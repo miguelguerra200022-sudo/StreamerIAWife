@@ -700,23 +700,31 @@ async def init_services():
 # 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (1 SOLO SALTO DIRECTO AL CELULAR)
 # ==============================================================================
 print("\n[7/8] ☁️ Iniciando Túnel Cloudflare en Kaggle...")
+log_file_path = "/tmp/cloudflared.log"
+if os.path.exists(log_file_path):
+    try: os.remove(log_file_path)
+    except Exception: pass
+
+log_file = open(log_file_path, "w+")
 tunnel_proc = subprocess.Popen(
     ["cloudflared", "tunnel", "--url", "http://127.0.0.1:8000"],
-    stdout=subprocess.PIPE,
+    stdout=log_file,
     stderr=subprocess.STDOUT,
     text=True
 )
 
 public_url = None
-start_time = time.time()
-while time.time() - start_time < 20:
-    line = tunnel_proc.stdout.readline()
-    if not line:
-        continue
-    match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', line)
-    if match:
-        public_url = match.group(0)
-        break
+for _ in range(40):
+    time.sleep(0.5)
+    try:
+        with open(log_file_path, "r") as f:
+            content = f.read()
+        match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', content)
+        if match:
+            public_url = match.group(0)
+            break
+    except Exception:
+        pass
 
 if not public_url:
     public_url = "https://strategies-knows-ticket-insight.trycloudflare.com"
