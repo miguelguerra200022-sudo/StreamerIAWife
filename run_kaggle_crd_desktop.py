@@ -43,6 +43,9 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def install_system_packages():
+    # 0. Auto-reparar cualquier interrupción previa de dpkg
+    subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
+
     # 1. Limpiar repositorios rotos de Kaggle
     subprocess.run("sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     subprocess.run("sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null", shell=True)
@@ -64,38 +67,33 @@ def install_system_packages():
         needed.append("xfce")
 
     if needed:
-        print(f"  📥 Instalando dependencias base del sistema ({len(needed)} módulos)...")
-        print("    • [1/4] ⏳ Actualizando lista de paquetes...")
-        sys.stdout.flush()
+        print(f"  📥 Instalando dependencias base del sistema ({len(needed)} módulos)...", flush=True)
+        print("    • [1/4] ⏳ Actualizando lista de paquetes...", flush=True)
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
 
-        print("    • [2/4] ⏳ Instalando XFCE4, Vulkan, Audio y FFmpeg (toma ~30 seg)...")
-        sys.stdout.flush()
+        print("    • [2/4] ⏳ Descargando e instalando XFCE4, Vulkan, Audio y FFmpeg (toma ~35 seg)...", flush=True)
         apt_cmd = (
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
-            "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "
+            "-o Dpkg::Use-Pty=0 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
             "python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy "
             "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers "
             "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
             "ffmpeg pulseaudio rclone espeak-ng xdotool"
         )
-        res = subprocess.run(apt_cmd, shell=True)
+        subprocess.run(apt_cmd, shell=True)
 
-        print("    • [3/4] ⏳ Configurando Google Chrome Stable...")
-        sys.stdout.flush()
+        print("    • [3/4] ⏳ Configurando Google Chrome Stable...", flush=True)
         if not shutil.which("google-chrome"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f -qq -o Dpkg::Use-Pty=0", shell=True)
 
-        print("    • [4/4] ⏳ Configurando Google Chrome Remote Desktop...")
-        sys.stdout.flush()
+        print("    • [4/4] ⏳ Configurando Google Chrome Remote Desktop...", flush=True)
         if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f -qq -o Dpkg::Use-Pty=0", shell=True)
 
-        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -f -y -qq 2>/dev/null", shell=True)
-        print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.")
-        sys.stdout.flush()
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -f -y -qq -o Dpkg::Use-Pty=0 2>/dev/null", shell=True)
+        print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.", flush=True)
     else:
-        print("  ⚡ [✓] Todos los paquetes del sistema (CRD, XFCE4, Chrome, Audio, FFmpeg) listos en caché.")
+        print("  ⚡ [✓] Todos los paquetes del sistema (CRD, XFCE4, Chrome, Audio, FFmpeg) listos en caché.", flush=True)
 
 install_system_packages()
 
