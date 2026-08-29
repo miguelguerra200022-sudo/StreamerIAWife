@@ -29,7 +29,7 @@ def install_system_packages():
     subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
     subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
 
-    # 1. Cambiar a la red CDN de Kernel.org (Cloudflare Edge) ultra-rápida y sin cuelgues
+    # 1. Cambiar a la red CDN de Kernel.org (Cloudflare Edge) ultra-rápida
     subprocess.run(
         "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
         "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
@@ -38,9 +38,9 @@ def install_system_packages():
         shell=True
     )
 
-    # 2. Configurar APT anti-freeze y debconf no interactivo
+    # 2. Forzar IPv4 estricto (elimina los cuelgues de IPv6 en Kaggle) y configurar debconf
     subprocess.run(
-        "printf 'Acquire::http::Timeout \"10\";\\nAcquire::https::Timeout \"10\";\\nAcquire::Retries \"5\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99anti-freeze >/dev/null; "
+        "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::https::Timeout \"10\";\\nAcquire::Retries \"5\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99anti-freeze >/dev/null; "
         "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
         "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
         "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null",
@@ -58,7 +58,7 @@ def install_system_packages():
     if needed:
         print(f"\n======================================================================\n🌸 [1/7] 📥 INSTALANDO DEPENDENCIAS DEL SISTEMA ({len(needed)} módulos)...\n======================================================================", flush=True)
         
-        print("  • [1/4] ⏳ Actualizando lista de paquetes desde Cloudflare CDN...", flush=True)
+        print("  • [1/4] ⏳ Actualizando lista de paquetes desde Cloudflare CDN (IPv4 Direct)...", flush=True)
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
 
         print("  • [2/4] ⏳ Descargando e instalando XFCE4, Vulkan, Audio, FFmpeg y Pantalla Virtual...", flush=True)
