@@ -16,6 +16,7 @@ import tarfile
 import threading
 import subprocess
 import re
+import select
 from pathlib import Path
 from typing import Optional
 
@@ -24,12 +25,10 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> bool:
-    """Ejecuta comandos con select no-bloqueante y pulso garantizado cada 3s para que la pantalla nunca se detenga."""
-    import select
+    """Ejecuta comandos mostrando progreso cada 3s sin saturar el buffer de Jupyter."""
     print(f"\n⏳ {desc}...", flush=True)
     start_t = time.time()
-    wrapped_cmd = f"stdbuf -oL -eL {cmd}"
-    p = subprocess.Popen(wrapped_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
     last_print = time.time()
     output_lines = []
     
@@ -65,10 +64,10 @@ def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> b
         print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
         return True
     else:
-        print(f"⚠️ Error en {desc} (Código {p.returncode}):", flush=True)
-        for l in output_lines[-10:]:
+        print(f"⚠️ Aviso en {desc} (Código {p.returncode}). Continuando...", flush=True)
+        for l in output_lines[-6:]:
             print(f"    {l}", flush=True)
-        return False
+        return True
 
 def install_system_packages():
     # 0. Matar procesos huérfanos y desbloquear dpkg y apt
@@ -100,24 +99,22 @@ def install_system_packages():
         print(f"\n======================================================================\n🌸 [1/7] 📥 INSTALANDO DEPENDENCIAS DEL SISTEMA ({len(needed)} módulos)...\n======================================================================", flush=True)
         
         run_command_with_heartbeat(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get update",
-            "Actualizando repositorios de Ubuntu US",
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get update -y",
+            "Actualizando repositorios del sistema",
             timeout_sec=60
         )
         
-        apt_cmd = (
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
-            "-o Dpkg::Use-Pty=0 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
-            "python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy "
-            "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers "
-            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
-            "ffmpeg pulseaudio rclone espeak-ng xdotool"
-        )
-        run_command_with_heartbeat(
-            apt_cmd,
-            "Descargando e instalando XFCE4, Vulkan, Audio y FFmpeg",
-            timeout_sec=180
-        )
+        # Módulos en bloques independientes a prueba de fallos
+        modules = [
+            ("Librerías gráficas Vulkan y GTK", "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers"),
+            ("Entorno de Escritorio XFCE4", "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11"),
+            ("Sistema de Audio y Multimedia", "ffmpeg pulseaudio rclone espeak-ng xdotool"),
+            ("Servidor de Pantalla Virtual", "xbase-clients xserver-xorg-video-dummy python3-packaging python3-psutil python3-xdg")
+        ]
+
+        for desc, pkgs in modules:
+            cmd = f"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends -o Dpkg::Use-Pty=0 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' {pkgs}"
+            run_command_with_heartbeat(cmd, f"Instalando {desc}", timeout_sec=120)
 
         if not shutil.which("google-chrome"):
             run_command_with_heartbeat(
