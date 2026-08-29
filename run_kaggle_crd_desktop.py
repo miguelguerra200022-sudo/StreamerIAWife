@@ -37,21 +37,29 @@ def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> b
                 p.kill()
                 print(f"⚠️ Tiempo límite excedido ({timeout_sec}s).", flush=True)
                 return False
-    print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
-    return True
+    if p.returncode == 0:
+        print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
+        return True
+    else:
+        print(f"⚠️ Aviso en {desc} (Código {p.returncode}).", flush=True)
+        try:
+            with open("/tmp/install.log", "r") as lf:
+                lines = lf.readlines()
+                for l in lines[-10:]:
+                    print(f"    {l.strip()}", flush=True)
+        except Exception:
+            pass
+        return False
 
 def install_system_packages():
-    # 0. Desbloquear dpkg
+    # 0. Desbloquear dpkg y apt
+    subprocess.run("sudo fuser -k /var/lib/dpkg/lock* /var/lib/apt/lists/lock* 2>/dev/null || true", shell=True)
+    subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
     subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
 
-    # 1. Configurar mirror rápido US y anti-freeze
-    subprocess.run(
-        "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null || true",
-        shell=True
-    )
+    # 1. Limpiar repositorios rotos de Kaggle
+    subprocess.run("sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    subprocess.run("sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null", shell=True)
 
     # 2. Pre-configurar debconf
     subprocess.run(
