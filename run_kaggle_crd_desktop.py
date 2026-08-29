@@ -46,8 +46,8 @@ os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 if not os.path.exists("/opt/google/chrome-remote-desktop/start-host"):
     print("\n📦 Configurando Google Chrome Remote Desktop en el sistema...", flush=True)
     subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb", shell=True)
-    subprocess.run("sudo dpkg --force-all -i /tmp/crd.deb 2>/dev/null || true", shell=True)
-    subprocess.run("sudo apt-get install -y --fix-broken -qq 2>/dev/null || true", shell=True)
+    subprocess.run("sudo dpkg --force-all -i /tmp/crd.deb", shell=True)
+    print("⚡ [✓] Google Chrome Remote Desktop configurado.", flush=True)
 
 # Configurar sesión XFCE para Chrome Remote Desktop
 crd_session_file = Path.home() / ".chrome-remote-desktop-session"
