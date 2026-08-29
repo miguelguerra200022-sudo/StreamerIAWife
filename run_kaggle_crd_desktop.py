@@ -24,30 +24,41 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> bool:
-    """Ejecuta comandos de instalación procesando tanto \r como \n para mostrar el progreso en tiempo real cada 1.5s."""
+    """Ejecuta comandos con select no-bloqueante y pulso garantizado cada 3s para que la pantalla nunca se detenga."""
+    import select
     print(f"\n⏳ {desc}...", flush=True)
     start_t = time.time()
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    wrapped_cmd = f"stdbuf -oL -eL {cmd}"
+    p = subprocess.Popen(wrapped_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
     last_print = time.time()
-    output_buffer = ""
     output_lines = []
     
     while p.poll() is None:
-        char = p.stdout.read(1)
-        if char:
-            if char in ('\r', '\n'):
-                line = output_buffer.strip()
-                output_buffer = ""
-                if line:
-                    output_lines.append(line)
-                    now = time.time()
-                    if now - last_print > 1.5 or "err" in line.lower() or "fail" in line.lower():
-                        print(f"  • {line[:85]}", flush=True)
-                        last_print = now
-            else:
-                output_buffer += char
+        now = time.time()
+        elapsed = int(now - start_t)
+        
+        rlist, _, _ = select.select([p.stdout], [], [], 0.5)
+        if rlist:
+            line = p.stdout.readline()
+            if line:
+                clean_l = line.strip()
+                output_lines.append(clean_l)
+                if now - last_print > 2.0 or "err" in clean_l.lower() or "fail" in clean_l.lower():
+                    print(f"  • {clean_l[:85]}", flush=True)
+                    last_print = now
         else:
-            time.sleep(0.01)
+            if now - last_print > 3.0:
+                print(f"  • En progreso ({elapsed}s transcurridos)...", flush=True)
+                last_print = now
+                
+        if elapsed > timeout_sec:
+            p.kill()
+            print(f"⚠️ Tiempo límite excedido ({timeout_sec}s).", flush=True)
+            return False
+            
+    for line in p.stdout:
+        if line.strip():
+            output_lines.append(line.strip())
             
     p.wait()
     if p.returncode == 0:
@@ -55,7 +66,7 @@ def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> b
         return True
     else:
         print(f"⚠️ Error en {desc} (Código {p.returncode}):", flush=True)
-        for l in output_lines[-12:]:
+        for l in output_lines[-10:]:
             print(f"    {l}", flush=True)
         return False
 
