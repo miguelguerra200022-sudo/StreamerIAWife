@@ -72,24 +72,24 @@ def install_system_packages():
         print("    • [2/4] ⏳ Instalando XFCE4, Vulkan, Audio y FFmpeg (toma ~30 seg)...")
         sys.stdout.flush()
         apt_cmd = (
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
             "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
             "python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy "
-            "libgtk-3-0 gsettings-desktop-schemas session-migration libvulkan1 mesa-vulkan-drivers "
-            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 desktop-base "
+            "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers "
+            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
             "ffmpeg pulseaudio rclone espeak-ng xdotool"
         )
-        subprocess.run(apt_cmd, shell=True)
+        res = subprocess.run(apt_cmd, shell=True)
 
         print("    • [3/4] ⏳ Configurando Google Chrome Stable...")
         sys.stdout.flush()
         if not shutil.which("google-chrome"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || true", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
 
         print("    • [4/4] ⏳ Configurando Google Chrome Remote Desktop...")
         sys.stdout.flush()
         if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || true", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
 
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -f -y -qq 2>/dev/null", shell=True)
         print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.")
