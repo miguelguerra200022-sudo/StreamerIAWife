@@ -59,25 +59,23 @@ def install_system_packages():
         print(f"\n======================================================================\n🌸 [1/7] 📥 INSTALANDO DEPENDENCIAS DEL SISTEMA ({len(needed)} módulos)...\n======================================================================", flush=True)
         
         print("  • [1/4] ⏳ Actualizando lista de paquetes desde Cloudflare CDN...", flush=True)
-        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -y", shell=True)
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
 
         print("  • [2/4] ⏳ Descargando e instalando XFCE4, Vulkan, Audio, FFmpeg y Pantalla Virtual...", flush=True)
         subprocess.run(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o quiet=1 --fix-missing --no-install-recommends "
             "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
-            "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers "
-            "ffmpeg pulseaudio rclone espeak-ng xdotool "
-            "xbase-clients xserver-xorg-video-dummy python3-packaging python3-psutil python3-xdg",
+            "pulseaudio rclone espeak-ng xdotool xserver-xorg-video-dummy",
             shell=True
         )
 
         print("  • [3/4] ⏳ Configurando Google Chrome Stable...", flush=True)
         if not shutil.which("google-chrome"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f -qq", shell=True)
 
         print("  • [4/4] ⏳ Configurando Google Chrome Remote Desktop...", flush=True)
         if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
+            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f -qq", shell=True)
 
         crd_session_file = Path.home() / ".chrome-remote-desktop-session"
         with open(crd_session_file, "w") as f:
