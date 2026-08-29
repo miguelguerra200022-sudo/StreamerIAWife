@@ -6,7 +6,7 @@ if [ -n "$1" ]; then
 fi
 
 echo "======================================================================"
-echo "🌸 [1/4] 📥 INSTALANDO PAQUETES BASE ESENCIALES (6 MB)..."
+echo "🌸 [1/4] 📥 INSTALANDO ENTORNO GRÁFICO XFCE4 & AUDIO..."
 echo "======================================================================"
 sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
 sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
@@ -38,9 +38,9 @@ echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > ~/.chrome-remote-desktop-
 chmod +x ~/.chrome-remote-desktop-session
 
 echo "======================================================================"
-echo "🌸 [3/4] 🧠 INSTALANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL..."
+echo "🌸 [3/4] 🧠 INSTALANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL (PREFER-BINARY)..."
 echo "======================================================================"
-pip install -q --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub 2>/dev/null || true
+pip install --prefer-binary opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub
 
 echo "======================================================================"
 echo "🌸 [4/4] 🚀 INICIANDO MOTOR LINUWAIFU CLOUD DESKTOP..."
