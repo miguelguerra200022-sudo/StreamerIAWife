@@ -40,6 +40,7 @@ except Exception:
 
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+os.environ["DEBCONF_NONINTERACTIVE_SEEN"] = "true"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def ensure_system_dependencies():
@@ -47,35 +48,42 @@ def ensure_system_dependencies():
     if os.path.exists(crd_bin) and os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
         return
 
-    print("\n🌸 [1/4] 📥 Configurando entorno gráfico mínimo (ultra-liviano)...", flush=True)
+    print("\n🌸 [1/4] 📥 Configurando entorno gráfico (Debconf 100% Automático)...", flush=True)
     
-    # 1. Limpiar bloqueos de dpkg anteriores
-    subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
-    subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
-    
-    # 2. Configurar fuentes limpias de Google Cloud
-    subprocess.run("sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
-    clean_sources = (
-        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\n"
-        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\n"
-        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n"
+    # 1. Pre-configurar Debconf para que no se quede esperando teclado o zona horaria
+    debconf_setup = (
+        "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'tzdata tzdata/Areas select Etc' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'tzdata tzdata/Zones/Etc select UTC' | sudo debconf-set-selections 2>/dev/null; "
+        "sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* 2>/dev/null || true; "
+        "sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true; "
+        "printf 'deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n' | sudo tee /etc/apt/sources.list >/dev/null; "
+        "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null; "
     )
-    subprocess.run(f"printf '{clean_sources}' | sudo tee /etc/apt/sources.list >/dev/null", shell=True)
-    subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null", shell=True)
+    subprocess.run(debconf_setup, shell=True)
     
-    # 3. Instalar solo los 5 paquetes esenciales sin saturar el contenedor
+    env = os.environ.copy()
+    env["DEBIAN_FRONTEND"] = "noninteractive"
+    env["DEBCONF_NONINTERACTIVE_SEEN"] = "true"
+    
+    print("  • Actualizando repositorios limpios...", flush=True)
+    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True, env=env)
+    
     print("  • Instalando XFCE4, GTK3 y Servidor de Pantalla...", flush=True)
-    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
     subprocess.run(
-        "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-upgrade --no-install-recommends "
+        "sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install -y "
+        "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
+        "--no-upgrade --no-install-recommends "
         "xfce4-session xfce4-terminal libgtk-3-0 dbus-x11 pulseaudio xvfb",
-        shell=True
+        shell=True,
+        env=env
     )
     
-    # 4. Instalar Chrome Remote Desktop
     print("  • Configurando Google Chrome Remote Desktop...", flush=True)
     subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb", shell=True)
-    subprocess.run("sudo dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken -qq", shell=True)
+    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken -qq", shell=True, env=env)
     print("⚡ [✓] Entorno gráfico y Chrome Remote Desktop listos.", flush=True)
 
 ensure_system_dependencies()
