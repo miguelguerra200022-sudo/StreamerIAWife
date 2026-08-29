@@ -19,6 +19,8 @@ import re
 import signal
 import atexit
 import traceback
+import urllib.request
+import concurrent.futures
 from pathlib import Path
 from typing import Optional
 
@@ -48,9 +50,9 @@ def ensure_system_dependencies():
     if os.path.exists(crd_bin) and os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
         return
 
-    print("\n🌸 [1/4] 📥 Configurando entorno gráfico (Debconf 100% Automático)...", flush=True)
+    print("\n🌸 [1/4] ⚡ Descargando e instalando entorno gráfico (Python Direct Network)...", flush=True)
     
-    # 1. Pre-configurar Debconf para que no se quede esperando teclado o zona horaria
+    # 1. Pre-sembrar Debconf para evitar cualquier bloqueo de stdin
     debconf_setup = (
         "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
         "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
@@ -61,29 +63,56 @@ def ensure_system_dependencies():
         "sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true; "
         "printf 'deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n' | sudo tee /etc/apt/sources.list >/dev/null; "
         "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null; "
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq"
     )
     subprocess.run(debconf_setup, shell=True)
     
+    # 2. Extraer URLs exactas con apt-get --print-uris
+    pkg_list = "xfce4-session xfce4-terminal libgtk-3-0 dbus-x11 pulseaudio xvfb"
+    try:
+        raw_uris = subprocess.check_output(f"apt-get --print-uris -y --no-install-recommends install {pkg_list}", shell=True).decode()
+    except Exception:
+        raw_uris = ""
+        
+    deb_urls = []
+    for line in raw_uris.splitlines():
+        m = re.search(r"'(http[^\']+)'\s+([^\s]+)", line)
+        if m:
+            deb_urls.append((m.group(1), m.group(2)))
+            
+    deb_urls.append(("https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb", "chrome-remote-desktop_current_amd64.deb"))
+    
+    deb_dir = Path("/tmp/fast_debs")
+    deb_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 3. Descarga paralela con Python puro (elimina cuelgues de sockets de APT)
+    completed_count = 0
+    lock = threading.Lock()
+    total_pkgs = len(deb_urls)
+
+    def download_deb(item):
+        nonlocal completed_count
+        url, filename = item
+        dest = deb_dir / filename
+        if not dest.exists() or dest.stat().st_size == 0:
+            try:
+                urllib.request.urlretrieve(url, dest)
+            except Exception:
+                pass
+        with lock:
+            completed_count += 1
+            if completed_count % 15 == 0 or completed_count == total_pkgs:
+                print(f"  • [{completed_count}/{total_pkgs}] Paquetes descargados...", flush=True)
+
+    print(f"  • Descargando {total_pkgs} paquetes en 24 hilos simultáneos...", flush=True)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=24) as executor:
+        list(executor.map(download_deb, deb_urls))
+        
+    print("  • Instalando paquetes con Debconf no interactivo...", flush=True)
     env = os.environ.copy()
     env["DEBIAN_FRONTEND"] = "noninteractive"
     env["DEBCONF_NONINTERACTIVE_SEEN"] = "true"
-    
-    print("  • Actualizando repositorios limpios...", flush=True)
-    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True, env=env)
-    
-    print("  • Instalando XFCE4, GTK3 y Servidor de Pantalla...", flush=True)
-    subprocess.run(
-        "sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install -y "
-        "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
-        "--no-upgrade --no-install-recommends "
-        "xfce4-session xfce4-terminal libgtk-3-0 dbus-x11 pulseaudio xvfb",
-        shell=True,
-        env=env
-    )
-    
-    print("  • Configurando Google Chrome Remote Desktop...", flush=True)
-    subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb", shell=True)
-    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken -qq", shell=True, env=env)
+    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --force-all -i /tmp/fast_debs/*.deb", shell=True, env=env)
     print("⚡ [✓] Entorno gráfico y Chrome Remote Desktop listos.", flush=True)
 
 ensure_system_dependencies()
