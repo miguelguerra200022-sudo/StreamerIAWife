@@ -809,9 +809,9 @@
     </style>
 
     <!-- Librerías de MediaPipe y Kalidokit para Face Tracking -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.umd.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.umd.js" crossorigin="anonymous" defer></script>
 </head>
 <body>
 
@@ -1761,7 +1761,6 @@
         const trackpadScroll = document.getElementById('trackpad-scroll');
         let prevTouchX = null, prevTouchY = null;
         let lastMoveTime = 0;
-        let sensitivity = 1.6;
         let dragModeActive = false;
         let lastTapTime = 0;
 
