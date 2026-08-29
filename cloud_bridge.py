@@ -40,6 +40,12 @@ class CloudConnectionManager:
         await websocket.accept()
         self.active_connections.add(websocket)
         print(f"[☁️ Bridge] Cliente conectado. Total activos: {len(self.active_connections)}")
+        # Enviar inmediatamente el último fotograma disponible para evitar pantalla negra
+        if self.latest_screen_frame_bytes:
+            try:
+                await websocket.send_bytes(b"\x01" + self.latest_screen_frame_bytes)
+            except Exception:
+                pass
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.discard(websocket)
@@ -136,8 +142,15 @@ async def websocket_cloud_endpoint(websocket: WebSocket):
                         await cloud_manager.broadcast_raw(data, sender=websocket)
                         continue
                     
-                    # C. Control de flujo ACK (reenviar a Kaggle)
-                    if data.get("type") == "frame_ack" or data.get("type") == "ping" or data.get("type") == "pong":
+                    # C. Ping / Pong y Control de flujo ACK
+                    if data.get("type") == "ping":
+                        try:
+                            await websocket.send_json({"type": "pong", "ts": data.get("ts")})
+                        except Exception:
+                            pass
+                        continue
+                    
+                    if data.get("type") == "frame_ack" or data.get("type") == "pong":
                         await cloud_manager.broadcast_raw(data, sender=websocket)
                         continue
                     

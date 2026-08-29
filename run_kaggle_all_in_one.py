@@ -696,22 +696,6 @@ async def init_services():
     if twitch_bot.active:
         asyncio.create_task(twitch_bot.start())
 
-def run_uvicorn():
-    config = uvicorn.Config(
-        fastapi_app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="warning",
-        ws="websockets",
-        ws_ping_interval=None,
-        ws_ping_timeout=None
-    )
-    server = uvicorn.Server(config)
-    server.run()
-
-threading.Thread(target=run_uvicorn, daemon=True).start()
-time.sleep(2)
-
 # ==============================================================================
 # 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (1 SOLO SALTO DIRECTO AL CELULAR)
 # ==============================================================================
@@ -746,11 +730,22 @@ print(f"\n👉 ENLACE DEL ESTUDIO MÓVIL (Toca para abrir en tu celular):\n\n   
 print("=" * 70)
 
 # ==============================================================================
-# 11. BUCLE DE ENLACE Y COMANDOS LOCALES (0ms LATENCIA)
+# 11. BUCLE MAESTRO INTEGRADO (FASTAPI + WEBSOCKET 30 FPS + COMANDOS)
 # ==============================================================================
 async def main_engine_loop():
     global current_voice_speed, current_voice_pitch, current_voice_name
     await init_services()
+
+    config = uvicorn.Config(
+        fastapi_app,
+        host="127.0.0.1",
+        port=8000,
+        log_level="warning",
+        ws="websockets",
+        ws_ping_interval=None,
+        ws_ping_timeout=None
+    )
+    server = uvicorn.Server(config)
 
     async def local_screen_sender():
         last_seq = -1
@@ -762,11 +757,9 @@ async def main_engine_loop():
                 if curr and seq != last_seq:
                     last_seq = seq
                     await cloud_manager.broadcast_bytes(b"\x01" + curr)
-                await asyncio.sleep(0.02)
+                await asyncio.sleep(0.025)
             except Exception:
                 await asyncio.sleep(0.05)
-
-    asyncio.create_task(local_screen_sender())
 
     async def command_dispatcher(message):
         global current_voice_speed, current_voice_pitch, current_voice_name
@@ -836,8 +829,11 @@ async def main_engine_loop():
     
     cloud_manager.broadcast_raw = intercepted_broadcast
 
-    while True:
-        await asyncio.sleep(3600)
+    tasks = [
+        asyncio.create_task(server.serve()),
+        asyncio.create_task(local_screen_sender())
+    ]
+    await asyncio.gather(*tasks)
 
 try:
     asyncio.run(main_engine_loop())
