@@ -1,23 +1,41 @@
 #!/bin/bash
 
-# Prevenir fallos de servicios en contenedores Docker de Kaggle
+echo "======================================================================"
+echo "🌸 [1/5] 🛠️ OPTIMIZANDO SERVIDORES DE DESCARGA DE KAGGLE (US MIRROR)..."
+echo "======================================================================"
+# Prevenir bloqueos de servicios en contenedores Docker
 printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d >/dev/null 2>&1
 sudo chmod +x /usr/sbin/policy-rc.d
 
-echo "======================================================================"
-echo "🌸 [1/5] 🛠️ PREPARANDO SISTEMA Y ACTUALIZANDO REPOSITORIOS..."
-echo "======================================================================"
+# Desbloquear dpkg
 sudo dpkg --configure -a 2>/dev/null || true
+
+# Cambiar al mirror de alta velocidad de Estados Unidos (donde están los servidores de Kaggle)
+sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
 sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
 sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null || true
+
+# Configurar APT anti-congelamiento (desactiva pipeline roto y fuerza reconexión automática)
+cat << 'EOF' | sudo tee /etc/apt/apt.conf.d/99custom-kaggle >/dev/null
+Acquire::http::Timeout "15";
+Acquire::https::Timeout "15";
+Acquire::Retries "5";
+Acquire::http::Pipeline-Depth "0";
+APT::Acquire::Retries "5";
+EOF
+
+# Pre-configurar debconf
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null || true
 echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null || true
 echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null || true
 
+# Limpiar caché congelado y actualizar
+sudo rm -rf /var/lib/apt/lists/*
 sudo DEBIAN_FRONTEND=noninteractive apt-get update
 
 echo "======================================================================"
-echo "🌸 [2/5] 📥 INSTALANDO XFCE4, VULKAN, AUDIO Y DEPENDENCIAS..."
+echo "🌸 [2/5] 📥 INSTALANDO XFCE4, VULKAN, AUDIO Y DEPENDENCIAS A ALTA VELOCIDAD..."
 echo "======================================================================"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy \
