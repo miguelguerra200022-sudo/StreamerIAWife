@@ -24,23 +24,31 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> bool:
-    """Ejecuta comandos de instalación en streaming controlado a 1 línea cada 2.5s para evitar límites de IOPub y capturar errores al instante."""
+    """Ejecuta comandos de instalación procesando tanto \r como \n para mostrar el progreso en tiempo real cada 1.5s."""
     print(f"\n⏳ {desc}...", flush=True)
     start_t = time.time()
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
     last_print = time.time()
+    output_buffer = ""
     output_lines = []
-    while True:
-        line = p.stdout.readline()
-        if not line and p.poll() is not None:
-            break
-        if line:
-            clean_l = line.strip()
-            output_lines.append(clean_l)
-            # Imprimir en pantalla cada 2.5 segundos o si contiene error
-            if time.time() - last_print > 2.5 or "err" in clean_l.lower() or "fail" in clean_l.lower():
-                print(f"  • {clean_l[:85]}", flush=True)
-                last_print = time.time()
+    
+    while p.poll() is None:
+        char = p.stdout.read(1)
+        if char:
+            if char in ('\r', '\n'):
+                line = output_buffer.strip()
+                output_buffer = ""
+                if line:
+                    output_lines.append(line)
+                    now = time.time()
+                    if now - last_print > 1.5 or "err" in line.lower() or "fail" in line.lower():
+                        print(f"  • {line[:85]}", flush=True)
+                        last_print = now
+            else:
+                output_buffer += char
+        else:
+            time.sleep(0.01)
+            
     p.wait()
     if p.returncode == 0:
         print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
