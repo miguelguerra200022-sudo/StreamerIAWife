@@ -45,20 +45,32 @@ os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 def ensure_system_dependencies():
     crd_bin = "/opt/google/chrome-remote-desktop/start-host"
     if not os.path.exists(crd_bin) or not os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
-        print("\n🌸 [1/4] 📥 Instalando librerías gráficas GTK3, XFCE4 y Google Remote Desktop...", flush=True)
+        print("\n🌸 [1/4] 📥 Limpiando repositorios y configurando entorno gráfico...", flush=True)
+        # Eliminar todos los repositorios rotos de Kaggle (r2u, ppa lentos)
+        subprocess.run("sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+        
+        # Configurar sources.list limpio de Ubuntu Jammy
+        clean_sources = (
+            "deb http://archive.ubuntu.com/ubuntu jammy main universe restricted multiverse\\n"
+            "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe restricted multiverse\\n"
+            "deb http://security.ubuntu.com/ubuntu jammy-security main universe restricted multiverse\\n"
+        )
+        subprocess.run(f"printf '{clean_sources}' | sudo tee /etc/apt/sources.list >/dev/null", shell=True)
+        subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null", shell=True)
+        
+        print("  • Actualizando repositorios limpios...", flush=True)
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
+        
+        print("  • Instalando dependencias gráficas GTK3, XFCE4 y Audio...", flush=True)
         subprocess.run(
-            "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-            "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-            "sudo sed -i 's|http://mirrors.edge.kernel.org/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-            "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99force >/dev/null; "
-            "sudo apt-get update -qq; "
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-upgrade --no-install-recommends "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
             "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas "
-            "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio; "
-            "wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb; "
-            "sudo dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken",
+            "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio",
             shell=True
         )
+        
+        print("  • Configurando Google Chrome Remote Desktop...", flush=True)
+        subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken", shell=True)
         print("⚡ [✓] Librerías gráficas GTK3 y Chrome Remote Desktop instalados.", flush=True)
 
 ensure_system_dependencies()
