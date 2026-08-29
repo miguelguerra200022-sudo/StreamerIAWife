@@ -19,6 +19,27 @@ import re
 from pathlib import Path
 from typing import Optional
 
+import signal
+import atexit
+import traceback
+
+def diagnostic_exit_handler():
+    print("\n🛑 [SISTEMA LINUWAIFU]: Proceso detenido. Guardando memoria...", flush=True)
+
+def signal_handler(signum, frame):
+    sig_name = "SIGTERM (Kaggle Shutdown)" if signum == signal.SIGTERM else "SIGINT (Cancelación)"
+    print(f"\n🛑 [DIAGNÓSTICO EN TIEMPO REAL]: Interrupción detectada -> {sig_name}", flush=True)
+    print("📍 [ÚLTIMA LÍNEA EJECUTADA]:", flush=True)
+    traceback.print_stack(frame, limit=2)
+    sys.exit(0)
+
+atexit.register(diagnostic_exit_handler)
+try:
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+except Exception:
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
@@ -40,7 +61,8 @@ try:
     from kokoro import KPipeline
 except ImportError:
     print("  📥 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
-    subprocess.run("pip install --prefer-binary opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
+    subprocess.run("pip install --prefer-binary opencv-python-headless mss openai aiosqlite soundfile numpy pydub loguru misaki espeakng_loader", shell=True)
+    subprocess.run("pip install --no-deps kokoro", shell=True)
     import torch
     import cv2
     import numpy as np

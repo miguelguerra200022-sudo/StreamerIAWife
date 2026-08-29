@@ -38,9 +38,10 @@ echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > ~/.chrome-remote-desktop-
 chmod +x ~/.chrome-remote-desktop-session
 
 echo "======================================================================"
-echo "🌸 [3/4] 🧠 INSTALANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL (PREFER-BINARY)..."
+echo "🌸 [3/4] 🧠 INSTALANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL (SIN CONFLICTOS)..."
 echo "======================================================================"
-pip install --prefer-binary opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub
+pip install --prefer-binary opencv-python-headless mss openai aiosqlite soundfile numpy pydub loguru misaki espeakng_loader
+pip install --no-deps kokoro
 
 echo "======================================================================"
 echo "🌸 [4/4] 🚀 INICIANDO MOTOR LINUWAIFU CLOUD DESKTOP..."
