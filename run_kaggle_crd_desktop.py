@@ -56,7 +56,7 @@ def install_system_packages():
     if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
         needed.append("crd")
     if not shutil.which("xfce4-session"):
-        needed.extend(["xfce4", "xfce4-terminal", "xfce4-goodies", "dbus-x11", "desktop-base"])
+        needed.extend(["xfwm4", "xfce4-panel", "xfce4-session", "xfce4-terminal", "xfdesktop4", "dbus-x11", "desktop-base"])
     if not shutil.which("google-chrome"):
         needed.append("google-chrome")
     if not shutil.which("ffmpeg"):
@@ -71,11 +71,11 @@ def install_system_packages():
         needed.append("xdotool")
 
     if needed:
-        print(f"  📥 Instalando paquetes del sistema en modo no-interactivo ({len(needed)} elementos)...")
-        apt_flags = "-y -qq -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+        print(f"  📥 Instalando paquetes esenciales ultra-livianos ({len(needed)} elementos)...")
+        apt_flags = "-y -qq --no-install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
         
-        # Instalar prerrequisitos de CRD y dependencias previas
+        # Instalar prerrequisitos de CRD
         subprocess.run(f"sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy libgtk-3-0", shell=True)
         
         # Instalar Chrome si falta
