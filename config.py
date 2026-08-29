@@ -13,11 +13,23 @@ for i in range(1, 20):
     if key and key.strip():
         NVIDIA_API_KEYS.append(key.strip())
 
-# Si no hay numeradas, buscar NVIDIA_API_KEY simple
 if not NVIDIA_API_KEYS:
     single_key = os.getenv("NVIDIA_API_KEY")
     if single_key:
         NVIDIA_API_KEYS.append(single_key.strip())
+
+# Claves predeterminadas del pool NVIDIA NIM Build si no hay .env en el servidor cloud
+if not NVIDIA_API_KEYS:
+    NVIDIA_API_KEYS = [
+        "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",
+        "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",
+        "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",
+        "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",
+        "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",
+        "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",
+        "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",
+        "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"
+    ]
 
 # Configuración del LLM
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")

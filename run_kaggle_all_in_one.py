@@ -105,6 +105,10 @@ import edge_tts
 import cv2
 import requests
 import nest_asyncio
+import uvicorn
+import fastapi
+import openai
+import aiosqlite
 
 nest_asyncio.apply()
 
