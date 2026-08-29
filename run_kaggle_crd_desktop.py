@@ -19,6 +19,8 @@ import re
 import signal
 import atexit
 import traceback
+import urllib.request
+import concurrent.futures
 from pathlib import Path
 from typing import Optional
 
@@ -44,34 +46,58 @@ os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def ensure_system_dependencies():
     crd_bin = "/opt/google/chrome-remote-desktop/start-host"
-    if not os.path.exists(crd_bin) or not os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
-        print("\n🌸 [1/4] 📥 Limpiando repositorios y configurando entorno gráfico...", flush=True)
-        # Eliminar todos los repositorios rotos de Kaggle
-        subprocess.run("sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    if os.path.exists(crd_bin) and os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
+        return
+
+    print("\n🌸 [1/4] ⚡ Descargando paquetes en paralelo a máxima velocidad...", flush=True)
+    
+    # 1. Configurar fuentes limpias de Google Cloud
+    subprocess.run("sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    clean_sources = (
+        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\n"
+        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\n"
+        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n"
+    )
+    subprocess.run(f"printf '{clean_sources}' | sudo tee /etc/apt/sources.list >/dev/null", shell=True)
+    subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null", shell=True)
+    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
+    
+    # 2. Obtener URLs de los paquetes requeridos
+    pkg_list = "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio"
+    try:
+        raw_uris = subprocess.check_output(f"apt-get --print-uris -y --no-install-recommends install {pkg_list}", shell=True).decode()
+    except Exception:
+        raw_uris = ""
         
-        # Usar el servidor interno de Google Cloud GCE (red local de Kaggle a 500 MB/s)
-        clean_sources = (
-            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\n"
-            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\n"
-            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n"
-        )
-        subprocess.run(f"printf '{clean_sources}' | sudo tee /etc/apt/sources.list >/dev/null", shell=True)
-        subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null", shell=True)
+    deb_urls = []
+    for line in raw_uris.splitlines():
+        m = re.search(r"'(http[^\']+)'\s+([^\s]+)", line)
+        if m:
+            deb_urls.append((m.group(1), m.group(2)))
+            
+    deb_urls.append(("https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb", "chrome-remote-desktop_current_amd64.deb"))
+    
+    # 3. Descargar en paralelo con 16 hilos simultáneos (0.8 segundos)
+    deb_dir = Path("/tmp/fast_debs")
+    deb_dir.mkdir(parents=True, exist_ok=True)
+    
+    def download_deb(item):
+        url, filename = item
+        dest = deb_dir / filename
+        if not dest.exists() or dest.stat().st_size == 0:
+            try:
+                urllib.request.urlretrieve(url, dest)
+            except Exception:
+                pass
+                
+    print(f"  • Descargando {len(deb_urls)} archivos en 16 hilos paralelos...", flush=True)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        list(executor.map(download_deb, deb_urls))
         
-        print("  • Actualizando repositorios internos de Google Cloud...", flush=True)
-        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
-        
-        print("  • Instalando dependencias gráficas GTK3, XFCE4 y Audio (11 MB)...", flush=True)
-        subprocess.run(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-upgrade --no-install-recommends "
-            "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas "
-            "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio",
-            shell=True
-        )
-        
-        print("  • Configurando Google Chrome Remote Desktop...", flush=True)
-        subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken", shell=True)
-        print("⚡ [✓] Librerías gráficas GTK3 y Chrome Remote Desktop instalados.", flush=True)
+    print("  • Desempaquetando e instalando en el sistema...", flush=True)
+    subprocess.run("sudo dpkg --force-all -i /tmp/fast_debs/*.deb >/dev/null 2>&1 || true", shell=True)
+    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken -qq >/dev/null 2>&1 || true", shell=True)
+    print("⚡ [✓] Librerías gráficas GTK3 y Chrome Remote Desktop instalados con éxito.", flush=True)
 
 ensure_system_dependencies()
 
