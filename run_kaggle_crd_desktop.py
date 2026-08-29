@@ -42,6 +42,19 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
+# Auto-instalar CRD si no está presente en el sistema
+if not os.path.exists("/opt/google/chrome-remote-desktop/start-host"):
+    print("\n📦 Configurando Google Chrome Remote Desktop en el sistema...", flush=True)
+    subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb", shell=True)
+    subprocess.run("sudo dpkg --force-all -i /tmp/crd.deb 2>/dev/null || true", shell=True)
+    subprocess.run("sudo apt-get install -y --fix-broken -qq 2>/dev/null || true", shell=True)
+
+# Configurar sesión XFCE para Chrome Remote Desktop
+crd_session_file = Path.home() / ".chrome-remote-desktop-session"
+with open(crd_session_file, "w") as f:
+    f.write("exec /etc/X11/Xsession /usr/bin/xfce4-session\n")
+crd_session_file.chmod(0o755)
+
 print("\n======================================================================", flush=True)
 print("🌸 [1/4] 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
 print("======================================================================", flush=True)
