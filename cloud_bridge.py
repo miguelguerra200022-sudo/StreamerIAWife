@@ -4,16 +4,30 @@ import asyncio
 from pathlib import Path
 from typing import List, Set, Optional, Callable
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 
 app = FastAPI(title="Streamer IA Waifu - Canaima Brain Bridge")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 BASE_DIR = Path(__file__).resolve().parent
 AVATARS_DIR = BASE_DIR / "avatars"
 os.makedirs(AVATARS_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(AVATARS_DIR)), name="static")
+
+@app.get("/")
+def root_redirect():
+    return RedirectResponse(url="/static/studio.html")
 
 class CloudConnectionManager:
     def __init__(self):
