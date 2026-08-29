@@ -40,7 +40,7 @@ try:
     from kokoro import KPipeline
 except ImportError:
     print("  📥 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
-    subprocess.run("pip install -q --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
+    subprocess.run("pip install --prefer-binary opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
     import torch
     import cv2
     import numpy as np
