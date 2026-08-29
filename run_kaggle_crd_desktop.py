@@ -44,6 +44,7 @@ os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def install_system_packages():
     # 1. Limpiar repositorios rotos de Kaggle
+    subprocess.run("sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     subprocess.run("sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null", shell=True)
 
     # 2. Pre-configurar debconf para evitar preguntas de teclado
@@ -64,8 +65,13 @@ def install_system_packages():
 
     if needed:
         print(f"  📥 Instalando dependencias base del sistema ({len(needed)} módulos)...")
+        print("    • [1/4] ⏳ Actualizando lista de paquetes...")
+        sys.stdout.flush()
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
+
+        print("    • [2/4] ⏳ Instalando XFCE4, Vulkan, Audio y FFmpeg (toma ~30 seg)...")
+        sys.stdout.flush()
         apt_cmd = (
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
             "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "
             "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
             "python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy "
@@ -75,16 +81,19 @@ def install_system_packages():
         )
         subprocess.run(apt_cmd, shell=True)
 
-        # Descargar e instalar Chrome y CRD con todas las dependencias ya resueltas
+        print("    • [3/4] ⏳ Configurando Google Chrome Stable...")
+        sys.stdout.flush()
         if not shutil.which("google-chrome"):
             subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || true", shell=True)
 
+        print("    • [4/4] ⏳ Configurando Google Chrome Remote Desktop...")
+        sys.stdout.flush()
         if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
             subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || true", shell=True)
 
-        # Reparación rápida de dependencias
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -f -y -qq 2>/dev/null", shell=True)
         print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.")
+        sys.stdout.flush()
     else:
         print("  ⚡ [✓] Todos los paquetes del sistema (CRD, XFCE4, Chrome, Audio, FFmpeg) listos en caché.")
 
