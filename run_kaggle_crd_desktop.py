@@ -229,17 +229,21 @@ if not crd_restored:
     print("4. Copia el comando de Debian Linux (ej: DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=\"4/...\").")
     print("=" * 70)
     
-    # Comprobar si se pasó por variable de entorno o argumento
+    # Comprobar si se pasó por variable de entorno, argumento o archivo crd_code.txt
     crd_command = os.environ.get("CRD_AUTH_COMMAND", "").strip()
     if len(sys.argv) > 1 and sys.argv[1].strip():
         crd_command = sys.argv[1].strip()
         
-    if not crd_command and os.path.exists(BASE_DIR / "crd_code.txt"):
-        try:
-            with open(BASE_DIR / "crd_code.txt", "r") as f:
-                crd_command = f.read().strip()
-        except Exception:
-            pass
+    if not crd_command:
+        for p in [Path("/tmp/crd_code.txt"), Path("/kaggle/working/crd_code.txt"), BASE_DIR / "crd_code.txt"]:
+            if p.exists():
+                try:
+                    with open(p, "r") as f:
+                        crd_command = f.read().strip()
+                    if crd_command:
+                        break
+                except Exception:
+                    pass
 
     if not crd_command:
         print("\n👉 [PASO FÁCIL]: Pega tu comando de Google en la variable CRD_AUTH de tu celda de Kaggle:")
