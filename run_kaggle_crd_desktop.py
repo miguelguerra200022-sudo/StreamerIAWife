@@ -23,74 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
-def install_system_packages():
-    # 0. Limpiar bloqueos y procesos huérfanos
-    subprocess.run("sudo killall -9 apt apt-get dpkg 2>/dev/null || true", shell=True)
-    subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
-    subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
-
-    # 1. Cambiar a la red CDN de Kernel.org (Cloudflare Edge) ultra-rápida
-    subprocess.run(
-        "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null",
-        shell=True
-    )
-
-    # 2. Forzar IPv4 estricto (elimina los cuelgues de IPv6 en Kaggle) y configurar debconf
-    subprocess.run(
-        "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::https::Timeout \"10\";\\nAcquire::Retries \"5\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99anti-freeze >/dev/null; "
-        "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null",
-        shell=True
-    )
-
-    needed = []
-    if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-        needed.append("crd")
-    if not shutil.which("google-chrome"):
-        needed.append("chrome")
-    if not shutil.which("xfce4-session"):
-        needed.append("xfce")
-
-    if needed:
-        print(f"\n======================================================================\n🌸 [1/7] 📥 INSTALANDO DEPENDENCIAS DEL SISTEMA ({len(needed)} módulos)...\n======================================================================", flush=True)
-        
-        print("  • [1/4] ⏳ Actualizando repositorios desde Cloudflare CDN...", flush=True)
-        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
-
-        print("  • [2/4] ⏳ Desempaquetando e instalando XFCE4, Vulkan, Audio, FFmpeg y Pantalla Virtual...", flush=True)
-        subprocess.run(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends "
-            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
-            "pulseaudio rclone espeak-ng xdotool xserver-xorg-video-dummy",
-            shell=True
-        )
-
-        print("  • [3/4] ⏳ Configurando Google Chrome Stable...", flush=True)
-        if not shutil.which("google-chrome"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
-
-        print("  • [4/4] ⏳ Configurando Google Chrome Remote Desktop...", flush=True)
-        if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
-
-        crd_session_file = Path.home() / ".chrome-remote-desktop-session"
-        with open(crd_session_file, "w") as f:
-            f.write("exec /etc/X11/Xsession /usr/bin/xfce4-session\n")
-        crd_session_file.chmod(0o755)
-
-        print("⚡ [✓] Paquetes base del sistema instalados exitosamente.", flush=True)
-    else:
-        print("⚡ [✓] Todos los paquetes del sistema listos en caché.", flush=True)
-
-install_system_packages()
-
 # ==============================================================================
 # INSTALACIÓN DE LIBRERÍAS DE IA Y VERIFICACIÓN DE GPU
 # ==============================================================================
+print("\n======================================================================", flush=True)
+print("🌸 [1/5] 🧠 VERIFICANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL & DUAL-GPU...", flush=True)
+print("======================================================================", flush=True)
+
 try:
     import torch
     import cv2
@@ -100,8 +39,8 @@ try:
     import aiosqlite
     from kokoro import KPipeline
 except ImportError:
-    print("\n[2/7] 🧠 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
-    subprocess.run("pip install --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
+    print("  📥 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
+    subprocess.run("pip install -q --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
     import torch
     import cv2
     import numpy as np
@@ -110,7 +49,7 @@ except ImportError:
     import aiosqlite
     from kokoro import KPipeline
 
-print(f"\n🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
+print(f"🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
 for i in range(torch.cuda.device_count()):
     props = torch.cuda.get_device_properties(i)
     print(f"  • GPU {i}: {props.name} ({props.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
@@ -118,21 +57,25 @@ for i in range(torch.cuda.device_count()):
 # ==============================================================================
 # CONFIGURACIÓN DEL SERVIDOR DE AUDIO VIRTUAL (PULSEAUDIO MIXER)
 # ==============================================================================
-print("\n[3/7] 🔊 Configurando Mezclador de Audio Virtual (Juego + Voz IA Waifu)...", flush=True)
+print("\n======================================================================", flush=True)
+print("🌸 [2/5] 🔊 CONFIGURANDO MEZCLADOR DE AUDIO VIRTUAL (PULSEAUDIO)...", flush=True)
+print("======================================================================", flush=True)
 subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
 subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink sink_properties=device.description=VirtualSink 2>/dev/null || true", shell=True)
 subprocess.run("pactl set-default-sink VirtualSink 2>/dev/null || true", shell=True)
-print("  [✓] Tarjeta de Audio Virtual 'VirtualSink' activa para mezcla de stream.", flush=True)
+print("  ⚡ [✓] Tarjeta de Audio Virtual 'VirtualSink' activa para mezcla de stream.", flush=True)
 
 # ==============================================================================
 # CARGA DE VOZ NEURONAL KOKORO EN GPU 1 (0ms LATENCIA)
 # ==============================================================================
-print("\n[4/7] 🧠 Cargando Voz Neuronal Kokoro en GPU 1...", flush=True)
+print("\n======================================================================", flush=True)
+print("🌸 [3/5] 🧠 CARGANDO VOZ NEURONAL KOKORO EN GPU 1...", flush=True)
+print("======================================================================", flush=True)
 voice_pipeline = None
 try:
     kokoro_device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
     voice_pipeline = KPipeline(lang_code='e', device=kokoro_device)
-    print(f"  [✓] Kokoro TTS activo en {kokoro_device} (Español Femenino 'ef_dora').", flush=True)
+    print(f"  ⚡ [✓] Kokoro TTS activo en {kokoro_device} (Español Femenino 'ef_dora').", flush=True)
 except Exception as e:
     print(f"  [⚠️] Fallback CPU para Kokoro: {e}", flush=True)
     voice_pipeline = KPipeline(lang_code='e', device='cpu')
@@ -162,7 +105,9 @@ def sintetizar_e_inyectar_audio(texto: str, speed: float = 1.0, pitch: int = 0):
 # ==============================================================================
 # CHROME REMOTE DESKTOP CON AUTO-PERSISTENCIA A GITHUB
 # ==============================================================================
-print("\n[5/7] 🖥️ Configurando Google Chrome Remote Desktop (XFCE4)...", flush=True)
+print("\n======================================================================", flush=True)
+print("🌸 [4/5] 🖥️ CONFIGURANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
+print("======================================================================", flush=True)
 CRD_BACKUP_TAR = BASE_DIR / "crd_session.tar.gz"
 CRD_CONFIG_DIR = Path.home() / ".config" / "chrome-remote-desktop"
 
@@ -235,7 +180,9 @@ print("  ⚡ [✓] Servicio Chrome Remote Desktop iniciado en el puerto virtual.
 # ==============================================================================
 # MOTOR DE VISIÓN Y COMENTARIOS EN VIVO (ESTILO NEURO-SAMA EN GPU 1)
 # ==============================================================================
-print("\n[6/7] 🎮 Iniciando Motor de Visión y Comentarista Gamer (Neuro-sama Mode)...", flush=True)
+print("\n======================================================================", flush=True)
+print("🌸 [5/5] 🎮 INICIANDO MOTOR DE VISIÓN & COMENTARISTA GAMER (NEURO-SAMA)...", flush=True)
+print("======================================================================", flush=True)
 from config import NVIDIA_API_KEYS, KICK_STREAM_KEY, KICK_RTMP_URL
 from personality import PersonalityManager
 
@@ -325,7 +272,6 @@ threading.Thread(target=vision_commentary_worker, daemon=True).start()
 # ==============================================================================
 # TRANSMISIÓN EN VIVO A KICK (60 FPS NVENC)
 # ==============================================================================
-print("\n[7/7] 🔴 Configurando Transmisor Kick Live a 60 FPS...", flush=True)
 def kick_live_streamer():
     if not KICK_STREAM_KEY or KICK_STREAM_KEY == "tu_stream_key_de_kick_aqui":
         return
