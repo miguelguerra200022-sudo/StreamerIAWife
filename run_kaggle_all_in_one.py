@@ -693,7 +693,8 @@ async def init_services():
     cloud_manager.set_vision_callback(coordinator.handle_vision_reaction)
 
     twitch_bot = TwitchChatBot(message_handler_callback=coordinator.handle_incoming_message)
-    asyncio.create_task(twitch_bot.start())
+    if twitch_bot.active:
+        asyncio.create_task(twitch_bot.start())
 
 def run_uvicorn():
     config = uvicorn.Config(

@@ -23,6 +23,13 @@ class TwitchChatBot(BaseBot):
             self.active = False
             print("[ℹ️] Twitch Bot: No se detectaron credenciales OAuth en .env. Modo pasivo/manual activo.")
 
+    async def start(self):
+        if self.active and hasattr(super(), "start"):
+            await super().start()
+        else:
+            while True:
+                await asyncio.sleep(3600)
+
     async def event_ready(self):
         print(f"[🎮 Twitch Bot] Conectado exitosamente como {self.nick} en #{TWITCH_CHANNEL}")
 
