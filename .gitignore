@@ -6,3 +6,4 @@ __pycache__/
 .env
 Nvidia_APIs.env
 .ipynb_checkpoints/
+venv/
