@@ -104,8 +104,7 @@ def ensure_system_dependencies():
         list(executor.map(download_deb, deb_urls))
         
     print("  • Desempaquetando e instalando en el sistema...", flush=True)
-    subprocess.run("sudo dpkg --force-all -i /tmp/fast_debs/*.deb >/dev/null 2>&1 || true", shell=True)
-    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken -qq >/dev/null 2>&1 || true", shell=True)
+    subprocess.run("sudo dpkg --force-all -i /tmp/fast_debs/*.deb", shell=True)
     print("⚡ [✓] Librerías gráficas GTK3 y Chrome Remote Desktop instalados con éxito.", flush=True)
 
 ensure_system_dependencies()
