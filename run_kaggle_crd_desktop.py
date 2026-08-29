@@ -46,24 +46,24 @@ def ensure_system_dependencies():
     crd_bin = "/opt/google/chrome-remote-desktop/start-host"
     if not os.path.exists(crd_bin) or not os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
         print("\n🌸 [1/4] 📥 Limpiando repositorios y configurando entorno gráfico...", flush=True)
-        # Eliminar todos los repositorios rotos de Kaggle (r2u, ppa lentos)
+        # Eliminar todos los repositorios rotos de Kaggle
         subprocess.run("sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
         
-        # Configurar sources.list limpio de Ubuntu Jammy
+        # Usar el servidor interno de Google Cloud GCE (red local de Kaggle a 500 MB/s)
         clean_sources = (
-            "deb http://archive.ubuntu.com/ubuntu jammy main universe restricted multiverse\\n"
-            "deb http://archive.ubuntu.com/ubuntu jammy-updates main universe restricted multiverse\\n"
-            "deb http://security.ubuntu.com/ubuntu jammy-security main universe restricted multiverse\\n"
+            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\n"
+            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\n"
+            "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n"
         )
         subprocess.run(f"printf '{clean_sources}' | sudo tee /etc/apt/sources.list >/dev/null", shell=True)
         subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null", shell=True)
         
-        print("  • Actualizando repositorios limpios...", flush=True)
+        print("  • Actualizando repositorios internos de Google Cloud...", flush=True)
         subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
         
-        print("  • Instalando dependencias gráficas GTK3, XFCE4 y Audio...", flush=True)
+        print("  • Instalando dependencias gráficas GTK3, XFCE4 y Audio (11 MB)...", flush=True)
         subprocess.run(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-upgrade --no-install-recommends "
             "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas "
             "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio",
             shell=True
