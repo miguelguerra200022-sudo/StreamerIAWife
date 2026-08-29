@@ -43,16 +43,16 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def ensure_system_dependencies():
-    # Verificar si falta libgtk-3 (libgdk-3.so.0) o el ejecutable de CRD
     crd_bin = "/opt/google/chrome-remote-desktop/start-host"
     if not os.path.exists(crd_bin) or not os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
         print("\n🌸 [1/4] 📥 Instalando librerías gráficas GTK3, XFCE4 y Google Remote Desktop...", flush=True)
         subprocess.run(
-            "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-            "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
-            "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99force >/dev/null; "
+            "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
+            "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
+            "sudo sed -i 's|http://mirrors.edge.kernel.org/ubuntu/|http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
+            "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\nAcquire::http::Pipeline-Depth \"0\";\\n' | sudo tee /etc/apt/apt.conf.d/99force >/dev/null; "
             "sudo apt-get update -qq; "
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-upgrade --no-install-recommends "
             "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas "
             "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio; "
             "wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb; "
