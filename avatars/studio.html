@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="es" class="notranslate" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LinuWaifu SOTA Master Studio Pro</title>
+    <style>
+        :root {
+            /* 🌌 Paleta Cyberpunk Glassmorphism */
+            --surface-void: #07090e;
+            --surface-base: #0d121f;
+            --surface-card: rgba(16, 22, 38, 0.72);
+            --surface-active: #1c2742;
+            --glass-specular: rgba(255, 255, 255, 0.12);
+
+            /* ⚡ Acentos Neón */
+            --neon-cyan: #00ffc8;
+            --neon-cyan-glow: rgba(0, 255, 200, 0.45);
+            --neon-purple: #9d4edd;
+            --neon-purple-glow: rgba(157, 78, 221, 0.45);
+            --neon-magenta: #ff2a85;
+            --neon-magenta-glow: rgba(255, 42, 133, 0.45);
+
+            /* 📊 Estados */
+            --status-live: #ff3366;
+            --status-warning: #ffb703;
+            --status-success: #2ecc71;
+
+            /* 📝 Texto y Bordes */
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-neon: rgba(0, 255, 200, 0.35);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--surface-void);
+            background-image: radial-gradient(circle at 50% 0%, #151c33 0%, #07090e 75%);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+            padding: 8px;
+            user-select: none;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* 👑 HEADER CON BORDE GRADIENTE ROTATIVO */
+        @property --gradient-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(rgba(13, 18, 31, 0.96), rgba(13, 18, 31, 0.96)) padding-box,
+                        conic-gradient(from var(--gradient-angle), var(--neon-cyan), var(--neon-purple), var(--neon-magenta), var(--neon-cyan)) border-box;
+            border: 1.5px solid transparent;
+            border-radius: 14px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            backdrop-filter: blur(16px);
+            animation: rotateGradient 6s linear infinite;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        @keyframes rotateGradient {
+            to { --gradient-angle: 360deg; }
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--neon-cyan);
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--status-success);
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--status-success);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* 📊 HUD DE TELEMETRÍA ULTRA-COMPACTO */
+        .telemetry-hud {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .telemetry-card {
+            background: var(--surface-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-neon);
+            border-radius: 10px;
+            padding: 6px 4px;
+            text-align: center;
+            box-shadow: inset 0 1px 1px var(--glass-specular);
+        }
+
+        .telemetry-val {
+            font-size: 13px;
+            font-weight: 800;
+            font-family: monospace;
+            color: var(--neon-cyan);
+        }
+
+        .telemetry-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 1px;
+        }
+
+        /* 📺 CONTENEDOR DE PANTALLA EN VIVO */
+        .video-monitor-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 14px;
+            border: 2px solid var(--neon-cyan);
+            overflow: hidden;
+            box-shadow: 0 6px 25px rgba(0, 255, 200, 0.25);
+            margin-bottom: 6px;
+        }
+
+        #direct-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #0b0e17;
+        }
+
+        .video-monitor-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        .video-touch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            z-index: 10;
+            touch-action: none !important;
+        }
+
+        /* ⛶ FULLSCREEN LANDSCAPE MODE */
+        .video-monitor-box:fullscreen, .video-monitor-box:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            border: none !important;
+            background: #000 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 🎛️ FLOATING HUD EN PANTALLA COMPLETA */
+        .fullscreen-hud {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 50;
+            display: none;
+            gap: 8px;
+        }
+
+        .video-monitor-box:fullscreen .fullscreen-hud,
+        .video-monitor-box:-webkit-full-screen .fullscreen-hud {
+            display: flex;
+        }
+
+        .btn-hud-float {
+            background: rgba(13, 18, 31, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--neon-cyan);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-hud-float:active {
+            background: var(--neon-cyan);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        /* ⌨️ FLOATING KEYBOARD MODAL EN PANTALLA COMPLETA */
+        .floating-keyboard-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid var(--neon-cyan);
+            padding: 12px;
+            z-index: 60;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .floating-keyboard-drawer.open {
+            display: flex;
+        }
+
+        .monitor-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 6px;
+            background: rgba(20, 26, 41, 0.85);
+            border: 1px solid rgba(0, 255, 200, 0.25);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 255, 200, 0.2), rgba(0, 180, 216, 0.4));
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 255, 200, 0.3);
+        }
+
+        .monitor-overlay-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 6px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .btn-pill {
+            background: rgba(30, 38, 56, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #eee;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-pill:active {
+            background: var(--neon-cyan);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .btn-pill.btn-pip {
+            background: linear-gradient(135deg, rgba(157, 78, 221, 0.3), rgba(0, 255, 200, 0.3));
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .btn-pill.btn-fullscreen {
+            background: linear-gradient(135deg, rgba(0, 255, 200, 0.3), rgba(0, 180, 216, 0.4));
+            border-color: var(--neon-cyan);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+        }
+
+        /* ⚡ QUICK ACTION DECK (ZONA DEL PULGAR) */
+        .quick-deck {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .deck-btn {
+            padding: 14px 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #fff;
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .deck-btn:active {
+            transform: scale(0.95) translateY(1px);
+        }
+
+        .deck-ptt {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .deck-ptt.active {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            box-shadow: 0 0 25px rgba(46, 204, 113, 0.8);
+            transform: scale(0.98);
+        }
+
+        .deck-vision {
+            background: linear-gradient(135deg, #9d4edd, #7b2cbf);
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.4);
+        }
+
+        .deck-pip {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            box-shadow: 0 4px 15px rgba(0, 180, 216, 0.4);
+        }
+
+        .deck-ai {
+            background: linear-gradient(135deg, #2ecc71, #1abc9c);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        .deck-ai.off {
+            background: linear-gradient(135deg, #7f8c8d, #34495e);
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        /* 📁 ACCORDION CARDS CON ANIMACIÓN CSS GRID */
+        .accordion-item {
+            background: var(--surface-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px var(--glass-specular);
+        }
+
+        .accordion-item.open {
+            border-color: var(--border-neon);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(0, 255, 200, 0.03);
+        }
+
+        .accordion-header {
+            width: 100%;
+            padding: 12px 14px;
+            background: transparent;
+            border: none;
+            color: var(--neon-cyan);
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .accordion-header .chevron {
+            font-size: 11px;
+            color: var(--text-secondary);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .accordion-item.open .accordion-header .chevron {
+            transform: rotate(180deg);
+            color: var(--neon-cyan);
+        }
+
+        .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .accordion-item.open .accordion-content {
+            grid-template-rows: 1fr;
+        }
+
+        .accordion-body {
+            overflow: hidden;
+            padding: 0 12px 12px 12px;
+        }
+
+        /* 🖱️ SUPER TRACKPAD CON SCROLL LATERAL */
+        .trackpad-container {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .trackpad-box {
+            position: relative;
+            flex: 1;
+            height: 210px;
+            background: radial-gradient(circle at center, #1b243d 0%, #0d121f 100%);
+            border-radius: 12px;
+            border: 2px solid rgba(0, 255, 200, 0.5);
+            overflow: hidden;
+            cursor: grab;
+            touch-action: none !important;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+        }
+
+        .trackpad-box:active {
+            border-color: var(--neon-cyan);
+            background: #141b30;
+        }
+
+        .trackpad-scroll-strip {
+            width: 44px;
+            height: 210px;
+            background: linear-gradient(180deg, #1b233a 0%, #0d121f 100%);
+            border: 2px solid rgba(0, 180, 216, 0.5);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: var(--neon-cyan);
+            font-size: 11px;
+            font-weight: bold;
+            touch-action: none !important;
+            cursor: ns-resize;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .trackpad-scroll-strip:active {
+            border-color: var(--neon-cyan);
+            background: #00b4d8;
+            color: #000;
+        }
+
+        .trackpad-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .sensitivity-pills {
+            display: flex;
+            gap: 4px;
+        }
+
+        .sens-btn {
+            background: rgba(20, 26, 41, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .sens-btn.active {
+            background: var(--neon-cyan);
+            color: #000;
+            border-color: var(--neon-cyan);
+        }
+
+        .btn-drag-toggle {
+            background: rgba(20, 26, 41, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-drag-toggle.active {
+            background: var(--status-live);
+            color: #fff;
+            border-color: var(--status-live);
+            box-shadow: 0 0 10px var(--status-live);
+        }
+
+        .trackpad-buttons {
+            display: grid;
+            grid-template-columns: 1fr 0.8fr 1fr;
+            gap: 6px;
+        }
+
+        .btn-click {
+            padding: 12px;
+            background: rgba(25, 34, 54, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-click:active {
+            background: var(--neon-cyan);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        /* ⌨️ VIRTUAL KEYPAD & NAVEGACIÓN PRO */
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .btn-key {
+            padding: 10px 4px;
+            background: rgba(24, 32, 51, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #eee;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .btn-key:active {
+            background: var(--neon-cyan);
+            color: #000;
+            transform: scale(0.92);
+        }
+
+        .btn-key.key-accent {
+            background: linear-gradient(135deg, rgba(0, 255, 200, 0.25), rgba(0, 180, 216, 0.4));
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .btn-key.key-accent:active {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+
+        .dpad-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 160px;
+            margin: 0 auto 8px auto;
+        }
+
+        .nav-input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .nav-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(10, 14, 26, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .nav-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+        }
+
+        .btn-nav {
+            padding: 10px 14px;
+            background: linear-gradient(135deg, var(--neon-cyan), #00b4d8);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .btn-nav:active {
+            transform: scale(0.95);
+        }
+
+        /* 🎙️ MODULADOR DE VOZ */
+        .voice-presets-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .voice-preset-btn {
+            padding: 10px;
+            background: rgba(22, 30, 48, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .voice-preset-btn.active {
+            background: linear-gradient(135deg, rgba(255, 42, 133, 0.3), rgba(157, 78, 221, 0.4));
+            border-color: var(--neon-magenta);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 42, 133, 0.4);
+        }
+
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .slider-range {
+            width: 100%;
+            accent-color: var(--neon-cyan);
+            cursor: pointer;
+        }
+
+        /* 🕹️ SOUNDBOARD & GESTOS */
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .btn-gesture {
+            padding: 12px 6px;
+            background: rgba(22, 30, 48, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-gesture:active {
+            background: var(--neon-purple);
+            transform: scale(0.95);
+        }
+
+        .btn-gesture span {
+            font-size: 18px;
+        }
+
+        /* ⚙️ SWITCH TOGGLES */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--neon-cyan);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: #000;
+        }
+
+        #camera-preview {
+            width: 100%;
+            max-height: 160px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-top: 8px;
+            border: 1px solid var(--border-neon);
+            display: none;
+        }
+
+        .live-console {
+            background: #05070a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #2ecc71;
+            height: 110px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+    </style>
+
+    <!-- Librerías de MediaPipe y Kalidokit para Face Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.umd.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <!-- 👑 HEADER PRINCIPAL -->
+    <div class="header">
+        <div class="title">
+            <span class="status-dot" id="status-dot"></span>
+            <span>LINUWAIFU STUDIO PRO</span>
+        </div>
+        <div style="font-size: 11px; font-weight: 700; color: var(--neon-cyan);" id="connection-status">
+            Conectando...
+        </div>
+    </div>
+
+    <!-- 📊 HUD DE TELEMETRÍA ULTRA-RÁPIDO -->
+    <div class="telemetry-hud">
+        <div class="telemetry-card">
+            <div class="telemetry-val" id="tele-fps">-- FPS</div>
+            <div class="telemetry-label">Video Live</div>
+        </div>
+        <div class="telemetry-card">
+            <div class="telemetry-val" id="tele-ping">-- ms</div>
+            <div class="telemetry-label">Ping Cloud</div>
+        </div>
+        <div class="telemetry-card">
+            <div class="telemetry-val" id="tele-voice">-- ms</div>
+            <div class="telemetry-label">Voz RTT</div>
+        </div>
+        <div class="telemetry-card">
+            <div class="telemetry-val" id="tele-quality" style="color:#2ecc71;">Q65</div>
+            <div class="telemetry-label">Calidad</div>
+        </div>
+        <div class="telemetry-card">
+            <div class="telemetry-val" id="tele-mode" style="color:var(--neon-purple);">DUAL</div>
+            <div class="telemetry-label">GPU Modo</div>
+        </div>
+    </div>
+
+    <!-- 📺 MONITOR DE PANTALLA PRINCIPAL (16:9 HD CON SOPORTE GESTOS MULTITÁCTILES) -->
+    <div class="video-monitor-box" id="video-box">
+        <canvas id="direct-canvas" width="854" height="480"></canvas>
+        <iframe class="video-monitor-iframe" id="stream-player" src="https://player.kick.com/linuwaifu?muted=true&autoplay=true" allowfullscreen="true"></iframe>
+        
+        <!-- Capa Multitáctil Interactiva (1 dedo tap, 1 dedo drag, 2 dedos tap derecho, 2 dedos scroll) -->
+        <div class="video-touch-overlay" id="video-touch"></div>
+        
+        <!-- Elemento de Video Invisible para Picture-in-Picture -->
+        <video id="pip-video" style="display:none;" muted playsinline></video>
+
+        <!-- 🎛️ HUD FLOTANTE PARA PANTALLA COMPLETA HORIZONTAL -->
+        <div class="fullscreen-hud" id="fullscreen-hud">
+            <button class="btn-hud-float" onclick="toggleFloatingKeyboard()">⌨️ TECLADO</button>
+            <button class="btn-hud-float" onclick="toggleFloatingVoiceModal()">🎙️ VOZ</button>
+            <button class="btn-hud-float" id="btn-fullscreen-ptt" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🎙️ HABLAR</button>
+            <button class="btn-hud-float" onclick="exitLandscapeFullscreen()" style="border-color:#ff3366;">✕ SALIR</button>
+        </div>
+
+        <!-- ⌨️ TECLADO FLOTANTE DENTRO DE PANTALLA COMPLETA -->
+        <div class="floating-keyboard-drawer" id="floating-keyboard-drawer">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:bold; color:var(--neon-cyan);">⌨️ TECLADO REMOTO HORIZONTAL</span>
+                <button class="btn-pill" style="padding:2px 8px;" onclick="toggleFloatingKeyboard()">✕ Cerrar</button>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <input type="text" class="nav-input" id="fs-text-input" placeholder="Escribe para enviar a Chrome / Desktop...">
+                <button class="btn-nav" id="btn-fs-send-enter">ENVIAR ↵</button>
+            </div>
+            <div style="display:flex; gap:4px; overflow-x:auto;">
+                <button class="btn-key key-accent" onclick="sendKey('ctrl+l')">Ctrl+L</button>
+                <button class="btn-key key-accent" onclick="sendKey('ctrl+t')">Ctrl+T</button>
+                <button class="btn-key key-accent" onclick="sendKey('ctrl+w')">Ctrl+W</button>
+                <button class="btn-key" onclick="sendKey('F5')">🔄 F5</button>
+                <button class="btn-key" onclick="sendKey('BackSpace')">⌫ Borrar</button>
+                <button class="btn-key" onclick="sendKey('Tab')">⇥ Tab</button>
+                <button class="btn-key" onclick="sendKey('Escape')">⎋ Esc</button>
+                <button class="btn-key" onclick="sendKey('Page_Up')">⏫ Subir</button>
+                <button class="btn-key" onclick="sendKey('Page_Down')">⏬ Bajar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas de Modo de Monitor -->
+    <div class="monitor-tabs">
+        <div class="tab-btn active" id="tab-direct" onclick="switchMonitorMode('direct')">⚡ Monitor Directo (Baja Latencia)</div>
+        <div class="tab-btn" id="tab-kick" onclick="switchMonitorMode('kick')">🔴 Transmisión Kick (Emisión Final)</div>
+    </div>
+
+    <!-- Barra de Controles Rápidos del Monitor -->
+    <div class="monitor-overlay-bar">
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <button class="btn-pill btn-fullscreen" onclick="enterLandscapeFullscreen()">⛶ PANTALLA COMPLETA</button>
+            <button class="btn-pill btn-pip" onclick="togglePictureInPicture()">🪟 Ventana Flotante (PiP)</button>
+        </div>
+        <div style="display: flex; gap: 4px;">
+            <button class="btn-pill" onclick="unmuteKick()">🔊 Desmutear Kick</button>
+            <button class="btn-pill" onclick="reloadPlayer()">🔄 Refrescar</button>
+        </div>
+    </div>
+
+    <!-- ⚡ QUICK ACTION DECK (ZONA DEL PULGAR) -->
+    <div class="quick-deck">
+        <button class="deck-btn deck-ptt" id="ptt-btn">
+            <span style="font-size: 18px;">🎙️</span>
+            <span id="ptt-text">HABLAR</span>
+        </button>
+        <button class="deck-btn deck-vision" onclick="triggerVisionReaction()">
+            <span style="font-size: 18px;">👀</span>
+            <span>VISIÓN</span>
+        </button>
+        <button class="deck-btn deck-pip" onclick="enterLandscapeFullscreen()">
+            <span style="font-size: 18px;">⛶</span>
+            <span>PANTALLA</span>
+        </button>
+        <button class="deck-btn deck-ai" id="deck-ai-btn" onclick="toggleAIFromDeck()">
+            <span style="font-size: 18px;">🤖</span>
+            <span id="deck-ai-text">IA: ON</span>
+        </button>
+    </div>
+
+    <!-- 📁 1. ACCORDION: MODULADOR DE VOZ EN TIEMPO REAL -->
+    <div class="accordion-item open" id="acc-voice-mod">
+        <button class="accordion-header" onclick="toggleAccordion('acc-voice-mod')">
+            <span>🎙️ Modulador de Voz & Pitch Shifter</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="voice-presets-grid">
+                    <button class="voice-preset-btn active" id="vp-waifu" onclick="applyVoicePreset('waifu')">🌸 Waifu Anime (Aguda)</button>
+                    <button class="voice-preset-btn" id="vp-sweet" onclick="applyVoicePreset('sweet')">🎀 LinuWaifu (Dulce)</button>
+                    <button class="voice-preset-btn" id="vp-tsundere" onclick="applyVoicePreset('tsundere')">💜 Tsundere (Picante)</button>
+                    <button class="voice-preset-btn" id="vp-cyber" onclick="applyVoicePreset('cyber')">🤖 Cyber Asistente</button>
+                </div>
+
+                <div class="slider-row">
+                    <div class="slider-header">
+                        <span>⚡ Velocidad de Habla</span>
+                        <span id="val-voice-speed">1.12x</span>
+                    </div>
+                    <input type="range" class="slider-range" id="slider-voice-speed" min="0.7" max="1.5" step="0.05" value="1.12" oninput="updateVoiceSliders()">
+                </div>
+
+                <div class="slider-row">
+                    <div class="slider-header">
+                        <span>🎵 Tono / Pitch</span>
+                        <span id="val-voice-pitch">+15% (Waifu)</span>
+                    </div>
+                    <input type="range" class="slider-range" id="slider-voice-pitch" min="-20" max="30" step="1" value="15" oninput="updateVoiceSliders()">
+                </div>
+
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <input type="text" class="nav-input" id="text-speak" placeholder="Escribe lo que LinuWaifu dirá con este tono...">
+                    <button class="btn-nav" id="btn-speak-text">🗣️ HABLAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 2. ACCORDION: SUPER TRACKPAD DE PRECISIÓN -->
+    <div class="accordion-item" id="acc-trackpad">
+        <button class="accordion-header" onclick="toggleAccordion('acc-trackpad')">
+            <span>🖱️ Super Trackpad de Precisión</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="trackpad-options">
+                    <div class="sensitivity-pills">
+                        <span style="line-height:22px; margin-right:4px;">Sensibilidad:</span>
+                        <button class="sens-btn" onclick="setSensitivity(0.8, this)">0.8x</button>
+                        <button class="sens-btn active" onclick="setSensitivity(1.6, this)">1.6x</button>
+                        <button class="sens-btn" onclick="setSensitivity(2.6, this)">2.6x</button>
+                    </div>
+                    <button class="btn-drag-toggle" id="btn-drag-mode" onclick="toggleDragMode()">✋ Arrastrar: OFF</button>
+                </div>
+
+                <div class="trackpad-container">
+                    <div class="trackpad-box" id="trackpad"></div>
+                    <div class="trackpad-scroll-strip" id="trackpad-scroll">
+                        <span>▲</span>
+                        <span style="writing-mode: vertical-rl; letter-spacing: 2px;">SCROLL</span>
+                        <span>▼</span>
+                    </div>
+                </div>
+
+                <div class="trackpad-buttons">
+                    <button class="btn-click" onclick="sendMouseClick('left')">🖱️ Clic Izquierdo</button>
+                    <button class="btn-click" onclick="sendMouseClick('middle')">⚙️ Centro</button>
+                    <button class="btn-click" onclick="sendMouseClick('right')">📑 Clic Derecho</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 3. ACCORDION: NAVEGADOR & DIRECCIÓN WEB -->
+    <div class="accordion-item" id="acc-nav">
+        <button class="accordion-header" onclick="toggleAccordion('acc-nav')">
+            <span>🌐 Navegador Remoto & Sitios Web</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="nav-input-row">
+                    <input type="text" class="nav-input" id="nav-url" placeholder="URL o búsqueda (ej: youtube, kick, google)...">
+                    <button class="btn-nav" id="btn-go">IR ➔</button>
+                </div>
+                <div style="display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px;">
+                    <button class="btn-pill" onclick="sendDirectNav('https://www.google.com')">🔍 Google</button>
+                    <button class="btn-pill" onclick="sendDirectNav('https://www.youtube.com')">▶️ YouTube</button>
+                    <button class="btn-pill" onclick="sendDirectNav('https://kick.com')">🟢 Kick</button>
+                    <button class="btn-pill" onclick="sendDirectNav('https://twitch.tv')">🟣 Twitch</button>
+                    <button class="btn-pill" onclick="sendDirectNav('https://reddit.com')">👽 Reddit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 4. ACCORDION: TECLADO VIRTUAL PRO -->
+    <div class="accordion-item" id="acc-keypad">
+        <button class="accordion-header" onclick="toggleAccordion('acc-keypad')">
+            <span>⌨️ Teclado Virtual & Atajos de Navegador</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="nav-input-row">
+                    <input type="text" class="nav-input" id="remote-text" placeholder="Escribe texto para la PC...">
+                    <button class="btn-nav" id="btn-send-text">ESCRIBIR</button>
+                    <button class="btn-nav" style="background:#2ecc71;" id="btn-send-enter">↵ ENTER</button>
+                </div>
+
+                <!-- Botones de Atajos de Navegador -->
+                <div class="keypad-grid">
+                    <button class="btn-key key-accent" onclick="sendKey('ctrl+l')">🌐 Barra URL</button>
+                    <button class="btn-key key-accent" onclick="sendKey('ctrl+t')">➕ Nueva Tab</button>
+                    <button class="btn-key key-accent" onclick="sendKey('ctrl+w')">✖️ Cerrar Tab</button>
+                    <button class="btn-key" onclick="sendKey('F5')">🔄 Recargar</button>
+                    <button class="btn-key" onclick="sendKey('Return')">↵ Enter</button>
+                    <button class="btn-key" onclick="sendKey('BackSpace')">⌫ Borrar</button>
+                    <button class="btn-key" onclick="sendKey('Tab')">⇥ Tab</button>
+                    <button class="btn-key" onclick="sendKey('Escape')">⎋ Esc</button>
+                </div>
+
+                <!-- D-Pad Flechas de Navegación -->
+                <div class="dpad-container">
+                    <div></div>
+                    <button class="btn-key" onclick="sendKey('Up')">⬆️</button>
+                    <div></div>
+                    <button class="btn-key" onclick="sendKey('Left')">⬅️</button>
+                    <button class="btn-key" onclick="sendKey('Down')">⬇️</button>
+                    <button class="btn-key" onclick="sendKey('Right')">➡️</button>
+                </div>
+
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn-key" style="flex:1;" onclick="sendKey('Page_Up')">⏫ Subir Página</button>
+                    <button class="btn-key" style="flex:1;" onclick="sendKey('space')">␣ Espacio</button>
+                    <button class="btn-key" style="flex:1;" onclick="sendKey('Page_Down')">⏬ Bajar Página</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 5. ACCORDION: CEREBRO AUTÓNOMO (NVIDIA NIM) -->
+    <div class="accordion-item" id="acc-ai">
+        <button class="accordion-header" onclick="toggleAccordion('acc-ai')">
+            <span>🤖 Cerebro IA Autónomo (Llama 3.3)</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" class="nav-input" id="ai-question" placeholder="Escribe un tema o dilema para que la IA hable...">
+                    <button class="btn-nav" id="btn-ask-ai">🧠 PREGUNTAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 6. ACCORDION: SOUNDBOARD ESTÉREO -->
+    <div class="accordion-item" id="acc-sounds">
+        <button class="accordion-header" onclick="toggleAccordion('acc-sounds')">
+            <span>🔊 Soundboard de Efectos de Sonido</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="gesture-grid">
+                    <button class="btn-gesture" onclick="sendSound('applause')"><span>👏</span>Aplausos</button>
+                    <button class="btn-gesture" onclick="sendSound('drum')"><span>🥁</span>Ba Dum Tss</button>
+                    <button class="btn-gesture" onclick="sendSound('sparkle')"><span>✨</span>Anime Sparkle</button>
+                    <button class="btn-gesture" onclick="sendSound('vip_bell')"><span>🔔</span>Campana VIP</button>
+                    <button class="btn-gesture" onclick="sendSound('tada')"><span>🎉</span>Fanfarria</button>
+                    <button class="btn-gesture" onclick="sendSound('wow')"><span>😮</span>¡WOW!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 7. ACCORDION: FACE TRACKING FRONTAL -->
+    <div class="accordion-item" id="acc-face">
+        <button class="accordion-header" onclick="toggleAccordion('acc-face')">
+            <span>📷 Face Tracking Frontal (Cámara)</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="toggle-row">
+                    <div>
+                        <div style="font-weight: bold; font-size: 13px;">Seguimiento Facial en Vivo</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Imita tus ojos, boca y giros de cabeza</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-camera">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <video id="camera-preview" autoplay playsinline muted></video>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 8. ACCORDION: BOTONERA DE GESTOS 3D -->
+    <div class="accordion-item" id="acc-gestures">
+        <button class="accordion-header" onclick="toggleAccordion('acc-gestures')">
+            <span>🕹️ Botonera de Gestos 3D</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="gesture-grid">
+                    <button class="btn-gesture" onclick="sendGesture('wave')"><span>👋</span>Saludar</button>
+                    <button class="btn-gesture" onclick="sendGesture('think')"><span>🤔</span>Pensar</button>
+                    <button class="btn-gesture" onclick="sendGesture('laugh')"><span>😂</span>Reírse</button>
+                    <button class="btn-gesture" onclick="sendGesture('gratitude')"><span>💖</span>VIP</button>
+                    <button class="btn-gesture" onclick="sendGesture('pout')"><span>😤</span>Tsundere</button>
+                    <button class="btn-gesture" onclick="sendGesture('explain')"><span>🗣️</span>Hablar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 9. ACCORDION: AJUSTES & OBSERVACIÓN VISUAL -->
+    <div class="accordion-item" id="acc-settings">
+        <button class="accordion-header" onclick="toggleAccordion('acc-settings')">
+            <span>⚙️ Ajustes de Autonomía & Visión</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="toggle-row" style="margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: bold; font-size: 13px;">🤖 Modo IA Automática 24/7</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Responder de forma autónoma al chat</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-ai" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <div>
+                        <div style="font-weight: bold; font-size: 13px;">👀 Observación Visual Periódica</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Comentar la pantalla cada 30 segundos</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-auto-vision">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📁 10. ACCORDION: MONITOR DE DIAGNÓSTICO EN VIVO -->
+    <div class="accordion-item" id="acc-console">
+        <button class="accordion-header" onclick="toggleAccordion('acc-console')">
+            <span>📡 Monitor de Conexión & Diagnóstico</span>
+            <span class="chevron">▼</span>
+        </button>
+        <div class="accordion-content">
+            <div class="accordion-body">
+                <div class="live-console" id="live-console">
+                    [Sistema] LinuWaifu Studio Pro Listo (854x480)...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================================
+        // 📳 MOTOR HÁPTICO MULTICAPA
+        // ==============================================================
+        const Haptic = {
+            light:    () => { if (navigator.vibrate) navigator.vibrate(15); },
+            medium:   () => { if (navigator.vibrate) navigator.vibrate(35); },
+            heavy:    () => { if (navigator.vibrate) navigator.vibrate(65); },
+            success:  () => { if (navigator.vibrate) navigator.vibrate([25, 40, 35]); },
+            warning:  () => { if (navigator.vibrate) navigator.vibrate([60, 50, 60]); },
+            error:    () => { if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 150]); }
+        };
+
+        const consoleEl = document.getElementById('live-console');
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            consoleEl.innerHTML = `[${time}] ${msg}<br>` + consoleEl.innerHTML;
+        }
+
+        // ==============================================================
+        // 📁 CONTROLADOR DE ACCORDIONS
+        // ==============================================================
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.toggle('open');
+                Haptic.light();
+            }
+        }
+
+        // ==============================================================
+        // 📊 SISTEMA DE TELEMETRÍA Y CONTADORES
+        // ==============================================================
+        let frameCount = 0;
+        let currentFps = 0;
+        let lastFpsTime = performance.now();
+        let pingStartTime = 0;
+        let lastPingVal = 0;
+        let lastVoiceSentTime = 0;
+        let lastVoiceRtt = 0;
+
+        function updateFpsCounter() {
+            const now = performance.now();
+            const elapsed = (now - lastFpsTime) / 1000;
+            if (elapsed >= 1.0) {
+                currentFps = Math.round(frameCount / elapsed);
+                document.getElementById('tele-fps').innerText = `${currentFps} FPS`;
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+            requestAnimationFrame(updateFpsCounter);
+        }
+        requestAnimationFrame(updateFpsCounter);
+
+        // ==============================================================
+        // 📺 MONITOR MODES & FULLSCREEN LANDSCAPE & PIP
+        // ==============================================================
+        function switchMonitorMode(mode) {
+            const direct = document.getElementById('direct-canvas');
+            const kick = document.getElementById('stream-player');
+            const tabDirect = document.getElementById('tab-direct');
+            const tabKick = document.getElementById('tab-kick');
+
+            if (mode === 'direct') {
+                direct.style.display = 'block';
+                kick.style.display = 'none';
+                tabDirect.classList.add('active');
+                tabKick.classList.remove('active');
+                log('⚡ Modo Directo activado.');
+                Haptic.light();
+            } else {
+                direct.style.display = 'none';
+                kick.style.display = 'block';
+                tabDirect.classList.remove('active');
+                tabKick.classList.add('active');
+                log('🔴 Vista Kick activada.');
+                Haptic.light();
+            }
+        }
+
+        function unmuteKick() {
+            const p = document.getElementById('stream-player');
+            p.src = 'https://player.kick.com/linuwaifu?muted=false&autoplay=true';
+            log('🔊 Desmuteando reproductor de Kick...');
+            Haptic.light();
+        }
+
+        function reloadPlayer() {
+            const p = document.getElementById('stream-player');
+            p.src = p.src;
+            log('🔄 Recargando pantalla de video...');
+            Haptic.medium();
+        }
+
+        // ⛶ MODO PANTALLA COMPLETA HORIZONTAL
+        async function enterLandscapeFullscreen() {
+            const box = document.getElementById('video-box');
+            try {
+                if (box.requestFullscreen) {
+                    await box.requestFullscreen();
+                } else if (box.webkitRequestFullscreen) {
+                    await box.webkitRequestFullscreen();
+                }
+
+                // Bloqueo de Orientación Horizontal (Landscape)
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        await screen.orientation.lock('landscape');
+                    } catch (e) {
+                        log('ℹ️ Giro de pantalla automático no permitido por el sistema.');
+                    }
+                }
+                log('⛶ Pantalla Completa Horizontal Activada.');
+                Haptic.heavy();
+            } catch (err) {
+                log('⚠️ Error entrando a pantalla completa: ' + err.message);
+            }
+        }
+
+        async function exitLandscapeFullscreen() {
+            try {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                }
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+                log('⛶ Salida de Pantalla Completa.');
+                Haptic.light();
+            } catch (err) {}
+        }
+
+        function toggleFloatingKeyboard() {
+            const drawer = document.getElementById('floating-keyboard-drawer');
+            drawer.classList.toggle('open');
+            Haptic.medium();
+        }
+
+        function toggleFloatingVoiceModal() {
+            toggleAccordion('acc-voice-mod');
+            const acc = document.getElementById('acc-voice-mod');
+            if (acc) acc.scrollIntoView({ behavior: 'smooth' });
+            Haptic.light();
+        }
+
+        async function togglePictureInPicture() {
+            try {
+                const canvas = document.getElementById('direct-canvas');
+                const pipVideo = document.getElementById('pip-video');
+                
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                    log('📺 Pantalla flotante minimizada.');
+                    Haptic.light();
+                } else {
+                    if (!pipVideo.srcObject) {
+                        const stream = canvas.captureStream(25);
+                        pipVideo.srcObject = stream;
+                        await pipVideo.play();
+                    }
+                    await pipVideo.requestPictureInPicture();
+                    log('📺 ¡Pantalla Flotante (PiP) iniciada con éxito!');
+                    Haptic.heavy();
+                }
+            } catch (err) {
+                log('ℹ️ PiP Nativo no disponible: ' + err.message);
+                Haptic.warning();
+            }
+        }
+
+        // ==============================================================
+        // 🚀 WEBSOCKET & RENDERIZADOR ROBUSTO (ARRAYBUFFER + BLOB)
+        // ==============================================================
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/cloud`;
+        let ws = null;
+
+        const directCanvas = document.getElementById('direct-canvas');
+        const ctx2d = directCanvas.getContext('2d', { alpha: false, desynchronized: true });
+
+        function renderJpegBlob(blob) {
+            if (window.createImageBitmap) {
+                createImageBitmap(blob).then(bitmap => {
+                    ctx2d.drawImage(bitmap, 0, 0, 854, 480);
+                    bitmap.close();
+                }).catch(() => {
+                    const img = new Image();
+                    img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                    img.src = URL.createObjectURL(blob);
+                });
+            } else {
+                const img = new Image();
+                img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                img.src = URL.createObjectURL(blob);
+            }
+        }
+
+        function connect() {
+            log(`Conectando WebSocket a ${wsUrl}...`);
+            ws = new WebSocket(wsUrl);
+            ws.binaryType = "arraybuffer";
+
+            ws.onopen = () => {
+                document.getElementById('status-dot').style.backgroundColor = '#2ecc71';
+                document.getElementById('connection-status').innerText = 'En Línea (854x480)';
+                log('✅ Enlace Binario Establecido.');
+                Haptic.success();
+                startPingInterval();
+            };
+            ws.onerror = (err) => {
+                log('⚠️ Error en conexión WebSocket.');
+            };
+            ws.onclose = () => {
+                document.getElementById('status-dot').style.backgroundColor = '#e74c3c';
+                document.getElementById('connection-status').innerText = 'Reconectando...';
+                log('❌ Desconectado. Reintentando en 3s...');
+                Haptic.error();
+                setTimeout(connect, 3000);
+            };
+            ws.onmessage = async (e) => {
+                try {
+                    // 1. RECEPTOR POLIMÓRFICO BINARIO (ARRAYBUFFER O BLOB)
+                    let rawBuffer = null;
+                    if (e.data instanceof ArrayBuffer) {
+                        rawBuffer = e.data;
+                    } else if (e.data instanceof Blob) {
+                        rawBuffer = await e.data.arrayBuffer();
+                    }
+
+                    if (rawBuffer && rawBuffer.byteLength > 1) {
+                        const view = new Uint8Array(rawBuffer);
+                        if (view[0] === 0x01) {
+                            const jpegBuffer = rawBuffer.slice(1);
+                            const blob = new Blob([jpegBuffer], { type: "image/jpeg" });
+                            renderJpegBlob(blob);
+                            frameCount++;
+
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                ws.send(JSON.stringify({ type: "frame_ack", ts: performance.now() }));
+                            }
+                            return;
+                        }
+                    }
+
+                    // 2. RECEPCIÓN DE TEXTO / JSON
+                    if (typeof e.data === 'string') {
+                        const data = JSON.parse(e.data);
+
+                        if (data.type === 'pong') {
+                            lastPingVal = Math.round(performance.now() - pingStartTime);
+                            document.getElementById('tele-ping').innerText = `${lastPingVal} ms`;
+                        }
+                        else if (data.type === 'telemetry_update' && data.quality) {
+                            const qEl = document.getElementById('tele-quality');
+                            qEl.innerText = `Q${data.quality}`;
+                            if (data.quality >= 65) qEl.style.color = '#2ecc71';
+                            else if (data.quality >= 50) qEl.style.color = '#f1c40f';
+                            else qEl.style.color = '#e74c3c';
+                        }
+                        else if (data.type === 'speech_chunk') {
+                            if (lastVoiceSentTime > 0) {
+                                lastVoiceRtt = Math.round(performance.now() - lastVoiceSentTime);
+                                document.getElementById('tele-voice').innerText = `${lastVoiceRtt} ms`;
+                                lastVoiceSentTime = 0;
+                            }
+                            log(`🗣️ LinuWaifu: "${data.text}"`);
+                            Haptic.success();
+                        }
+                    }
+                } catch(err){}
+            };
+        }
+        connect();
+
+        function startPingInterval() {
+            setInterval(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    pingStartTime = performance.now();
+                    ws.send(JSON.stringify({ type: "ping" }));
+                }
+            }, 2000);
+        }
+
+        function sendWS(data) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(data));
+                return true;
+            }
+            return false;
+        }
+
+        // ==============================================================
+        // 🎙️ MODULADOR DE VOZ EN TIEMPO REAL
+        // ==============================================================
+        let currentVoiceConfig = { speed: 1.12, pitch: 15, voice: 'ef_dora' };
+
+        function applyVoicePreset(preset) {
+            document.querySelectorAll('.voice-preset-btn').forEach(b => b.classList.remove('active'));
+            if (preset === 'waifu') {
+                document.getElementById('vp-waifu').classList.add('active');
+                currentVoiceConfig = { speed: 1.15, pitch: 15, voice: 'ef_dora' };
+            } else if (preset === 'sweet') {
+                document.getElementById('vp-sweet').classList.add('active');
+                currentVoiceConfig = { speed: 1.0, pitch: 0, voice: 'ef_dora' };
+            } else if (preset === 'tsundere') {
+                document.getElementById('vp-tsundere').classList.add('active');
+                currentVoiceConfig = { speed: 1.20, pitch: 8, voice: 'ef_dora' };
+            } else if (preset === 'cyber') {
+                document.getElementById('vp-cyber').classList.add('active');
+                currentVoiceConfig = { speed: 1.05, pitch: -5, voice: 'ef_dora' };
+            }
+
+            document.getElementById('slider-voice-speed').value = currentVoiceConfig.speed;
+            document.getElementById('slider-voice-pitch').value = currentVoiceConfig.pitch;
+            document.getElementById('val-voice-speed').innerText = `${currentVoiceConfig.speed}x`;
+            document.getElementById('val-voice-pitch').innerText = `${currentVoiceConfig.pitch > 0 ? '+' : ''}${currentVoiceConfig.pitch}%`;
+
+            sendWS({ type: "studio_command", action: "voice_config", ...currentVoiceConfig });
+            log(`🎙️ Preset de Voz aplicado: ${preset.toUpperCase()}`);
+            Haptic.medium();
+        }
+
+        function updateVoiceSliders() {
+            const speed = parseFloat(document.getElementById('slider-voice-speed').value);
+            const pitch = parseInt(document.getElementById('slider-voice-pitch').value);
+            
+            document.getElementById('val-voice-speed').innerText = `${speed}x`;
+            document.getElementById('val-voice-pitch').innerText = `${pitch > 0 ? '+' : ''}${pitch}%`;
+
+            currentVoiceConfig.speed = speed;
+            currentVoiceConfig.pitch = pitch;
+
+            sendWS({ type: "studio_command", action: "voice_config", ...currentVoiceConfig });
+        }
+
+        // ==============================================================
+        // 👆 MOTOR TÁCTIL RELATIVO TIPO LAPTOP TRACKPAD SOBRE EL VIDEO
+        // (1 Dedo = Mover Puntero / Tap = Clic Izquierdo | 2 Dedos Tap = Clic Derecho | 2 Dedos Drag = Scroll)
+        // ==============================================================
+        const videoTouch = document.getElementById('video-touch');
+        let prevScreenTouchX = null, prevScreenTouchY = null;
+        let touchStartTime = 0;
+        let touchMovedDistance = 0;
+        let touchFingerCount = 1;
+        let prevMultiScrollY = null;
+        let lastGestureMoveTime = 0;
+        let curX = 425;
+        let curY = 360;
+
+        videoTouch.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchStartTime = performance.now();
+            touchMovedDistance = 0;
+            touchFingerCount = e.touches.length;
+
+            if (e.touches.length === 1) {
+                prevScreenTouchX = e.touches[0].clientX;
+                prevScreenTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                prevMultiScrollY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            }
+        }, { passive: false });
+
+        videoTouch.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const now = performance.now();
+
+            // 1. DESPLAZAMIENTO CON 2 DEDOS (SCROLL VERTICAL)
+            if (e.touches.length === 2 && prevMultiScrollY !== null) {
+                const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const deltaY = currentY - prevMultiScrollY;
+                touchMovedDistance += Math.abs(deltaY);
+
+                if (Math.abs(deltaY) > 8 && now - lastGestureMoveTime > 35) {
+                    lastGestureMoveTime = now;
+                    const scrollDelta = deltaY > 0 ? -2 : 2;
+                    sendWS({ type: "studio_command", action: "mouse_scroll", delta: scrollDelta });
+                    prevMultiScrollY = currentY;
+                    Haptic.light();
+                }
+                return;
+            }
+
+            // 2. MOVIMIENTO RELATIVO CON 1 DEDO (COMO TRACKPAD DE LAPTOP)
+            if (e.touches.length === 1 && prevScreenTouchX !== null && prevScreenTouchY !== null) {
+                const clientX = e.touches[0].clientX;
+                const clientY = e.touches[0].clientY;
+
+                const deltaX = (clientX - prevScreenTouchX) * sensitivity;
+                const deltaY = (clientY - prevScreenTouchY) * sensitivity;
+                touchMovedDistance += Math.abs(deltaX) + Math.abs(deltaY);
+
+                prevScreenTouchX = clientX;
+                prevScreenTouchY = clientY;
+
+                curX = Math.max(0, Math.min(1280, curX + deltaX));
+                curY = Math.max(0, Math.min(720, curY + deltaY));
+
+                // Throttling a 33ms (~30 FPS) para respuesta instantánea sin colas
+                if (now - lastGestureMoveTime >= 33) {
+                    lastGestureMoveTime = now;
+                    sendWS({ type: "studio_command", action: "mouse_move_abs", px: Math.round(curX), py: Math.round(curY) });
+                }
+            }
+        }, { passive: false });
+
+        videoTouch.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const duration = performance.now() - touchStartTime;
+            prevScreenTouchX = null;
+            prevScreenTouchY = null;
+            prevMultiScrollY = null;
+
+            // Si el dedo no se desplazó mucho (< 18px de movimiento acumulado) y fue un tap rápido (< 320ms)
+            if (touchMovedDistance < 18 && duration < 320) {
+                if (touchFingerCount === 2) {
+                    // Clic Derecho en la posición actual del puntero
+                    sendMouseClick('right');
+                    log(`📑 Clic Derecho en (${Math.round(curX)}, ${Math.round(curY)})`);
+                    Haptic.heavy();
+                } else if (touchFingerCount === 1) {
+                    // Clic Izquierdo en la posición actual del puntero
+                    sendMouseClick('left');
+                    log(`👆 Clic Izquierdo en (${Math.round(curX)}, ${Math.round(curY)})`);
+                    Haptic.medium();
+                }
+            }
+        }, { passive: false });
+
+        // ==============================================================
+        // 🖱️ SUPER TRACKPAD OPTIMIZADO (30 FPS THROTTLED)
+        // ==============================================================
+        const trackpad = document.getElementById('trackpad');
+        const trackpadScroll = document.getElementById('trackpad-scroll');
+        let prevTouchX = null, prevTouchY = null;
+        let lastMoveTime = 0;
+        let sensitivity = 1.6;
+        let dragModeActive = false;
+        let lastTapTime = 0;
+
+        function setSensitivity(val, btn) {
+            sensitivity = val;
+            document.querySelectorAll('.sens-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            Haptic.light();
+            log(`⚡ Sensibilidad ajustada a ${val}x`);
+        }
+
+        function toggleDragMode() {
+            dragModeActive = !dragModeActive;
+            const btn = document.getElementById('btn-drag-mode');
+            if (dragModeActive) {
+                btn.classList.add('active');
+                btn.innerText = '✋ Arrastrar: ON';
+                sendWS({ type: "studio_command", action: "mouse_down", button: "left", px: Math.round(curX), py: Math.round(curY) });
+                log('✋ Modo Arrastrar ACTIVADO');
+                Haptic.heavy();
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = '✋ Arrastrar: OFF';
+                sendWS({ type: "studio_command", action: "mouse_up", button: "left", px: Math.round(curX), py: Math.round(curY) });
+                log('✋ Modo Arrastrar DESACTIVADO');
+                Haptic.light();
+            }
+        }
+
+        function handleTrackpadMove(e) {
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            if (prevTouchX === null || prevTouchY === null) {
+                prevTouchX = clientX;
+                prevTouchY = clientY;
+                return;
+            }
+
+            const deltaX = (clientX - prevTouchX) * sensitivity;
+            const deltaY = (clientY - prevTouchY) * sensitivity;
+
+            prevTouchX = clientX;
+            prevTouchY = clientY;
+
+            curX = Math.max(0, Math.min(1280, curX + deltaX));
+            curY = Math.max(0, Math.min(720, curY + deltaY));
+
+            const now = performance.now();
+            // Throttling a 33ms (~30 FPS) para respuesta instantánea sin colas
+            if (now - lastMoveTime >= 33) {
+                lastMoveTime = now;
+                sendWS({ type: "studio_command", action: "mouse_move_abs", px: Math.round(curX), py: Math.round(curY) });
+            }
+        }
+
+        function handleTrackpadEnd(e) {
+            prevTouchX = null;
+            prevTouchY = null;
+        }
+
+        trackpad.addEventListener('touchstart', (e) => {
+            prevTouchX = e.touches[0].clientX;
+            prevTouchY = e.touches[0].clientY;
+
+            const now = performance.now();
+            if (now - lastTapTime < 280) {
+                sendMouseClick('left');
+                sendMouseClick('left');
+                log('👆 Doble Clic en Trackpad');
+                Haptic.medium();
+            }
+            lastTapTime = now;
+        }, { passive: false });
+
+        trackpad.addEventListener('touchmove', handleTrackpadMove, { passive: false });
+        trackpad.addEventListener('touchend', handleTrackpadEnd, { passive: false });
+        trackpad.addEventListener('mousedown', (e) => { prevTouchX = e.clientX; prevTouchY = e.clientY; });
+        trackpad.addEventListener('mousemove', (e) => { if (e.buttons > 0) handleTrackpadMove(e); });
+        trackpad.addEventListener('mouseup', handleTrackpadEnd);
+
+        // Barra de Scroll Vertical dedicada
+        let prevScrollY = null;
+        function handleScrollMove(e) {
+            e.preventDefault();
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            if (prevScrollY === null) {
+                prevScrollY = clientY;
+                return;
+            }
+            const diff = clientY - prevScrollY;
+            if (Math.abs(diff) > 10) {
+                const scrollDelta = diff > 0 ? 2 : -2;
+                sendWS({ type: "studio_command", action: "mouse_scroll", delta: scrollDelta });
+                prevScrollY = clientY;
+                Haptic.light();
+            }
+        }
+
+        trackpadScroll.addEventListener('touchstart', (e) => { prevScrollY = e.touches[0].clientY; }, { passive: false });
+        trackpadScroll.addEventListener('touchmove', handleScrollMove, { passive: false });
+        trackpadScroll.addEventListener('touchend', () => { prevScrollY = null; }, { passive: false });
+
+        function sendMouseClick(btn) {
+            sendWS({ type: "studio_command", action: "mouse_click", button: btn, px: Math.round(curX), py: Math.round(curY) });
+            log(`🖱️ Clic ${btn} en (${Math.round(curX)}, ${Math.round(curY)})`);
+            Haptic.medium();
+        }
+
+        function sendKey(k) {
+            sendWS({ type: "studio_command", action: "key_press", key: k });
+            log(`⌨️ Tecla: ${k}`);
+            Haptic.light();
+        }
+
+        // ==============================================================
+        // ⌨️ ACCIONES DE TEXTO Y TECLADO
+        // ==============================================================
+        document.getElementById('btn-send-text').onclick = () => {
+            const val = document.getElementById('remote-text').value;
+            if (val) {
+                sendWS({ type: "studio_command", action: "type_text", text: val });
+                log(`⌨️ Escrito: "${val}"`);
+                document.getElementById('remote-text').value = '';
+                Haptic.medium();
+            }
+        };
+
+        document.getElementById('btn-send-enter').onclick = () => {
+            const val = document.getElementById('remote-text').value;
+            if (val) {
+                sendWS({ type: "studio_command", action: "type_text", text: val });
+                setTimeout(() => sendKey('Return'), 80);
+                log(`⌨️ Escrito + Enter: "${val}"`);
+                document.getElementById('remote-text').value = '';
+                Haptic.heavy();
+            } else {
+                sendKey('Return');
+            }
+        };
+
+        // Enviar texto desde el teclado flotante de pantalla completa
+        document.getElementById('btn-fs-send-enter').onclick = () => {
+            const val = document.getElementById('fs-text-input').value;
+            if (val) {
+                sendWS({ type: "studio_command", action: "type_text", text: val });
+                setTimeout(() => sendKey('Return'), 80);
+                log(`⌨️ Escrito (Fullscreen): "${val}"`);
+                document.getElementById('fs-text-input').value = '';
+                Haptic.heavy();
+            } else {
+                sendKey('Return');
+            }
+        };
+
+        document.getElementById('btn-speak-text').onclick = () => {
+            const val = document.getElementById('text-speak').value.trim();
+            if (val) {
+                lastVoiceSentTime = performance.now();
+                sendWS({ type: "studio_command", action: "voice_speak", text: val, ...currentVoiceConfig });
+                log(`🎙️ LinuWaifu hablará: "${val}"`);
+                document.getElementById('text-speak').value = '';
+                Haptic.medium();
+            }
+        };
+
+        document.getElementById('btn-ask-ai').onclick = () => {
+            const val = document.getElementById('ai-question').value.trim();
+            if (val) {
+                lastVoiceSentTime = performance.now();
+                sendWS({ type: "studio_command", action: "ask_ai", text: val });
+                log(`🧠 Pregunta enviada al Cerebro IA: "${val}"`);
+                document.getElementById('ai-question').value = '';
+                Haptic.heavy();
+            }
+        };
+
+        // ==============================================================
+        // 🎮 QUICK ACTIONS & REACCIONES
+        // ==============================================================
+        function triggerVisionReaction() {
+            sendWS({ type: "studio_command", action: "vision_react" });
+            log('👀 [Visión Llama 3.2]: Solicitando reacción visual...');
+            Haptic.heavy();
+        }
+
+        setInterval(() => {
+            const autoVision = document.getElementById('toggle-auto-vision');
+            if (autoVision && autoVision.checked) {
+                triggerVisionReaction();
+            }
+        }, 30000);
+
+        function sendGesture(g) {
+            sendWS({ type: "studio_command", action: "gesture", value: g });
+            log(`🕹️ Gesto 3D: ${g}`);
+            Haptic.medium();
+        }
+
+        function sendSound(s) {
+            sendWS({ type: "studio_command", action: "sound_effect", sound: s });
+            log(`🔊 Sonido reproducido: ${s}`);
+            Haptic.medium();
+        }
+
+        let aiEnabledState = true;
+        function toggleAIFromDeck() {
+            aiEnabledState = !aiEnabledState;
+            document.getElementById('toggle-ai').checked = aiEnabledState;
+            updateAIDeckUI(aiEnabledState);
+            sendWS({ type: "studio_command", action: "ai_toggle", value: aiEnabledState });
+            Haptic.medium();
+        }
+
+        function updateAIDeckUI(active) {
+            const btn = document.getElementById('deck-ai-btn');
+            const txt = document.getElementById('deck-ai-text');
+            if (active) {
+                btn.classList.remove('off');
+                txt.innerText = 'IA: ON';
+            } else {
+                btn.classList.add('off');
+                txt.innerText = 'IA: OFF';
+            }
+        }
+
+        document.getElementById('toggle-ai').onchange = (e) => {
+            aiEnabledState = e.target.checked;
+            updateAIDeckUI(aiEnabledState);
+            sendWS({ type: "studio_command", action: "ai_toggle", value: aiEnabledState });
+            log(`🤖 Modo IA: ${aiEnabledState ? 'ON' : 'OFF'}`);
+            Haptic.medium();
+        };
+
+        // ==============================================================
+        // 🌐 NAVEGACIÓN Y URLS
+        // ==============================================================
+        function sanitizeUrl(raw) {
+            let input = raw.trim();
+            if (!input) return 'https://www.google.com';
+            if (input.startsWith('http://') || input.startsWith('https://')) return input;
+
+            const shortcuts = {
+                'youtube': 'https://www.youtube.com',
+                'google': 'https://www.google.com',
+                'kick': 'https://kick.com',
+                'twitch': 'https://twitch.tv',
+                'reddit': 'https://reddit.com',
+                'x': 'https://x.com',
+                'twitter': 'https://x.com',
+                'chatgpt': 'https://chatgpt.com'
+            };
+            const lower = input.toLowerCase();
+            if (shortcuts[lower]) return shortcuts[lower];
+
+            if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(input)) {
+                return 'https://' + input;
+            }
+            return `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+        }
+
+        function sendDirectNav(url) {
+            sendWS({ type: "studio_command", action: "navigate", value: url });
+            log(`🌐 Navegando a: ${url}`);
+            Haptic.medium();
+        }
+
+        document.getElementById('btn-go').onclick = () => {
+            const raw = document.getElementById('nav-url').value;
+            if (raw) {
+                sendDirectNav(sanitizeUrl(raw));
+                document.getElementById('nav-url').value = '';
+            }
+        };
+
+        // ==============================================================
+        // 🎙️ PUSH TO TALK (VOZ BABINIKU CON MODULACIÓN)
+        // ==============================================================
+        const pttBtn = document.getElementById('ptt-btn');
+        const pttFsBtn = document.getElementById('btn-fullscreen-ptt');
+        let recognition = null;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'es-MX';
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                if (text) {
+                    lastVoiceSentTime = performance.now();
+                    sendWS({ type: "studio_command", action: "voice_speak", text: text, ...currentVoiceConfig });
+                    log(`🎙️ Voz detectada: "${text}"`);
+                }
+            };
+        }
+
+        function startPTT(e) {
+            e.preventDefault();
+            isRecording = true;
+            pttBtn.classList.add('active');
+            document.getElementById('ptt-text').innerText = '¡HABLANDO! 🔴';
+            if (pttFsBtn) pttFsBtn.style.background = 'linear-gradient(135deg, #2ecc71, #27ae60)';
+            Haptic.heavy();
+            if (recognition) {
+                try { recognition.start(); } catch(err){}
+            }
+        }
+
+        function stopPTT(e) {
+            e.preventDefault();
+            isRecording = false;
+            pttBtn.classList.remove('active');
+            document.getElementById('ptt-text').innerText = 'HABLAR';
+            if (pttFsBtn) pttFsBtn.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+            Haptic.light();
+            if (recognition) {
+                try { recognition.stop(); } catch(err){}
+            }
+        }
+
+        pttBtn.addEventListener('touchstart', startPTT, { passive: false });
+        pttBtn.addEventListener('touchend', stopPTT, { passive: false });
+        pttBtn.addEventListener('mousedown', startPTT);
+        pttBtn.addEventListener('mouseup', stopPTT);
+
+        if (pttFsBtn) {
+            pttFsBtn.addEventListener('touchstart', startPTT, { passive: false });
+            pttFsBtn.addEventListener('touchend', stopPTT, { passive: false });
+            pttFsBtn.addEventListener('mousedown', startPTT);
+            pttFsBtn.addEventListener('mouseup', stopPTT);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                startPTT(e);
+            } else if (e.key >= '1' && e.key <= '6') {
+                const gestures = ['wave', 'think', 'laugh', 'gratitude', 'pout', 'explain'];
+                sendGesture(gestures[parseInt(e.key) - 1]);
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                stopPTT(e);
+            }
+        });
+
+        // ==============================================================
+        // 📷 FACE TRACKING FRONTAL
+        // ==============================================================
+        const videoElement = document.getElementById('camera-preview');
+        const cameraToggle = document.getElementById('toggle-camera');
+        let camera = null;
+
+        const faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        faceMesh.onResults((results) => {
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                const solved = Kalidokit.Face.solve(landmarks, {
+                    runtime: 'mediapipe',
+                    video: videoElement
+                });
+                if (solved) {
+                    sendWS({
+                        type: "studio_command",
+                        action: "face_tracking",
+                        head: { x: solved.head.x, y: solved.head.y, z: solved.head.z },
+                        blink: { l: solved.eye.l, r: solved.eye.r },
+                        mouth: solved.mouth.y
+                    });
+                }
+            }
+        });
+
+        cameraToggle.onchange = async (e) => {
+            if (e.target.checked) {
+                videoElement.style.display = 'block';
+                camera = new Camera(videoElement, {
+                    onFrame: async () => {
+                        await faceMesh.send({ image: videoElement });
+                    },
+                    width: 320,
+                    height: 240
+                });
+                await camera.start();
+                log('📷 Face tracking activado.');
+                Haptic.medium();
+            } else {
+                videoElement.style.display = 'none';
+                if (camera) camera.stop();
+                log('📷 Face tracking desactivado.');
+                Haptic.light();
+            }
+        };
+    </script>
+</body>
+</html>

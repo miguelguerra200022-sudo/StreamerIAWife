@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinuWaifu 3D VTuber - VRM Player</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0e111a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 40px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(24, 28, 44, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 200, 0.3);
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ffc8;
+            letter-spacing: 1px;
+        }
+        .mood-badge {
+            background: #2ecc71;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .subtitle-box {
+            background: rgba(20, 24, 38, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid #00b4d8;
+            border-radius: 16px;
+            padding: 18px 30px;
+            font-size: 22px;
+            line-height: 1.4;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        #status-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+    </style>
+    <!-- Three.js + GLTFLoader + Three-VRM -->
+    <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/@pixiv/three-vrm@2.0.6/lib/three-vrm.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="ui-overlay">
+        <div class="header">
+            <div class="title">🔴 LINUWAIFU 3D | VTUBER OFICIAL DE LINUX</div>
+            <div class="mood-badge" id="mood-badge">Ánimo: ALEGRE</div>
+        </div>
+        <div class="subtitle-box" id="subtitle-box">
+            <span id="subtitle-text">Esperando mensajes desde el cerebro de la Canaima...</span>
+        </div>
+    </div>
+    <div id="status-indicator">3D Engine: Three-VRM 2.0 | 60 FPS</div>
+
+    <script>
+        // 1. Configuración de la Escena 3D
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0e111a);
+
+        const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
+        camera.position.set(0.0, 1.35, 1.25); // Plano medio VTuber (Pecho y Cabeza)
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        container.appendChild(renderer.domElement);
+
+        // 2. Iluminación Profesional de Estudio
+        const keyLight = new THREE.DirectionalLight(0xfff5ea, 1.2);
+        keyLight.position.set(1.0, 2.0, 1.5);
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0xd0e8ff, 0.6);
+        fillLight.position.set(-1.0, 1.0, 1.0);
+        scene.add(fillLight);
+
+        const rimLight = new THREE.DirectionalLight(0x00ffc8, 1.0);
+        rimLight.position.set(0.0, 2.0, -1.5);
+        scene.add(rimLight);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        // 3. Variables de Control del Avatar VRM
+        let currentVrm = null;
+        const loader = new THREE.GLTFLoader();
+        loader.crossOrigin = 'anonymous';
+
+        loader.register((parser) => {
+            return new THREE_VRM.VRMLoaderPlugin(parser);
+        });
+
+        const vrmUrl = '/static/AliciaSolid.vrm';
+        loader.load(
+            vrmUrl,
+            (gltf) => {
+                const vrm = gltf.userData.vrm;
+                currentVrm = vrm;
+                scene.add(vrm.scene);
+                vrm.scene.rotation.y = Math.PI; // Orientar de frente a la cámara
+                console.log('✅ Modelo 3D VRM cargado con éxito:', vrm);
+            },
+            (progress) => {
+                console.log(`Cargando VRM: ${(progress.loaded / progress.total * 100).toFixed(0)}%`);
+            },
+            (error) => {
+                console.error('Error cargando modelo VRM:', error);
+            }
+        );
+
+        // 4. Bucle de Animación Autónoma (Respiración, Parpadeo y Lip-Sync)
+        const clock = new THREE.Clock();
+        let isSpeaking = false;
+        let speechAudio = null;
+        let currentMood = 'ALEGRE';
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+
+            if (currentVrm) {
+                // Actualizar físicas y blendshapes
+                currentVrm.update(delta);
+
+                // A. Respiración suave del pecho y hombros
+                const spine = currentVrm.humanoid.getNormalizedBoneNode('spine');
+                if (spine) {
+                    spine.rotation.x = Math.sin(elapsedTime * 2.0) * 0.02;
+                }
+
+                // B. Micro-movimiento de cabeza
+                const head = currentVrm.humanoid.getNormalizedBoneNode('head');
+                if (head) {
+                    head.rotation.y = Math.sin(elapsedTime * 0.8) * 0.04;
+                    head.rotation.z = Math.cos(elapsedTime * 0.5) * 0.02;
+                }
+
+                // C. Parpadeo de ojos natural cada 3 segundos
+                const blinkValue = Math.sin(elapsedTime * 2.5) > 0.95 ? 1.0 : 0.0;
+                currentVrm.expressionManager.setValue('blink', blinkValue);
+
+                // D. Lip-Sync 3D mientras habla
+                if (isSpeaking) {
+                    const mouthOpen = (Math.sin(elapsedTime * 15.0) + 1.0) * 0.45;
+                    currentVrm.expressionManager.setValue('aa', mouthOpen);
+                    currentVrm.expressionManager.setValue('ih', (Math.cos(elapsedTime * 10.0) + 1.0) * 0.2);
+                } else {
+                    currentVrm.expressionManager.setValue('aa', 0.0);
+                    currentVrm.expressionManager.setValue('ih', 0.0);
+                }
+
+                // E. Expresiones emocionales
+                if (currentMood === 'ALEGRE' || currentMood === 'VIP_AGRADECIDA') {
+                    currentVrm.expressionManager.setValue('happy', 0.6);
+                    currentVrm.expressionManager.setValue('angry', 0.0);
+                } else if (currentMood === 'TSUNDERE') {
+                    currentVrm.expressionManager.setValue('angry', 0.5);
+                    currentVrm.expressionManager.setValue('happy', 0.0);
+                } else if (currentMood === 'TIMIDA') {
+                    currentVrm.expressionManager.setValue('relaxed', 0.5);
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 5. Ajuste dinámico de resolución
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 6. Conexión WebSocket en tiempo real con el Cerebro de la Canaima
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/cloud`;
+
+        function connectWebSocket() {
+            const ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('⚡ Conectado al Cerebro de LinuWaifu.');
+                document.getElementById('status-indicator').innerText = '🟢 En Vivo: Conectado a la Canaima';
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const texto = data.text || '';
+                const mood = data.mood || 'ALEGRE';
+
+                // Actualizar UI
+                currentMood = mood;
+                document.getElementById('mood-badge').innerText = `Ánimo: ${mood}`;
+                document.getElementById('subtitle-text').innerText = `Linu: ${texto}`;
+
+                // Simular habla durante la duración de la frase
+                isSpeaking = true;
+                const duracionMs = Math.max(1500, texto.length * 75);
+                setTimeout(() => {
+                    isSpeaking = false;
+                }, duracionMs);
+            };
+
+            ws.onclose = () => {
+                console.log('⚠️ Conexión perdida, reintentando en 3s...');
+                document.getElementById('status-indicator').innerText = '🟡 Reconectando a la Canaima...';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+        connectWebSocket();
+    </script>
+</body>
+</html>
