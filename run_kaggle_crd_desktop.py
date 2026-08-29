@@ -229,13 +229,23 @@ if not crd_restored:
     print("4. Copia el comando de Debian Linux (ej: DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=\"4/...\").")
     print("=" * 70)
     
-    # Comprobar si se pasó por variable de entorno o pedir por input
+    # Comprobar si se pasó por variable de entorno o argumento
     crd_command = os.environ.get("CRD_AUTH_COMMAND", "").strip()
-    if not crd_command:
+    if len(sys.argv) > 1 and sys.argv[1].strip():
+        crd_command = sys.argv[1].strip()
+        
+    if not crd_command and os.path.exists(BASE_DIR / "crd_code.txt"):
         try:
-            crd_command = input("\n👉 Pega aquí el comando completo de Google o el código: ").strip()
-        except EOFError:
-            crd_command = ""
+            with open(BASE_DIR / "crd_code.txt", "r") as f:
+                crd_command = f.read().strip()
+        except Exception:
+            pass
+
+    if not crd_command:
+        print("\n👉 [PASO FÁCIL]: Pega tu comando de Google en la variable CRD_AUTH de tu celda de Kaggle:")
+        print('   CRD_AUTH = "DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=..."')
+        print("   ¡Y dale Play de nuevo a la celda para vincularlo automáticamente!\n")
+        sys.exit(0)
             
     if crd_command:
         # Extraer el código si pegaron el comando completo
@@ -243,8 +253,8 @@ if not crd_restored:
         auth_code = code_match.group(1) if code_match else crd_command
         
         # Ejecutar start-host con PIN 123456
-        print(f"\n⏳ Vinculando con Google Remote Desktop...")
-        start_cmd = f'/opt/google/chrome-remote-desktop/start-host --code="{auth_code}" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="LinuWaifu-Cloud-PC" --pin="123456"'
+        print(f"\n⏳ Vinculando con Google Remote Desktop (Host: LinuWaifu-Cloud-PC, PIN: 123456)...")
+        start_cmd = f'DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="{auth_code}" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="LinuWaifu-Cloud-PC" --pin="123456"'
         res = subprocess.run(start_cmd, shell=True)
         
         if res.returncode == 0:
@@ -252,7 +262,7 @@ if not crd_restored:
             time.sleep(2)
             backup_crd_session()
         else:
-            print("⚠️ No se pudo vincular automáticamente. Revisa el código.")
+            print("⚠️ No se pudo vincular con el código provisto. Asegúrate de generar un código fresco en https://remotedesktop.google.com/headless")
 
 # Iniciar el servicio de CRD
 subprocess.run("/opt/google/chrome-remote-desktop/chrome-remote-desktop --start 2>/dev/null || sudo systemctl restart chrome-remote-desktop 2>/dev/null || true", shell=True)
