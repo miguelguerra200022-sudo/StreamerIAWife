@@ -43,7 +43,10 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def install_system_packages():
-    # Pre-configurar debconf para evitar preguntas de teclado / zona horaria
+    # 1. Limpiar repositorios rotos de Kaggle
+    subprocess.run("sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null", shell=True)
+
+    # 2. Pre-configurar debconf para evitar preguntas de teclado
     subprocess.run(
         "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
         "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null; "
@@ -52,45 +55,35 @@ def install_system_packages():
     )
 
     needed = []
-    # Comprobar CRD y XFCE4
     if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
         needed.append("crd")
-    if not shutil.which("xfce4-session"):
-        needed.extend(["xfwm4", "xfce4-panel", "xfce4-session", "xfce4-terminal", "xfdesktop4", "dbus-x11", "desktop-base"])
     if not shutil.which("google-chrome"):
-        needed.append("google-chrome")
-    if not shutil.which("ffmpeg"):
-        needed.append("ffmpeg")
-    if not shutil.which("pulseaudio"):
-        needed.append("pulseaudio")
-    if not shutil.which("rclone"):
-        needed.append("rclone")
-    if not shutil.which("espeak-ng"):
-        needed.append("espeak-ng")
-    if not shutil.which("xdotool"):
-        needed.append("xdotool")
+        needed.append("chrome")
+    if not shutil.which("xfce4-session"):
+        needed.append("xfce")
 
     if needed:
-        print(f"  📥 Instalando paquetes esenciales ultra-livianos ({len(needed)} elementos)...")
-        apt_flags = "-y -qq --no-install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
-        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
-        
-        # Instalar prerrequisitos de CRD
-        subprocess.run(f"sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy libgtk-3-0", shell=True)
-        
-        # Instalar Chrome si falta
-        if "google-chrome" in needed:
-            subprocess.run(f"wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install -f", shell=True)
-        
-        # Instalar CRD si falta
-        if "crd" in needed:
-            subprocess.run(f"wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install -f", shell=True)
-        
-        # Instalar paquetes restantes
-        pkg_list = [p for p in needed if p not in ("crd", "google-chrome")]
-        if pkg_list:
-            subprocess.run(f"sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install {' '.join(pkg_list)}", shell=True)
-        
+        print(f"  📥 Instalando dependencias base del sistema ({len(needed)} módulos)...")
+        apt_cmd = (
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "
+            "-o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' "
+            "python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy "
+            "libgtk-3-0 gsettings-desktop-schemas session-migration libvulkan1 mesa-vulkan-drivers "
+            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 desktop-base "
+            "ffmpeg pulseaudio rclone espeak-ng xdotool"
+        )
+        subprocess.run(apt_cmd, shell=True)
+
+        # Descargar e instalar Chrome y CRD con todas las dependencias ya resueltas
+        if not shutil.which("google-chrome"):
+            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || true", shell=True)
+
+        if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
+            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || true", shell=True)
+
+        # Reparación rápida de dependencias
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -f -y -qq 2>/dev/null", shell=True)
         print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.")
     else:
         print("  ⚡ [✓] Todos los paquetes del sistema (CRD, XFCE4, Chrome, Audio, FFmpeg) listos en caché.")
