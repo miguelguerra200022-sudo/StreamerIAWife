@@ -43,6 +43,14 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def install_system_packages():
+    # Pre-configurar debconf para evitar preguntas de teclado / zona horaria
+    subprocess.run(
+        "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null; "
+        "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null",
+        shell=True
+    )
+
     needed = []
     # Comprobar CRD y XFCE4
     if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
@@ -63,21 +71,25 @@ def install_system_packages():
         needed.append("xdotool")
 
     if needed:
-        print(f"  📥 Instalando paquetes del sistema ({len(needed)} elementos)...")
-        subprocess.run("sudo apt-get update -qq", shell=True)
+        print(f"  📥 Instalando paquetes del sistema en modo no-interactivo ({len(needed)} elementos)...")
+        apt_flags = "-y -qq -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'"
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq", shell=True)
+        
+        # Instalar prerrequisitos de CRD y dependencias previas
+        subprocess.run(f"sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install python3-packaging python3-psutil python3-xdg xbase-clients xserver-xorg-video-dummy libgtk-3-0", shell=True)
         
         # Instalar Chrome si falta
         if "google-chrome" in needed:
-            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo dpkg -i /tmp/chrome.deb || sudo apt-get install -f -y", shell=True)
+            subprocess.run(f"wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install -f", shell=True)
         
         # Instalar CRD si falta
         if "crd" in needed:
-            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo dpkg -i /tmp/crd.deb || sudo apt-get install -f -y", shell=True)
+            subprocess.run(f"wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install -f", shell=True)
         
         # Instalar paquetes restantes
         pkg_list = [p for p in needed if p not in ("crd", "google-chrome")]
         if pkg_list:
-            subprocess.run(f"sudo apt-get install -y -qq {' '.join(pkg_list)}", shell=True)
+            subprocess.run(f"sudo DEBIAN_FRONTEND=noninteractive apt-get {apt_flags} install {' '.join(pkg_list)}", shell=True)
         
         print("  ⚡ [✓] Paquetes base del sistema instalados exitosamente.")
     else:
