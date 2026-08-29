@@ -661,9 +661,9 @@ def screen_capture_worker():
 
                     if turbo_jpeg:
                         bgr = cv2.cvtColor(small, cv2.COLOR_BGRA2BGR)
-                        jpeg_bytes = turbo_jpeg.encode(bgr, quality=65, pixel_format=TJPF_BGR, jpeg_subsample=TJSAMP_420)
+                        jpeg_bytes = turbo_jpeg.encode(bgr, quality=52, pixel_format=TJPF_BGR, jpeg_subsample=TJSAMP_420)
                     else:
-                        _, enc = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 65, cv2.IMWRITE_JPEG_OPTIMIZE, 0])
+                        _, enc = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 52, cv2.IMWRITE_JPEG_OPTIMIZE, 0])
                         jpeg_bytes = enc.tobytes()
 
                     with frame_lock:
@@ -671,7 +671,7 @@ def screen_capture_worker():
                         frame_sequence += 1
 
                     elapsed = time.time() - t0
-                    sleep_time = max(0.001, 0.033 - elapsed)
+                    sleep_time = max(0.001, 0.0166 - elapsed)
                     time.sleep(sleep_time)
         except Exception:
             time.sleep(1)
@@ -697,11 +697,11 @@ async def init_services():
         asyncio.create_task(twitch_bot.start())
 
 # ==============================================================================
-# 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (1 SOLO SALTO DIRECTO AL CELULAR)
+# 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (QUIC UDP + 1 SOLO SALTO DIRECTO AL CELULAR)
 # ==============================================================================
-print("\n[7/8] ☁️ Iniciando Túnel Cloudflare en Kaggle...")
+print("\n[7/8] ☁️ Iniciando Túnel Cloudflare QUIC de Ultra-Baja Latencia en Kaggle...")
 tunnel_proc = subprocess.Popen(
-    ["cloudflared", "tunnel", "--url", "http://127.0.0.1:8000"],
+    ["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--no-autoupdate", "--url", "http://127.0.0.1:8000"],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True
@@ -757,9 +757,9 @@ async def main_engine_loop():
                 if curr and seq != last_seq:
                     last_seq = seq
                     await cloud_manager.broadcast_bytes(b"\x01" + curr)
-                await asyncio.sleep(0.025)
+                await asyncio.sleep(0.012)
             except Exception:
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.02)
 
     async def command_dispatcher(message):
         global current_voice_speed, current_voice_pitch, current_voice_name

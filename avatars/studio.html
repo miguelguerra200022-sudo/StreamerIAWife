@@ -1380,21 +1380,32 @@
         let ws = null;
 
         const directCanvas = document.getElementById('direct-canvas');
-        const ctx2d = directCanvas.getContext('2d', { alpha: false, desynchronized: true });
+        let ctxBitmap = null;
+        let ctx2d = null;
+        try {
+            ctxBitmap = directCanvas.getContext('bitmaprenderer');
+        } catch(e) {}
+        if (!ctxBitmap) {
+            ctx2d = directCanvas.getContext('2d', { alpha: false, desynchronized: true });
+        }
 
         function renderJpegBlob(blob) {
             if (window.createImageBitmap) {
-                createImageBitmap(blob).then(bitmap => {
-                    ctx2d.drawImage(bitmap, 0, 0, 854, 480);
-                    bitmap.close();
+                createImageBitmap(blob, { imageOrientation: "none", premultiplyAlpha: "none" }).then(bitmap => {
+                    if (ctxBitmap) {
+                        ctxBitmap.transferFromImageBitmap(bitmap);
+                    } else if (ctx2d) {
+                        ctx2d.drawImage(bitmap, 0, 0, 854, 480);
+                        bitmap.close();
+                    }
                 }).catch(() => {
                     const img = new Image();
-                    img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                    img.onload = () => { if (ctx2d) ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
                     img.src = URL.createObjectURL(blob);
                 });
             } else {
                 const img = new Image();
-                img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                img.onload = () => { if (ctx2d) ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
                 img.src = URL.createObjectURL(blob);
             }
         }
@@ -1538,98 +1549,221 @@
         }
 
         // ==============================================================
-        // 👆 MOTOR TÁCTIL RELATIVO TIPO LAPTOP TRACKPAD SOBRE EL VIDEO
-        // (1 Dedo = Mover Puntero / Tap = Clic Izquierdo | 2 Dedos Tap = Clic Derecho | 2 Dedos Drag = Scroll)
+        // 🖱️ MOTOR TÁCTIL COMPLETO MULTITOUCH (PRECISION TOUCHPAD SUITE)
         // ==============================================================
         const videoTouch = document.getElementById('video-touch');
-        let prevScreenTouchX = null, prevScreenTouchY = null;
+        let prevTouchPositions = [];
         let touchStartTime = 0;
-        let touchMovedDistance = 0;
-        let touchFingerCount = 1;
-        let prevMultiScrollY = null;
-        let lastGestureMoveTime = 0;
+        let lastTapEndTime = 0;
+        let isTapDragging = false;
+        let touchMovedDist = 0;
+        let initialPinchDist = null;
+        let lastPinchTime = 0;
+        let lastGestureTime = 0;
+        let last3FingerSwipeTime = 0;
+        let activeFingerCount = 0;
         let curX = 425;
         let curY = 360;
+        let sensitivity = 1.6;
 
-        videoTouch.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchStartTime = performance.now();
-            touchMovedDistance = 0;
-            touchFingerCount = e.touches.length;
-
-            if (e.touches.length === 1) {
-                prevScreenTouchX = e.touches[0].clientX;
-                prevScreenTouchY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                prevMultiScrollY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        function getTouchCenter(touches) {
+            let sumX = 0, sumY = 0;
+            for (let i = 0; i < touches.length; i++) {
+                sumX += touches[i].clientX;
+                sumY += touches[i].clientY;
             }
-        }, { passive: false });
+            return { x: sumX / touches.length, y: sumY / touches.length };
+        }
 
-        videoTouch.addEventListener('touchmove', (e) => {
+        function getPinchDistance(touches) {
+            if (touches.length < 2) return null;
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.hypot(dx, dy);
+        }
+
+        function handleMultiTouchStart(e) {
             e.preventDefault();
             const now = performance.now();
+            activeFingerCount = e.touches.length;
+            touchStartTime = now;
+            touchMovedDist = 0;
 
-            // 1. DESPLAZAMIENTO CON 2 DEDOS (SCROLL VERTICAL)
-            if (e.touches.length === 2 && prevMultiScrollY !== null) {
-                const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                const deltaY = currentY - prevMultiScrollY;
-                touchMovedDistance += Math.abs(deltaY);
+            const center = getTouchCenter(e.touches);
+            prevTouchPositions = [{ x: center.x, y: center.y }];
 
-                if (Math.abs(deltaY) > 8 && now - lastGestureMoveTime > 35) {
-                    lastGestureMoveTime = now;
-                    const scrollDelta = deltaY > 0 ? -2 : 2;
-                    sendWS({ type: "studio_command", action: "mouse_scroll", delta: scrollDelta });
-                    prevMultiScrollY = currentY;
-                    Haptic.light();
+            if (activeFingerCount === 2) {
+                initialPinchDist = getPinchDistance(e.touches);
+            } else {
+                initialPinchDist = null;
+            }
+
+            // Detección de Tap-to-Drag (1 dedo, segundo toque en < 300ms)
+            if (activeFingerCount === 1) {
+                if (now - lastTapEndTime < 280) {
+                    isTapDragging = true;
+                    sendWS({ type: "studio_command", action: "mouse_down", button: "left", px: Math.round(curX), py: Math.round(curY) });
+                    log('✋ Tap-to-Drag Activado (Arrastrando con 1 dedo)');
+                    Haptic.heavy();
+                }
+            }
+        }
+
+        function handleMultiTouchMove(e) {
+            e.preventDefault();
+            const now = performance.now();
+            const center = getTouchCenter(e.touches);
+            if (prevTouchPositions.length === 0) {
+                prevTouchPositions = [{ x: center.x, y: center.y }];
+                return;
+            }
+
+            const prevCenter = prevTouchPositions[0];
+            const deltaX = (center.x - prevCenter.x) * sensitivity;
+            const deltaY = (center.y - prevCenter.y) * sensitivity;
+            touchMovedDist += Math.hypot(deltaX, deltaY);
+            prevTouchPositions[0] = { x: center.x, y: center.y };
+
+            // 1. GESTOS CON 1 DEDO: MOVIMIENTO RELATIVO SUAVE (30 FPS)
+            if (e.touches.length === 1) {
+                curX = Math.max(0, Math.min(1280, curX + deltaX));
+                curY = Math.max(0, Math.min(720, curY + deltaY));
+
+                if (now - lastGestureTime >= 33) {
+                    lastGestureTime = now;
+                    sendWS({ type: "studio_command", action: "mouse_move_abs", px: Math.round(curX), py: Math.round(curY) });
                 }
                 return;
             }
 
-            // 2. MOVIMIENTO RELATIVO CON 1 DEDO (COMO TRACKPAD DE LAPTOP)
-            if (e.touches.length === 1 && prevScreenTouchX !== null && prevScreenTouchY !== null) {
-                const clientX = e.touches[0].clientX;
-                const clientY = e.touches[0].clientY;
-
-                const deltaX = (clientX - prevScreenTouchX) * sensitivity;
-                const deltaY = (clientY - prevScreenTouchY) * sensitivity;
-                touchMovedDistance += Math.abs(deltaX) + Math.abs(deltaY);
-
-                prevScreenTouchX = clientX;
-                prevScreenTouchY = clientY;
-
-                curX = Math.max(0, Math.min(1280, curX + deltaX));
-                curY = Math.max(0, Math.min(720, curY + deltaY));
-
-                // Throttling a 33ms (~30 FPS) para respuesta instantánea sin colas
-                if (now - lastGestureMoveTime >= 33) {
-                    lastGestureMoveTime = now;
-                    sendWS({ type: "studio_command", action: "mouse_move_abs", px: Math.round(curX), py: Math.round(curY) });
+            // 2. GESTOS CON 2 DEDOS: SCROLL, PINCH ZOOM Y NAVEGACIÓN ATRÁS/ADELANTE
+            if (e.touches.length === 2) {
+                // A. Pinch to Zoom
+                const currentPinch = getPinchDistance(e.touches);
+                if (initialPinchDist && currentPinch && Math.abs(currentPinch - initialPinchDist) > 30) {
+                    if (now - lastPinchTime > 220) {
+                        lastPinchTime = now;
+                        if (currentPinch > initialPinchDist) {
+                            sendKey('ctrl+plus');
+                            log('🔍 Zoom In (+)');
+                        } else {
+                            sendKey('ctrl+minus');
+                            log('🔍 Zoom Out (-)');
+                        }
+                        initialPinchDist = currentPinch;
+                        Haptic.light();
+                    }
+                    return;
                 }
-            }
-        }, { passive: false });
 
-        videoTouch.addEventListener('touchend', (e) => {
+                // B. Scroll Vertical o Navegación Horizontal
+                if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                    // Scroll Vertical (Arriba / Abajo)
+                    if (Math.abs(deltaY) > 5 && now - lastGestureTime > 35) {
+                        lastGestureTime = now;
+                        const scrollDelta = deltaY > 0 ? -2 : 2;
+                        sendWS({ type: "studio_command", action: "mouse_scroll", delta: scrollDelta });
+                        Haptic.light();
+                    }
+                } else {
+                    // Deslizar 2 dedos horizontal: Navegar Atrás / Adelante en Chrome
+                    if (Math.abs(deltaX) > 22 && now - lastGestureTime > 320) {
+                        lastGestureTime = now;
+                        if (deltaX > 0) {
+                            sendKey('alt+Right');
+                            log('➡️ Navegar Adelante (Alt+Right)');
+                        } else {
+                            sendKey('alt+Left');
+                            log('⬅️ Navegar Atrás (Alt+Left)');
+                        }
+                        Haptic.medium();
+                    }
+                }
+                return;
+            }
+
+            // 3. GESTOS CON 3 DEDOS: CAMBIAR PESTAÑAS, MAXIMIZAR Y MOSTRAR ESCRITORIO
+            if (e.touches.length === 3) {
+                if (now - last3FingerSwipeTime > 350) {
+                    if (Math.abs(deltaX) > 22) {
+                        last3FingerSwipeTime = now;
+                        if (deltaX > 0) {
+                            sendKey('ctrl+Page_Down');
+                            log('📑 Pestaña Siguiente (Ctrl+PageDown)');
+                        } else {
+                            sendKey('ctrl+Page_Up');
+                            log('📑 Pestaña Anterior (Ctrl+PageUp)');
+                        }
+                        Haptic.heavy();
+                    } else if (Math.abs(deltaY) > 22) {
+                        last3FingerSwipeTime = now;
+                        if (deltaY > 0) {
+                            sendKey('ctrl+alt+d');
+                            log('🖥️ Mostrar Escritorio (Minimizar)');
+                        } else {
+                            sendKey('F11');
+                            log('🪟 Maximizar / Pantalla Completa');
+                        }
+                        Haptic.heavy();
+                    }
+                }
+                return;
+            }
+        }
+
+        function handleMultiTouchEnd(e) {
             e.preventDefault();
-            const duration = performance.now() - touchStartTime;
-            prevScreenTouchX = null;
-            prevScreenTouchY = null;
-            prevMultiScrollY = null;
+            const now = performance.now();
+            const duration = now - touchStartTime;
 
-            // Si el dedo no se desplazó mucho (< 18px de movimiento acumulado) y fue un tap rápido (< 320ms)
-            if (touchMovedDistance < 18 && duration < 320) {
-                if (touchFingerCount === 2) {
-                    // Clic Derecho en la posición actual del puntero
+            if (isTapDragging) {
+                isTapDragging = false;
+                sendWS({ type: "studio_command", action: "mouse_up", button: "left", px: Math.round(curX), py: Math.round(curY) });
+                log('✋ Fin de Arrastre (Soltado)');
+                Haptic.light();
+                return;
+            }
+
+            // Toques rápidos sin arrastrar (< 20px movidos y < 300ms)
+            if (touchMovedDist < 20 && duration < 300) {
+                if (activeFingerCount === 1) {
+                    // 1 Dedo = Clic Izquierdo (o Doble Clic si es consecutivo)
+                    if (now - lastTapEndTime < 280) {
+                        sendMouseClick('left');
+                        sendMouseClick('left');
+                        log(`👆 Doble Clic en (${Math.round(curX)}, ${Math.round(curY)})`);
+                        Haptic.heavy();
+                    } else {
+                        sendMouseClick('left');
+                        log(`👆 Clic Izquierdo en (${Math.round(curX)}, ${Math.round(curY)})`);
+                        Haptic.medium();
+                    }
+                    lastTapEndTime = now;
+                } else if (activeFingerCount === 2) {
+                    // 2 Dedos = Clic Derecho (Menú Contextual)
                     sendMouseClick('right');
-                    log(`📑 Clic Derecho en (${Math.round(curX)}, ${Math.round(curY)})`);
+                    log(`📑 Clic Derecho (2 Dedos) en (${Math.round(curX)}, ${Math.round(curY)})`);
                     Haptic.heavy();
-                } else if (touchFingerCount === 1) {
-                    // Clic Izquierdo en la posición actual del puntero
-                    sendMouseClick('left');
-                    log(`👆 Clic Izquierdo en (${Math.round(curX)}, ${Math.round(curY)})`);
-                    Haptic.medium();
+                } else if (activeFingerCount === 3) {
+                    // 3 Dedos = Clic Rueda Central (Abrir pestaña)
+                    sendMouseClick('middle');
+                    log(`⚙️ Clic Central (3 Dedos) en (${Math.round(curX)}, ${Math.round(curY)})`);
+                    Haptic.heavy();
+                } else if (activeFingerCount >= 4) {
+                    // 4 Dedos = Cerrar Pestaña Actual
+                    sendKey('ctrl+w');
+                    log('✖️ Cerrar Pestaña (4 Dedos - Ctrl+W)');
+                    Haptic.error();
                 }
             }
-        }, { passive: false });
+
+            prevTouchPositions = [];
+            initialPinchDist = null;
+        }
+
+        videoTouch.addEventListener('touchstart', handleMultiTouchStart, { passive: false });
+        videoTouch.addEventListener('touchmove', handleMultiTouchMove, { passive: false });
+        videoTouch.addEventListener('touchend', handleMultiTouchEnd, { passive: false });
 
         // ==============================================================
         // 🖱️ SUPER TRACKPAD OPTIMIZADO (30 FPS THROTTLED)

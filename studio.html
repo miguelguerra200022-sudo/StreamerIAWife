@@ -1380,21 +1380,32 @@
         let ws = null;
 
         const directCanvas = document.getElementById('direct-canvas');
-        const ctx2d = directCanvas.getContext('2d', { alpha: false, desynchronized: true });
+        let ctxBitmap = null;
+        let ctx2d = null;
+        try {
+            ctxBitmap = directCanvas.getContext('bitmaprenderer');
+        } catch(e) {}
+        if (!ctxBitmap) {
+            ctx2d = directCanvas.getContext('2d', { alpha: false, desynchronized: true });
+        }
 
         function renderJpegBlob(blob) {
             if (window.createImageBitmap) {
-                createImageBitmap(blob).then(bitmap => {
-                    ctx2d.drawImage(bitmap, 0, 0, 854, 480);
-                    bitmap.close();
+                createImageBitmap(blob, { imageOrientation: "none", premultiplyAlpha: "none" }).then(bitmap => {
+                    if (ctxBitmap) {
+                        ctxBitmap.transferFromImageBitmap(bitmap);
+                    } else if (ctx2d) {
+                        ctx2d.drawImage(bitmap, 0, 0, 854, 480);
+                        bitmap.close();
+                    }
                 }).catch(() => {
                     const img = new Image();
-                    img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                    img.onload = () => { if (ctx2d) ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
                     img.src = URL.createObjectURL(blob);
                 });
             } else {
                 const img = new Image();
-                img.onload = () => { ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
+                img.onload = () => { if (ctx2d) ctx2d.drawImage(img, 0, 0, 854, 480); URL.revokeObjectURL(img.src); };
                 img.src = URL.createObjectURL(blob);
             }
         }
