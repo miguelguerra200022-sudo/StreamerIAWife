@@ -697,11 +697,11 @@ async def init_services():
         asyncio.create_task(twitch_bot.start())
 
 # ==============================================================================
-# 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (QUIC UDP + 1 SOLO SALTO DIRECTO AL CELULAR)
+# 10. INICIAR TÚNEL CLOUDFLARE EN KAGGLE (1 SOLO SALTO DIRECTO AL CELULAR)
 # ==============================================================================
-print("\n[7/8] ☁️ Iniciando Túnel Cloudflare QUIC de Ultra-Baja Latencia en Kaggle...")
+print("\n[7/8] ☁️ Iniciando Túnel Cloudflare en Kaggle...")
 tunnel_proc = subprocess.Popen(
-    ["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--no-autoupdate", "--url", "http://127.0.0.1:8000"],
+    ["cloudflared", "tunnel", "--url", "http://127.0.0.1:8000"],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True
