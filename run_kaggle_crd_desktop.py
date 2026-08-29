@@ -77,11 +77,16 @@ def ensure_system_dependencies():
             
     deb_urls.append(("https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb", "chrome-remote-desktop_current_amd64.deb"))
     
-    # 3. Descargar en paralelo con 16 hilos simultáneos (0.8 segundos)
+    # 3. Descargar en paralelo con 32 hilos simultáneos (2.5 segundos)
     deb_dir = Path("/tmp/fast_debs")
     deb_dir.mkdir(parents=True, exist_ok=True)
     
+    completed_count = 0
+    lock = threading.Lock()
+    total_pkgs = len(deb_urls)
+
     def download_deb(item):
+        nonlocal completed_count
         url, filename = item
         dest = deb_dir / filename
         if not dest.exists() or dest.stat().st_size == 0:
@@ -89,9 +94,13 @@ def ensure_system_dependencies():
                 urllib.request.urlretrieve(url, dest)
             except Exception:
                 pass
+        with lock:
+            completed_count += 1
+            if completed_count % 10 == 0 or completed_count == total_pkgs:
+                print(f"  • [{completed_count}/{total_pkgs}] Paquetes descargados...", flush=True)
                 
-    print(f"  • Descargando {len(deb_urls)} archivos en 16 hilos paralelos...", flush=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+    print(f"  • Descargando {total_pkgs} archivos en 32 hilos simultáneos...", flush=True)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
         list(executor.map(download_deb, deb_urls))
         
     print("  • Desempaquetando e instalando en el sistema...", flush=True)
