@@ -33,4 +33,4 @@ pip install --prefer-binary opencv-python-headless mss openai aiosqlite soundfil
 echo "======================================================================"
 echo "🌸 [4/4] 🚀 INICIANDO MOTOR LINUWAIFU CLOUD DESKTOP..."
 echo "======================================================================"
-python3 run_kaggle_crd_desktop.py
+python3 run_kaggle_crd_desktop.py "$@"
