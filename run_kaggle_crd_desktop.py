@@ -16,7 +16,6 @@ import tarfile
 import threading
 import subprocess
 import re
-import select
 from pathlib import Path
 from typing import Optional
 
@@ -24,53 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
-def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> bool:
-    """Ejecuta comandos mostrando progreso cada 3s sin saturar el buffer de Jupyter."""
-    print(f"\n⏳ {desc}...", flush=True)
-    start_t = time.time()
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
-    last_print = time.time()
-    output_lines = []
-    
-    while p.poll() is None:
-        now = time.time()
-        elapsed = int(now - start_t)
-        
-        rlist, _, _ = select.select([p.stdout], [], [], 0.5)
-        if rlist:
-            line = p.stdout.readline()
-            if line:
-                clean_l = line.strip()
-                output_lines.append(clean_l)
-                if now - last_print > 2.0 or "err" in clean_l.lower() or "fail" in clean_l.lower():
-                    print(f"  • {clean_l[:85]}", flush=True)
-                    last_print = now
-        else:
-            if now - last_print > 3.0:
-                print(f"  • En progreso ({elapsed}s transcurridos)...", flush=True)
-                last_print = now
-                
-        if elapsed > timeout_sec:
-            p.kill()
-            print(f"⚠️ Tiempo límite excedido ({timeout_sec}s).", flush=True)
-            return False
-            
-    for line in p.stdout:
-        if line.strip():
-            output_lines.append(line.strip())
-            
-    p.wait()
-    if p.returncode == 0:
-        print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
-        return True
-    else:
-        print(f"⚠️ Aviso en {desc} (Código {p.returncode}). Continuando...", flush=True)
-        for l in output_lines[-6:]:
-            print(f"    {l}", flush=True)
-        return True
-
 def install_system_packages():
-    # 0. Matar procesos huérfanos y desbloquear dpkg y apt
+    # 0. Limpiar bloqueos y procesos huérfanos
     subprocess.run("sudo killall -9 apt apt-get dpkg 2>/dev/null || true", shell=True)
     subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
     subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
@@ -79,7 +33,7 @@ def install_system_packages():
     subprocess.run("sudo sed -i '/r2u/d' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     subprocess.run("sudo rm -f /etc/apt/sources.list.d/r2u*.list 2>/dev/null", shell=True)
 
-    # 2. Pre-configurar debconf
+    # 2. Pre-configurar debconf para instalación desatendida
     subprocess.run(
         "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
         "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
@@ -98,50 +52,41 @@ def install_system_packages():
     if needed:
         print(f"\n======================================================================\n🌸 [1/7] 📥 INSTALANDO DEPENDENCIAS DEL SISTEMA ({len(needed)} módulos)...\n======================================================================", flush=True)
         
-        run_command_with_heartbeat(
-            "sudo DEBIAN_FRONTEND=noninteractive apt-get update -y",
-            "Actualizando repositorios del sistema",
-            timeout_sec=60
+        print("  • [1/4] ⏳ Actualizando lista de paquetes...", flush=True)
+        subprocess.run("sudo DEBIAN_FRONTEND=noninteractive apt-get update -y", shell=True)
+
+        print("  • [2/4] ⏳ Instalando XFCE4, Vulkan, Audio, FFmpeg y Pantalla Virtual...", flush=True)
+        subprocess.run(
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends "
+            "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11 "
+            "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers "
+            "ffmpeg pulseaudio rclone espeak-ng xdotool "
+            "xbase-clients xserver-xorg-video-dummy python3-packaging python3-psutil python3-xdg",
+            shell=True
         )
-        
-        # Módulos en bloques independientes a prueba de fallos
-        modules = [
-            ("Librerías gráficas Vulkan y GTK", "libgtk-3-0 gsettings-desktop-schemas libvulkan1 mesa-vulkan-drivers"),
-            ("Entorno de Escritorio XFCE4", "xfwm4 xfce4-panel xfce4-session xfce4-terminal xfdesktop4 dbus-x11"),
-            ("Sistema de Audio y Multimedia", "ffmpeg pulseaudio rclone espeak-ng xdotool"),
-            ("Servidor de Pantalla Virtual", "xbase-clients xserver-xorg-video-dummy python3-packaging python3-psutil python3-xdg")
-        ]
 
-        for desc, pkgs in modules:
-            cmd = f"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends -o Dpkg::Use-Pty=0 -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' {pkgs}"
-            run_command_with_heartbeat(cmd, f"Instalando {desc}", timeout_sec=120)
-
+        print("  • [3/4] ⏳ Configurando Google Chrome Stable...", flush=True)
         if not shutil.which("google-chrome"):
-            run_command_with_heartbeat(
-                "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f",
-                "Instalando Google Chrome Stable",
-                timeout_sec=90
-            )
+            subprocess.run("wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/chrome.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
 
+        print("  • [4/4] ⏳ Configurando Google Chrome Remote Desktop...", flush=True)
         if not os.path.exists("/opt/google/chrome-remote-desktop/chrome-remote-desktop"):
-            run_command_with_heartbeat(
-                "wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f",
-                "Instalando Google Chrome Remote Desktop",
-                timeout_sec=90
-            )
+            subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -f", shell=True)
 
         crd_session_file = Path.home() / ".chrome-remote-desktop-session"
         with open(crd_session_file, "w") as f:
             f.write("exec /etc/X11/Xsession /usr/bin/xfce4-session\n")
         crd_session_file.chmod(0o755)
 
-        print("⚡ [✓] Todos los paquetes del sistema instalados exitosamente.", flush=True)
+        print("⚡ [✓] Paquetes base del sistema instalados exitosamente.", flush=True)
     else:
         print("⚡ [✓] Todos los paquetes del sistema listos en caché.", flush=True)
 
 install_system_packages()
 
-# Instalar librerías Python esenciales
+# ==============================================================================
+# INSTALACIÓN DE LIBRERÍAS DE IA Y VERIFICACIÓN DE GPU
+# ==============================================================================
 try:
     import torch
     import cv2
@@ -151,12 +96,8 @@ try:
     import aiosqlite
     from kokoro import KPipeline
 except ImportError:
-    print("\n[2/7] 🧠 Instalando librerías Python de IA (Kokoro + PyTorch)...", flush=True)
-    run_command_with_heartbeat(
-        "pip install --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub",
-        "Instalando módulos Python",
-        timeout_sec=120
-    )
+    print("\n[2/7] 🧠 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
+    subprocess.run("pip install --no-cache-dir opencv-python-headless mss openai aiosqlite kokoro soundfile numpy pydub", shell=True)
     import torch
     import cv2
     import numpy as np
