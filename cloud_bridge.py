@@ -31,7 +31,7 @@ def root_redirect():
 
 class CloudConnectionManager:
     def __init__(self):
-        self.active_connections: Set[WebSocket] = set()
+        self.active_connections: dict = {}  # ws: asyncio.Lock
         self.message_callback: Optional[Callable] = None
         self.vision_callback: Optional[Callable] = None
         self.ai_enabled: bool = True
@@ -52,17 +52,18 @@ class CloudConnectionManager:
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.add(websocket)
+        lock = asyncio.Lock()
+        self.active_connections[websocket] = lock
         print(f"[☁️ Bridge] Cliente conectado. Total activos: {len(self.active_connections)}")
-        # Enviar inmediatamente el último fotograma disponible para evitar pantalla negra
         if self.latest_screen_frame_bytes:
             try:
-                await websocket.send_bytes(b"\x01" + self.latest_screen_frame_bytes)
+                async with lock:
+                    await websocket.send_bytes(b"\x01" + self.latest_screen_frame_bytes)
             except Exception:
                 pass
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.discard(websocket)
+        self.active_connections.pop(websocket, None)
         print(f"[☁️ Bridge] Cliente desconectado. Total activos: {len(self.active_connections)}")
 
     async def broadcast_speech_event(self, chunk: str, mood: str, gesture: str = "explain", is_donation: bool = False):
@@ -81,34 +82,38 @@ class CloudConnectionManager:
         if not self.active_connections:
             return
         
-        to_remove = set()
-        for conn in list(self.active_connections):
-            if conn == sender:
+        dead_conns = []
+        for ws, lock in list(self.active_connections.items()):
+            if ws == sender:
                 continue
             try:
-                await conn.send_json(payload)
+                async with lock:
+                    await ws.send_json(payload)
             except Exception:
-                to_remove.add(conn)
+                dead_conns.append(ws)
         
-        for dead_conn in to_remove:
-            self.disconnect(dead_conn)
+        for dead in dead_conns:
+            self.disconnect(dead)
 
     async def broadcast_bytes(self, raw_bytes: bytes, sender: Optional[WebSocket] = None):
-        """Reenvía fotogramas binarios sin tocar memoria a < 0.5ms de latencia."""
+        """Reenvía fotogramas binarios sin tocar memoria y descartando frames obsoletos."""
         if not self.active_connections:
             return
         
-        to_remove = set()
-        for conn in list(self.active_connections):
-            if conn == sender:
+        dead_conns = []
+        for ws, lock in list(self.active_connections.items()):
+            if ws == sender:
+                continue
+            if lock.locked():
                 continue
             try:
-                await conn.send_bytes(raw_bytes)
+                async with lock:
+                    await ws.send_bytes(raw_bytes)
             except Exception:
-                to_remove.add(conn)
+                dead_conns.append(ws)
         
-        for dead_conn in to_remove:
-            self.disconnect(dead_conn)
+        for dead in dead_conns:
+            self.disconnect(dead)
 
 cloud_manager = CloudConnectionManager()
 
@@ -158,10 +163,13 @@ async def websocket_cloud_endpoint(websocket: WebSocket):
                     
                     # C. Ping / Pong y Control de flujo ACK
                     if data.get("type") == "ping":
-                        try:
-                            await websocket.send_json({"type": "pong", "ts": data.get("ts")})
-                        except Exception:
-                            pass
+                        lock = cloud_manager.active_connections.get(websocket)
+                        if lock:
+                            try:
+                                async with lock:
+                                    await websocket.send_json({"type": "pong", "ts": data.get("ts")})
+                            except Exception:
+                                pass
                         continue
                     
                     if data.get("type") == "frame_ack" or data.get("type") == "pong":
