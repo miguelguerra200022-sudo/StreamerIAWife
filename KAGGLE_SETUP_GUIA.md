@@ -25,7 +25,7 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFcxCzZIe/GQsCN/85OAo2kVAl2FLhDFSL0S5exfQIat
 
 ---
 
-## 🚀 CELDA 1: Instalación de Entorno Dual-GPU, Vulkan, Audio, TurboJPEG y Scripts 3D Locales
+## 🚀 CELDA 1: Instalación de Entorno Dual-GPU, Vulkan, Cloudflared y Descarga de Repositorio
 
 ```python
 import os
@@ -34,26 +34,31 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 # 1. Instalar librerías de sistema, herramientas X11 y aceleración gráfica Vulkan / TurboJPEG
 !apt-get update -qq && apt-get install -y -qq espeak-ng xvfb fluxbox xdotool wmctrl mpv ffmpeg x11-xserver-utils libportaudio2 libgbm1 libasound2 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libturbojpeg0-dev libvulkan1 vulkan-tools
 
-# 2. Instalar Google Chrome Oficial
+# 2. Instalar Google Chrome Oficial y Cloudflared Tunnel
 !if ! command -v google-chrome &> /dev/null; then wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && dpkg -i google-chrome-stable_current_amd64.deb 2>/dev/null || apt-get install -y -f; rm -f google-chrome-stable_current_amd64.deb; fi
+!if ! command -v cloudflared &> /dev/null; then wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && dpkg -i cloudflared-linux-amd64.deb 2>/dev/null; rm -f cloudflared-linux-amd64.deb; fi
 
-# 3. Instalar librerías de Python con aceleración CUDA y SIMD
-!pip install -q kokoro soundfile torch websockets requests aiohttp edge-tts numpy pillow pygame mss scipy PyTurboJPEG opencv-python-headless nest_asyncio
+# 3. Instalar librerías de Python con aceleración CUDA, IA y Servidor Web
+!pip install -q kokoro soundfile torch websockets requests aiohttp edge-tts numpy pillow pygame mss scipy PyTurboJPEG opencv-python-headless nest_asyncio fastapi uvicorn openai aiosqlite python-dotenv
 
-# 4. Pre-descarga de librerías Three.js y Modelo 3D a disco local (Cero fallos de red dentro de Chrome)
+# 4. Clonar o Actualizar el Repositorio de LinuWaifu desde GitHub (5 segundos)
+!if [ ! -d "/kaggle/working/StreamerIAWife" ]; then \
+    git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife; \
+else \
+    cd /kaggle/working/StreamerIAWife && git pull; \
+fi
+
+# 5. Pre-descarga de librerías Three.js locales
 !mkdir -p /tmp/vrm_web
 !wget -q -O /tmp/vrm_web/three.min.js https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js
 !wget -q -O /tmp/vrm_web/GLTFLoader.js https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js
 !wget -q -O /tmp/vrm_web/three-vrm.js https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.6/lib/three-vrm.js
 
-!if [ ! -f /tmp/vrm_web/AliciaSolid.vrm ] || [ $(stat -c%s /tmp/vrm_web/AliciaSolid.vrm) -lt 4000000 ]; then \
-    echo "📥 Descargando modelo 3D AliciaSolid.vrm..."; \
-    wget -q -O /tmp/vrm_web/AliciaSolid.vrm "https://raw.githubusercontent.com/vrm-c/UniVRM/master/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm" || \
-    wget -q -O /tmp/vrm_web/AliciaSolid.vrm "https://strategies-knows-ticket-insight.trycloudflare.com/static/AliciaSolid.vrm" || \
-    wget -q -O /tmp/vrm_web/AliciaSolid.vrm "https://github.com/vrm-c/UniVRM/raw/master/Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"; \
-fi
+# Copiar archivos del repositorio al servidor web local
+!cp /kaggle/working/StreamerIAWife/avatars/AliciaSolid.vrm /tmp/vrm_web/ 2>/dev/null || true
+!cp /kaggle/working/StreamerIAWife/avatars/studio.html /tmp/vrm_web/ 2>/dev/null || true
 
-print("\n🎉 ¡Entorno Dual-GPU T4x2 con Scripts Locales y Modelo 3D Listo!")
+print("\n🎉 ¡Entorno Dual-GPU T4x2 + Repositorio GitHub + Scripts Locales Listo!")
 ```
 
 ---
@@ -133,6 +138,14 @@ else:
     print(f"  • Modo GPU única: {GPU_RENDER}")
 
 KICK_RTMP_URL = "rtmps://fa723fc1b171.global-contribute.live-video.net:443/app/sk_us-west-2_CDSbvsx9Bo2K_ojNQmhIAyiHF2bDlkPpJMisRuZFnHQ"
+
+# ==============================================================================
+# 🚀 SELECCIÓN DE MODO DE EJECUCIÓN
+# True  = MODO ALL-IN-ONE (Recomendado: Todo en Kaggle a 0ms de latencia)
+# False = MODO HÍBRIDO (Canaima + Kaggle conectados vía túnel)
+# ==============================================================================
+KAGGLE_ALL_IN_ONE = False  # Cambia a True para correr todo en Kaggle con Cloudflare propio
+
 CANAIMA_WS_URL = "wss://strategies-knows-ticket-insight.trycloudflare.com/ws/cloud"
 CANAIMA_HTTP_URL = "https://strategies-knows-ticket-insight.trycloudflare.com"
 
