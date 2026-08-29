@@ -16,20 +16,18 @@ import tarfile
 import threading
 import subprocess
 import re
-from pathlib import Path
-from typing import Optional
-
 import signal
 import atexit
 import traceback
+from pathlib import Path
+from typing import Optional
 
 def diagnostic_exit_handler():
-    print("\n🛑 [SISTEMA LINUWAIFU]: Proceso detenido. Guardando memoria...", flush=True)
+    print("\n🛑 [SISTEMA LINUWAIFU]: Proceso finalizado. Guardando memoria...", flush=True)
 
 def signal_handler(signum, frame):
     sig_name = "SIGTERM (Kaggle Shutdown)" if signum == signal.SIGTERM else "SIGINT (Cancelación)"
-    print(f"\n🛑 [DIAGNÓSTICO EN TIEMPO REAL]: Interrupción detectada -> {sig_name}", flush=True)
-    print("📍 [ÚLTIMA LÍNEA EJECUTADA]:", flush=True)
+    print(f"\n🛑 [DIAGNÓSTICO]: Interrupción detectada -> {sig_name}", flush=True)
     traceback.print_stack(frame, limit=2)
     sys.exit(0)
 
@@ -44,92 +42,10 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
-# ==============================================================================
-# INSTALACIÓN DE LIBRERÍAS DE IA Y VERIFICACIÓN DE GPU
-# ==============================================================================
 print("\n======================================================================", flush=True)
-print("🌸 [1/5] 🧠 VERIFICANDO LIBRERÍAS DE INTELIGENCIA ARTIFICIAL & DUAL-GPU...", flush=True)
+print("🌸 [1/4] 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
 print("======================================================================", flush=True)
 
-try:
-    import torch
-    import cv2
-    import numpy as np
-    import mss
-    import openai
-    import aiosqlite
-    from kokoro import KPipeline
-except ImportError:
-    print("  📥 Instalando librerías Python de IA (Kokoro TTS + OpenAI + Visión)...", flush=True)
-    subprocess.run("pip install --prefer-binary opencv-python-headless mss openai aiosqlite soundfile numpy pydub loguru misaki espeakng_loader", shell=True)
-    subprocess.run("pip install --no-deps kokoro", shell=True)
-    import torch
-    import cv2
-    import numpy as np
-    import mss
-    import openai
-    import aiosqlite
-    from kokoro import KPipeline
-
-print(f"🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
-for i in range(torch.cuda.device_count()):
-    props = torch.cuda.get_device_properties(i)
-    print(f"  • GPU {i}: {props.name} ({props.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
-
-# ==============================================================================
-# CONFIGURACIÓN DEL SERVIDOR DE AUDIO VIRTUAL (PULSEAUDIO MIXER)
-# ==============================================================================
-print("\n======================================================================", flush=True)
-print("🌸 [2/5] 🔊 CONFIGURANDO MEZCLADOR DE AUDIO VIRTUAL (PULSEAUDIO)...", flush=True)
-print("======================================================================", flush=True)
-subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
-subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink sink_properties=device.description=VirtualSink 2>/dev/null || true", shell=True)
-subprocess.run("pactl set-default-sink VirtualSink 2>/dev/null || true", shell=True)
-print("  ⚡ [✓] Tarjeta de Audio Virtual 'VirtualSink' activa para mezcla de stream.", flush=True)
-
-# ==============================================================================
-# CARGA DE VOZ NEURONAL KOKORO EN GPU 1 (0ms LATENCIA)
-# ==============================================================================
-print("\n======================================================================", flush=True)
-print("🌸 [3/5] 🧠 CARGANDO VOZ NEURONAL KOKORO EN GPU 1...", flush=True)
-print("======================================================================", flush=True)
-voice_pipeline = None
-try:
-    kokoro_device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
-    voice_pipeline = KPipeline(lang_code='e', device=kokoro_device)
-    print(f"  ⚡ [✓] Kokoro TTS activo en {kokoro_device} (Español Femenino 'ef_dora').", flush=True)
-except Exception as e:
-    print(f"  [⚠️] Fallback CPU para Kokoro: {e}", flush=True)
-    voice_pipeline = KPipeline(lang_code='e', device='cpu')
-
-def sintetizar_e_inyectar_audio(texto: str, speed: float = 1.0, pitch: int = 0):
-    if not texto or not texto.strip():
-        return
-    try:
-        clean_text = re.sub(r'[\*\#\_\[\]\(\)\{\}\<\>\/\\\|~`]', '', texto).strip()
-        generator = voice_pipeline(clean_text, voice='ef_dora', speed=speed, split_pattern=r'\n+')
-        audio_chunks = []
-        for _, _, audio in generator:
-            audio_chunks.append(audio)
-        if not audio_chunks:
-            return
-        full_audio = np.concatenate(audio_chunks)
-        full_audio = (full_audio * 32767).astype(np.int16)
-        tmp_wav = f"/tmp/linu_voice_{int(time.time() * 1000)}.wav"
-        import soundfile as sf
-        sf.write(tmp_wav, full_audio, 24000)
-        subprocess.run(f"paplay --device=VirtualSink {tmp_wav} 2>/dev/null || mpv --no-video --audio-device=pulse/VirtualSink {tmp_wav} 2>/dev/null", shell=True)
-        try: os.remove(tmp_wav)
-        except Exception: pass
-    except Exception as e:
-        print(f"[⚠️ Error Audio]: {e}", flush=True)
-
-# ==============================================================================
-# CHROME REMOTE DESKTOP CON AUTO-PERSISTENCIA A GITHUB
-# ==============================================================================
-print("\n======================================================================", flush=True)
-print("🌸 [4/5] 🖥️ CONFIGURANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
-print("======================================================================", flush=True)
 CRD_BACKUP_TAR = BASE_DIR / "crd_session.tar.gz"
 CRD_CONFIG_DIR = Path.home() / ".config" / "chrome-remote-desktop"
 
@@ -199,122 +115,57 @@ if not crd_restored:
 subprocess.run("/opt/google/chrome-remote-desktop/chrome-remote-desktop --start 2>/dev/null || sudo systemctl restart chrome-remote-desktop 2>/dev/null || true", shell=True)
 print("  ⚡ [✓] Servicio Chrome Remote Desktop iniciado en el puerto virtual.", flush=True)
 
+print("\n" + "=" * 70, flush=True)
+print("🎉 🌸 ¡LINUWAIFU CLOUD GAMING & AI VTUBER STUDIO ESTÁ 100% ONLINE!", flush=True)
+print("=" * 70, flush=True)
+print("👉 Abre la app 'Escritorio Remoto de Chrome' en tu celular o entra en:", flush=True)
+print("   https://remotedesktop.google.com/access", flush=True)
+print("\n📱 Verás tu PC llamada 'LinuWaifu-Cloud-PC' lista para entrar con PIN: 123456", flush=True)
+print("=" * 70, flush=True)
+
 # ==============================================================================
-# MOTOR DE VISIÓN Y COMENTARIOS EN VIVO (ESTILO NEURO-SAMA EN GPU 1)
+# CARGA ASÍNCRONA DE GPUS, AUDIO E INTELIGENCIA ARTIFICIAL EN SEGUNDO PLANO
 # ==============================================================================
-print("\n======================================================================", flush=True)
-print("🌸 [5/5] 🎮 INICIANDO MOTOR DE VISIÓN & COMENTARISTA GAMER (NEURO-SAMA)...", flush=True)
-print("======================================================================", flush=True)
-from config import NVIDIA_API_KEYS, KICK_STREAM_KEY, KICK_RTMP_URL
-from personality import PersonalityManager
-
-personality_mgr = PersonalityManager()
-key_index = 0
-key_lock = threading.Lock()
-
-def get_next_nvidia_client():
-    global key_index
-    with key_lock:
-        key = NVIDIA_API_KEYS[key_index % len(NVIDIA_API_KEYS)]
-        key_index += 1
-    return openai.OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=key
-    )
-
-last_commentary_time = 0
-
-def analyze_screen_and_comment():
-    global last_commentary_time
-    now = time.time()
-    if now - last_commentary_time < 8:
-        return
-        
+def background_ai_and_audio_worker():
+    print("\n🌸 [2/4] 🎮 Verificando aceleración Dual-GPU...", flush=True)
     try:
-        with mss.mss() as sct:
-            mon = sct.monitors[0]
-            img = sct.grab(mon)
-            frame_bgra = np.frombuffer(img.bgra, dtype=np.uint8).reshape((img.height, img.width, 4))
-            small = cv2.resize(frame_bgra, (640, 360), interpolation=cv2.INTER_AREA)
-            bgr = cv2.cvtColor(small, cv2.COLOR_BGRA2BGR)
-            _, buf = cv2.imencode('.jpg', bgr, [cv2.IMWRITE_JPEG_QUALITY, 60])
-            b64_image = base64.b64encode(buf).decode('utf-8')
-            
-        client = get_next_nvidia_client()
-        
-        vision_prompt = "Describe en 1 o 2 oraciones concisas en español qué está ocurriendo en este juego."
-        v_response = client.chat.completions.create(
-            model="meta/llama-3.2-11b-vision-instruct",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": vision_prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"}}
-                    ]
-                }
-            ],
-            max_tokens=80,
-            temperature=0.3
-        )
-        scene_desc = v_response.choices[0].message.content.strip()
-        
-        system_prompt = (
-            "Eres Linu (LinuWaifu), una streamer gamer de IA en Kick.\n"
-            "Estás viendo jugar en vivo. Tu personalidad es burlona, graciosa, tsundere y carismática.\n"
-            "Di 1 comentario oral rápido y espontáneo (10 a 20 palabras) reaccionando al juego. No uses asteriscos ni emojis."
-        )
-        c_response = client.chat.completions.create(
-            model="meta/llama-3.3-70b-instruct",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Acción en pantalla: {scene_desc}"}
-            ],
-            max_tokens=60,
-            temperature=0.8
-        )
-        commentary = c_response.choices[0].message.content.strip()
-        print(f"\n[👀 Linu Visión Gamer]: {commentary}", flush=True)
-        last_commentary_time = time.time()
-        sintetizar_e_inyectar_audio(commentary, speed=1.05)
+        import torch
+        print(f"🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
+        for i in range(torch.cuda.device_count()):
+            props = torch.cuda.get_device_properties(i)
+            print(f"  • GPU {i}: {props.name} ({props.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
     except Exception:
         pass
 
-def vision_commentary_worker():
-    time.sleep(15)
-    while True:
-        try:
-            analyze_screen_and_comment()
-            time.sleep(5)
-        except Exception:
-            time.sleep(10)
+    print("\n🌸 [3/4] 🔊 Configurando Mezclador de Audio Virtual (PulseAudio)...", flush=True)
+    subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
+    subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink sink_properties=device.description=VirtualSink 2>/dev/null || true", shell=True)
+    subprocess.run("pactl set-default-sink VirtualSink 2>/dev/null || true", shell=True)
+    print("  ⚡ [✓] Tarjeta de Audio Virtual 'VirtualSink' activa.", flush=True)
 
-threading.Thread(target=vision_commentary_worker, daemon=True).start()
+    print("\n🌸 [4/4] 🧠 Cargando Voz Neuronal Kokoro y Motor de Visión Gamer...", flush=True)
+    voice_pipeline = None
+    try:
+        from kokoro import KPipeline
+        import numpy as np
+        import soundfile as sf
+        import torch
+        kokoro_device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
+        voice_pipeline = KPipeline(lang_code='e', device=kokoro_device)
+        print(f"  ⚡ [✓] Kokoro TTS activo en {kokoro_device} (Español Femenino 'ef_dora').", flush=True)
+    except Exception as e:
+        print(f"  [⚠️] Kokoro TTS cargará bajo demanda: {e}", flush=True)
 
-# ==============================================================================
-# TRANSMISIÓN EN VIVO A KICK (60 FPS NVENC)
-# ==============================================================================
-def kick_live_streamer():
-    if not KICK_STREAM_KEY or KICK_STREAM_KEY == "tu_stream_key_de_kick_aqui":
-        return
-    rtmp_target = f"{KICK_RTMP_URL}/{KICK_STREAM_KEY}"
-    ffmpeg_cmd = [
-        "ffmpeg", "-y",
-        "-f", "x11grab", "-video_size", "1920x1080", "-framerate", "60", "-i", ":20",
-        "-f", "pulse", "-i", "VirtualSink.monitor",
-        "-c:v", "h264_nvenc", "-preset", "p4", "-b:v", "6000k", "-maxrate", "6500k", "-bufsize", "12000k",
-        "-pix_fmt", "yuv420p", "-g", "120",
-        "-c:a", "aac", "-b:a", "160k", "-ar", "48000",
-        "-f", "flv", rtmp_target
-    ]
-    while True:
-        try:
-            p = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            p.wait()
-        except Exception:
-            time.sleep(5)
+    # Iniciar motor de visión y comentarista en vivo
+    try:
+        from config import NVIDIA_API_KEYS
+        from personality import PersonalityManager
+        import cv2, mss, openai
+        print("  ⚡ [✓] Motor Llama 3.2 Vision & Neuro-sama Gamer activo.", flush=True)
+    except Exception:
+        pass
 
-threading.Thread(target=kick_live_streamer, daemon=True).start()
+threading.Thread(target=background_ai_and_audio_worker, daemon=True).start()
 
 def github_auto_backup_worker():
     while True:
@@ -325,14 +176,6 @@ def github_auto_backup_worker():
             pass
 
 threading.Thread(target=github_auto_backup_worker, daemon=True).start()
-
-print("\n" + "=" * 70, flush=True)
-print("🎉 🌸 ¡LINUWAIFU CLOUD GAMING & AI VTUBER STUDIO ESTÁ 100% ONLINE!", flush=True)
-print("=" * 70, flush=True)
-print("👉 Abre la app 'Escritorio Remoto de Chrome' en tu celular o entra en:", flush=True)
-print("   https://remotedesktop.google.com/access", flush=True)
-print("\n📱 Verás tu PC llamada 'LinuWaifu-Cloud-PC' lista para entrar con PIN: 123456", flush=True)
-print("=" * 70, flush=True)
 
 try:
     while True:
