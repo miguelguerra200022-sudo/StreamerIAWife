@@ -24,36 +24,36 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 def run_command_with_heartbeat(cmd: str, desc: str, timeout_sec: int = 240) -> bool:
-    """Ejecuta comandos de instalación en segundo plano emitiendo un pulso limpio cada 3s para evitar límites de IOPub."""
+    """Ejecuta comandos de instalación en streaming controlado a 1 línea cada 2.5s para evitar límites de IOPub y capturar errores al instante."""
     print(f"\n⏳ {desc}...", flush=True)
     start_t = time.time()
-    with open("/tmp/install.log", "a") as log_file:
-        p = subprocess.Popen(cmd, shell=True, stdout=log_file, stderr=log_file)
-        while p.poll() is None:
-            time.sleep(3)
-            elapsed = int(time.time() - start_t)
-            print(f"  • {desc}: en progreso ({elapsed}s transcurridos)...", flush=True)
-            if elapsed > timeout_sec:
-                p.kill()
-                print(f"⚠️ Tiempo límite excedido ({timeout_sec}s).", flush=True)
-                return False
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    last_print = time.time()
+    output_lines = []
+    while True:
+        line = p.stdout.readline()
+        if not line and p.poll() is not None:
+            break
+        if line:
+            clean_l = line.strip()
+            output_lines.append(clean_l)
+            # Imprimir en pantalla cada 2.5 segundos o si contiene error
+            if time.time() - last_print > 2.5 or "err" in clean_l.lower() or "fail" in clean_l.lower():
+                print(f"  • {clean_l[:85]}", flush=True)
+                last_print = time.time()
+    p.wait()
     if p.returncode == 0:
         print(f"⚡ [✓] {desc} completado ({int(time.time() - start_t)}s).", flush=True)
         return True
     else:
-        print(f"⚠️ Aviso en {desc} (Código {p.returncode}).", flush=True)
-        try:
-            with open("/tmp/install.log", "r") as lf:
-                lines = lf.readlines()
-                for l in lines[-10:]:
-                    print(f"    {l.strip()}", flush=True)
-        except Exception:
-            pass
+        print(f"⚠️ Error en {desc} (Código {p.returncode}):", flush=True)
+        for l in output_lines[-12:]:
+            print(f"    {l}", flush=True)
         return False
 
 def install_system_packages():
-    # 0. Desbloquear dpkg y apt
-    subprocess.run("sudo fuser -k /var/lib/dpkg/lock* /var/lib/apt/lists/lock* 2>/dev/null || true", shell=True)
+    # 0. Matar procesos huérfanos y desbloquear dpkg y apt
+    subprocess.run("sudo killall -9 apt apt-get dpkg 2>/dev/null || true", shell=True)
     subprocess.run("sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
     subprocess.run("sudo dpkg --configure -a 2>/dev/null || true", shell=True)
 
