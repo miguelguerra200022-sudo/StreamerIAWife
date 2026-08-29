@@ -42,12 +42,26 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
-# Auto-instalar CRD si no está presente en el sistema
-if not os.path.exists("/opt/google/chrome-remote-desktop/start-host"):
-    print("\n📦 Configurando Google Chrome Remote Desktop en el sistema...", flush=True)
-    subprocess.run("wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb", shell=True)
-    subprocess.run("sudo dpkg --force-all -i /tmp/crd.deb", shell=True)
-    print("⚡ [✓] Google Chrome Remote Desktop configurado.", flush=True)
+def ensure_system_dependencies():
+    # Verificar si falta libgtk-3 (libgdk-3.so.0) o el ejecutable de CRD
+    crd_bin = "/opt/google/chrome-remote-desktop/start-host"
+    if not os.path.exists(crd_bin) or not os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
+        print("\n🌸 [1/4] 📥 Instalando librerías gráficas GTK3, XFCE4 y Google Remote Desktop...", flush=True)
+        subprocess.run(
+            "sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
+            "sudo sed -i 's|http://security.ubuntu.com/ubuntu/|http://mirrors.edge.kernel.org/ubuntu/|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true; "
+            "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99force >/dev/null; "
+            "sudo apt-get update -qq; "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
+            "libgtk-3-0 libxtst6 xbase-clients xserver-xorg-video-dummy gsettings-desktop-schemas "
+            "xvfb python3-psutil python3-xdg python3-packaging xfwm4 xfce4-session xfce4-terminal xfdesktop4 dbus-x11 pulseaudio; "
+            "wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb; "
+            "sudo dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken",
+            shell=True
+        )
+        print("⚡ [✓] Librerías gráficas GTK3 y Chrome Remote Desktop instalados.", flush=True)
+
+ensure_system_dependencies()
 
 # Configurar sesión XFCE para Chrome Remote Desktop
 crd_session_file = Path.home() / ".chrome-remote-desktop-session"
@@ -56,7 +70,7 @@ with open(crd_session_file, "w") as f:
 crd_session_file.chmod(0o755)
 
 print("\n======================================================================", flush=True)
-print("🌸 [1/4] 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
+print("🌸 [2/4] 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
 print("======================================================================", flush=True)
 
 CRD_BACKUP_TAR = BASE_DIR / "crd_session.tar.gz"
@@ -104,12 +118,12 @@ if not crd_restored:
                 except Exception:
                     pass
 
-    if not crd_command:
+    if not crd_command or crd_command == "PEGA_AQUI_TU_COMANDO_DE_GOOGLE":
         print("\n👉 [PASO FÁCIL]: Pega tu comando de Google en la variable CRD_AUTH de tu celda de Kaggle:")
         print('   CRD_AUTH = "DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=..."\n', flush=True)
         sys.exit(0)
             
-    if crd_command:
+    if crd_command and crd_command != "PEGA_AQUI_TU_COMANDO_DE_GOOGLE":
         code_match = re.search(r'--code="?([^"\s]+)"?', crd_command)
         auth_code = code_match.group(1) if code_match else crd_command
         
@@ -140,7 +154,7 @@ print("=" * 70, flush=True)
 # CARGA ASÍNCRONA DE GPUS, AUDIO E INTELIGENCIA ARTIFICIAL EN SEGUNDO PLANO
 # ==============================================================================
 def background_ai_and_audio_worker():
-    print("\n🌸 [2/4] 🎮 Verificando aceleración Dual-GPU...", flush=True)
+    print("\n🌸 [3/4] 🎮 Verificando aceleración Dual-GPU...", flush=True)
     try:
         import torch
         print(f"🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
@@ -150,24 +164,11 @@ def background_ai_and_audio_worker():
     except Exception:
         pass
 
-    print("\n🌸 [3/4] 🔊 Configurando Mezclador de Audio Virtual (PulseAudio)...", flush=True)
+    print("\n🌸 [4/4] 🔊 Configurando Mezclador de Audio Virtual (PulseAudio)...", flush=True)
     subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
     subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink sink_properties=device.description=VirtualSink 2>/dev/null || true", shell=True)
     subprocess.run("pactl set-default-sink VirtualSink 2>/dev/null || true", shell=True)
     print("  ⚡ [✓] Tarjeta de Audio Virtual 'VirtualSink' activa.", flush=True)
-
-    print("\n🌸 [4/4] 🧠 Cargando Voz Neuronal Kokoro y Motor de Visión Gamer...", flush=True)
-    voice_pipeline = None
-    try:
-        from kokoro import KPipeline
-        import numpy as np
-        import soundfile as sf
-        import torch
-        kokoro_device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
-        voice_pipeline = KPipeline(lang_code='e', device=kokoro_device)
-        print(f"  ⚡ [✓] Kokoro TTS activo en {kokoro_device} (Español Femenino 'ef_dora').", flush=True)
-    except Exception as e:
-        print(f"  [⚠️] Kokoro TTS cargará bajo demanda: {e}", flush=True)
 
     # Iniciar motor de visión y comentarista en vivo
     try:
