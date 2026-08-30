@@ -12,6 +12,7 @@ Funciona tanto en modo interactivo como en "Save & Run All".
 import os
 import sys
 import time
+import getpass
 import tarfile
 import threading
 import subprocess
@@ -126,12 +127,17 @@ if not crd_restored:
     code_match = re.search(r'--code="?([^"\s]+)"?', crd_command)
     auth_code = code_match.group(1) if code_match else crd_command
 
-    print(f"⏳ Vinculando (Host: LinuWaifu-Cloud-PC, PIN: 123456)...", flush=True)
+    curr_user = getpass.getuser() or os.environ.get("USER", "root")
+    subprocess.run(f"sudo usermod -a -G chrome-remote-desktop {curr_user} 2>/dev/null || true", shell=True)
+
+    print(f"⏳ Vinculando (Host: LinuWaifu-Cloud-PC, Usuario: {curr_user}, PIN: 123456)...", flush=True)
     start_cmd = (
         f'DISPLAY= /opt/google/chrome-remote-desktop/start-host '
         f'--code="{auth_code}" '
         f'--redirect-url="https://remotedesktop.google.com/_/oauthredirect" '
-        f'--name="LinuWaifu-Cloud-PC" --pin="123456"'
+        f'--name="LinuWaifu-Cloud-PC" '
+        f'--user-name="{curr_user}" '
+        f'--pin="123456"'
     )
     res = subprocess.run(start_cmd, shell=True)
     if res.returncode == 0:
@@ -139,7 +145,7 @@ if not crd_restored:
         time.sleep(2)
         backup_crd_session()
     else:
-        print("⚠️ Código inválido. Genera uno nuevo en https://remotedesktop.google.com/headless", flush=True)
+        print("⚠️ Si el código expiró, genera uno nuevo en https://remotedesktop.google.com/headless", flush=True)
 
 # Iniciar servicio CRD
 subprocess.run(
@@ -168,7 +174,7 @@ def background_worker():
         print(f"\n🎮 GPUs: {n}", flush=True)
         for i in range(n):
             p = torch.cuda.get_device_properties(i)
-            print(f"  • GPU {i}: {p.name} ({p.total_mem / (1024**3):.1f} GB)", flush=True)
+            print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB)", flush=True)
     except Exception:
         pass
     subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
