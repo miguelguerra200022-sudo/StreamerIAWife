@@ -1,54 +1,34 @@
 ================================================================================
-🌸 GUÍA DEFINITIVA: LINUWAIFU CLOUD GAMING & AI VTUBER (KAGGLE NOTEBOOK)
+🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (GUÍA DEFINITIVA DE KAGGLE)
 ================================================================================
 
-📌 PASO PREVIO: OBTENER TU CÓDIGO DE GOOGLE
-1. Entra desde tu navegador a: https://remotedesktop.google.com/headless
-2. Clic en "Comenzar" -> "Siguiente" -> "Autorizar".
-3. Copia el comando que aparece en la sección "Debian Linux".
-   (Se parece a: DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="4/0A...")
+🖥️ ¿QUÉ ES ESTE ENTORNO?
+Es una PC Linux completa con escritorio gráfico (ratón, ventanas, terminal,
+explorador de archivos, soporte de Google Drive de 5TB vía Rclone, y 2 GPUs
+NVIDIA Tesla T4 con 32GB de VRAM total).
+
+📱 CÓMO SE USA EN EL CELULAR:
+Al ejecutar el comando, te da un enlace web que abres en Chrome o Brave en tu
+celular y tienes la PC completa en tus manos con pantalla táctil.
 
 ================================================================================
-📋 CELDA 1 EN KAGGLE (Instalación limpia de paquetes gráficos y audio)
+📋 COMANDO ÚNICO PARA EJECUTAR EN KAGGLE (1 SOLA CELDA)
 ================================================================================
-Copia y pega exactamente este comando en la Celda 1 y dale Play (▶️):
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && bash /kaggle/working/StreamerIAWife/install_kaggle_packages.sh
-
-⏳ Espera que termine y diga:
-   "✅ INSTALACIÓN 100% COMPLETADA"
-
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py
 
 ================================================================================
-📋 CELDA 2 EN KAGGLE (Vinculación y Encendido del Escritorio Remoto)
+🌐 SI TIENES TU TOKEN GRATIS DE NGROK (RECOMENDADO PARA MÁXIMA VELOCIDAD)
 ================================================================================
-Copia y pega este bloque en la Celda 2, reemplazando el texto con tu comando:
+Si tienes cuenta en https://ngrok.com (es gratis), puedes pasar tu token así:
 
-CRD_AUTH = 'PEGA_AQUI_TU_COMANDO_DE_GOOGLE'
-
-import os, subprocess
-if not os.path.exists('/kaggle/working/StreamerIAWife'):
-    subprocess.run('git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife', shell=True)
-else:
-    subprocess.run('cd /kaggle/working/StreamerIAWife && git pull origin main', shell=True)
-
-%cd /kaggle/working/StreamerIAWife
-!python3 run_kaggle_crd_desktop.py "$CRD_AUTH"
-
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "TU_TOKEN_DE_NGROK"
 
 ================================================================================
-📱 CÓMO CONECTARTE DESDE TU CELULAR
+💾 CÓMO USAR TUS 5TB DE GOOGLE DRIVE EN ESTA PC
 ================================================================================
-1. Abre la app "Escritorio Remoto de Chrome" (o entra a https://remotedesktop.google.com/access).
-2. Verás en verde tu PC llamada: "LinuWaifu-Cloud-PC".
-3. Toca sobre ella e ingresa el PIN de seguridad:
-   PIN: 123456
-
-================================================================================
-🔄 TRUCO PARA CERRAR EL NAVEGADOR Y DEJARLO CORRIENDO (HASTA 12 HORAS)
-================================================================================
-1. Asegúrate de tener la Celda 1 arriba y la Celda 2 abajo con tu código pegado.
-2. Arriba a la derecha en Kaggle, dale clic a "Save Version".
-3. Selecciona la opción "Save & Run All (Commit)".
-4. ¡Listo! Puedes cerrar la pestaña de Kaggle en el celular o la computadora y tu PC en la nube seguirá encendida.
+1. Dentro de la terminal de tu Cloud PC (o en una celda de Kaggle), escribe:
+   rclone config
+2. Sigue los pasos para vincular tu cuenta de Google Drive de 5TB.
+3. ¡Podrás descargar, jugar y transferir archivos a más de 500 MB/s!
 ================================================================================
