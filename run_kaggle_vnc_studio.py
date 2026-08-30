@@ -4,9 +4,9 @@
 ================================================================================
 🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (VNC + noVNC + Rclone GDrive)
 ================================================================================
-Entorno de escritorio gráfico completo (XFCE4/Fluxbox) accesible desde el
-navegador web de tu celular o PC, con soporte para Google Drive (Rclone),
-GPUs NVIDIA Tesla T4 activas, Audio y VTuber IA.
+Entorno de escritorio gráfico completo accesible desde el navegador web
+de tu celular o PC con soporte para Google Drive (Rclone), 2 GPUs NVIDIA
+Tesla T4 (32GB VRAM), Audio y Ngrok Tunnel de alta velocidad.
 ================================================================================
 """
 
@@ -22,21 +22,25 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = ":1"
 
+DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+
 print("\n" + "=" * 70)
 print("🌸 INICIANDO LINUWAIFU CLOUD PC (VNC WEB DESKTOP PRO)...")
 print("=" * 70)
 
 # ==============================================================================
-# 1. INSTALACIÓN ULTRA RÁPIDA DE DEPENDENCIAS (x11vnc, noVNC, fluxbox, rclone)
+# 1. INSTALACIÓN ULTRA RÁPIDA DE DEPENDENCIAS (x11vnc, noVNC, fluxbox, rclone, pyngrok)
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Verificando e instalando servidor gráfico y herramientas...", flush=True)
+    print("📦 [1/4] Verificando e instalando herramientas del sistema...", flush=True)
     subprocess.run(
         "apt-get update -qq && "
         "apt-get install -y --no-install-recommends "
         "x11vnc xvfb fluxbox dbus-x11 pulseaudio net-tools wget curl rclone psmisc >/dev/null 2>&1",
         shell=True
     )
+    subprocess.run("pip install -q pyngrok >/dev/null 2>&1", shell=True)
+
     # Descargar noVNC si no existe
     novnc_dir = Path("/kaggle/working/noVNC")
     if not novnc_dir.exists():
@@ -50,7 +54,7 @@ setup_dependencies()
 # 2. INICIAR PANTALLA VIRTUAL Y ESCRITORIO
 # ==============================================================================
 print("🖥️ [3/4] Levantando pantalla virtual (1280x720 HD) y gestor de ventanas...", flush=True)
-subprocess.run("killall -9 Xvfb x11vnc websockify 2>/dev/null || true", shell=True)
+subprocess.run("killall -9 Xvfb x11vnc websockify ngrok 2>/dev/null || true", shell=True)
 
 # Pantalla virtual HD
 subprocess.Popen(["Xvfb", ":1", "-screen", "0", "1280x720x24"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -75,14 +79,16 @@ novnc_proc = subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 3. TÚNEL PÚBLICO SEGURO (Ngrok / Cloudflare / LocalTunnel)
+# 3. TÚNEL PÚBLICO SEGURO (Ngrok de alta velocidad)
 # ==============================================================================
-print("🌐 [4/4] Generando enlace web de acceso para tu celular...", flush=True)
+print("🌐 [4/4] Conectando túnel Ngrok de alta velocidad...", flush=True)
 
 tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN":
     ngrok_token = sys.argv[1].strip()
+if not ngrok_token:
+    ngrok_token = DEFAULT_NGROK
 
 if ngrok_token:
     try:
@@ -91,10 +97,10 @@ if ngrok_token:
         tunnel = ngrok.connect(6080, "http")
         tunnel_url = f"{tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
     except Exception as e:
-        print(f"⚠️ Error con Ngrok: {e}")
+        print(f"⚠️ Aviso Ngrok: {e}")
 
 if not tunnel_url:
-    # Intentar con LocalTunnel o Cloudflared
+    # Intentar con LocalTunnel como respaldo
     try:
         subprocess.run("npm install -g localtunnel >/dev/null 2>&1 || true", shell=True)
         lt_proc = subprocess.Popen(["lt", "--port", "6080"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -109,7 +115,7 @@ if not tunnel_url:
         pass
 
 if not tunnel_url:
-    tunnel_url = "http://localhost:6080/vnc.html?autoconnect=true&resize=scale (Usa túnel Ngrok para acceso remoto)"
+    tunnel_url = "http://localhost:6080/vnc.html?autoconnect=true&resize=scale"
 
 # ==============================================================================
 # INFORMACIÓN DE GPUs Y AUDIO
@@ -117,7 +123,7 @@ if not tunnel_url:
 try:
     import torch
     n = torch.cuda.device_count()
-    print(f"\n🎮 GPUs Disponibles: {n}")
+    print(f"\n🎮 GPUs NVIDIA Tesla Activas: {n}")
     for i in range(n):
         p = torch.cuda.get_device_properties(i)
         print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)")
@@ -130,12 +136,12 @@ except Exception:
 print("\n" + "=" * 70)
 print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE!")
 print("=" * 70)
-print("📱 ENLACE DE ACCESO DIRECTO (Ábrelo en Chrome/Brave en tu celular):")
+print("📱 ENLACE DE ACCESO DIRECTO (Toca o cópialo en Chrome/Brave en tu celular):")
 print(f"👉 {tunnel_url}")
 print("=" * 70)
-print("📌 NOTA: Tienes ratón táctil, teclado en pantalla y escritorio completo.")
-print("   Para montar tu Google Drive de 5TB ejecuta: !rclone config")
-print("=" * 70)
+print("📌 Tienes escritorio completo, ratón táctil y teclado en pantalla.")
+print("   Para montar tu Google Drive de 5TB escribe: !rclone config")
+print("=" * 70 + "\n")
 
 # Mantener viva la celda
 try:
