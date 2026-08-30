@@ -1,36 +1,43 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (GUÍA DEFINITIVA DE KAGGLE)
+🌸 UBUNTU NATIVO PRO EDITION EN KAGGLE (GUÍA DEFINITIVA)
 ================================================================================
 
-🖥️ ¿QUÉ ES ESTE ENTORNO?
-Es una PC Linux completa con escritorio gráfico (ratón, ventanas, terminal,
-explorador de archivos, soporte de Google Drive de 5TB vía Rclone, y 2 GPUs
-NVIDIA Tesla T4 con 32GB de VRAM total).
-
-📱 CÓMO SE USA EN EL CELULAR:
-Al ejecutar el comando, te da un enlace web de Ngrok que abres en Chrome o Brave
-en tu celular y tienes la PC completa en tus manos con pantalla táctil.
+🖥️ ¿QUÉ INCLUYE ESTA PC EN LA NUBE?
+1. Aspecto 100% Ubuntu: Tema oficial Yaru-Dark, iconos oficiales Yaru,
+   fuentes Ubuntu, barra superior con Menú de Aplicaciones y Reloj.
+2. Suite completa de programas:
+   - 📁 Explorador de archivos Thunar (carpetas visuales, papelera).
+   - 📝 Editor de texto y código Mousepad.
+   - 📊 Monitor gráfico de GPUs Tesla T4 (nvtop) y de CPU (htop).
+   - 🎬 Reproductor multimedia mpv y audio virtual.
+   - 💾 Soporte de Google Drive de 5TB vía Rclone.
+3. 2x GPUs NVIDIA Tesla T4 con 32GB de VRAM total.
+4. Almacenamiento optimizado: Más de 19 GB libres en Kaggle.
 
 ================================================================================
-📋 COMANDO ÚNICO PARA COPIAR Y PEGAR EN KAGGLE (1 SOLA CELDA)
+📋 COMANDO ÚNICO PARA PEGAR EN KAGGLE (1 SOLA CELDA)
 ================================================================================
-Copia y pega exactamente este comando en una sola celda y dale Play (▶️):
+Copia y pega este comando en una sola celda y dale Play (▶️):
 
 !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 ================================================================================
-📱 LO QUE VERÁS EN PANTALLA EN 15 SEGUNDOS
+📱 CÓMO CONECTARTE CON LA MÁXIMA EXPERIENCIA (MODO GOOGLE CLOUD)
 ================================================================================
-🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE!
-📱 ENLACE DE ACCESO DIRECTO:
-👉 https://xxxxxx.ngrok-free.app/vnc.html?autoconnect=true&resize=scale
-
-Tocas ese enlace en tu celular ¡y listo!
+1. Descarga en tu celular la app gratuita "RealVNC Viewer" de la Play Store.
+2. Al ejecutar el comando en Kaggle, verás la dirección generada:
+   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
+3. En la app RealVNC Viewer:
+   - Toca el botón '+' para agregar conexión.
+   - Pega la dirección en Address (ej: xxxxxx.free.pinggy.link:12345).
+   - En Name pon: Ubuntu Kaggle.
+   - Toca 'Connect'.
+4. ¡Listo! Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS y resolución FULL HD 1080p.
 
 ================================================================================
 💾 CÓMO USAR TUS 5TB DE GOOGLE DRIVE EN ESTA PC
 ================================================================================
-1. Dentro de la terminal de tu Cloud PC (o en una celda de Kaggle), escribe:
+1. Dentro de la terminal de tu Ubuntu (o en Kaggle), escribe:
    rclone config
 2. Sigue los pasos para vincular tu cuenta de Google Drive de 5TB.
 3. ¡Podrás descargar, jugar y transferir archivos a más de 500 MB/s!
