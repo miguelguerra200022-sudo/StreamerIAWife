@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (VNC + noVNC + Rclone GDrive)
+🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (VNC + noVNC + FULL XFCE4 DESKTOP)
 ================================================================================
-Entorno de escritorio gráfico completo con visualización corregida:
-Fondo de pantalla activo, panel de tareas, terminal, explorador de archivos,
-Google Drive (Rclone), 2 GPUs NVIDIA Tesla T4 (32GB VRAM) y Ngrok de alta velocidad.
+Entorno de escritorio gráfico COMPLETO de Ubuntu / XFCE4:
+Barra de tareas, Menú de inicio de aplicaciones, Iconos de escritorio,
+Explorador de archivos (Thunar), Terminal, Google Drive (Rclone),
+2 GPUs NVIDIA Tesla T4 (32GB VRAM) y Ngrok Tunnel de alta velocidad.
 ================================================================================
 """
 
@@ -25,18 +26,19 @@ os.environ["DISPLAY"] = ":1"
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 print("\n" + "=" * 70)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC (VNC WEB DESKTOP PRO)...")
+print("🌸 INICIANDO LINUWAIFU CLOUD PC (ESCRITORIO COMPLETO XFCE4 PRO)...")
 print("=" * 70)
 
 # ==============================================================================
-# 1. INSTALACIÓN DE HERRAMIENTAS Y DEPENDENCIAS GRÁFICAS
+# 1. INSTALACIÓN DE XFCE4 COMPLETO + HERRAMIENTAS
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Verificando e instalando herramientas del sistema y escritorio...", flush=True)
+    print("📦 [1/4] Instalando entorno de escritorio completo XFCE4 (Panel, Menú, Iconos)...", flush=True)
     subprocess.run(
         "apt-get update -qq && "
         "apt-get install -y --no-install-recommends "
-        "x11vnc xvfb fluxbox xterm x11-xserver-utils x11-utils dbus-x11 pulseaudio net-tools wget curl rclone psmisc >/dev/null 2>&1",
+        "xfce4 xfce4-terminal xfce4-panel xfdesktop4 thunar dbus-x11 x11vnc xvfb "
+        "pulseaudio net-tools wget curl rclone psmisc greybird-gtk-theme >/dev/null 2>&1",
         shell=True
     )
     subprocess.run("pip install -q pyngrok >/dev/null 2>&1", shell=True)
@@ -51,40 +53,31 @@ def setup_dependencies():
 setup_dependencies()
 
 # ==============================================================================
-# 2. INICIAR PANTALLA VIRTUAL Y ESCRITORIO CON DISPLAY :1 EXPLÍCITO
+# 2. INICIAR PANTALLA VIRTUAL Y ESCRITORIO COMPLETO XFCE4
 # ==============================================================================
-print("🖥️ [3/4] Levantando pantalla virtual (1280x720 HD) y escritorio visual...", flush=True)
-subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xterm fluxbox 2>/dev/null || true", shell=True)
+print("🖥️ [3/4] Levantando pantalla virtual (1280x720 HD) y sesión XFCE4 completa...", flush=True)
+subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 2>/dev/null || true", shell=True)
 time.sleep(1)
 
 # Variables de entorno con DISPLAY :1
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
 
-# Iniciar servidor Xvfb
-xvfb_proc = subprocess.Popen(["Xvfb", ":1", "-screen", "0", "1280x720x24", "-nolisten", "tcp"], env=env)
+# Iniciar servidor de pantalla virtual Xvfb
+xvfb_proc = subprocess.Popen([
+    "Xvfb", ":1",
+    "-screen", "0", "1280x720x24",
+    "-ac", "-noreset", "-nolisten", "tcp"
+], env=env)
 time.sleep(2)
 
-# Establecer fondo de pantalla colorido (Cyberpunk Dark)
-subprocess.run("xsetroot -solid '#1e1e2e'", shell=True, env=env)
-
-# Iniciar gestor de ventanas Fluxbox con DISPLAY :1
-subprocess.Popen(["fluxbox"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-time.sleep(1)
-
-# Iniciar Terminal interactiva visible de bienvenida
+# Iniciar sesión de escritorio completa XFCE4 con D-Bus integrado
 subprocess.Popen([
-    "xterm",
-    "-geometry", "100x30+150+100",
-    "-bg", "#11111b",
-    "-fg", "#a6e3a1",
-    "-fa", "Monospace",
-    "-fs", "12",
-    "-title", "🌸 LINUWAIFU CLOUD TERMINAL - 2x NVIDIA TESLA T4 READY",
-    "-e", "bash -c 'echo \"==================================================\"; echo \"🌸 ¡BIENVENIDO A TU LINUWAIFU CLOUD PC!\"; echo \"==================================================\"; echo \"🎮 GPUs: 2x Tesla T4 (32GB VRAM)\"; echo \"💾 Google Drive: Escribe rclone config para montar\"; echo \"==================================================\"; bash'"
+    "dbus-launch", "--exit-with-session", "startxfce4"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+time.sleep(3)
 
-# Servidor VNC optimizado con noxdamage y noxfixes para evitar pantalla negra
+# Servidor VNC optimizado con noxdamage y noxfixes para fluidez total
 subprocess.Popen([
     "x11vnc", "-display", ":1",
     "-forever", "-nopw", "-shared",
@@ -94,7 +87,7 @@ subprocess.Popen([
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(1)
 
-# Servidor noVNC Web (Puerto 6080) con ruta web explícita
+# Servidor noVNC Web (Puerto 6080)
 subprocess.Popen([
     "/kaggle/working/noVNC/utils/novnc_proxy",
     "--vnc", "localhost:5900",
@@ -119,7 +112,6 @@ if ngrok_token:
     try:
         from pyngrok import ngrok
         ngrok.set_auth_token(ngrok_token)
-        # Cerrar túneles previos si existían
         try:
             ngrok.kill()
         except Exception:
@@ -164,14 +156,15 @@ except Exception:
 # 🎉 ¡TODO LISTO Y ONLINE!
 # ==============================================================================
 print("\n" + "=" * 70)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE Y VISIBLE!")
+print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE CON ESCRITORIO XFCE4!")
 print("=" * 70)
 print("📱 ENLACE DE ACCESO DIRECTO (Toca o cópialo en Chrome/Brave en tu celular):")
 print(f"👉 {tunnel_url}")
 print("=" * 70)
-print("📌 Verás la pantalla oscura Cyberpunk con la Terminal verde lista para usar.")
-print("   Haz clic derecho o mantén presionado en la pantalla para abrir el menú.")
-print("   Para montar tu Google Drive de 5TB escribe en la terminal: rclone config")
+print("🖥️ CARACTERÍSTICAS ACTIVAS:")
+print("   • Barra de tareas con reloj, menú de aplicaciones y explorador de archivos.")
+print("   • Iconos en el escritorio, ventanas redimensionables y ratón táctil.")
+print("   • Para montar tus 5TB de Google Drive abre la Terminal y escribe: rclone config")
 print("=" * 70 + "\n")
 
 # Mantener viva la celda
