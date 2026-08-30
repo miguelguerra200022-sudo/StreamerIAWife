@@ -26,6 +26,12 @@ Copia y pega este bloque en la Celda 2, reemplazando el texto con tu comando:
 
 CRD_AUTH = 'PEGA_AQUI_TU_COMANDO_DE_GOOGLE'
 
+import os, subprocess
+if not os.path.exists('/kaggle/working/StreamerIAWife'):
+    subprocess.run('git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife', shell=True)
+else:
+    subprocess.run('cd /kaggle/working/StreamerIAWife && git pull origin main', shell=True)
+
 %cd /kaggle/working/StreamerIAWife
 !python3 run_kaggle_crd_desktop.py "$CRD_AUTH"
 
