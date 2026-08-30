@@ -6,9 +6,9 @@
 ================================================================================
 Entorno de escritorio oficial estilo Ubuntu (Yaru Dark + Fuentes Ubuntu + 1080p).
 Soporta:
-1. Conexión directa mediante App RealVNC / AVNC en Android (Modo Touchpad,
-   Pinch-to-Zoom con 2 dedos, resolución Full HD 1080p).
-2. Conexión web instantánea en navegador móvil (noVNC).
+1. Conexión directa mediante App RealVNC / AVNC en Android vía Túnel TCP Gratuito
+   (Sin tarjeta de crédito, con Modo Touchpad, Pinch-to-Zoom con 2 dedos y 1080p).
+2. Conexión web instantánea en navegador móvil (noVNC) vía Ngrok HTTP.
 3. 2x GPUs NVIDIA Tesla T4 (32GB VRAM) y Google Drive (Rclone).
 ================================================================================
 """
@@ -16,6 +16,7 @@ Soporta:
 import os
 import sys
 import time
+import re
 import subprocess
 import threading
 import signal
@@ -35,11 +36,11 @@ print("=" * 70)
 # 1. INSTALACIÓN DE TEMA UBUNTU YARU + HERRAMIENTAS
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Instalando paquetes de Ubuntu oficial (Yaru Theme, XFCE4, Fuentes)...", flush=True)
+    print("📦 [1/4] Instalando paquetes de Ubuntu oficial (Yaru Theme, XFCE4, Fuentes, SSH)...", flush=True)
     subprocess.run(
         "apt-get update -qq && "
         "apt-get install -y --no-install-recommends "
-        "xfce4 xfce4-terminal xfce4-panel xfdesktop4 thunar dbus-x11 x11vnc xvfb "
+        "xfce4 xfce4-terminal xfce4-panel xfdesktop4 thunar dbus-x11 x11vnc xvfb openssh-client "
         "yaru-theme-gtk yaru-theme-icon fonts-ubuntu pulseaudio net-tools wget curl rclone psmisc >/dev/null 2>&1",
         shell=True
     )
@@ -58,7 +59,7 @@ setup_dependencies()
 # 2. INICIAR PANTALLA VIRTUAL EN FULL HD (1920x1080) Y CONFIGURAR TEMA UBUNTU
 # ==============================================================================
 print("🖥️ [3/4] Levantando pantalla virtual Full HD (1920x1080) y tema Ubuntu Yaru...", flush=True)
-subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 2>/dev/null || true", shell=True)
+subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 ssh 2>/dev/null || true", shell=True)
 time.sleep(1)
 
 # Variables de entorno con DISPLAY :1
@@ -68,7 +69,6 @@ env["DISPLAY"] = ":1"
 # Configurar temas de Ubuntu antes de iniciar sesión
 try:
     os.makedirs(os.path.expanduser("~/.config/xfce4/xfconf/xfce-perchannel-xml"), exist_ok=True)
-    # Establecer tema Yaru-dark en xsettings
     subprocess.run("xfconf-query -c xsettings -p /Net/ThemeName -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Net/IconThemeName -s 'Yaru' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
@@ -109,13 +109,33 @@ subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 3. TÚNELES NGROK (TCP PARA APPS NATIVAS + HTTP PARA WEB)
+# 3. TÚNELES (TCP PARA APP REALVNC + HTTP PARA WEB)
 # ==============================================================================
-print("🌐 [4/4] Conectando túneles Ngrok (App Móvil + Web)...", flush=True)
+print("🌐 [4/4] Conectando túneles de alta velocidad...", flush=True)
 
 vnc_app_address = None
 web_tunnel_url = None
 
+# A) TÚNEL TCP PARA APP REALVNC (Pinggy - 100% Gratis sin tarjeta)
+try:
+    pinggy_proc = subprocess.Popen(
+        ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True
+    )
+    for _ in range(20):
+        line = pinggy_proc.stdout.readline()
+        if "tcp://" in line:
+            match = re.search(r'tcp://([^\s]+)', line)
+            if match:
+                vnc_app_address = match.group(1)
+                break
+        time.sleep(0.3)
+except Exception as e:
+    print(f"⚠️ Aviso Pinggy TCP: {e}")
+
+# B) TÚNEL HTTP PARA NAVEGADOR WEB (Ngrok HTTP)
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN":
     ngrok_token = sys.argv[1].strip()
@@ -125,28 +145,27 @@ if not ngrok_token:
 if ngrok_token:
     try:
         from pyngrok import ngrok
-        ngrok.set_auth_token(ngrok_token)
         try:
             ngrok.kill()
         except Exception:
             pass
-        
-        # 1. Túnel TCP para App móvil RealVNC / AVNC (Puntero touchpad y Pinch to Zoom)
-        try:
-            tcp_tunnel = ngrok.connect(5900, "tcp")
-            vnc_app_address = tcp_tunnel.public_url.replace("tcp://", "")
-        except Exception as e:
-            print(f"⚠️ Aviso Ngrok TCP: {e}")
-
-        # 2. Túnel HTTP para navegador web
-        try:
-            http_tunnel = ngrok.connect(6080, "http")
-            web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
-        except Exception as e:
-            print(f"⚠️ Aviso Ngrok HTTP: {e}")
-
+        ngrok.set_auth_token(ngrok_token)
+        http_tunnel = ngrok.connect(6080, "http")
+        web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
     except Exception as e:
-        print(f"⚠️ Error Ngrok: {e}")
+        # Fallback a LocalTunnel si Ngrok da error de sesion duplicada
+        try:
+            subprocess.run("npm install -g localtunnel >/dev/null 2>&1 || true", shell=True)
+            lt_proc = subprocess.Popen(["lt", "--port", "6080"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            time.sleep(3)
+            for _ in range(5):
+                line = lt_proc.stdout.readline()
+                if "your url is:" in line:
+                    raw_url = line.split("your url is:")[1].strip()
+                    web_tunnel_url = f"{raw_url}/vnc.html?autoconnect=true&resize=scale"
+                    break
+        except Exception:
+            pass
 
 # ==============================================================================
 # INFORMACIÓN DE GPUs
@@ -171,14 +190,14 @@ print("=" * 70)
 if vnc_app_address:
     print("🌟 OPCIÓN 1: APP MÓVIL RECOMENDADA (Como Google Cloud + Chrome Desktop):")
     print("   📱 Abre la app gratuita 'RealVNC Viewer' o 'AVNC' en tu celular.")
-    print("   ➕ Agrega una nueva conexión con esta dirección:")
+    print("   ➕ Toca el botón '+' para agregar conexión.")
     print(f"   👉 Servidor VNC: {vnc_app_address}")
     print("   👉 Nombre: LinuWaifu Cloud")
     print("   ✨ ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS Y RESOLUCIÓN FULL HD 1080P!")
     print("=" * 70)
 
 if web_tunnel_url:
-    print("🌐 OPCIÓN 2: ENLACE WEB RÁPIDO (Directo en Chrome o Brave móvil):")
+    print("🌐 OPCIÓN 2: ENLACE WEB DIRECTO (Chrome o Brave en celular):")
     print(f"   👉 {web_tunnel_url}")
     print("=" * 70)
 
