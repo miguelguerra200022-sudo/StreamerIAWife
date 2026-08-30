@@ -4,9 +4,9 @@
 ================================================================================
 🌸 LINUWAIFU CLOUD PC & AI VTUBER STUDIO (VNC + noVNC + Rclone GDrive)
 ================================================================================
-Entorno de escritorio gráfico completo accesible desde el navegador web
-de tu celular o PC con soporte para Google Drive (Rclone), 2 GPUs NVIDIA
-Tesla T4 (32GB VRAM), Audio y Ngrok Tunnel de alta velocidad.
+Entorno de escritorio gráfico completo con visualización corregida:
+Fondo de pantalla activo, panel de tareas, terminal, explorador de archivos,
+Google Drive (Rclone), 2 GPUs NVIDIA Tesla T4 (32GB VRAM) y Ngrok de alta velocidad.
 ================================================================================
 """
 
@@ -29,14 +29,14 @@ print("🌸 INICIANDO LINUWAIFU CLOUD PC (VNC WEB DESKTOP PRO)...")
 print("=" * 70)
 
 # ==============================================================================
-# 1. INSTALACIÓN ULTRA RÁPIDA DE DEPENDENCIAS (x11vnc, noVNC, fluxbox, rclone, pyngrok)
+# 1. INSTALACIÓN DE HERRAMIENTAS Y DEPENDENCIAS GRÁFICAS
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Verificando e instalando herramientas del sistema...", flush=True)
+    print("📦 [1/4] Verificando e instalando herramientas del sistema y escritorio...", flush=True)
     subprocess.run(
         "apt-get update -qq && "
         "apt-get install -y --no-install-recommends "
-        "x11vnc xvfb fluxbox dbus-x11 pulseaudio net-tools wget curl rclone psmisc >/dev/null 2>&1",
+        "x11vnc xvfb fluxbox xterm x11-xserver-utils x11-utils dbus-x11 pulseaudio net-tools wget curl rclone psmisc >/dev/null 2>&1",
         shell=True
     )
     subprocess.run("pip install -q pyngrok >/dev/null 2>&1", shell=True)
@@ -51,31 +51,56 @@ def setup_dependencies():
 setup_dependencies()
 
 # ==============================================================================
-# 2. INICIAR PANTALLA VIRTUAL Y ESCRITORIO
+# 2. INICIAR PANTALLA VIRTUAL Y ESCRITORIO CON DISPLAY :1 EXPLÍCITO
 # ==============================================================================
-print("🖥️ [3/4] Levantando pantalla virtual (1280x720 HD) y gestor de ventanas...", flush=True)
-subprocess.run("killall -9 Xvfb x11vnc websockify ngrok 2>/dev/null || true", shell=True)
-
-# Pantalla virtual HD
-subprocess.Popen(["Xvfb", ":1", "-screen", "0", "1280x720x24"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+print("🖥️ [3/4] Levantando pantalla virtual (1280x720 HD) y escritorio visual...", flush=True)
+subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xterm fluxbox 2>/dev/null || true", shell=True)
 time.sleep(1)
 
-# Iniciar gestor de ventanas (Fluxbox con menú completo)
-subprocess.Popen(["fluxbox"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# Variables de entorno con DISPLAY :1
+env = os.environ.copy()
+env["DISPLAY"] = ":1"
 
-# Servidor VNC
+# Iniciar servidor Xvfb
+xvfb_proc = subprocess.Popen(["Xvfb", ":1", "-screen", "0", "1280x720x24", "-nolisten", "tcp"], env=env)
+time.sleep(2)
+
+# Establecer fondo de pantalla colorido (Cyberpunk Dark)
+subprocess.run("xsetroot -solid '#1e1e2e'", shell=True, env=env)
+
+# Iniciar gestor de ventanas Fluxbox con DISPLAY :1
+subprocess.Popen(["fluxbox"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+time.sleep(1)
+
+# Iniciar Terminal interactiva visible de bienvenida
 subprocess.Popen([
-    "x11vnc", "-display", ":1", "-nopw", "-listen", "localhost",
-    "-rfbport", "5900", "-xkb", "-forever", "-shared"
-], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    "xterm",
+    "-geometry", "100x30+150+100",
+    "-bg", "#11111b",
+    "-fg", "#a6e3a1",
+    "-fa", "Monospace",
+    "-fs", "12",
+    "-title", "🌸 LINUWAIFU CLOUD TERMINAL - 2x NVIDIA TESLA T4 READY",
+    "-e", "bash -c 'echo \"==================================================\"; echo \"🌸 ¡BIENVENIDO A TU LINUWAIFU CLOUD PC!\"; echo \"==================================================\"; echo \"🎮 GPUs: 2x Tesla T4 (32GB VRAM)\"; echo \"💾 Google Drive: Escribe rclone config para montar\"; echo \"==================================================\"; bash'"
+], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+# Servidor VNC optimizado con noxdamage y noxfixes para evitar pantalla negra
+subprocess.Popen([
+    "x11vnc", "-display", ":1",
+    "-forever", "-nopw", "-shared",
+    "-rfbport", "5900",
+    "-noxdamage", "-noxfixes",
+    "-wait", "50", "-defer", "50"
+], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(1)
 
-# Servidor noVNC Web (Puerto 6080)
-novnc_proc = subprocess.Popen([
+# Servidor noVNC Web (Puerto 6080) con ruta web explícita
+subprocess.Popen([
     "/kaggle/working/noVNC/utils/novnc_proxy",
     "--vnc", "localhost:5900",
-    "--listen", "6080"
-], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    "--listen", "6080",
+    "--web", "/kaggle/working/noVNC"
+], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(2)
 
 # ==============================================================================
@@ -94,6 +119,11 @@ if ngrok_token:
     try:
         from pyngrok import ngrok
         ngrok.set_auth_token(ngrok_token)
+        # Cerrar túneles previos si existían
+        try:
+            ngrok.kill()
+        except Exception:
+            pass
         tunnel = ngrok.connect(6080, "http")
         tunnel_url = f"{tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
     except Exception as e:
@@ -134,13 +164,14 @@ except Exception:
 # 🎉 ¡TODO LISTO Y ONLINE!
 # ==============================================================================
 print("\n" + "=" * 70)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE!")
+print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE Y VISIBLE!")
 print("=" * 70)
 print("📱 ENLACE DE ACCESO DIRECTO (Toca o cópialo en Chrome/Brave en tu celular):")
 print(f"👉 {tunnel_url}")
 print("=" * 70)
-print("📌 Tienes escritorio completo, ratón táctil y teclado en pantalla.")
-print("   Para montar tu Google Drive de 5TB escribe: !rclone config")
+print("📌 Verás la pantalla oscura Cyberpunk con la Terminal verde lista para usar.")
+print("   Haz clic derecho o mantén presionado en la pantalla para abrir el menú.")
+print("   Para montar tu Google Drive de 5TB escribe en la terminal: rclone config")
 print("=" * 70 + "\n")
 
 # Mantener viva la celda
