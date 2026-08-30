@@ -8,21 +8,24 @@ explorador de archivos, soporte de Google Drive de 5TB vía Rclone, y 2 GPUs
 NVIDIA Tesla T4 con 32GB de VRAM total).
 
 📱 CÓMO SE USA EN EL CELULAR:
-Al ejecutar el comando, te da un enlace web que abres en Chrome o Brave en tu
-celular y tienes la PC completa en tus manos con pantalla táctil.
+Al ejecutar el comando, te da un enlace web de Ngrok que abres en Chrome o Brave
+en tu celular y tienes la PC completa en tus manos con pantalla táctil.
 
 ================================================================================
-📋 COMANDO ÚNICO PARA EJECUTAR EN KAGGLE (1 SOLA CELDA)
+📋 COMANDO ÚNICO PARA COPIAR Y PEGAR EN KAGGLE (1 SOLA CELDA)
 ================================================================================
+Copia y pega exactamente este comando en una sola celda y dale Play (▶️):
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 ================================================================================
-🌐 SI TIENES TU TOKEN GRATIS DE NGROK (RECOMENDADO PARA MÁXIMA VELOCIDAD)
+📱 LO QUE VERÁS EN PANTALLA EN 15 SEGUNDOS
 ================================================================================
-Si tienes cuenta en https://ngrok.com (es gratis), puedes pasar tu token así:
+🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE!
+📱 ENLACE DE ACCESO DIRECTO:
+👉 https://xxxxxx.ngrok-free.app/vnc.html?autoconnect=true&resize=scale
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "TU_TOKEN_DE_NGROK"
+Tocas ese enlace en tu celular ¡y listo!
 
 ================================================================================
 💾 CÓMO USAR TUS 5TB DE GOOGLE DRIVE EN ESTA PC
