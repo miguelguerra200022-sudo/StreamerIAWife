@@ -46,16 +46,25 @@ os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
 # ==============================================================================
-# VERIFICAR QUE LA CELDA 1 SE EJECUTÓ
+# AUTO-INSTALADOR SI FALTA ALGO
 # ==============================================================================
 crd_bin = "/opt/google/chrome-remote-desktop/start-host"
 if not os.path.exists(crd_bin):
-    print("❌ ERROR: Chrome Remote Desktop no está instalado.", flush=True)
-    print("👉 Ejecuta primero la Celda 1 (install_kaggle_packages.sh)", flush=True)
-    print("   O si usas 'Save & Run All', asegúrate de que la Celda 1 esté arriba.", flush=True)
-    sys.exit(1)
+    print("🌸 [Auto-Instalador]: Configurando paquetes del sistema necesarios...", flush=True)
+    install_script = BASE_DIR / "install_kaggle_packages.sh"
+    if install_script.exists():
+        subprocess.run(f"bash {install_script}", shell=True)
+    else:
+        subprocess.run(
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
+            "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "
+            "xfce4-session xfce4-terminal libgtk-3-0 dbus-x11 pulseaudio xvfb && "
+            "wget -q https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb -O /tmp/crd.deb && "
+            "sudo DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/crd.deb 2>/dev/null || sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken",
+            shell=True
+        )
 
-print("✅ Chrome Remote Desktop detectado. Continuando...", flush=True)
+print("✅ Chrome Remote Desktop detectado y listo. Continuando...", flush=True)
 
 # ==============================================================================
 # CONFIGURAR SESIÓN XFCE
