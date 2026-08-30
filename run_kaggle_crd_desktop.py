@@ -4,14 +4,14 @@
 ================================================================================
 🌸 LINUWAIFU CLOUD GAMING & AI VTUBER STUDIO PRO (KAGGLE MASTER ENGINE)
 ================================================================================
+CELDA 2: Vincula CRD, inicia escritorio, y mantiene viva la sesión.
+Funciona tanto en modo interactivo como en "Save & Run All".
+================================================================================
 """
 
 import os
 import sys
 import time
-import json
-import base64
-import shutil
 import tarfile
 import threading
 import subprocess
@@ -19,17 +19,17 @@ import re
 import signal
 import atexit
 import traceback
-import urllib.request
-import concurrent.futures
 from pathlib import Path
-from typing import Optional
 
+# ==============================================================================
+# DIAGNÓSTICO DE SEÑALES (atrapa cualquier cierre forzoso)
+# ==============================================================================
 def diagnostic_exit_handler():
-    print("\n🛑 [SISTEMA LINUWAIFU]: Proceso finalizado. Guardando memoria...", flush=True)
+    print("\n🛑 [SISTEMA LINUWAIFU]: Proceso finalizado.", flush=True)
 
 def signal_handler(signum, frame):
     sig_name = "SIGTERM (Kaggle Shutdown)" if signum == signal.SIGTERM else "SIGINT (Cancelación)"
-    print(f"\n🛑 [DIAGNÓSTICO]: Interrupción detectada -> {sig_name}", flush=True)
+    print(f"\n🛑 [DIAGNÓSTICO]: Interrupción -> {sig_name}", flush=True)
     traceback.print_stack(frame, limit=2)
     sys.exit(0)
 
@@ -42,89 +42,33 @@ except Exception:
 
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
-os.environ["DEBCONF_NONINTERACTIVE_SEEN"] = "true"
 os.environ["DISPLAY"] = os.environ.get("DISPLAY", ":20")
 
-def ensure_system_dependencies():
-    crd_bin = "/opt/google/chrome-remote-desktop/start-host"
-    if os.path.exists(crd_bin) and os.path.exists("/usr/lib/x86_64-linux-gnu/libgdk-3.so.0"):
-        return
+# ==============================================================================
+# VERIFICAR QUE LA CELDA 1 SE EJECUTÓ
+# ==============================================================================
+crd_bin = "/opt/google/chrome-remote-desktop/start-host"
+if not os.path.exists(crd_bin):
+    print("❌ ERROR: Chrome Remote Desktop no está instalado.", flush=True)
+    print("👉 Ejecuta primero la Celda 1 (install_kaggle_packages.sh)", flush=True)
+    print("   O si usas 'Save & Run All', asegúrate de que la Celda 1 esté arriba.", flush=True)
+    sys.exit(1)
 
-    print("\n🌸 [1/4] ⚡ Descargando e instalando entorno gráfico (Python Direct Network)...", flush=True)
-    
-    # 1. Pre-sembrar Debconf para evitar cualquier bloqueo de stdin
-    debconf_setup = (
-        "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'keyboard-configuration keyboard-configuration/modelcode string pc105' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'tzdata tzdata/Areas select Etc' | sudo debconf-set-selections 2>/dev/null; "
-        "echo 'tzdata tzdata/Zones/Etc select UTC' | sudo debconf-set-selections 2>/dev/null; "
-        "sudo rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* 2>/dev/null || true; "
-        "sudo rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true; "
-        "printf 'deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\ndeb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n' | sudo tee /etc/apt/sources.list >/dev/null; "
-        "printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' | sudo tee /etc/apt/apt.conf.d/99clean >/dev/null; "
-        "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq"
-    )
-    subprocess.run(debconf_setup, shell=True)
-    
-    # 2. Extraer URLs exactas con apt-get --print-uris
-    pkg_list = "xfce4-session xfce4-terminal libgtk-3-0 dbus-x11 pulseaudio xvfb"
-    try:
-        raw_uris = subprocess.check_output(f"apt-get --print-uris -y --no-install-recommends install {pkg_list}", shell=True).decode()
-    except Exception:
-        raw_uris = ""
-        
-    deb_urls = []
-    for line in raw_uris.splitlines():
-        m = re.search(r"'(http[^\']+)'\s+([^\s]+)", line)
-        if m:
-            deb_urls.append((m.group(1), m.group(2)))
-            
-    deb_urls.append(("https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb", "chrome-remote-desktop_current_amd64.deb"))
-    
-    deb_dir = Path("/tmp/fast_debs")
-    deb_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 3. Descarga paralela con Python puro (elimina cuelgues de sockets de APT)
-    completed_count = 0
-    lock = threading.Lock()
-    total_pkgs = len(deb_urls)
+print("✅ Chrome Remote Desktop detectado. Continuando...", flush=True)
 
-    def download_deb(item):
-        nonlocal completed_count
-        url, filename = item
-        dest = deb_dir / filename
-        if not dest.exists() or dest.stat().st_size == 0:
-            try:
-                urllib.request.urlretrieve(url, dest)
-            except Exception:
-                pass
-        with lock:
-            completed_count += 1
-            if completed_count % 15 == 0 or completed_count == total_pkgs:
-                print(f"  • [{completed_count}/{total_pkgs}] Paquetes descargados...", flush=True)
-
-    print(f"  • Descargando {total_pkgs} paquetes en 24 hilos simultáneos...", flush=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=24) as executor:
-        list(executor.map(download_deb, deb_urls))
-        
-    print("  • Instalando paquetes con Debconf no interactivo...", flush=True)
-    env = os.environ.copy()
-    env["DEBIAN_FRONTEND"] = "noninteractive"
-    env["DEBCONF_NONINTERACTIVE_SEEN"] = "true"
-    subprocess.run("sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --force-all -i /tmp/fast_debs/*.deb", shell=True, env=env)
-    print("⚡ [✓] Entorno gráfico y Chrome Remote Desktop listos.", flush=True)
-
-ensure_system_dependencies()
-
-# Configurar sesión XFCE para Chrome Remote Desktop
+# ==============================================================================
+# CONFIGURAR SESIÓN XFCE
+# ==============================================================================
 crd_session_file = Path.home() / ".chrome-remote-desktop-session"
 with open(crd_session_file, "w") as f:
     f.write("exec /etc/X11/Xsession /usr/bin/xfce4-session\n")
 crd_session_file.chmod(0o755)
 
+# ==============================================================================
+# RESTAURAR O VINCULAR CRD
+# ==============================================================================
 print("\n======================================================================", flush=True)
-print("🌸 [2/4] 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
+print("🌸 🖥️ VINCULANDO GOOGLE CHROME REMOTE DESKTOP (XFCE4)...", flush=True)
 print("======================================================================", flush=True)
 
 CRD_BACKUP_TAR = BASE_DIR / "crd_session.tar.gz"
@@ -132,16 +76,15 @@ CRD_CONFIG_DIR = Path.home() / ".config" / "chrome-remote-desktop"
 
 def restore_crd_session() -> bool:
     if CRD_BACKUP_TAR.exists() and CRD_BACKUP_TAR.stat().st_size > 100:
-        print("  📦 Restaurando sesión de Google Chrome Remote Desktop desde GitHub...", flush=True)
+        print("  📦 Restaurando sesión CRD desde GitHub...", flush=True)
         try:
             CRD_CONFIG_DIR.parent.mkdir(parents=True, exist_ok=True)
             with tarfile.open(CRD_BACKUP_TAR, "r:gz") as tar:
                 tar.extractall(path=Path.home() / ".config")
-            print("  ⚡ [✓] Tokens de acceso permanente restaurados exitosamente.", flush=True)
+            print("  ⚡ [✓] Tokens restaurados.", flush=True)
             return True
         except Exception as e:
-            print(f"  ⚠️ Error al restaurar tokens: {e}", flush=True)
-            return False
+            print(f"  ⚠️ Error restaurando: {e}", flush=True)
     return False
 
 def backup_crd_session():
@@ -149,104 +92,105 @@ def backup_crd_session():
         try:
             with tarfile.open(CRD_BACKUP_TAR, "w:gz") as tar:
                 tar.add(CRD_CONFIG_DIR, arcname="chrome-remote-desktop")
-            print("  💾 [✓] Tokens de sesión guardados en crd_session.tar.gz para auto-sync.", flush=True)
-            subprocess.run(f"cd {BASE_DIR} && git add crd_session.tar.gz streamer_memory.db 2>/dev/null && git commit -m 'Auto-backup CRD tokens & memory' 2>/dev/null && git push origin main 2>/dev/null || true", shell=True)
-        except Exception as e:
-            print(f"  ⚠️ Error al guardar tokens: {e}", flush=True)
+            subprocess.run(
+                f"cd {BASE_DIR} && git add crd_session.tar.gz 2>/dev/null && "
+                f"git commit -m 'Auto-backup CRD tokens' 2>/dev/null && "
+                f"git push origin main 2>/dev/null || true",
+                shell=True
+            )
+        except Exception:
+            pass
 
 crd_restored = restore_crd_session()
 
 if not crd_restored:
+    # Buscar código de autenticación CRD
     crd_command = os.environ.get("CRD_AUTH_COMMAND", "").strip()
     if len(sys.argv) > 1 and sys.argv[1].strip():
         crd_command = sys.argv[1].strip()
-        
     if not crd_command:
         for p in [Path("/tmp/crd_code.txt"), Path("/kaggle/working/crd_code.txt"), BASE_DIR / "crd_code.txt"]:
             if p.exists():
                 try:
-                    with open(p, "r") as f:
-                        crd_command = f.read().strip()
+                    crd_command = p.read_text().strip()
                     if crd_command:
                         break
                 except Exception:
                     pass
 
     if not crd_command or crd_command == "PEGA_AQUI_TU_COMANDO_DE_GOOGLE":
-        print("\n👉 [PASO FÁCIL]: Pega tu comando de Google en la variable CRD_AUTH de tu celda de Kaggle:")
-        print('   CRD_AUTH = "DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=..."\n', flush=True)
+        print("\n👉 Pega tu código de Google en la variable CRD_AUTH de la Celda 2")
+        print('   CRD_AUTH = "DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=..."')
         sys.exit(0)
-            
-    if crd_command and crd_command != "PEGA_AQUI_TU_COMANDO_DE_GOOGLE":
-        code_match = re.search(r'--code="?([^"\s]+)"?', crd_command)
-        auth_code = code_match.group(1) if code_match else crd_command
-        
-        print(f"\n⏳ Vinculando con Google Remote Desktop (Host: LinuWaifu-Cloud-PC, PIN: 123456)...", flush=True)
-        start_cmd = f'DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="{auth_code}" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="LinuWaifu-Cloud-PC" --pin="123456"'
-        res = subprocess.run(start_cmd, shell=True)
-        
-        if res.returncode == 0:
-            print("🎉 [✓] ¡Vinculación exitosa con Google!", flush=True)
-            time.sleep(2)
-            backup_crd_session()
-        else:
-            print("⚠️ No se pudo vincular con el código provisto. Genera un código fresco en https://remotedesktop.google.com/headless", flush=True)
 
-# Iniciar el servicio de CRD
-subprocess.run("/opt/google/chrome-remote-desktop/chrome-remote-desktop --start 2>/dev/null || sudo systemctl restart chrome-remote-desktop 2>/dev/null || true", shell=True)
-print("  ⚡ [✓] Servicio Chrome Remote Desktop iniciado en el puerto virtual.", flush=True)
+    code_match = re.search(r'--code="?([^"\s]+)"?', crd_command)
+    auth_code = code_match.group(1) if code_match else crd_command
 
-print("\n" + "=" * 70, flush=True)
-print("🎉 🌸 ¡LINUWAIFU CLOUD GAMING & AI VTUBER STUDIO ESTÁ 100% ONLINE!", flush=True)
-print("=" * 70, flush=True)
-print("👉 Abre la app 'Escritorio Remoto de Chrome' en tu celular o entra en:", flush=True)
-print("   https://remotedesktop.google.com/access", flush=True)
-print("\n📱 Verás tu PC llamada 'LinuWaifu-Cloud-PC' lista para entrar con PIN: 123456", flush=True)
-print("=" * 70, flush=True)
+    print(f"⏳ Vinculando (Host: LinuWaifu-Cloud-PC, PIN: 123456)...", flush=True)
+    start_cmd = (
+        f'DISPLAY= /opt/google/chrome-remote-desktop/start-host '
+        f'--code="{auth_code}" '
+        f'--redirect-url="https://remotedesktop.google.com/_/oauthredirect" '
+        f'--name="LinuWaifu-Cloud-PC" --pin="123456"'
+    )
+    res = subprocess.run(start_cmd, shell=True)
+    if res.returncode == 0:
+        print("🎉 [✓] ¡Vinculación exitosa!", flush=True)
+        time.sleep(2)
+        backup_crd_session()
+    else:
+        print("⚠️ Código inválido. Genera uno nuevo en https://remotedesktop.google.com/headless", flush=True)
+
+# Iniciar servicio CRD
+subprocess.run(
+    "/opt/google/chrome-remote-desktop/chrome-remote-desktop --start 2>/dev/null || "
+    "sudo systemctl restart chrome-remote-desktop 2>/dev/null || true",
+    shell=True
+)
 
 # ==============================================================================
-# CARGA ASÍNCRONA DE GPUS, AUDIO E INTELIGENCIA ARTIFICIAL EN SEGUNDO PLANO
+# ¡ONLINE!
 # ==============================================================================
-def background_ai_and_audio_worker():
-    print("\n🌸 [3/4] 🎮 Verificando aceleración Dual-GPU...", flush=True)
+print("\n" + "=" * 60, flush=True)
+print("🎉 🌸 ¡LINUWAIFU CLOUD PC ESTÁ 100% ONLINE!", flush=True)
+print("=" * 60, flush=True)
+print("📱 Abre 'Escritorio Remoto de Chrome' en tu celular", flush=True)
+print("   → Toca 'LinuWaifu-Cloud-PC' → PIN: 123456", flush=True)
+print("=" * 60, flush=True)
+
+# ==============================================================================
+# GPUS + AUDIO EN SEGUNDO PLANO
+# ==============================================================================
+def background_worker():
     try:
         import torch
-        print(f"🎮 GPUs NVIDIA Detectadas: {torch.cuda.device_count()}", flush=True)
-        for i in range(torch.cuda.device_count()):
-            props = torch.cuda.get_device_properties(i)
-            print(f"  • GPU {i}: {props.name} ({props.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
+        n = torch.cuda.device_count()
+        print(f"\n🎮 GPUs: {n}", flush=True)
+        for i in range(n):
+            p = torch.cuda.get_device_properties(i)
+            print(f"  • GPU {i}: {p.name} ({p.total_mem / (1024**3):.1f} GB)", flush=True)
     except Exception:
         pass
-
-    print("\n🌸 [4/4] 🔊 Configurando Mezclador de Audio Virtual (PulseAudio)...", flush=True)
     subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
-    subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink sink_properties=device.description=VirtualSink 2>/dev/null || true", shell=True)
-    subprocess.run("pactl set-default-sink VirtualSink 2>/dev/null || true", shell=True)
-    print("  ⚡ [✓] Tarjeta de Audio Virtual 'VirtualSink' activa.", flush=True)
+    subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink 2>/dev/null || true", shell=True)
+    print("🔊 Audio Virtual activo.", flush=True)
 
-    # Iniciar motor de visión y comentarista en vivo
-    try:
-        from config import NVIDIA_API_KEYS
-        from personality import PersonalityManager
-        import cv2, mss, openai
-        print("  ⚡ [✓] Motor Llama 3.2 Vision & Neuro-sama Gamer activo.", flush=True)
-    except Exception:
-        pass
+threading.Thread(target=background_worker, daemon=True).start()
 
-threading.Thread(target=background_ai_and_audio_worker, daemon=True).start()
-
-def github_auto_backup_worker():
-    while True:
-        time.sleep(900)
-        try:
-            backup_crd_session()
-        except Exception:
-            pass
-
-threading.Thread(target=github_auto_backup_worker, daemon=True).start()
-
+# ==============================================================================
+# KEEPALIVE: Imprime un punto cada 30 segundos para que Kaggle NO mate la celda
+# ==============================================================================
+print("\n⏳ Sesión activa. Puedes cerrar el navegador si usaste 'Save & Run All'.", flush=True)
+print("   Keepalive activo (un punto cada 30s):", flush=True, end=" ")
 try:
+    minutes = 0
     while True:
-        time.sleep(3600)
+        time.sleep(30)
+        print(".", end="", flush=True)
+        minutes += 0.5
+        if minutes % 15 == 0:
+            print(f" [{int(minutes)}min]", flush=True, end=" ")
+            backup_crd_session()
 except KeyboardInterrupt:
     backup_crd_session()
+    print("\n🛑 Sesión terminada por el usuario.", flush=True)
