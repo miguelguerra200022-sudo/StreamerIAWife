@@ -1,0 +1,48 @@
+================================================================================
+🌸 GUÍA DEFINITIVA: LINUWAIFU CLOUD GAMING & AI VTUBER (KAGGLE NOTEBOOK)
+================================================================================
+
+📌 PASO PREVIO: OBTENER TU CÓDIGO DE GOOGLE
+1. Entra desde tu navegador a: https://remotedesktop.google.com/headless
+2. Clic en "Comenzar" -> "Siguiente" -> "Autorizar".
+3. Copia el comando que aparece en la sección "Debian Linux".
+   (Se parece a: DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="4/0A...")
+
+================================================================================
+📋 CELDA 1 EN KAGGLE (Instalación limpia de paquetes gráficos y audio)
+================================================================================
+Copia y pega exactamente este comando en la Celda 1 y dale Play (▶️):
+
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && bash /kaggle/working/StreamerIAWife/install_kaggle_packages.sh
+
+⏳ Espera que termine y diga:
+   "✅ INSTALACIÓN 100% COMPLETADA"
+
+
+================================================================================
+📋 CELDA 2 EN KAGGLE (Vinculación y Encendido del Escritorio Remoto)
+================================================================================
+Copia y pega este bloque en la Celda 2, reemplazando el texto con tu comando:
+
+CRD_AUTH = 'PEGA_AQUI_TU_COMANDO_DE_GOOGLE'
+
+%cd /kaggle/working/StreamerIAWife
+!python3 run_kaggle_crd_desktop.py "$CRD_AUTH"
+
+
+================================================================================
+📱 CÓMO CONECTARTE DESDE TU CELULAR
+================================================================================
+1. Abre la app "Escritorio Remoto de Chrome" (o entra a https://remotedesktop.google.com/access).
+2. Verás en verde tu PC llamada: "LinuWaifu-Cloud-PC".
+3. Toca sobre ella e ingresa el PIN de seguridad:
+   PIN: 123456
+
+================================================================================
+🔄 TRUCO PARA CERRAR EL NAVEGADOR Y DEJARLO CORRIENDO (HASTA 12 HORAS)
+================================================================================
+1. Asegúrate de tener la Celda 1 arriba y la Celda 2 abajo con tu código pegado.
+2. Arriba a la derecha en Kaggle, dale clic a "Save Version".
+3. Selecciona la opción "Save & Run All (Commit)".
+4. ¡Listo! Puedes cerrar la pestaña de Kaggle en el celular o la computadora y tu PC en la nube seguirá encendida.
+================================================================================
