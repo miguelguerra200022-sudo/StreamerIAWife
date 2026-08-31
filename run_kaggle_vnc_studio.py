@@ -2,16 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS OFICIAL GNOME DESKTOP (5TB GOOGLE DRIVE)
-================================================================================
-1. [PASO 1]: Conecta y monta Google Drive (PC_Kaggle) inmediatamente.
-2. [PASO 2]: Carga y activa el entorno OFICIAL de Ubuntu (GNOME Shell Canonical):
-   - Barra superior oficial negra de Ubuntu (Top Bar).
-   - Ubuntu Left Dock oficial translúcido con iconos Yaru oficiales.
-   - Explorador de archivos oficial Nautilus y terminal GNOME.
-   - Panel de control y configuraciones oficiales de Ubuntu.
-3. [PASO 3]: Activa 2x GPUs NVIDIA Tesla T4, Audio Virtual y LinuWaifu 3D IA.
-4. [PASO 4]: Persistencia infinita: Todo lo que hagas vive en tus 5TB de Google Drive.
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS PRO (LIVE LOGS & ERROR STREAMER)
 ================================================================================
 """
 
@@ -28,16 +19,20 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = ":1"
-os.environ["XDG_CURRENT_DESKTOP"] = "ubuntu:GNOME"
-os.environ["XDG_SESSION_DESKTOP"] = "ubuntu"
-os.environ["XDG_SESSION_TYPE"] = "x11"
-os.environ["MUTTER_DEBUG_DUMMY_MODE_SPECS"] = "1920x1080"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 # Archivo Maestro de Registros
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+# 0. Limpieza segura de procesos residuales
+subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
+time.sleep(0.5)
+
+# Inicializar archivo de log limpio
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write(f"=== INICIO DE SESIÓN LINUWAIFU UBUNTU 24.04 ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 def log(msg, level="INFO"):
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -48,16 +43,33 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# 0. Limpieza segura de procesos residuales
-subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
-time.sleep(0.5)
+# Hilo de transmisión de logs y errores en tiempo real a la consola
+def live_log_streamer():
+    last_size = 0
+    while True:
+        try:
+            if LOG_FILE.exists():
+                curr_size = LOG_FILE.stat().st_size
+                if curr_size > last_size:
+                    with open(LOG_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                        f.seek(last_size)
+                        new_text = f.read()
+                        last_size = curr_size
+                        for line in new_text.splitlines():
+                            l_strip = line.strip()
+                            if l_strip:
+                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower():
+                                    print(f"🔴 {l_strip}", flush=True)
+                                elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
+                                    print(f"⚠️ {l_strip}", flush=True)
+            time.sleep(0.5)
+        except Exception:
+            time.sleep(1)
 
-# Inicializar archivo de log limpio
-with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== INICIO DE SESIÓN LINUWAIFU UBUNTU OFICIAL GNOME ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+threading.Thread(target=live_log_streamer, daemon=True).start()
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO UBUNTU 24.04 LTS OFICIAL GNOME (5TB GOOGLE DRIVE + WAIFU IA)...", flush=True)
+print("🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE)...", flush=True)
 print("=" * 78, flush=True)
 
 # Directorios Clave
@@ -69,7 +81,7 @@ STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==============================================================================
-# 1. [PASO 1 INMEDIATO] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
+# 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
 # ==============================================================================
 print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...", flush=True)
 log("Iniciando conexión de Google Drive...")
@@ -83,7 +95,7 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
         pass
 
 # Instalar rclone rápido si no está presente
-subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >/dev/null 2>&1)", shell=True)
+subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
 
 # Iniciar servidor Rclone WebDAV
 try:
@@ -106,19 +118,18 @@ except Exception as e:
     log(f"Aviso Rclone: {e}", "WARNING")
 
 # ==============================================================================
-# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU DESKTOP (GNOME SHELL CANONICAL)
+# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04 (YARU, XFCE, HERRAMIENTAS)
 # ==============================================================================
-print("📦 [2/5] Activando Suite Oficial Ubuntu Desktop (GNOME Shell, Nautilus, Yaru)...", flush=True)
-log("Instalando Suite Oficial Ubuntu GNOME Desktop...")
+print("📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, Thunar, Audio)...", flush=True)
+log("Instalando dependencias de Ubuntu...")
 subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
-# Paquetes oficiales de Canonical Ubuntu Desktop
-official_ubuntu_pkgs = [
-    "ubuntu-desktop-minimal", "gnome-session", "gnome-shell", "nautilus",
-    "gnome-terminal", "gnome-control-center", "yaru-theme-gtk", "yaru-theme-icon",
-    "yaru-theme-sound", "fonts-ubuntu", "dbus-x11", "x11vnc", "xvfb",
+base_pkgs = [
+    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
+    "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
     "pulseaudio", "net-tools", "wget", "curl", "psmisc", "openssh-client",
-    "chromium-browser", "p7zip-full", "unzip", "htop", "nvtop", "mpv"
+    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
 ]
 
 extra_pkgs = []
@@ -133,7 +144,7 @@ if EXTRA_PKGS_FILE.exists():
     except Exception:
         pass
 
-all_pkgs = list(set(official_ubuntu_pkgs + extra_pkgs))
+all_pkgs = list(set(base_pkgs + extra_pkgs))
 
 cmd_install = (
     "apt-get update -qq && "
@@ -149,7 +160,7 @@ if not novnc_dir.exists():
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
-print("  ✅ [✓] Entorno Oficial Ubuntu Desktop GNOME listo.", flush=True)
+print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.", flush=True)
 
 # Restaurar estado personal guardado de Google Drive
 try:
@@ -165,22 +176,40 @@ except Exception:
     pass
 
 # ==============================================================================
-# 3. CONFIGURAR ESCRITORIO OFICIAL, DOCK Y ACCESOS DIRECTOS
+# 3. APARIENCIA OFICIAL UBUNTU YARU-DARK (WALLPAPER, ICONOS, ACCESOS)
 # ==============================================================================
-print("🎨 [3/5] Configurando apariencia oficial de Canonical Ubuntu...", flush=True)
+print("🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...", flush=True)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
-env["XDG_CURRENT_DESKTOP"] = "ubuntu:GNOME"
-env["XDG_SESSION_DESKTOP"] = "ubuntu"
-env["XDG_SESSION_TYPE"] = "x11"
 
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
 
-# Script auxiliar para instalar cualquier paquete y guardarlo en GitHub
+# Inyectar temas oficiales de Ubuntu
+try:
+    xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
+    xfconf_dir.mkdir(parents=True, exist_ok=True)
+    
+    subprocess.run("xfconf-query -c xsettings -p /Net/ThemeName -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xsettings -p /Net/IconThemeName -s 'Yaru' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
+    
+    subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
+
+    # Iconos de escritorio
+    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
+except Exception:
+    pass
+
+# Script auxiliar para instalar paquetes
 install_helper = BASE_DIR / "instalar_y_guardar.sh"
 install_helper.write_text(
     "#!/bin/bash\n"
@@ -217,7 +246,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
         "Comment=Carpeta persistente con todos tus juegos y partidas\n"
-        "Exec=nautilus dav://127.0.0.1:8088/\n"
+        "Exec=thunar dav://127.0.0.1:8088/\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
         "Categories=Game;\n"
@@ -238,7 +267,7 @@ shortcuts = {
         "Version=1.0\n"
         "Type=Application\n"
         "Name=📊 Monitor GPUs Tesla T4 (nvtop)\n"
-        "Exec=gnome-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
+        "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
         "Icon=utilities-system-monitor\n"
         "Terminal=false\n"
         "Categories=System;\n"
@@ -261,9 +290,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDOR GRÁFICO FULL HD CON GNOME SESSION OFICIAL
+# 4. LEVANTAR SERVIDOR GRÁFICO 1080p, ESCRITORIO Y BACKEND IA
 # ==============================================================================
-print("🖥️ [4/5] Levantando pantalla 1080p e iniciando sesión oficial Ubuntu GNOME...", flush=True)
+print("🖥️ [4/5] Levantando pantalla 1080p y servidor de escritorio...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -273,16 +302,14 @@ xvfb_proc = subprocess.Popen([
 ], env=env)
 time.sleep(2)
 
-# Iniciar sesión oficial de Ubuntu (GNOME Shell)
-log_gnome = open(LOG_FILE, "a", encoding="utf-8")
-try:
-    subprocess.Popen([
-        "dbus-run-session", "--", "gnome-session", "--session=ubuntu"
-    ], env=env, stdout=log_gnome, stderr=log_gnome)
-except Exception:
-    subprocess.Popen([
-        "dbus-launch", "--exit-with-session", "startxfce4"
-    ], env=env, stdout=log_gnome, stderr=log_gnome)
+# Establecer cursor de flecha y fondo oficial de Ubuntu (Aubergine) para evitar pantalla negra con X
+subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
+
+# Iniciar sesión de escritorio completa XFCE4
+log_xfce = open(LOG_FILE, "a", encoding="utf-8")
+subprocess.Popen([
+    "dbus-launch", "--exit-with-session", "startxfce4"
+], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(3)
 
 # Iniciar PulseAudio virtual
@@ -293,8 +320,8 @@ subprocess.run(f"pactl load-module module-null-sink sink_name=VirtualSink >> {LO
 def start_linuwaifu_backend():
     try:
         subprocess.run(f"python3 {BASE_DIR}/cloud_bridge.py >> {LOG_FILE} 2>&1", shell=True, env=env)
-    except Exception:
-        pass
+    except Exception as e:
+        log(f"Aviso Backend: {e}", "WARNING")
 
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
@@ -378,7 +405,12 @@ def run_pinggy_tunnel():
         pass
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
-time.sleep(3)
+
+# Esperar hasta 4 segundos para capturar la dirección de Pinggy
+for _ in range(8):
+    if vnc_app_address:
+        break
+    time.sleep(0.5)
 
 # ==============================================================================
 # INFORMACIÓN DE HARDWARE Y DISCO
@@ -400,10 +432,10 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU OFICIAL GNOME 100% ONLINE!
+# 🎉 ¡UBUNTU 24.04 PRO 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU UBUNTU 24.04 LTS OFICIAL GNOME ESTÁ 100% ONLINE!", flush=True)
+print("🎉 🌸 ¡TU UBUNTU 24.04 PRO ESTÁ 100% ONLINE Y FUNCIONANDO!", flush=True)
 print("=" * 78, flush=True)
 
 if web_tunnel_url:
@@ -418,10 +450,11 @@ print("   • Abre RealVNC Viewer en tu celular -> Botón '+'", flush=True)
 print("   • Pega la dirección de arriba y toca 'Connect'.", flush=True)
 print("=" * 78, flush=True)
 
-print("💾 SISTEMA DE PERSISTENCIA ACTIVO:", flush=True)
+print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
 print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
+print("   • 📜 Transmisión de errores y logs activa en tiempo real.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
 # Función de auto-guardado a Google Drive
