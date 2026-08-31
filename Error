@@ -1,19 +1,6 @@
-¿Porque me sigue apareciendo esto cuando apenas le doy a la celda 1?:
-
-==============================================================================
-📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (REGISTRO DESDE EL SEGUNDO 1)
-==============================================================================
-🟢 [LISTO]: El monitor ya está activo y escuchando.
-👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).
-==============================================================================
+¿Porque me aparece esto cuando ejecuto la celda de la limpieza?:
 
 
-==============================================================================
-🎉 🌸 ¡TU PC EN LA NUBE ESTÁ 100% ONLINE Y FUNCIONANDO!
-==============================================================================
-📱 APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
-   • Abre la app en tu celular -> Toca '+'
-   • Busca la dirección tcp://... de Pinggy que aparece arriba en el log.
-==============================================================================
 
-Necesito que cualquier parada de cualquier tipo, se borre los log viejos apenas se ejecute de nuevo la celda 1 o crear otra celda como 1 antes del de monitoreo de diagnostico que se encargue de borrar todo lo viejo, para que cada ejecuciones de celdas nuevas salgan como nueva
+Oops something went wrong
+An unknown error occurred. We suggest downloading a copy of your notebook to avoid losing your work, then refresh your browser.
