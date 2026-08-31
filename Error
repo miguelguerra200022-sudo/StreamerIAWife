@@ -1,58 +1,39 @@
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 472, done.
-remote: Counting objects: 100% (112/112), done.
-remote: Compressing objects: 100% (90/90), done.
-remote: Total 472 (delta 63), reused 59 (delta 22), pack-reused 360 (from 1)
-Receiving objects: 100% (472/472), 6.67 MiB | 23.96 MiB/s, done.
-Resolving deltas: 100% (272/272), done.
+remote: Enumerating objects: 501, done.
+remote: Counting objects: 100% (141/141), done.41)
+remote: Compressing objects: 100% (116/116), done.
+remote: Total 501 (delta 78), reused 68 (delta 24), pack-reused 360 (from 1)
+Receiving objects: 100% (501/501), 6.73 MiB | 9.37 MiB/s, done.
+Resolving deltas: 100% (287/287), done.
+/kaggle/working/StreamerIAWife/run_kaggle_vnc_studio.py:215: SyntaxWarning: invalid escape sequence '\/'
+  sed -i "s/\\"id\\": \\".*\\"/\\"id\\": \\"$USUARIO\/$DATASET_ID\\"/" "$RUTA_JUEGO/dataset-metadata.json"
 
 ==============================================================================
-🌸 INICIANDO LINUWAIFU CLOUD PC (KASMVNC 60 FPS WEBRTC + 5TB GDRIVE)...
+🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...
 ==============================================================================
-☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
-  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
-📦 [2/5] Instalando Ubuntu ligero + Motor KasmVNC WebRTC H.264 (60 FPS)...
-  🚀 Descargando e instalando KasmVNC 60 FPS (H.264 / WebRTC)...
-Adding user `root' to group `ssl-cert' ...
-Adding user root to group ssl-cert
-Done.
+☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...
+W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
+  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.
+  🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...
+📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...
+🔴 Failed to send reload request: No such file or directory
+🔴 tpm0: Failed to write 'change' to '/sys/devices/platform/MSFT0101:00/tpm/tpm0/uevent': Read-only file system
+🔴 tpm0: Failed to write 'add' to '/sys/devices/platform/MSFT0101:00/tpm/tpm0/uevent': Read-only file system
+🔴 tpmrm0: Failed to write 'add' to '/sys/devices/platform/MSFT0101:00/tpmrm/tpmrm0/uevent': Read-only file system
+⚠️ update-rc.d: warning: start and stop actions are no longer supported; falling back to defaults
+⚠️ update-rc.d: warning: start and stop actions are no longer supported; falling back to defaults
+⚠️ Warning: The home dir /var/lib/usbmux you specified can't be accessed: No such file or directory
+⚠️ update-inetd: warning: cannot add service, /etc/inetd.conf does not exist
+🔴 sda: Failed to write 'change' to '/sys/devices/pci0000:00/0000:00:03.0/virtio0/host0/target0:0:1/0:0:1:0/block/sda/uevent': Read-only file system
+⚠️ adduser: Warning: The home directory `/var/lib/sss' does not belong to the user you are currently creating.
+🔴 Failed to send reload request: No such file or directory
+  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.
   ℹ️ Primera ejecución: Creando entorno inicial limpio.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
-🖥️ [4/5] Levantando pantalla 1080p y servidor gráfico optimizado a 60 FPS...
-⚠️ (wrapper-2.0:5346): Gtk-WARNING **: 05:50:52.522: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
-⚠️ (wrapper-2.0:5383): Gtk-WARNING **: 05:50:52.592: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
-🔴 31/08/2026 05:50:53   errors, etc) it may be disabled:
-🔴 31/08/2026 05:50:53   errors, etc) it may be disabled via: '-noscr'
-🔴 31/08/2026 05:50:53   painting errors, etc) it may be disabled via: '-ncache 0'
-⚠️ Warning: could not find self.pem
-🌐 [5/5] Conectando túneles de transmisión a 60 FPS...
-
-🎮 GPUs NVIDIA Tesla Activas: 2
-  • GPU 0: Tesla T4 (14.6 GB VRAM)
-  • GPU 1: Tesla T4 (14.6 GB VRAM)
-💾 Espacio Libre en Disco: 20G disponibles de 20G
-
-==============================================================================
-🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE A 60 FPS REALES!
-==============================================================================
-🚀 OPCIÓN 1: ENLACE WEB DIRECTO (CHROME / BRAVE CELULAR CON CALIDAD 9):
-👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale&quality=9
-   • Auto-conecta en pantalla completa con calidad HD y render 60 FPS.
-------------------------------------------------------------------------------
-📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y 60 FPS):
-👉 Servidor VNC: free.pinggy.link (Consultando...)
-   • Abre RealVNC Viewer en tu celular -> Botón '+'
-   • Pega la dirección de arriba y toca 'Connect'.
-==============================================================================
-💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
-   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
-   • 📦 Para instalar cualquier cosa usa: instalar <nombre>
-   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
-   • ⚡ Render 60 FPS con ncache y cero delay activo.
-==============================================================================
-
-🔴 (xfce4-panel:5299): xfce4-panel-CRITICAL **: 05:51:27.915: panel-window.c:2391 (panel_window_active_window_geometry_changed): expression 'WNCK_IS_WINDOW (active_window)' failed.
-🔴 (xfce4-panel:5299): xfce4-panel-CRITICAL **: 05:51:32.829: panel-window.c:2391 (panel_window_active_window_geometry_changed): expression 'WNCK_IS_WINDOW (active_window)' failed.
-...
-
-Y me sale la pantalla como una pulgada, ve la imagen que esta en github, se llama sin titulo
+🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...
+🔴 (xfwm4:21128): GLib-CRITICAL **: 08:36:17.498: g_str_has_prefix: assertion 'prefix != NULL' failed
+⚠️ (xfwm4:21128): xfwm4-WARNING **: 08:36:18.079: Another compositing manager is running on screen 0
+🔴 (xfsettingsd:21136): GLib-CRITICAL **: 08:36:18.180: g_str_has_prefix: assertion 'prefix != NULL' failed
+🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.185: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.189: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.201: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
