@@ -1,4 +1,4 @@
-¿Porque me dice la celda 1 que esta instalando cosas, cuando mi idea es que el del sistema se encargue de todo, mientras la uno es solo log?
+¿Porque me sigue apareciendo esto cuando apenas le doy a la celda 1?:
 
 ==============================================================================
 📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (REGISTRO DESDE EL SEGUNDO 1)
@@ -7,21 +7,6 @@
 👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).
 ==============================================================================
 
-  === INICIO DE SESIÓN LINUWAIFU CLOUD PC (2026-08-31 02:20:07) ===
-  [2026-08-31 02:20:07] [INFO] Iniciando sistema maestro de LinuWaifu Cloud PC...
-  [2026-08-31 02:20:07] [INFO] Sincronizando credenciales de Google Drive (5TB)...
-🟢 [2026-08-31 02:20:07] [SUCCESS] Credenciales de Google Drive restauradas con éxito desde GitHub.
-🔴 [2026-08-31 02:20:07] [ERROR] Error iniciando Rclone WebDAV: [Errno 2] No such file or directory: 'rclone'
-  [2026-08-31 02:20:07] [INFO] Instalando dependencias de Ubuntu y herramientas...
-  [2026-08-31 02:20:07] [INFO] Restaurando programas adicionales: #, Lista, de, paquetes, y, programas, adicionales, que, se, instalan, y, recuerdan, automáticamente, #, Puedes, añadir, paquetes, aquí, o, usar, el, comando, 'instalar, <paquete>', dentro, de, tu, PC, en, la, nube, neofetch, p7zip-full, unzip
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.1/67.1 kB 3.2 MB/s eta 0:00:00
-🟢 [2026-08-31 02:20:17] [SUCCESS] Instalación de paquetes completada.
-  [2026-08-31 02:20:17] [INFO] Clonando repositorios noVNC y websockify...
-  Cloning into '/kaggle/working/noVNC'...
-  Cloning into '/kaggle/working/noVNC/utils/websockify'...
-  [2026-08-31 02:20:19] [INFO] Restaurando estado personal del usuario desde Google Drive...
-  /bin/sh: 1: rclone: not found
-  [2026-08-31 02:20:19] [INFO] Configurando temas de escritorio Yaru-Dark y accesos directos...
 
 ==============================================================================
 🎉 🌸 ¡TU PC EN LA NUBE ESTÁ 100% ONLINE Y FUNCIONANDO!
@@ -30,3 +15,5 @@
    • Abre la app en tu celular -> Toca '+'
    • Busca la dirección tcp://... de Pinggy que aparece arriba en el log.
 ==============================================================================
+
+Necesito que cualquier parada de cualquier tipo, se borre los log viejos apenas se ejecute de nuevo la celda 1 o crear otra celda como 1 antes del de monitoreo de diagnostico que se encargue de borrar todo lo viejo, para que cada ejecuciones de celdas nuevas salgan como nueva
