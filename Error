@@ -1,52 +1,23 @@
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 460, done.
-remote: Counting objects: 100% (100/100), done.
-remote: Compressing objects: 100% (79/79), done.
-remote: Total 460 (delta 56), reused 55 (delta 21), pack-reused 360 (from 1)
-Receiving objects: 100% (460/460), 6.66 MiB | 21.11 MiB/s, done.
-Resolving deltas: 100% (265/265), done.
+remote: Enumerating objects: 466, done.
+remote: Counting objects: 100% (106/106), done.
+remote: Compressing objects: 100% (85/85), done.
+remote: Total 466 (delta 60), reused 56 (delta 21), pack-reused 360 (from 1)
+Receiving objects: 100% (466/466), 6.66 MiB | 15.90 MiB/s, done.
+Resolving deltas: 100% (269/269), done.
 
 ==============================================================================
 🌸 INICIANDO LINUWAIFU CLOUD PC (KASMVNC 60 FPS WEBRTC + 5TB GDRIVE)...
 ==============================================================================
 ☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
-W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
   ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
 📦 [2/5] Instalando Ubuntu ligero + Motor KasmVNC WebRTC H.264 (60 FPS)...
-🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:17: Failed to resolve group 'kvm'.
-🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:18: Failed to resolve group 'kvm'.
-🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:19: Failed to resolve group 'kvm'.
-🔴 sda: Failed to write 'change' to '/sys/devices/pci0000:00/0000:00:03.0/virtio0/host0/target0:0:1/0:0:1:0/block/sda/uevent': Read-only file system
-🔴 Failed to send reload request: No such file or directory
   🚀 Descargando e instalando KasmVNC 60 FPS (H.264 / WebRTC)...
-  ✅ [✓] Motor KasmVNC 60 FPS y Suite de Ubuntu instalados.
   ℹ️ Primera ejecución: Creando entorno inicial limpio.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
 🖥️ [4/5] Levantando pantalla 1080p y servidor KasmVNC 60 FPS...
-🔴 (xfce4-session:4065): dbind-WARNING **: 05:42:08.665: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (xfwm4:4096): dbind-WARNING **: 05:42:08.753: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (xfwm4:4096): GLib-CRITICAL **: 05:42:08.850: g_str_has_prefix: assertion 'prefix != NULL' failed
-⚠️ (xfwm4:4096): xfwm4-WARNING **: 05:42:09.518: Another compositing manager is running on screen 0
-🔴 (xfsettingsd:4111): dbind-WARNING **: 05:42:09.558: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (xfsettingsd:4111): GLib-CRITICAL **: 05:42:09.594: g_str_has_prefix: assertion 'prefix != NULL' failed
-🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.598: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
-🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.601: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
-🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.611: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
-🔴 (xfce4-panel:4114): dbind-WARNING **: 05:42:09.706: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (migrate:4119): dbind-WARNING **: 05:42:09.767: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (Thunar:4118): dbind-WARNING **: 05:42:09.777: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (xfdesktop:4127): dbind-WARNING **: 05:42:09.917: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (xfsettingsd:4130): dbind-WARNING **: 05:42:10.350: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (wrapper-2.0:4156): dbind-WARNING **: 05:42:10.754: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (wrapper-2.0:4157): dbind-WARNING **: 05:42:10.767: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-🔴 (wrapper-2.0:4162): dbind-WARNING **: 05:42:10.941: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
-⚠️ (wrapper-2.0:4157): Gtk-WARNING **: 05:42:11.799: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
-⚠️ (wrapper-2.0:4162): Gtk-WARNING **: 05:42:11.850: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
-⚠️ Warning: could not find self.pem
-🔴 31/08/2026 05:42:13   errors, etc) it may be disabled:
-🔴 31/08/2026 05:42:13   errors, etc) it may be disabled via: '-noscr'
 🌐 [5/5] Conectando túneles de transmisión WebRTC 60 FPS...
-                                                                                                    
+
 🎮 GPUs NVIDIA Tesla Activas: 2
   • GPU 0: Tesla T4 (14.6 GB VRAM)
   • GPU 1: Tesla T4 (14.6 GB VRAM)
@@ -55,15 +26,10 @@ W: Skipping acquire of configured file 'main/source/Sources' as repository 'http
 ==============================================================================
 🎉 🌸 ¡TU LINUWAIFU CLOUD PC (KASMVNC 60 FPS) ESTÁ 100% ONLINE!
 ==============================================================================
-🚀 OPCIÓN 1: KASMVNC WEBRTC H.264 (60 FPS CRISTALINOS EN NAVEGADOR):
+🚀 ENLACE WEB DIRECTO KASMVNC 60 FPS (ABRE EN CHROME / BRAVE MÓVIL):
 👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev
-   • Transmisión de video continua H.264 en tiempo real.
-   • Texto 100% nítido, controles táctiles y cero latencia.
-------------------------------------------------------------------------------
-📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
-👉 Servidor VNC: free.pinggy.link (Consultando...)
-   • Abre RealVNC Viewer en tu celular -> Botón '+'
-   • Pega la dirección de arriba y toca 'Connect'.
+   • Transmisión de video continua WebRTC H.264 a 60 FPS reales.
+   • Calidad cristalina, controles táctiles, zoom y cero latencia.
 ==============================================================================
 💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
    • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
@@ -72,4 +38,21 @@ W: Skipping acquire of configured file 'main/source/Sources' as repository 'http
    • ⚡ Video H.264 / WebRTC acelerado a 60 FPS nativo.
 ==============================================================================
 
-t=2026-08-31T05:42:33+0000 lvl=warn msg="failed to open private leg" id=660fb95b9485 privaddr=localhost:8444 err="dial tcp [::1]:8444: connect: connection refused"
+t=2026-08-31T05:46:58+0000 lvl=warn msg="failed to open private leg" id=d75be0741ddf privaddr=localhost:8444 err="dial tcp [::1]:8444: connect: connection refused"
+
+Y esto es en la pagina:
+
+ERR_NGROK_8012
+Traffic successfully made it to the ngrok agent, but the agent failed to establish a connection to the upstream web service at http://localhost:8444. The error encountered was:
+
+dial tcp [::1]:8444: connect: connection refused
+Get help with this error
+If you're the developer of this page
+On the machine where the ngrok agent is running, make sure a service is running on http://localhost:8444. Try to cURL or open the address in a browser to see that you get the correct response.
+
+Check out the docs to get help with this error.
+
+If you're a visitor of this page
+Wait a few minutes and refresh the page. If that still doesn't work, please contact the developer of this page for more information.
+
+Powered by ngrok
