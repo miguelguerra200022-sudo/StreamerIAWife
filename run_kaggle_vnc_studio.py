@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS NOBLE NUMBAT PRO (5TB GOOGLE DRIVE)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS OFICIAL GNOME DESKTOP (5TB GOOGLE DRIVE)
 ================================================================================
 1. [PASO 1]: Conecta y monta Google Drive (PC_Kaggle) inmediatamente.
-2. [PASO 2]: Aplica la apariencia oficial Ubuntu 24.04 LTS Noble Numbat:
-   - Fondo de pantalla oficial Ubuntu 24.04 (Noble Numbat Dark HD).
-   - Dock lateral estilo Ubuntu con iconos Yaru oficiales.
-   - Tema Yaru-Dark con acentos naranja oficial y fuentes Ubuntu.
-   - Panel superior con menú oficial, reloj y monitor del sistema.
-3. [PASO 3]: Enciende 2x GPUs NVIDIA Tesla T4, Audio y Waifu 3D IA en pantalla.
-4. [PASO 4]: Sincronización continua de partidas y archivos a tus 5TB de Google Drive.
+2. [PASO 2]: Carga y activa el entorno OFICIAL de Ubuntu (GNOME Shell Canonical):
+   - Barra superior oficial negra de Ubuntu (Top Bar).
+   - Ubuntu Left Dock oficial translúcido con iconos Yaru oficiales.
+   - Explorador de archivos oficial Nautilus y terminal GNOME.
+   - Panel de control y configuraciones oficiales de Ubuntu.
+3. [PASO 3]: Activa 2x GPUs NVIDIA Tesla T4, Audio Virtual y LinuWaifu 3D IA.
+4. [PASO 4]: Persistencia infinita: Todo lo que hagas vive en tus 5TB de Google Drive.
 ================================================================================
 """
 
@@ -28,6 +28,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = ":1"
+os.environ["XDG_CURRENT_DESKTOP"] = "ubuntu:GNOME"
+os.environ["XDG_SESSION_DESKTOP"] = "ubuntu"
+os.environ["XDG_SESSION_TYPE"] = "x11"
+os.environ["MUTTER_DEBUG_DUMMY_MODE_SPECS"] = "1920x1080"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
@@ -45,15 +49,15 @@ def log(msg, level="INFO"):
         pass
 
 # 0. Limpieza segura de procesos residuales
-subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
+subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
 time.sleep(0.5)
 
 # Inicializar archivo de log limpio
 with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== INICIO DE SESIÓN LINUWAIFU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+    f.write(f"=== INICIO DE SESIÓN LINUWAIFU UBUNTU OFICIAL GNOME ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO UBUNTU 24.04 LTS PRO EDITION (5TB GOOGLE DRIVE + WAIFU IA)...", flush=True)
+print("🌸 INICIANDO UBUNTU 24.04 LTS OFICIAL GNOME (5TB GOOGLE DRIVE + WAIFU IA)...", flush=True)
 print("=" * 78, flush=True)
 
 # Directorios Clave
@@ -96,24 +100,25 @@ try:
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games >> {LOG_FILE} 2>&1 || true", shell=True)
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
     
-    print("  ✅ [✓] Unidad de 5TB Google Drive vinculada como Disco Principal.", flush=True)
+    print("  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.", flush=True)
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
 except Exception as e:
     log(f"Aviso Rclone: {e}", "WARNING")
 
 # ==============================================================================
-# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04 LTS (YARU-DARK & TOOLS)
+# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU DESKTOP (GNOME SHELL CANONICAL)
 # ==============================================================================
-print("📦 [2/5] Instalando Suite oficial Ubuntu 24.04 LTS (Yaru, XFCE, Multimedia)...", flush=True)
-log("Instalando paquetes de Ubuntu...")
+print("📦 [2/5] Activando Suite Oficial Ubuntu Desktop (GNOME Shell, Nautilus, Yaru)...", flush=True)
+log("Instalando Suite Oficial Ubuntu GNOME Desktop...")
 subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
-base_pkgs = [
-    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-    "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
+# Paquetes oficiales de Canonical Ubuntu Desktop
+official_ubuntu_pkgs = [
+    "ubuntu-desktop-minimal", "gnome-session", "gnome-shell", "nautilus",
+    "gnome-terminal", "gnome-control-center", "yaru-theme-gtk", "yaru-theme-icon",
+    "yaru-theme-sound", "fonts-ubuntu", "dbus-x11", "x11vnc", "xvfb",
     "pulseaudio", "net-tools", "wget", "curl", "psmisc", "openssh-client",
-    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
+    "chromium-browser", "p7zip-full", "unzip", "htop", "nvtop", "mpv"
 ]
 
 extra_pkgs = []
@@ -128,7 +133,7 @@ if EXTRA_PKGS_FILE.exists():
     except Exception:
         pass
 
-all_pkgs = list(set(base_pkgs + extra_pkgs))
+all_pkgs = list(set(official_ubuntu_pkgs + extra_pkgs))
 
 cmd_install = (
     "apt-get update -qq && "
@@ -144,7 +149,7 @@ if not novnc_dir.exists():
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
-print("  ✅ [✓] Suite Ubuntu 24.04 LTS instalada.", flush=True)
+print("  ✅ [✓] Entorno Oficial Ubuntu Desktop GNOME listo.", flush=True)
 
 # Restaurar estado personal guardado de Google Drive
 try:
@@ -155,67 +160,27 @@ try:
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 100:
         subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
-        print("  ✅ [✓] Partidas y preferencias de usuario restauradas.", flush=True)
+        print("  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
 except Exception:
     pass
 
 # ==============================================================================
-# 3. APARIENCIA OFICIAL UBUNTU 24.04 NOBLE NUMBAT (WALLPAPER HD, DOCK, YARU)
+# 3. CONFIGURAR ESCRITORIO OFICIAL, DOCK Y ACCESOS DIRECTOS
 # ==============================================================================
-print("🎨 [3/5] Aplicando diseño oficial Ubuntu 24.04 Noble Numbat...", flush=True)
+print("🎨 [3/5] Configurando apariencia oficial de Canonical Ubuntu...", flush=True)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
+env["XDG_CURRENT_DESKTOP"] = "ubuntu:GNOME"
+env["XDG_SESSION_DESKTOP"] = "ubuntu"
+env["XDG_SESSION_TYPE"] = "x11"
 
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
-bg_dir = Path("/usr/share/backgrounds")
-bg_dir.mkdir(parents=True, exist_ok=True)
 
-# Descargar Wallpaper oficial de Ubuntu 24.04 Noble Numbat Dark
-wallpaper_file = bg_dir / "ubuntu_noble_numbat_dark.png"
-if not wallpaper_file.exists():
-    try:
-        subprocess.run(
-            f"wget -q -O {wallpaper_file} 'https://raw.githubusercontent.com/Ubuntu/yaru/master/default-wallpaper/warty-final-ubuntu.png' 2>/dev/null || "
-            f"curl -s -L -o {wallpaper_file} 'https://assets.ubuntu.com/v1/5b35c05c-ubuntu_noble_numbat_dark_4k.png' 2>/dev/null || true",
-            shell=True
-        )
-    except Exception:
-        pass
-
-# Inyectar configuración completa de Ubuntu Yaru-Dark oficial
-try:
-    xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
-    xfconf_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 1. Tema GTK e Iconos Yaru
-    subprocess.run("xfconf-query -c xsettings -p /Net/ThemeName -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xsettings -p /Net/IconThemeName -s 'Yaru' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
-    
-    # 2. Ventanas y Botones estilo Ubuntu
-    subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfwm4 -p /general/button_layout -s 'CHM|' --create -t string 2>/dev/null || true", shell=True, env=env)
-
-    # 3. Fondo de pantalla oficial
-    if wallpaper_file.exists():
-        subprocess.run(f"xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s '{wallpaper_file}' --create -t string 2>/dev/null || true", shell=True, env=env)
-        subprocess.run(f"xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/image-style -s 5 --create -t int 2>/dev/null || true", shell=True, env=env)
-
-    # 4. Iconos en el escritorio
-    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
-except Exception:
-    pass
-
-# Script auxiliar para instalar cualquier paquete y recordarlo en GitHub
+# Script auxiliar para instalar cualquier paquete y guardarlo en GitHub
 install_helper = BASE_DIR / "instalar_y_guardar.sh"
 install_helper.write_text(
     "#!/bin/bash\n"
@@ -252,7 +217,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
         "Comment=Carpeta persistente con todos tus juegos y partidas\n"
-        "Exec=thunar dav://127.0.0.1:8088/\n"
+        "Exec=nautilus dav://127.0.0.1:8088/\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
         "Categories=Game;\n"
@@ -273,7 +238,7 @@ shortcuts = {
         "Version=1.0\n"
         "Type=Application\n"
         "Name=📊 Monitor GPUs Tesla T4 (nvtop)\n"
-        "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
+        "Exec=gnome-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
         "Icon=utilities-system-monitor\n"
         "Terminal=false\n"
         "Categories=System;\n"
@@ -296,9 +261,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDOR GRÁFICO FULL HD Y AUTO-INICIAR LINUWAIFU STUDIO
+# 4. LEVANTAR SERVIDOR GRÁFICO FULL HD CON GNOME SESSION OFICIAL
 # ==============================================================================
-print("🖥️ [4/5] Levantando pantalla 1080p y servidor gráfico...", flush=True)
+print("🖥️ [4/5] Levantando pantalla 1080p e iniciando sesión oficial Ubuntu GNOME...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -308,11 +273,16 @@ xvfb_proc = subprocess.Popen([
 ], env=env)
 time.sleep(2)
 
-# Iniciar sesión de escritorio completa XFCE4
-log_xfce = open(LOG_FILE, "a", encoding="utf-8")
-subprocess.Popen([
-    "dbus-launch", "--exit-with-session", "startxfce4"
-], env=env, stdout=log_xfce, stderr=log_xfce)
+# Iniciar sesión oficial de Ubuntu (GNOME Shell)
+log_gnome = open(LOG_FILE, "a", encoding="utf-8")
+try:
+    subprocess.Popen([
+        "dbus-run-session", "--", "gnome-session", "--session=ubuntu"
+    ], env=env, stdout=log_gnome, stderr=log_gnome)
+except Exception:
+    subprocess.Popen([
+        "dbus-launch", "--exit-with-session", "startxfce4"
+    ], env=env, stdout=log_gnome, stderr=log_gnome)
 time.sleep(3)
 
 # Iniciar PulseAudio virtual
@@ -329,7 +299,7 @@ def start_linuwaifu_backend():
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
 
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu en la esquina de la pantalla
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu
 subprocess.Popen([
     "chromium-browser",
     "--no-sandbox",
@@ -430,10 +400,10 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU 24.04 NOBLE NUMBAT 100% ONLINE!
+# 🎉 ¡UBUNTU OFICIAL GNOME 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU UBUNTU 24.04 LTS NOBLE NUMBAT ESTÁ 100% ONLINE!", flush=True)
+print("🎉 🌸 ¡TU UBUNTU 24.04 LTS OFICIAL GNOME ESTÁ 100% ONLINE!", flush=True)
 print("=" * 78, flush=True)
 
 if web_tunnel_url:
