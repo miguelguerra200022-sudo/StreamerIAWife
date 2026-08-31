@@ -4,11 +4,6 @@
 ================================================================================
 🌸 LINUWAIFU CLOUD PC: INFINITE PERSISTENCE & FULL LOGGING ENGINE (KAGGLE)
 ================================================================================
-Comportamiento de PC Real con Registro Completo en Vivo:
-1. Celda 1 (Principal): Mantiene la PC limpia, rápida y online.
-2. Celda 2 (Monitor): Registra en vivo todo lo que se instala, juega o ejecuta.
-3. Almacenamiento 5TB en Google Drive (Juegos, partidas y dependencias).
-================================================================================
 """
 
 import os
@@ -45,9 +40,9 @@ def log(msg, level="INFO"):
 with open(LOG_FILE, "w", encoding="utf-8") as f:
     f.write(f"=== INICIO DE SESIÓN LINUWAIFU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
-print("\n" + "=" * 78)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC (SISTEMA CON REGISTRO EN VIVO)...")
-print("=" * 78)
+print("\n" + "=" * 78, flush=True)
+print("🌸 INICIANDO LINUWAIFU CLOUD PC: SISTEMA Y MOTOR PRINCIPAL...", flush=True)
+print("=" * 78, flush=True)
 log("Iniciando sistema maestro de LinuWaifu Cloud PC...")
 
 # Directorios Clave
@@ -59,9 +54,61 @@ STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==============================================================================
-# 1. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE Y PERSISTENCIA
+# 1. INSTALACIÓN DE SUITE BASE + DEPENDENCIAS (PRIMERO PARA TENER RCLONE Y XFCE)
 # ==============================================================================
-print("☁️ [1/6] Sincronizando credenciales de Google Drive (5TB)...", flush=True)
+def setup_dependencies():
+    print("📦 [1/6] Instalando Suite de Ubuntu oficial (XFCE, rclone, tools)...", flush=True)
+    log("Instalando dependencias de Ubuntu y herramientas...")
+    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    
+    base_pkgs = [
+        "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+        "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+        "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
+        "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
+        "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
+    ]
+    
+    extra_pkgs = []
+    if EXTRA_PKGS_FILE.exists():
+        try:
+            for line in EXTRA_PKGS_FILE.read_text().splitlines():
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    for p in line.split():
+                        if p and not p.startswith("#"):
+                            extra_pkgs.append(p)
+            if extra_pkgs:
+                print(f"  📦 Paquetes adicionales detectados: {', '.join(extra_pkgs)}", flush=True)
+                log(f"Restaurando programas adicionales: {', '.join(extra_pkgs)}")
+        except Exception:
+            pass
+    
+    all_pkgs = list(set(base_pkgs + extra_pkgs))
+    
+    cmd_install = (
+        "apt-get update -qq && "
+        f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+        "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
+    )
+    subprocess.run(cmd_install, shell=True)
+    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+    log("Instalación de paquetes completada con éxito.", "SUCCESS")
+
+    # Descargar noVNC si no existe
+    novnc_dir = Path("/kaggle/working/noVNC")
+    if not novnc_dir.exists():
+        print("📥 [2/6] Descargando componentes web de interfaz...", flush=True)
+        log("Clonando repositorios noVNC y websockify...")
+        subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
+        subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+
+setup_dependencies()
+
+# ==============================================================================
+# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (YA CON RCLONE INSTALADO)
+# ==============================================================================
+print("☁️ [2/6] Sincronizando Google Drive (5TB)...", flush=True)
 log("Sincronizando credenciales de Google Drive (5TB)...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -80,7 +127,7 @@ elif GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
     except Exception:
         pass
 
-# Iniciar servidor Rclone WebDAV en segundo plano con salida a log
+# Iniciar servidor Rclone WebDAV en segundo plano
 try:
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
@@ -93,52 +140,6 @@ try:
     log("Servidor Rclone WebDAV montado en puerto 8088.", "SUCCESS")
 except Exception as e:
     log(f"Error iniciando Rclone WebDAV: {e}", "ERROR")
-
-# ==============================================================================
-# 2. INSTALACIÓN DE SUITE BASE + AUTO-RESTAURACIÓN DE PAQUETES EXTRA
-# ==============================================================================
-def setup_dependencies():
-    print("📦 [2/6] Instalando Suite de Ubuntu oficial y dependencias...", flush=True)
-    log("Instalando dependencias de Ubuntu y herramientas...")
-    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
-    
-    base_pkgs = [
-        "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-        "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-        "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
-        "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
-        "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
-    ]
-    
-    extra_pkgs = []
-    if EXTRA_PKGS_FILE.exists():
-        try:
-            extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().split() if p.strip()]
-            print(f"  📦 Restaurando {len(extra_pkgs)} programas adicionales: {', '.join(extra_pkgs)}", flush=True)
-            log(f"Restaurando programas adicionales: {', '.join(extra_pkgs)}")
-        except Exception:
-            pass
-    
-    all_pkgs = list(set(base_pkgs + extra_pkgs))
-    
-    cmd_install = (
-        "apt-get update -qq && "
-        f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-        "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
-    )
-    subprocess.run(cmd_install, shell=True)
-    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-    log("Instalación de paquetes completada.", "SUCCESS")
-
-    # Descargar noVNC si no existe
-    novnc_dir = Path("/kaggle/working/noVNC")
-    if not novnc_dir.exists():
-        print("📥 [3/6] Descargando componentes web de interfaz...", flush=True)
-        log("Clonando repositorios noVNC y websockify...")
-        subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
-        subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
-
-setup_dependencies()
 
 # ==============================================================================
 # 3. RESTAURAR ESTADO DE USUARIO (CONFIGURACIONES, PARTIDAS DE JUEGOS, ESCRITORIO)
@@ -396,8 +397,8 @@ def run_pinggy_tunnel():
                         vnc_app_address.append(addr)
                         print(f"\n📱 [PINGGY ACTIVO] Dirección para RealVNC Viewer: {addr}\n", flush=True)
                         log(f"Túnel TCP Pinggy conectado: {addr}", "SUCCESS")
-    except Exception as e:
-        log(f"Aviso Pinggy: {e}", "WARNING")
+    except Exception:
+        pass
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 time.sleep(3)
@@ -408,18 +409,18 @@ time.sleep(3)
 try:
     import torch
     n = torch.cuda.device_count()
-    print(f"\n🎮 GPUs NVIDIA Tesla Activas: {n}")
+    print(f"\n🎮 GPUs NVIDIA Tesla Activas: {n}", flush=True)
     log(f"GPUs NVIDIA Tesla detectadas: {n}")
     for i in range(n):
         p = torch.cuda.get_device_properties(i)
-        print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)")
+        print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
         log(f"GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)")
 except Exception:
     pass
 
 try:
     df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
-    print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}")
+    print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
     log(f"Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}")
 except Exception:
     pass
@@ -427,23 +428,19 @@ except Exception:
 # ==============================================================================
 # 🎉 ¡UBUNTU PERSISTENTE 100% ONLINE!
 # ==============================================================================
-print("\n" + "=" * 78)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE (CON REGISTRO EN VIVO)!")
-print("=" * 78)
+print("\n" + "=" * 78, flush=True)
+print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE Y FUNCIONANDO!", flush=True)
+print("=" * 78, flush=True)
 
 if web_tunnel_url:
-    print("🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):")
-    print(f"👉 {web_tunnel_url}")
-    print("=" * 78)
+    print("🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):", flush=True)
+    print(f"👉 {web_tunnel_url}", flush=True)
+    print("-" * 78, flush=True)
 
-print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):")
-print("   • Abre RealVNC Viewer en tu celular -> Botón '+'")
-print("   • Pega la dirección de Pinggy que aparece arriba.")
-print("=" * 78)
-
-print("📊 PARA VER LOS REGISTROS Y DIAGNOSTICAR EN VIVO (CELDA 2):")
-print("👉 Ejecuta en otra celda: !python3 /kaggle/working/StreamerIAWife/debug_monitor.py")
-print("=" * 78 + "\n")
+print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
+print("   • Abre RealVNC Viewer en tu celular -> Botón '+'", flush=True)
+print("   • Pega la dirección de Pinggy que aparece en la Celda 1.", flush=True)
+print("=" * 78 + "\n", flush=True)
 
 # Función de auto-guardado a Google Drive y GitHub
 def auto_save_user_state():
