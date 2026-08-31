@@ -55,4 +55,4 @@ Done.
 🔴 (xfce4-panel:5299): xfce4-panel-CRITICAL **: 05:51:32.829: panel-window.c:2391 (panel_window_active_window_geometry_changed): expression 'WNCK_IS_WINDOW (active_window)' failed.
 ...
 
-Y me sale la pantalla como una pulgada, ve la imagen que esta en github
+Y me sale la pantalla como una pulgada, ve la imagen que esta en github, se llama sin titulo
