@@ -1,41 +1,27 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS MAESTROS (KAGGLE TURNKEY)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 FULL EDITION (COMANDO PREDETERMINADO)
 ================================================================================
 
-🚀 1. SISTEMA MAESTRO KASMVNC 60 FPS (UBUNTU PRO + WEBRTC + 5TB GOOGLE DRIVE):
+🚀 COMANDO MAESTRO ÚNICO (TODO EN 1 CELDA):
 --------------------------------------------------------------------------------
 !rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-✨ ¿Qué incluye este comando?:
-• ⚡ Motor KasmVNC con video continuo WebRTC H.264 a 60 FPS cristalinos.
-• ☁️ Google Drive de 5TB (PC_Kaggle) conectado como disco duro principal.
+✨ ¿Qué incluye este comando predeterminado?:
+• 📦 Suite Oficial Completa de Ubuntu de Canonical (Gigabytes).
+• 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress).
+• 🎬 Suite Multimedia, audio virtual PulseAudio y códecs oficiales.
+• 🖥️ Pantalla Completa 16:9 Full HD (1920x1080) nativa de borde a borde.
+• ☁️ Google Drive de 5TB (PC_Kaggle) conectado como disco principal.
 • 🌸 LinuWaifu 3D IA Studio con voz y chat en vivo en pantalla.
-• 🎨 Escritorio oficial Ubuntu Yaru-Dark con accesos directos y 2x GPUs Tesla T4.
-• 💾 Auto-guardado de partidas y descargas cada 5 minutos.
+• 🎮 2x GPUs NVIDIA Tesla T4 activas y auto-guardado cada 5 minutos.
 
 
 ================================================================================
-📦 2. PRUEBA DE UBUNTU COMPLETO DE GIGABYTES (UBUNTU-DESKTOP + LIBREOFFICE):
---------------------------------------------------------------------------------
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_pure_ubuntu_test.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
-
-
-================================================================================
-🩺 3. AUDITORÍA PROFUNDA DE PAQUETES (VERIFICAR ABSOLUTAMENTE TODO LO INSTALADO):
+🩺 COMANDO DE AUDITORÍA PROFUNDA DE PAQUETES (VERIFICAR EN CUALQUIER MOMENTO):
 --------------------------------------------------------------------------------
 • En una Celda de Kaggle:
 !git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/inspect_ubuntu_packages.py
 
 • En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
 cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
-
-
-================================================================================
-🔍 4. AUDITORÍA DE HARDWARE, 2x GPUS TESLA T4 Y PUERTOS DE RED:
---------------------------------------------------------------------------------
-• En una Celda de Kaggle:
-!git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/check_system_full_audit.py
-
-• En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
-cd /kaggle/working/StreamerIAWife && git pull && python3 check_system_full_audit.py
 ================================================================================

@@ -2,7 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 PRO (PANTALLA COMPLETA 1080p 16:9 + 5TB GDRIVE)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS FULL EDITION (DEFAULT MASTER SUITE)
+================================================================================
+1. [PASO 1]: Conecta y monta Google Drive (5TB - Carpeta PC_Kaggle) inmediatamente.
+2. [PASO 2]: Instala la Suite Oficial Completa de Ubuntu de Canonical (Gigabytes):
+   - `ubuntu-desktop` y herramientas oficiales de Canonical.
+   - Suite ofimática LibreOffice completa (Writer, Calc, Impress).
+   - Suite multimedia con códecs propietarios (`ubuntu-restricted-extras`).
+   - Gestor de archivos GVFS para 5TB Google Drive, compresores 7-Zip.
+3. [PASO 3]: Configura tema oficial Ubuntu Yaru-Dark y accesos directos.
+4. [PASO 4]: Inicia pantalla 1080p nativa 16:9 completa, PulseAudio y Waifu IA 3D.
+5. [PASO 5]: Auto-guarda todo a Google Drive y entrega enlaces de acceso remoto.
 ================================================================================
 """
 
@@ -38,7 +48,7 @@ time.sleep(0.5)
 
 # Inicializar archivo de log limpio
 with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== INICIO DE SESIÓN LINUWAIFU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+    f.write(f"=== INICIO DE SESIÓN LINUWAIFU UBUNTU FULL EDITION ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 def log(msg, level="INFO"):
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -49,7 +59,7 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs
+# Hilo de transmisión de logs (filtrando ruido interno irrelevante)
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
     "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
@@ -84,7 +94,7 @@ def live_log_streamer():
 threading.Thread(target=live_log_streamer, daemon=True).start()
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE)...", flush=True)
+print("🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...", flush=True)
 print("=" * 78, flush=True)
 
 # Directorios Clave
@@ -134,19 +144,21 @@ except Exception as e:
     log(f"Aviso Rclone: {e}", "WARNING")
 
 # ==============================================================================
-# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04
+# 2. INSTALACIÓN DE LA SUITE COMPLETA UBUNTU (GIGABYTES) + LIBREOFFICE + CODECS
 # ==============================================================================
-print("📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, GVFS, Audio)...", flush=True)
-log("Instalando dependencias de Ubuntu...")
+print("📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...", flush=True)
+log("Instalando paquetes oficiales de Ubuntu...")
 subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
-base_pkgs = [
-    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+full_ubuntu_pkgs = [
+    "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
+    "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
     "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
-    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
-    "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
-    "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools", "wget", "curl", "psmisc", "openssh-client",
-    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
+    "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
+    "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+    "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
+    "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
+    "wget", "curl", "psmisc", "openssh-client", "chromium-browser", "p7zip-full", "unzip"
 ]
 
 extra_pkgs = []
@@ -161,11 +173,11 @@ if EXTRA_PKGS_FILE.exists():
     except Exception:
         pass
 
-all_pkgs = list(set(base_pkgs + extra_pkgs))
+all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 
 cmd_install = (
     "apt-get update -qq && "
-    f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+    f"apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
     "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
 )
 subprocess.run(cmd_install, shell=True)
@@ -177,7 +189,7 @@ if not novnc_dir.exists():
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
-print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.", flush=True)
+print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", flush=True)
 
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
@@ -251,7 +263,7 @@ install_helper.write_text(
     "  echo 'Uso: ./instalar_y_guardar.sh <nombre_paquete>'\n"
     "  exit 1\n"
     "fi\n"
-    f"apt-get update -qq && apt-get install -y --no-install-recommends \"$@\" >> {LOG_FILE} 2>&1\n"
+    f"apt-get update -qq && apt-get install -y \"$@\" >> {LOG_FILE} 2>&1\n"
     "if [ $? -eq 0 ]; then\n"
     f"  echo \"$@\" >> {EXTRA_PKGS_FILE}\n"
     f"  cd {BASE_DIR} && git add packages_extra.txt && git commit -m 'Add persistent packages: '$@ && git push origin main >/dev/null 2>&1 || true\n"
@@ -261,7 +273,7 @@ install_helper.write_text(
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
 
-# Accesos directos oficiales en el escritorio
+# Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
     "LinuWaifu_AI_Studio.desktop": (
         "[Desktop Entry]\n"
@@ -360,7 +372,7 @@ subprocess.Popen([
 ], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(3)
 
-# Servidor VNC en resolución nativa 1920x1080 (SIN ncache para evitar franja angosta)
+# Servidor VNC en resolución nativa 1920x1080 (SIN ncache)
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "x11vnc", "-display", ":1",
@@ -481,7 +493,7 @@ except Exception:
 # 🎉 ¡LINUWAIFU CLOUD PC 1080p PANTALLA COMPLETA 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
+print("🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
 print("=" * 78, flush=True)
 
 if web_tunnel_url:
@@ -499,7 +511,8 @@ print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
-print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
+print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
+print("   • 🎬 Suite Multimedia y Códecs oficiales de Ubuntu listos.", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
 print("   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
