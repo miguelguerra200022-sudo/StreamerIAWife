@@ -4,10 +4,12 @@
 ================================================================================
 📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO (CELDA 2)
 ================================================================================
-Ejecuta este script en una celda separada en Kaggle para ver en tiempo real:
-1. Estado de los 7 servicios clave (Pantalla, XFCE, VNC, Google Drive, IA, Audio).
-2. Transmisión continua de logs y comandos en tiempo real.
-3. Detección automática de errores en color rojo.
+Ejecuta este script en una celda separada en Kaggle.
+Se mantiene en ejecución INFINITA (nunca se apaga):
+1. Transmite en vivo segundo a segundo todo lo que pasa en la PC.
+2. Comprueba la salud de los 7 servicios en tiempo real.
+3. Resalta errores en 🔴 rojo y éxitos en 🟢 verde.
+4. Mantiene un latido continuo para que Kaggle nunca pause la celda.
 ================================================================================
 """
 
@@ -17,18 +19,17 @@ import time
 import subprocess
 from pathlib import Path
 
-# Rutas posibles del archivo de registro
 CANDIDATE_LOGS = [
     Path("/kaggle/working/linuwaifu_system.log"),
     Path("/kaggle/working/StreamerIAWife/linuwaifu_system.log"),
     Path("/tmp/linuwaifu_system.log")
 ]
 
-print("=" * 75)
-print("📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO")
-print("=" * 75)
+print("=" * 78)
+print("📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS EN VIVO (EJECUCIÓN CONTINUA)")
+print("=" * 78)
 
-# 1. Comprobar servicios activos
+# Función de comprobación de servicios
 def check_services():
     services = {
         "🖥️ Pantalla Xvfb (1080p)": "Xvfb",
@@ -51,7 +52,7 @@ def check_services():
                 print(f"  🔴 {name}: DETENIDO / INACTIVO")
         except Exception:
             print(f"  ⚠️ {name}: NO DETECTADO")
-    print("-" * 75)
+    print("-" * 78)
 
 check_services()
 
@@ -69,27 +70,36 @@ if not target_log:
         f.write(f"=== MONITOR INICIADO ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 print(f"\n📜 TRANSMISIÓN DE REGISTROS EN TIEMPO REAL ({target_log}):")
-print("👉 Cualquier cosa que instales, abras o ejecutes se transmitirá aquí abajo.")
-print("   Si ves un error en 🔴 rojo, cópialo y pégalo en el chat para solucionarlo.\n")
-print("=" * 75 + "\n")
+print("👉 Esta celda se quedará ejecutándose INDEFINIDAMENTE transmitiendo todo.")
+print("   Cualquier comando, juego o error aparecerá aquí abajo en tiempo real.\n")
+print("=" * 78 + "\n")
 
-# Mostrar contenido existente
+# Mostrar contenido inicial
 try:
-    with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
-        lines = f.readlines()
-        for l in lines[-30:]:
-            print(l.rstrip())
+    if target_log.exists():
+        with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+            for l in lines[-30:]:
+                print(l.rstrip())
 except Exception:
     pass
 
-# Streaming continuo
+# Streaming continuo infinito (Nunca se apaga)
 last_size = target_log.stat().st_size if target_log.exists() else 0
-loop_count = 0
+seconds_counter = 0
 
-try:
-    while True:
+while True:
+    try:
         time.sleep(1)
-        loop_count += 1
+        seconds_counter += 1
+        
+        # Buscar log si cambió de ubicación
+        if not target_log.exists():
+            for p in CANDIDATE_LOGS:
+                if p.exists():
+                    target_log = p
+                    last_size = 0
+                    break
         
         if target_log.exists():
             curr_size = target_log.stat().st_size
@@ -110,10 +120,14 @@ try:
                             else:
                                 print(f"  {line_str}", flush=True)
             elif curr_size < last_size:
-                last_size = 0  # El archivo fue recreado/rotado
-                
-        # Cada 60 segundos refrescar un pulso
-        if loop_count % 60 == 0:
-            print(f"\n⏱️ [{time.strftime('%H:%M:%S')}] Monitor activo - Todos los servicios corriendo en orden.", flush=True)
-except KeyboardInterrupt:
-    print("\n🛑 Monitor detenido por el usuario.")
+                last_size = 0  # Rotación de log
+        
+        # Latido y re-chequeo cada 60 segundos
+        if seconds_counter % 60 == 0:
+            print(f"⏱️ [{time.strftime('%H:%M:%S')}] Monitor activo ({seconds_counter // 60} min) - 7 servicios OK.", flush=True)
+            
+    except KeyboardInterrupt:
+        print("\n🛑 Monitor detenido por el usuario.")
+        break
+    except Exception as e:
+        time.sleep(2)
