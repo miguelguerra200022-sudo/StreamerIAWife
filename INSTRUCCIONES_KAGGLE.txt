@@ -1,12 +1,12 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (REGISTRO EN VIVO)
+🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (SESIÓN 100% LIMPIA)
 ================================================================================
 
 📊 CELDA 1: EL MONITOR DE REGISTROS (EJECUTAR DE PRIMERO)
 --------------------------------------------------------------------------------
 Pega esto en la Celda 1 y dale Play (▶️):
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
 
 
 ================================================================================

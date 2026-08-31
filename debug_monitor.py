@@ -17,9 +17,12 @@ from pathlib import Path
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-if not LOG_FILE.exists():
-    with open(LOG_FILE, "w", encoding="utf-8") as f:
-        f.write(f"=== REGISTRO DEL SISTEMA INICIADO ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+# Limpiar log de sesiones pasadas para que la pantalla esté 100% limpia
+try:
+    if LOG_FILE.exists():
+        LOG_FILE.unlink()
+except Exception:
+    pass
 
 print("=" * 78, flush=True)
 print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (REGISTRO DESDE EL SEGUNDO 1)", flush=True)
