@@ -1,42 +1,21 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: ARQUITECTURA MAESTRA DE 3 CELDAS (100% SEGURA)
+🌸 LINUWAIFU CLOUD PC: COMANDO MAESTRO ÚNICO (TODO EN 1 CELDA)
 ================================================================================
 
-🧹 CELDA 1: LIMPIEZA SEGURA Y RESETEO A CERO (EJECUTAR DE PRIMERO)
+🚀 UN SOLO CLIC: ARRANCAR TU PC EN LA NUBE
 --------------------------------------------------------------------------------
-Pega esto en la Celda 1 y dale Play (▶️) para limpiar procesos viejos en 1 segundo:
+En tu libreta de Kaggle, pega este comando único en la Celda y dale Play (▶️):
 
-!pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true
-!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log /kaggle/working/noVNC /kaggle/working/LinuWaifu_State
-!echo "✅ [LIMPIEZA SEGURA]: Procesos apagados y memoria reseteada a 0."
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 
 ================================================================================
-📊 CELDA 2: MONITOR DE LOGS EN VIVO (EJECUTAR DESPUÉS)
---------------------------------------------------------------------------------
-Pega esto en la Celda 2 y dale Play (▶️). Se quedará escuchando en tiempo real:
-
-!git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
-
-
+✨ ¿QUÉ HACE ESTE COMANDO AUTOMÁTICAMENTE?
 ================================================================================
-🖥️ CELDA 3: ARRANQUE DE LA PC EN LA NUBE (EJECUTAR AL FINAL)
---------------------------------------------------------------------------------
-Pega esto en la Celda 3 y dale Play (▶️) para encender tu PC, 5TB GDrive y Waifu IA:
-
-!cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
-
-
-================================================================================
-📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER EN TU CELULAR
-================================================================================
-1. En la salida verás tu dirección de conexión:
-   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345 (o tu enlace de Ngrok)
-2. En la app RealVNC Viewer de tu teléfono:
-   - Toca '+' para agregar conexión.
-   - Pega esa dirección.
-   - Nombre: Ubuntu Kaggle PC.
-   - Toca 'Connect'.
-3. ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS, tus 5TB de Google Drive y tu
-   Waifu IA 3D en pantalla lista para transmitir!
+1. 🧹 Limpia cualquier proceso viejo residual en 1 segundo.
+2. 📦 Instala la Suite oficial Ubuntu 24.04 LTS (Yaru-Dark, XFCE, audio virtual).
+3. ☁️ Conecta y monta tu Google Drive de 5TB (carpeta PC_Kaggle).
+4. 🌸 Enciende tus 2 GPUs Tesla T4 y abre a LinuWaifu 3D IA en pantalla.
+5. 🌐 Te entrega tu enlace Web directo y tu dirección para la App RealVNC Viewer.
+6. 💾 Auto-guarda tus partidas, descargas y cambios a tu Google Drive cada 5 min.
 ================================================================================

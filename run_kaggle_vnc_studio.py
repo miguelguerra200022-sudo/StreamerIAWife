@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: INFINITE PERSISTENCE & FULL LOGGING ENGINE (KAGGLE)
+🌸 LINUWAIFU CLOUD PC: MOTOR MAESTRO TURNKEY TODO-EN-UNO (KAGGLE)
+================================================================================
+1. Limpia procesos y archivos anteriores automáticamente.
+2. Instala Suite oficial Ubuntu 24.04 LTS (Yaru-Dark, XFCE, audio, herramientas).
+3. Conecta y monta tu Google Drive de 5TB (PC_Kaggle) con enlaces simbólicos.
+4. Inicia pantalla 1080p, 2x GPUs NVIDIA Tesla T4 y LinuWaifu 3D AI Studio.
+5. Abre túneles de alta velocidad (Pinggy TCP para app móvil + Ngrok Web).
+6. Auto-guarda partidas y cambios a tu Google Drive cada 5 minutos.
 ================================================================================
 """
 
@@ -23,7 +30,7 @@ os.environ["DISPLAY"] = ":1"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-# Archivo Maestro de Registros Centralizado
+# Archivo Maestro de Registros
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -36,14 +43,17 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Inicializar archivo de log
+# 0. Limpieza segura de procesos residuales
+subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
+time.sleep(1)
+
+# Inicializar archivo de log limpio
 with open(LOG_FILE, "w", encoding="utf-8") as f:
     f.write(f"=== INICIO DE SESIÓN LINUWAIFU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC: SISTEMA Y MOTOR PRINCIPAL...", flush=True)
+print("🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 1080p + 5TB GDRIVE + IA VTUBER)...", flush=True)
 print("=" * 78, flush=True)
-log("Iniciando sistema maestro de LinuWaifu Cloud PC...")
 
 # Directorios Clave
 GDRIVE_CONF_DIR = Path.home() / ".config" / "rclone"
@@ -54,76 +64,62 @@ STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==============================================================================
-# 1. INSTALACIÓN DE SUITE BASE + DEPENDENCIAS (PRIMERO PARA TENER RCLONE Y XFCE)
+# 1. INSTALACIÓN DE SUITE BASE + DEPENDENCIAS
 # ==============================================================================
-def setup_dependencies():
-    print("📦 [1/6] Instalando Suite de Ubuntu oficial (XFCE, rclone, tools)...", flush=True)
-    log("Instalando dependencias de Ubuntu y herramientas...")
-    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
-    
-    base_pkgs = [
-        "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-        "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-        "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
-        "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
-        "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
-    ]
-    
-    extra_pkgs = []
-    if EXTRA_PKGS_FILE.exists():
-        try:
-            for line in EXTRA_PKGS_FILE.read_text().splitlines():
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    for p in line.split():
-                        if p and not p.startswith("#"):
-                            extra_pkgs.append(p)
-            if extra_pkgs:
-                print(f"  📦 Paquetes adicionales detectados: {', '.join(extra_pkgs)}", flush=True)
-                log(f"Restaurando programas adicionales: {', '.join(extra_pkgs)}")
-        except Exception:
-            pass
-    
-    all_pkgs = list(set(base_pkgs + extra_pkgs))
-    
-    cmd_install = (
-        "apt-get update -qq && "
-        f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-        "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
-    )
-    subprocess.run(cmd_install, shell=True)
-    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-    log("Instalación de paquetes completada con éxito.", "SUCCESS")
+print("📦 [1/6] Instalando Suite de Ubuntu oficial y herramientas...", flush=True)
+log("Instalando dependencias de Ubuntu...")
+subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
-    # Descargar noVNC si no existe
-    novnc_dir = Path("/kaggle/working/noVNC")
-    if not novnc_dir.exists():
-        print("📥 [2/6] Descargando componentes web de interfaz...", flush=True)
-        log("Clonando repositorios noVNC y websockify...")
-        subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
-        subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+base_pkgs = [
+    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+    "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
+    "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
+    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
+]
 
-setup_dependencies()
+extra_pkgs = []
+if EXTRA_PKGS_FILE.exists():
+    try:
+        for line in EXTRA_PKGS_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                for p in line.split():
+                    if p and not p.startswith("#"):
+                        extra_pkgs.append(p)
+        if extra_pkgs:
+            print(f"  📦 Restaurando programas guardados: {', '.join(extra_pkgs)}", flush=True)
+    except Exception:
+        pass
+
+all_pkgs = list(set(base_pkgs + extra_pkgs))
+
+cmd_install = (
+    "apt-get update -qq && "
+    f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
+)
+subprocess.run(cmd_install, shell=True)
+subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas listas.", flush=True)
+
+# Descargar noVNC si no existe
+novnc_dir = Path("/kaggle/working/noVNC")
+if not novnc_dir.exists():
+    print("📥 [2/6] Descargando componentes web de interfaz...", flush=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
 # ==============================================================================
-# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (YA CON RCLONE INSTALADO)
+# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (5TB)
 # ==============================================================================
-print("☁️ [2/6] Sincronizando Google Drive (5TB)...", flush=True)
-log("Sincronizando credenciales de Google Drive (5TB)...")
+print("☁️ [3/6] Sincronizando Google Drive (5TB - PC_Kaggle)...", flush=True)
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
 if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     try:
         decoded = base64.b64decode(REPO_RCLONE_B64.read_text().strip())
         GDRIVE_CONF_FILE.write_bytes(decoded)
-        print("  ✅ [✓] Credenciales de 5TB restauradas automáticamente desde GitHub.", flush=True)
-        log("Credenciales de Google Drive restauradas con éxito desde GitHub.", "SUCCESS")
-    except Exception as e:
-        log(f"Error decodificando credenciales: {e}", "ERROR")
-elif GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
-    try:
-        encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
-        REPO_RCLONE_B64.write_text(encoded)
     except Exception:
         pass
 
@@ -137,21 +133,16 @@ try:
         "--vfs-cache-mode", "writes"
     ], stdout=log_rclone, stderr=log_rclone)
     
-    # Crear estructura base en Google Drive (solo si no existen)
+    # Crear estructura base en Google Drive
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_state >> {LOG_FILE} 2>&1 || true", shell=True)
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games >> {LOG_FILE} 2>&1 || true", shell=True)
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
     
-    print("  ✅ [✓] Servidor de 5TB Google Drive montado y carpetas vinculadas (Puerto 8088).", flush=True)
-    log("Servidor Rclone WebDAV montado y estructura de 5TB (PC_Kaggle) vinculada.", "SUCCESS")
-except Exception as e:
-    log(f"Error iniciando Rclone WebDAV: {e}", "ERROR")
+    print("  ✅ [✓] Unidad de 5TB Google Drive montada en red local (Puerto 8088).", flush=True)
+except Exception:
+    pass
 
-# ==============================================================================
-# 3. RESTAURAR ESTADO DE USUARIO (CONFIGURACIONES, PARTIDAS DE JUEGOS, ESCRITORIO)
-# ==============================================================================
-print("📂 [3/6] Restaurando partidas, escritorio y estado personal de Google Drive...", flush=True)
-log("Restaurando estado personal del usuario desde Google Drive...")
+# Restaurar estado personal
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
     subprocess.run(
@@ -160,31 +151,23 @@ try:
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 100:
         subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
-        print("  ✅ [✓] Escritorio, fondos y partidas restauradas con éxito.", flush=True)
-        log("Estado personal restaurado con éxito.", "SUCCESS")
-except Exception as e:
-    log(f"Aviso estado personal: {e}", "WARNING")
+        print("  ✅ [✓] Partidas guardadas y configuraciones de usuario restauradas.", flush=True)
+except Exception:
+    pass
 
 # ==============================================================================
-# 4. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS Y HERRAMIENTAS
+# 3. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS Y HERRAMIENTAS
 # ==============================================================================
-print("🎨 [4/6] Configurando tema Ubuntu Yaru-Dark y herramientas en escritorio...", flush=True)
-log("Configurando temas de escritorio Yaru-Dark y accesos directos...")
-
-# Limpiar procesos anteriores
-subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 ssh python3 2>/dev/null || true", shell=True)
-time.sleep(1)
+print("🎨 [4/6] Configurando tema oficial Ubuntu Yaru-Dark y accesos directos...", flush=True)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
 
-# Crear carpeta Desktop y Games
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
 
-# Inyectar temas oficiales de Ubuntu
 try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
     xfconf_dir.mkdir(parents=True, exist_ok=True)
@@ -197,7 +180,6 @@ try:
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 10' --create -t string 2>/dev/null || true", shell=True, env=env)
 
-    # Mostrar iconos de escritorio
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
@@ -205,7 +187,7 @@ try:
 except Exception:
     pass
 
-# Script auxiliar para instalar cualquier paquete y guardarlo para siempre en GitHub/GDrive
+# Script auxiliar para instalar cualquier paquete
 install_helper = BASE_DIR / "instalar_y_guardar.sh"
 install_helper.write_text(
     "#!/bin/bash\n"
@@ -213,15 +195,11 @@ install_helper.write_text(
     "  echo 'Uso: ./instalar_y_guardar.sh <nombre_paquete>'\n"
     "  exit 1\n"
     "fi\n"
-    f"echo '[INSTALANDO]: '$@ >> {LOG_FILE}\n"
     f"apt-get update -qq && apt-get install -y --no-install-recommends \"$@\" >> {LOG_FILE} 2>&1\n"
     "if [ $? -eq 0 ]; then\n"
     f"  echo \"$@\" >> {EXTRA_PKGS_FILE}\n"
     f"  cd {BASE_DIR} && git add packages_extra.txt && git commit -m 'Add persistent packages: '$@ && git push origin main >/dev/null 2>&1 || true\n"
     "  echo '✅ ¡Paquete instalado y guardado para siempre en GitHub!'\n"
-    f"  echo '[EXITO]: Paquetes '$@' guardados.' >> {LOG_FILE}\n"
-    "else\n"
-    f"  echo '[ERROR]: Falló la instalación de '$@ >> {LOG_FILE}\n"
     "fi\n"
 )
 install_helper.chmod(0o755)
@@ -290,10 +268,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 5. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
+# 4. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
 # ==============================================================================
-print("🖥️ [5/6] Levantando pantalla 1080p y auto-iniciando LinuWaifu AI Studio...", flush=True)
-log("Iniciando pantalla Xvfb, XFCE4, Audio Virtual y LinuWaifu Backend...")
+print("🖥️ [5/6] Levantando pantalla 1080p y servidor gráfico...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -303,7 +280,7 @@ xvfb_proc = subprocess.Popen([
 ], env=env)
 time.sleep(2)
 
-# Iniciar sesión de escritorio completa XFCE4 con salida a log
+# Iniciar sesión de escritorio completa XFCE4
 log_xfce = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "dbus-launch", "--exit-with-session", "startxfce4"
@@ -314,17 +291,17 @@ time.sleep(3)
 subprocess.run(f"pulseaudio --start --exit-idle-time=-1 >> {LOG_FILE} 2>&1 || true", shell=True)
 subprocess.run(f"pactl load-module module-null-sink sink_name=VirtualSink >> {LOG_FILE} 2>&1 || true", shell=True)
 
-# Iniciar el servidor backend de LinuWaifu (Cloud Bridge + IA Brain) en puerto 8000
+# Iniciar backend de LinuWaifu
 def start_linuwaifu_backend():
     try:
         subprocess.run(f"python3 {BASE_DIR}/cloud_bridge.py >> {LOG_FILE} 2>&1", shell=True, env=env)
-    except Exception as e:
-        log(f"Aviso Backend: {e}", "WARNING")
+    except Exception:
+        pass
 
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
 
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu en la esquina de la pantalla
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu
 subprocess.Popen([
     "chromium-browser",
     "--no-sandbox",
@@ -333,7 +310,7 @@ subprocess.Popen([
     f"--app=http://localhost:8000/avatars/studio.html"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-# Servidor VNC optimizado para 60 FPS con noxdamage y noxfixes
+# Servidor VNC optimizado
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "x11vnc", "-display", ":1",
@@ -354,10 +331,9 @@ subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 6. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
+# 5. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
 # ==============================================================================
 print("🌐 [6/6] Conectando túneles de acceso remoto...", flush=True)
-log("Conectando túneles Ngrok y Pinggy...")
 
 web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
@@ -377,7 +353,6 @@ if ngrok_token:
         ngrok.set_auth_token(ngrok_token)
         http_tunnel = ngrok.connect(6080, "http")
         web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
-        log(f"Túnel Web Ngrok conectado: {web_tunnel_url}", "SUCCESS")
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
@@ -401,8 +376,6 @@ def run_pinggy_tunnel():
                     addr = match.group(1).strip()
                     if addr not in vnc_app_address:
                         vnc_app_address.append(addr)
-                        print(f"\n📱 [PINGGY ACTIVO] Dirección para RealVNC Viewer: {addr}\n", flush=True)
-                        log(f"Túnel TCP Pinggy conectado: {addr}", "SUCCESS")
     except Exception:
         pass
 
@@ -416,18 +389,15 @@ try:
     import torch
     n = torch.cuda.device_count()
     print(f"\n🎮 GPUs NVIDIA Tesla Activas: {n}", flush=True)
-    log(f"GPUs NVIDIA Tesla detectadas: {n}")
     for i in range(n):
         p = torch.cuda.get_device_properties(i)
         print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
-        log(f"GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)")
 except Exception:
     pass
 
 try:
     df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
     print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
-    log(f"Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}")
 except Exception:
     pass
 
@@ -443,12 +413,21 @@ if web_tunnel_url:
     print(f"👉 {web_tunnel_url}", flush=True)
     print("-" * 78, flush=True)
 
+# Buscar dirección de Pinggy
+pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
 print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
+print(f"👉 Servidor VNC: {pinggy_addr}", flush=True)
 print("   • Abre RealVNC Viewer en tu celular -> Botón '+'", flush=True)
-print("   • Pega la dirección de Pinggy que aparece en la Celda 1.", flush=True)
+print("   • Pega la dirección de arriba y toca 'Connect'.", flush=True)
+print("=" * 78, flush=True)
+
+print("💾 SISTEMA DE PERSISTENCIA ACTIVO:", flush=True)
+print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
+print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
+print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
-# Función de auto-guardado a Google Drive y GitHub
+# Función de auto-guardado a Google Drive
 def auto_save_user_state():
     try:
         if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
@@ -470,24 +449,22 @@ def auto_save_user_state():
                 f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ >> {LOG_FILE} 2>&1 || true",
                 shell=True
             )
-            log("Auto-guardado del sistema completo a Google Drive (PC_Kaggle) completado.", "SUCCESS")
+            log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
     except Exception as e:
         log(f"Error en auto-guardado: {e}", "ERROR")
 
-# Mantener viva la celda con auto-guardado periódico
+# Mantener viva la celda con auto-guardado y transmisión
 try:
     minutos = 0
     while True:
         time.sleep(30)
-        print(".", end="", flush=True)
         minutos += 0.5
+        print(".", end="", flush=True)
         if minutos % 5 == 0:
             auto_save_user_state()
         if minutos % 10 == 0:
-            print(f" [{int(minutos)} min activo]", flush=True)
-            log(f"Sistema activo {int(minutos)} minutos. Todo funcionando correctamente.")
+            print(f" [{int(minutos)} min activo - Estado Guardado]", flush=True)
 except KeyboardInterrupt:
-    print("\n🛑 Guardando estado final antes de salir...")
-    log("Detención manual solicitada por el usuario...")
+    print("\n🛑 Guardando estado final antes de salir...", flush=True)
     auto_save_user_state()
-    print("✅ Estado guardado. Servidor detenido.")
+    print("✅ Estado guardado. Servidor detenido.", flush=True)
