@@ -109,6 +109,64 @@ EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
 STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
+# Utilidades de Polling y Espera Activa (Elimina Race Conditions)
+def wait_for_path(path, timeout=15):
+    p = Path(path)
+    start = time.time()
+    while time.time() - start < timeout:
+        if p.exists():
+            return True
+        time.sleep(0.2)
+    return False
+
+def wait_for_port(port, timeout=15):
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            with socket.create_connection(('127.0.0.1', port), timeout=0.3):
+                return True
+        except Exception:
+            time.sleep(0.2)
+    return False
+
+# Función de auto-guardado a Google Drive (Excluyendo gdrive para evitar loops recursivos)
+def auto_save_user_state():
+    try:
+        if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
+            encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
+            if not REPO_RCLONE_B64.exists() or REPO_RCLONE_B64.read_text().strip() != encoded:
+                REPO_RCLONE_B64.write_text(encoded)
+                subprocess.run(
+                    f"cd {BASE_DIR} && git add rclone_gdrive.b64 && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
+                    shell=True
+                )
+        
+        save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
+        subprocess.run(
+            f"tar --exclude='./gdrive' --exclude='./.cache' --exclude='./.config/google-chrome' -czf {save_tar} -C /root/ . >> {LOG_FILE} 2>&1 || true",
+            shell=True
+        )
+        if save_tar.exists() and save_tar.stat().st_size > 100:
+            subprocess.run(
+                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >/dev/null 2>&1 || true",
+                shell=True
+            )
+            log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
+    except Exception as e:
+        log(f"Error en auto-guardado: {e}", "ERROR")
+
+# Manejador dedicado para el botón de escritorio "Guardar Estado de mi PC"
+if "--save-now" in sys.argv:
+    print("💾 Guardando estado manual de la PC en Google Drive...", flush=True)
+    auto_save_user_state()
+    if os.environ.get("DISPLAY"):
+        subprocess.run(
+            "notify-send '💾 Guardado de PC' 'Tu estado ha sido respaldado en Google Drive exitosamente.' 2>/dev/null || true",
+            shell=True
+        )
+    print("✅ Estado guardado exitosamente. Saliendo.", flush=True)
+    sys.exit(0)
+
 # Iniciar servicio D-Bus del sistema
 subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
 
@@ -157,10 +215,14 @@ try:
         "--drive-chunk-size", "64M",
         "--daemon"
     ], stdout=log_rclone, stderr=log_rclone)
-    time.sleep(3) # Esperar a que monte
     
-    print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
-    log("Google Drive 5TB montado con éxito.", "SUCCESS")
+    # Espera activa inteligente para confirmación del montaje
+    drive_ready = wait_for_path("/root/gdrive", timeout=15)
+    if drive_ready:
+        print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
+        log("Google Drive 5TB montado con éxito.", "SUCCESS")
+    else:
+        print("  ⚠️ [!] Montaje de Google Drive tardando más de lo normal...", flush=True)
     
     # ==============================================================================
     # Sincronización Simbólica Inteligente (Master Folders)
@@ -252,13 +314,31 @@ if EXTRA_PKGS_FILE.exists():
 
 all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 
-# Descargar Google Chrome Oficial
-subprocess.run(
-    "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
-    shell=True, cwd="/kaggle/working"
-)
-if Path("/kaggle/working/google-chrome-stable_current_amd64.deb").exists():
-    all_pkgs.append("/kaggle/working/google-chrome-stable_current_amd64.deb")
+# Descargar o reutilizar Google Chrome Oficial desde caché de Drive
+chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
+gdrive_cache_deb = Path("/root/gdrive/Cache/google-chrome-stable_current_amd64.deb")
+
+if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
+    print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
+    try:
+        shutil.copy2(gdrive_cache_deb, chrome_deb)
+    except Exception:
+        pass
+
+if not chrome_deb.exists() or chrome_deb.stat().st_size < 1000:
+    subprocess.run(
+        "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /kaggle/working/google-chrome-stable_current_amd64.deb",
+        shell=True
+    )
+    if chrome_deb.exists() and chrome_deb.stat().st_size > 50_000_000 and os.path.exists("/root/gdrive"):
+        os.makedirs("/root/gdrive/Cache", exist_ok=True)
+        try:
+            shutil.copy2(chrome_deb, gdrive_cache_deb)
+        except Exception:
+            pass
+
+if chrome_deb.exists():
+    all_pkgs.append(str(chrome_deb))
 
 cmd_install = (
     "apt-get update -qq && "
@@ -439,7 +519,6 @@ subprocess.run(
     "--load='module-null-sink sink_name=VirtualSink' >> {LOG_FILE} 2>&1 || true",
     shell=True, env=env
 )
-time.sleep(1)
 
 # Iniciar pantalla Xvfb a 1080p nativa (1920x1080)
 subprocess.Popen([
@@ -447,16 +526,18 @@ subprocess.Popen([
     "-screen", "0", "1920x1080x24",
     "-ac", "-noreset", "-nolisten", "tcp"
 ], env=env)
-time.sleep(2)
 
-subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
+# Esperar activamente a que X11 esté listo (sin sleeps arbitrarios)
+xvfb_ready = wait_for_path("/tmp/.X11-unix/X1", timeout=10)
+if xvfb_ready:
+    subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
 
 # Iniciar sesión de escritorio completa XFCE4
 log_xfce = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "dbus-launch", "--exit-with-session", "startxfce4"
 ], env=env, stdout=log_xfce, stderr=log_xfce)
-time.sleep(3)
+time.sleep(1.5)
 
 # Servidor VNC en resolución nativa 1920x1080 (SIN ncache)
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
@@ -469,7 +550,9 @@ subprocess.Popen([
     "-wait", "10",
     "-defer", "10"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
-time.sleep(1)
+
+# Esperar a que x11vnc esté escuchando en puerto 5900
+vnc_ready = wait_for_port(5900, timeout=10)
 
 # Servidor Web noVNC con WebSocket en puerto 6080
 subprocess.Popen([
@@ -478,7 +561,9 @@ subprocess.Popen([
     "--listen", "6080",
     "--web", "/kaggle/working/noVNC"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
-time.sleep(2)
+
+# Esperar a que noVNC esté escuchando en puerto 6080
+novnc_ready = wait_for_port(6080, timeout=10)
 
 # Iniciar backend de LinuWaifu
 def start_linuwaifu_backend():
@@ -488,7 +573,7 @@ def start_linuwaifu_backend():
         pass
 
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
-time.sleep(2)
+time.sleep(1)
 
 # Auto-abrir la ventana del Avatar 3D de LinuWaifu con Chrome
 chrome_bin = "google-chrome" if shutil.which("google-chrome") else ("google-chrome-stable" if shutil.which("google-chrome-stable") else "chromium-browser")
@@ -501,9 +586,9 @@ subprocess.Popen([
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # ==============================================================================
-# 5. TÚNELES DE ALTA VELOCIDAD (PANTALLA COMPLETA 16:9)
+# 5. TÚNELES DE ALTA VELOCIDAD Y AUTO-RECONEXIÓN RESILIENTE
 # ==============================================================================
-print("🌐 [5/5] Conectando túneles de acceso remoto en pantalla completa...", flush=True)
+print("🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...", flush=True)
 
 web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
@@ -526,28 +611,32 @@ if ngrok_token:
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
-# 2. Túnel TCP Pinggy en segundo plano con captura garantizada
+# 2. Túnel TCP Pinggy con bucle de auto-reconexión continua
 vnc_app_address = []
 def run_pinggy_tunnel():
-    try:
-        proc = subprocess.Popen(
-            ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
-        while True:
-            line = proc.stdout.readline()
-            if not line:
-                break
-            if "tcp://" in line or "pinggy" in line:
-                match = re.search(r'(?:tcp://)?([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
-                if match:
-                    addr = match.group(1).strip()
-                    if addr not in vnc_app_address:
-                        vnc_app_address.append(addr)
-    except Exception:
-        pass
+    while True:
+        try:
+            proc = subprocess.Popen(
+                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+            while True:
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                if "tcp://" in line or "pinggy" in line:
+                    match = re.search(r'(?:tcp://)?([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
+                    if match:
+                        addr = match.group(1).strip()
+                        if addr not in vnc_app_address:
+                            vnc_app_address.clear()
+                            vnc_app_address.append(addr)
+            proc.wait()
+        except Exception:
+            pass
+        time.sleep(3)
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
@@ -558,8 +647,10 @@ for _ in range(12):
     time.sleep(0.5)
 
 # ==============================================================================
-# INFORMACIÓN DE HARDWARE Y DISCO
+# VERIFICACIÓN DE ESTADO Y SALUD REAL DEL SISTEMA
 # ==============================================================================
+drive_mounted = os.path.exists("/root/gdrive")
+
 try:
     import torch
     n = torch.cuda.device_count()
@@ -580,8 +671,16 @@ except Exception:
 # 🎉 ¡LINUWAIFU CLOUD PC 1080p PANTALLA COMPLETA 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
+if xvfb_ready and vnc_ready and novnc_ready:
+    print("🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
+else:
+    print("⚠️ 🌸 SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
 print("=" * 78, flush=True)
+print(f"  • Servidor X11 Display :1 (1080p):  {'🟢 OPERATIVO' if xvfb_ready else '🔴 ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor VNC Nativo (5900):       {'🟢 OPERATIVO' if vnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor Web noVNC (6080):        {'🟢 OPERATIVO' if novnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
+print(f"  • Google Drive 5TB FUSE Mount:      {'🟢 MONTADO (/root/gdrive)' if drive_mounted else '🔴 NO MONTADO'}", flush=True)
+print("-" * 78, flush=True)
 
 if web_tunnel_url:
     print("🚀 OPCIÓN 1: ENLACE WEB DIRECTO (PANTALLA COMPLETA 1080p NATIVA):", flush=True)
@@ -597,38 +696,12 @@ print("   • Pega la dirección de arriba y toca 'Connect'.", flush=True)
 print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
-print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
+print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en /root/gdrive.", flush=True)
 print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
 print("   • 🎬 Suite Multimedia y Códecs oficiales de Ubuntu listos.", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
 print("   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
-
-# Función de auto-guardado a Google Drive
-def auto_save_user_state():
-    try:
-        if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
-            encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
-            if not REPO_RCLONE_B64.exists() or REPO_RCLONE_B64.read_text().strip() != encoded:
-                REPO_RCLONE_B64.write_text(encoded)
-                subprocess.run(
-                    f"cd {BASE_DIR} && git add rclone_gdrive.b64 && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
-                    shell=True
-                )
-        
-        save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
-        subprocess.run(
-            f"tar -czf {save_tar} -C /root/ . >> {LOG_FILE} 2>&1 || true",
-            shell=True
-        )
-        if save_tar.exists():
-            subprocess.run(
-                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >/dev/null 2>&1 || true",
-                shell=True
-            )
-            log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
-    except Exception as e:
-        log(f"Error en auto-guardado: {e}", "ERROR")
 
 # ==============================================================================
 # Instalador Inteligente (Secuestrador de APT)

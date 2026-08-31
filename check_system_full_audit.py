@@ -103,13 +103,12 @@ print(f"  • Servidor de Audio PulseAudio:   {'🟢 ACTIVO (VirtualSink)' if pu
 print(f"  • Tema Visual Oficial:            {run_cmd('xfconf-query -c xsettings -p /Net/ThemeName 2>/dev/null') or 'Yaru-dark'}")
 print(f"  • Iconos Oficiales:               {run_cmd('xfconf-query -c xsettings -p /Net/IconThemeName 2>/dev/null') or 'Yaru'}")
 
-# 6. MAPA DE PUERTOS DE RED Y TÚNELES
-print("\n🌐 [6/7] MAPA DE PUERTOS DE RED Y CONECTIVIDAD:")
+# 6. MAPA DE PUERTOS DE RED Y PERSISTENCIA
+print("\n🌐 [6/7] MAPA DE PUERTOS DE RED Y PERSISTENCIA:")
 print("-" * 80)
 ports_map = {
     5900: "x11vnc (Servidor VNC Nativo TCP)",
     6080: "noVNC (Servidor Web VNC para Navegador)",
-    8088: "Google Drive 5TB (Servidor WebDAV Rclone)",
     8000: "LinuWaifu IA Studio 3D (WebSocket & Audio)"
 }
 
@@ -117,6 +116,10 @@ for port, desc in ports_map.items():
     status = check_port(port)
     icon = "🟢 ABIERTO / ESCUCHANDO" if status else "⚪ NO INICIADO"
     print(f"  • Puerto {port:4d}: {icon:25s} -> {desc}")
+
+gdrive_mount_ok = os.path.exists("/root/gdrive") and os.path.isdir("/root/gdrive")
+gdrive_icon = "🟢 MONTADO Y ACTIVO" if gdrive_mount_ok else "🔴 NO MONTADO"
+print(f"  • FUSE Mount:  {gdrive_icon:25s} -> /root/gdrive (5TB Google Drive)")
 
 # 7. SUITES DE SOFTWARE Y PROGRAMAS INSTALADOS
 print("\n📦 [7/7] SUITES DE SOFTWARE Y APLICACIONES INSTALADAS:")
@@ -127,7 +130,7 @@ print(f"  • Total Paquetes del Sistema:   {total_pkgs} instalados")
 
 apps_check = [
     ("LibreOffice Suite", "libreoffice --version 2>/dev/null | head -1"),
-    ("Chromium Browser", "chromium-browser --version 2>/dev/null || chromium --version 2>/dev/null"),
+    ("Google Chrome Oficial", "google-chrome --version 2>/dev/null || google-chrome-stable --version 2>/dev/null || chromium-browser --version 2>/dev/null"),
     ("Explorador Thunar", "thunar --version 2>/dev/null | head -1"),
     ("Visor Evince PDF", "evince --version 2>/dev/null | head -1"),
     ("Calculadora GNOME", "gnome-calculator --version 2>/dev/null | head -1"),
