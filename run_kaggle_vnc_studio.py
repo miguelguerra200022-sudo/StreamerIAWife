@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS PRO (LIVE LOGS & ERROR STREAMER)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 PRO (SISTEMA OPTIMIZADO & PULIDO)
 ================================================================================
 """
 
@@ -19,6 +19,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = ":1"
+os.environ["PULSE_SERVER"] = "127.0.0.1"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
@@ -27,7 +28,7 @@ LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 # 0. Limpieza segura de procesos residuales
-subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
+subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio|tracker' 2>/dev/null || true", shell=True)
 time.sleep(0.5)
 
 # Inicializar archivo de log limpio
@@ -43,7 +44,9 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs y errores en tiempo real a la consola
+# Hilo de transmisión de logs y errores en tiempo real a la consola (filtrando ruido irrelevante)
+IGNORE_KEYWORDS = ["unsupported gl renderer", "remote volume monitor", "not starting for system user", "pm-is-supported", "assertion 'source != null'"]
+
 def live_log_streamer():
     last_size = 0
     while True:
@@ -57,8 +60,8 @@ def live_log_streamer():
                         last_size = curr_size
                         for line in new_text.splitlines():
                             l_strip = line.strip()
-                            if l_strip:
-                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower():
+                            if l_strip and not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
+                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower() or "quota exceeded" in l_strip.lower():
                                     print(f"🔴 {l_strip}", flush=True)
                                 elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
                                     print(f"⚠️ {l_strip}", flush=True)
@@ -80,6 +83,9 @@ EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
 STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
+# Iniciar servicio D-Bus del sistema
+subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
+
 # ==============================================================================
 # 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
 # ==============================================================================
@@ -97,20 +103,25 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
 # Instalar rclone rápido si no está presente
 subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
 
-# Iniciar servidor Rclone WebDAV
+# Iniciar servidor Rclone WebDAV con límite de peticiones (tpslimit) para evitar Error 403 Rate Limit
 try:
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
         "rclone", "serve", "webdav", "gdrive:",
         "--addr", "127.0.0.1:8088",
         "--read-only=false",
-        "--vfs-cache-mode", "writes"
+        "--vfs-cache-mode", "writes",
+        "--tpslimit", "10",
+        "--drive-chunk-size", "64M"
     ], stdout=log_rclone, stderr=log_rclone)
+    time.sleep(1)
     
-    # Crear estructura base en Google Drive
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_state >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
+    # Crear estructura base en Google Drive de forma pausada
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_state --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
+    time.sleep(0.5)
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
+    time.sleep(0.5)
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
     
     print("  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.", flush=True)
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
@@ -128,7 +139,7 @@ base_pkgs = [
     "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
     "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
     "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
-    "pulseaudio", "net-tools", "wget", "curl", "psmisc", "openssh-client",
+    "pulseaudio", "pulseaudio-utils", "net-tools", "wget", "curl", "psmisc", "openssh-client",
     "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
 ]
 
@@ -166,7 +177,7 @@ print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.", flush=True
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
     subprocess.run(
-        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} >> {LOG_FILE} 2>&1 || true",
+        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 5 >> {LOG_FILE} 2>&1 || true",
         shell=True
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 100:
@@ -188,7 +199,7 @@ desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
 
-# Inyectar temas oficiales de Ubuntu
+# Inyectar temas oficiales de Ubuntu y desactivar compositing pesado de OpenGL
 try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
     xfconf_dir.mkdir(parents=True, exist_ok=True)
@@ -198,6 +209,8 @@ try:
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
     
+    # Desactivar compositor OpenGL para 120 FPS sin advertencias de software render
+    subprocess.run("xfconf-query -c xfwm4 -p /general/use_compositing -s false --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
 
@@ -313,15 +326,15 @@ subprocess.Popen([
 time.sleep(3)
 
 # Iniciar PulseAudio virtual
-subprocess.run(f"pulseaudio --start --exit-idle-time=-1 >> {LOG_FILE} 2>&1 || true", shell=True)
+subprocess.run(f"pulseaudio --start --exit-idle-time=-1 --daemonize=true >> {LOG_FILE} 2>&1 || true", shell=True)
 subprocess.run(f"pactl load-module module-null-sink sink_name=VirtualSink >> {LOG_FILE} 2>&1 || true", shell=True)
 
 # Iniciar backend de LinuWaifu
 def start_linuwaifu_backend():
     try:
         subprocess.run(f"python3 {BASE_DIR}/cloud_bridge.py >> {LOG_FILE} 2>&1", shell=True, env=env)
-    except Exception as e:
-        log(f"Aviso Backend: {e}", "WARNING")
+    except Exception:
+        pass
 
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
@@ -476,7 +489,7 @@ def auto_save_user_state():
         )
         if save_tar.exists():
             subprocess.run(
-                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ >> {LOG_FILE} 2>&1 || true",
+                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >> {LOG_FILE} 2>&1 || true",
                 shell=True
             )
             log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
