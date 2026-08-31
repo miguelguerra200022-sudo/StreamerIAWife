@@ -1,43 +1,23 @@
-Ahora si agarro, pero yo quiero es que tenga todos las cosas que tiene instalado Ubuntu 24.04 LTS, con todas sus cosas instaladas, tener todos en github, las credenciales de rclone, tener todos los juegos pesados ahi /}(GTA V, Red Dead Redemption), que vivan ahi para jugar cuando quiera, que con solo darle start a la celda, este ya todo configurado desde GitHub hacia Kaggle, no importa desde que cuenta de Kaggle me conecte cuando se me acabe una, que apenas abra la interfaz me aparezca el avatar IA 100% funcional para comenzar a transmitir, con todo lo que tenemos en GitHub, ¿Se puede?
-
-Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 272, done.
-remote: Counting objects: 100% (78/78), done.
-remote: Compressing objects: 100% (53/53), done.
-remote: Total 272 (delta 47), reused 55 (delta 25), pack-reused 194 (from 1)
-Receiving objects: 100% (272/272), 6.57 MiB | 18.80 MiB/s, done.
-Resolving deltas: 100% (156/156), done.
+Ejecute primero la celda de ejecucion y despues la de sistema, que creo que debe de ser, ¿No? Y mira lo que me salio en el diagnostico:
 
 ===========================================================================
-🌸 INICIANDO UBUNTU NATIVO PRO EDITION EN KAGGLE (1080p FULL HD)...
-===========================================================================
-📦 [1/4] Verificando e instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop)...
-🎨 [2/4] Configurando apariencia oficial Ubuntu (Yaru Dark, Dock, Fuentes)...
-🖥️ [3/4] Levantando servidor gráfico Full HD (1920x1080) y sesión D-Bus...
-🌐 [4/4] Conectando túneles de acceso remoto...
-                                                                                                    
-🎮 GPUs NVIDIA Tesla Activas: 2
-  • GPU 0: Tesla T4 (14.6 GB VRAM)
-  • GPU 1: Tesla T4 (14.6 GB VRAM)
-💾 Espacio Libre en Disco: 20G disponibles de 20G
-
-===========================================================================
-🎉 🌸 ¡TU UBUNTU NATIVO PRO ESTÁ 100% ONLINE EN KAGGLE!
-===========================================================================
-🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):
-👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale
-===========================================================================
-📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
-   • Abre RealVNC Viewer en tu celular -> Botón '+'
-   • Pega la dirección de Pinggy que aparece arriba (o conéctate con la Web).
-===========================================================================
-🖥️ PROGRAMAS INSTALADOS LISTOS EN EL MENÚ:
-   • 📁 Thunar (Explorador de archivos visual y Google Drive)
-   • 📝 Mousepad (Editor de código y texto)
-   • 📊 nvtop (Monitor visual de las 2 GPUs Tesla T4)
-   • 📊 htop (Monitor de CPU y 30GB de RAM)
-   • 🎬 mpv (Reproductor multimedia y audio virtual)
-   • 💾 Para vincular tus 5TB de Google Drive: Abre Terminal y escribe rclone config
+📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO
 ===========================================================================
 
-............
+🔍 ESTADO DE SERVICIOS DEL SISTEMA:
+  🟢 🖥️ Pantalla Xvfb (1080p): ACTIVO (PID: 86)
+  🟢 🎨 Escritorio XFCE4: ACTIVO (PID: 88)
+  🟢 📡 Servidor VNC (:5900): ACTIVO (PID: 90)
+  🟢 🌐 Servidor Web noVNC (:6080): ACTIVO (PID: 92)
+  🟢 ☁️ Google Drive 5TB (Rclone): ACTIVO (PID: 94)
+  🟢 🌸 LinuWaifu IA Backend: ACTIVO (PID: 96)
+  🟢 🎵 Audio Virtual PulseAudio: ACTIVO (PID: 98)
+---------------------------------------------------------------------------
+
+⏳ Esperando a que el archivo de registro (/kaggle/working/linuwaifu_system.log) sea creado por la Celda 1...
+⚠️ No se encontró el archivo de log aún. Asegúrate de que la Celda 1 esté corriendo.
+An exception has occurred, use %tb to see the full traceback.
+
+SystemExit: 0
+/usr/local/lib/python3.12/dist-packages/IPython/core/interactiveshell.py:3561: UserWarning: To exit: use 'exit', 'quit', or Ctrl-D.
+  warn("To exit: use 'exit', 'quit', or Ctrl-D.", stacklevel=1)
