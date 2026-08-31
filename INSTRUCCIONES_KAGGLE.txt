@@ -1,22 +1,16 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: COMANDO MAESTRO ÚNICO (TODO EN 1 CELDA)
+🐧 PRUEBA PURA: UBUNTU BASE OFICIAL + XFCE4 (KAGGLE TURNKEY 1-CLICK)
 ================================================================================
 
-🚀 UN SOLO CLIC: ARRANCAR TU PC EN LA NUBE
+🚀 COMANDO DE PRUEBA PURA (COPIAR Y PEGAR EN KAGGLE):
 --------------------------------------------------------------------------------
-En tu libreta de Kaggle, pega este comando único en la Celda y dale Play (▶️):
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_pure_ubuntu_test.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
+================================================================================
+🌸 SISTEMA COMPLETO: UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE + WAIFU IA
+================================================================================
+
+🚀 COMANDO MAESTRO COMPLETO:
+--------------------------------------------------------------------------------
 !rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
-
-
-================================================================================
-✨ ¿QUÉ HACE ESTE COMANDO AUTOMÁTICAMENTE?
-================================================================================
-1. 🧹 Limpia cualquier proceso residual en 0.5 segundos.
-2. 📦 Instala la Suite oficial Ubuntu 24.04 LTS (Yaru-Dark, Thunar, GVFS, audio).
-3. ☁️ Conecta y monta tu Google Drive de 5TB (carpeta PC_Kaggle).
-4. 🌸 Enciende tus 2 GPUs Tesla T4 y abre a LinuWaifu 3D IA en pantalla.
-5. 🌐 Te entrega tu enlace Web directo (noVNC) y tu dirección para la App RealVNC Viewer.
-6. 💾 Auto-guarda tus partidas, descargas y cambios a tu Google Drive cada 5 min.
-7. 📜 Transmite los registros y diagnósticos del sistema en tiempo real.
 ================================================================================
