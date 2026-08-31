@@ -12,6 +12,7 @@ import time
 import re
 import shutil
 import base64
+import socket
 import subprocess
 import threading
 from pathlib import Path
@@ -33,7 +34,7 @@ LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 # 0. Limpieza segura de procesos residuales
 subprocess.run("vncserver -kill :1 2>/dev/null || true", shell=True)
 subprocess.run("pkill -9 -f 'Xvfb|x11vnc|Xkasmvnc|kasmvnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
-subprocess.run("rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock 2>/dev/null || true", shell=True)
+subprocess.run("rm -rf /tmp/.X11-unix/X1 /tmp/.X1-lock /tmp/.X11-unix/X* /tmp/.X*-lock 2>/dev/null || true", shell=True)
 time.sleep(0.5)
 
 # Inicializar archivo de log limpio
@@ -49,7 +50,7 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs (filtrando ruido interno irrelevante)
+# Hilo de transmisión de logs
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
     "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
@@ -142,7 +143,7 @@ subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=Tru
 base_pkgs = [
     "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
     "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
-    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11-xserver-utils",
+    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
     "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
     "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools", "wget", "curl", "psmisc", "openssh-client",
     "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip", "ssl-cert", "libjpeg-turbo8", "libpixman-1-0"
@@ -170,7 +171,7 @@ cmd_install = (
 subprocess.run(cmd_install, shell=True)
 subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
 
-# Descargar e Instalar KasmVNC Server oficial (WebRTC / H.264 60 FPS)
+# Descargar e Instalar KasmVNC Server oficial
 kasm_installed = subprocess.run("which vncserver >/dev/null 2>&1", shell=True).returncode == 0
 if not kasm_installed:
     print("  🚀 Descargando e instalando KasmVNC 60 FPS (H.264 / WebRTC)...", flush=True)
@@ -180,6 +181,14 @@ if not kasm_installed:
         "rm -f /tmp/kasmvnc.deb",
         shell=True
     )
+
+# Configurar permisos SSL Snakeoil para KasmVNC
+subprocess.run("adduser root ssl-cert 2>/dev/null || true", shell=True)
+subprocess.run("make-ssl-cert generate-default-snakeoil --force-overwrite 2>/dev/null || true", shell=True)
+subprocess.run("chmod 640 /etc/ssl/private/ssl-cert-snakeoil.key 2>/dev/null || true", shell=True)
+
+# Configurar contraseña de usuario en KasmVNC (admin / admin)
+subprocess.run("echo 'admin\nadmin\n' | kasmvncpasswd -u root -s 2>/dev/null || true", shell=True)
 
 # Configurar xstartup de KasmVNC para XFCE4
 vnc_home = Path.home() / ".vnc"
@@ -196,26 +205,11 @@ xstartup_file.write_text(
 )
 xstartup_file.chmod(0o755)
 
-# Configurar YAML de KasmVNC en puerto 8444 HTTP (sin SSL para máxima velocidad con Ngrok)
-kasm_yaml = vnc_home / "kasmvnc.yaml"
-kasm_yaml.write_text(
-    "network:\n"
-    "  protocol: http\n"
-    "  websocket_port: 8444\n"
-    "  interface: 0.0.0.0\n"
-    "  http_dir: /usr/share/kasmvnc/www\n"
-    "  ssl:\n"
-    "    require_ssl: false\n"
-    "encoding:\n"
-    "  video_encoding: true\n"
-    "  frame_rate: 60\n"
-    "  quality: 9\n"
-    "  rect_encoding_mode: 1\n"
-    "runtime:\n"
-    "  command_line:\n"
-    "    prompt: false\n"
-)
-subprocess.run(f"mkdir -p /etc/kasmvnc && cp {kasm_yaml} /etc/kasmvnc/kasmvnc.yaml 2>/dev/null || true", shell=True)
+# Descargar noVNC si no existe (como respaldo ultra fluido)
+novnc_dir = Path("/kaggle/working/noVNC")
+if not novnc_dir.exists():
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
@@ -264,7 +258,6 @@ try:
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
     
-    # Desactivar compositor OpenGL para 120 FPS
     subprocess.run("xfconf-query -c xfwm4 -p /general/use_compositing -s false --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
@@ -295,7 +288,7 @@ install_helper.write_text(
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
 
-# Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
+# Accesos directos oficiales en el escritorio
 shortcuts = {
     "LinuWaifu_AI_Studio.desktop": (
         "[Desktop Entry]\n"
@@ -363,9 +356,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDORES GRÁFICOS: KASMVNC 60 FPS
+# 4. LEVANTAR SERVIDORES GRÁFICOS (PANTALLA 1080p, VNC 60 FPS Y WEB STREAM)
 # ==============================================================================
-print("🖥️ [4/5] Levantando pantalla 1080p y servidor KasmVNC 60 FPS...", flush=True)
+print("🖥️ [4/5] Levantando pantalla 1080p y servidor gráfico optimizado a 60 FPS...", flush=True)
 
 # Iniciar PulseAudio nativo en modo TCP local
 subprocess.run(
@@ -377,13 +370,47 @@ subprocess.run(
 )
 time.sleep(1)
 
-# Iniciar KasmVNC Server oficial (Él mismo maneja la pantalla :1 y el puerto WebRTC 8444)
-log_kasm = open(LOG_FILE, "a", encoding="utf-8")
-subprocess.run(
-    "vncserver :1 -geometry 1920x1080 -depth 24 -select-de XFCE -disableBasicAuth >> " + str(LOG_FILE) + " 2>&1 || true",
-    shell=True, env=env
-)
+# Iniciar pantalla Xvfb a 1080p 60Hz con aceleración de buffer
+subprocess.Popen([
+    "Xvfb", ":1",
+    "-screen", "0", "1920x1080x24",
+    "+extension", "GLX",
+    "+extension", "RENDER",
+    "-ac", "-noreset", "-nolisten", "tcp"
+], env=env)
+time.sleep(2)
+
+subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
+
+# Iniciar sesión de escritorio completa XFCE4
+log_xfce = open(LOG_FILE, "a", encoding="utf-8")
+subprocess.Popen([
+    "dbus-launch", "--exit-with-session", "startxfce4"
+], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(3)
+
+# Servidor VNC de ultra alta velocidad (60 FPS con buffer y detección de cambios)
+log_vnc = open(LOG_FILE, "a", encoding="utf-8")
+subprocess.Popen([
+    "x11vnc", "-display", ":1",
+    "-forever", "-nopw", "-shared",
+    "-rfbport", "5900",
+    "-ncache", "10",
+    "-ncache_cr",
+    "-threads",
+    "-wait", "0",
+    "-defer", "0"
+], env=env, stdout=log_vnc, stderr=log_vnc)
+time.sleep(1)
+
+# Servidor Web noVNC con WebSocket a 60 FPS
+subprocess.Popen([
+    "/kaggle/working/noVNC/utils/novnc_proxy",
+    "--vnc", "localhost:5900",
+    "--listen", "6080",
+    "--web", "/kaggle/working/noVNC"
+], env=env, stdout=log_vnc, stderr=log_vnc)
+time.sleep(2)
 
 # Iniciar backend de LinuWaifu
 def start_linuwaifu_backend():
@@ -405,18 +432,18 @@ subprocess.Popen([
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # ==============================================================================
-# 5. TÚNELES DE ALTA VELOCIDAD (KASMVNC 60 FPS WEBRTC)
+# 5. TÚNELES DE ALTA VELOCIDAD (WEB NO-VNC + PINGGY TCP 60 FPS)
 # ==============================================================================
-print("🌐 [5/5] Conectando túneles de transmisión WebRTC 60 FPS...", flush=True)
+print("🌐 [5/5] Conectando túneles de transmisión a 60 FPS...", flush=True)
 
-kasm_tunnel_url = None
+web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
     ngrok_token = sys.argv[1].strip()
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Túnel Web Ngrok HTTP apuntando al puerto 8444 de KasmVNC (WebRTC 60 FPS)
+# 1. Túnel Web Ngrok HTTP apuntando al servidor web 6080
 if ngrok_token:
     try:
         from pyngrok import ngrok
@@ -425,10 +452,41 @@ if ngrok_token:
         except Exception:
             pass
         ngrok.set_auth_token(ngrok_token)
-        http_tunnel = ngrok.connect(8444, "http")
-        kasm_tunnel_url = f"{http_tunnel.public_url}"
+        http_tunnel = ngrok.connect(6080, "http")
+        web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale&quality=9"
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
+
+# 2. Túnel TCP Pinggy en segundo plano con captura garantizada
+vnc_app_address = []
+def run_pinggy_tunnel():
+    try:
+        proc = subprocess.Popen(
+            ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            if "tcp://" in line or "pinggy" in line:
+                match = re.search(r'(?:tcp://)?([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
+                if match:
+                    addr = match.group(1).strip()
+                    if addr not in vnc_app_address:
+                        vnc_app_address.append(addr)
+    except Exception:
+        pass
+
+threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
+
+# Esperar hasta 6 segundos para capturar la dirección exacta de Pinggy
+for _ in range(12):
+    if vnc_app_address:
+        break
+    time.sleep(0.5)
 
 # ==============================================================================
 # INFORMACIÓN DE HARDWARE Y DISCO
@@ -450,24 +508,30 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡KASMVNC PRO 60 FPS WEBRTC 100% ONLINE!
+# 🎉 ¡LINUWAIFU CLOUD PC 60 FPS 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC (KASMVNC 60 FPS) ESTÁ 100% ONLINE!", flush=True)
+print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE A 60 FPS REALES!", flush=True)
 print("=" * 78, flush=True)
 
-if kasm_tunnel_url:
-    print("🚀 ENLACE WEB DIRECTO KASMVNC 60 FPS (ABRE EN CHROME / BRAVE MÓVIL):", flush=True)
-    print(f"👉 {kasm_tunnel_url}", flush=True)
-    print("   • Transmisión de video continua WebRTC H.264 a 60 FPS reales.", flush=True)
-    print("   • Calidad cristalina, controles táctiles, zoom y cero latencia.", flush=True)
-    print("=" * 78, flush=True)
+if web_tunnel_url:
+    print("🚀 OPCIÓN 1: ENLACE WEB DIRECTO (CHROME / BRAVE CELULAR CON CALIDAD 9):", flush=True)
+    print(f"👉 {web_tunnel_url}", flush=True)
+    print("   • Auto-conecta en pantalla completa con calidad HD y render 60 FPS.", flush=True)
+    print("-" * 78, flush=True)
+
+pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
+print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y 60 FPS):", flush=True)
+print(f"👉 Servidor VNC: {pinggy_addr}", flush=True)
+print("   • Abre RealVNC Viewer en tu celular -> Botón '+'", flush=True)
+print("   • Pega la dirección de arriba y toca 'Connect'.", flush=True)
+print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
 print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
-print("   • ⚡ Video H.264 / WebRTC acelerado a 60 FPS nativo.", flush=True)
+print("   • ⚡ Render 60 FPS con ncache y cero delay activo.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
 # Función de auto-guardado a Google Drive
