@@ -20,6 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["DISPLAY"] = ":1"
 os.environ["PULSE_SERVER"] = "127.0.0.1"
+os.environ["LC_ALL"] = "C.UTF-8"
+os.environ["LANG"] = "C.UTF-8"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
@@ -44,12 +46,13 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs (filtrando ruido irrelevante de librerías del sistema)
+# Hilo de transmisión de logs (filtrando ruido interno irrelevante de librerías)
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
     "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
     "attempting to reconnect in 5 seconds", "calling canshutdown failed", "calling canrestart failed",
-    "thumbnailer failed", "failed to connect to proxy", "accountsservice", "g_source_unref"
+    "thumbnailer failed", "failed to connect to proxy", "accountsservice", "g_source_unref",
+    "assertion 'string != null' failed"
 ]
 
 def live_log_streamer():
@@ -127,14 +130,15 @@ except Exception as e:
     log(f"Aviso Rclone: {e}", "WARNING")
 
 # ==============================================================================
-# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04 (YARU, XFCE, HERRAMIENTAS)
+# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04 (GVFS-BACKENDS, YARU, AUDIO)
 # ==============================================================================
-print("📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, Thunar, Audio)...", flush=True)
+print("📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, GVFS, Thunar, Audio)...", flush=True)
 log("Instalando dependencias de Ubuntu...")
 subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
 base_pkgs = [
     "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+    "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
     "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
     "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
     "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools", "wget", "curl", "psmisc", "openssh-client",
@@ -199,6 +203,8 @@ print("🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...", 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
 env["PULSE_SERVER"] = "127.0.0.1"
+env["LC_ALL"] = "C.UTF-8"
+env["LANG"] = "C.UTF-8"
 
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
@@ -251,57 +257,62 @@ install_helper.write_text(
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
 
-# Accesos directos oficiales en el escritorio
+# Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
-    "🌸_LinuWaifu_AI_Studio.desktop": (
+    "LinuWaifu_AI_Studio.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=🌸 LinuWaifu AI VTuber Studio\n"
         "Comment=Panel de IA VTuber 3D en vivo con Voz y Chat\n"
         "Exec=chromium-browser --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
+        "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=applications-multimedia\n"
         "Terminal=false\n"
         "Categories=AudioVideo;Network;\n"
     ),
-    "🎮_Mis_Juegos_5TB_GoogleDrive.desktop": (
+    "Mis_Juegos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
         "Comment=Carpeta persistente con todos tus juegos y partidas\n"
         "Exec=thunar dav://127.0.0.1:8088/\n"
+        "Path=/root\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
         "Categories=Game;\n"
     ),
-    "💾_Guardar_Estado_de_mi_PC.desktop": (
+    "Guardar_Estado_de_mi_PC.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=💾 Guardar Estado de mi PC (Nube)\n"
         "Comment=Guarda tus partidas, descargas y cambios a Google Drive y GitHub\n"
         f"Exec=python3 {BASE_DIR}/run_kaggle_vnc_studio.py --save-now\n"
+        "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=system-software-update\n"
         "Terminal=true\n"
         "Categories=System;\n"
     ),
-    "📊_Monitor_GPUs_Tesla_T4.desktop": (
+    "Monitor_GPUs_Tesla_T4.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=📊 Monitor GPUs Tesla T4 (nvtop)\n"
         "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
+        "Path=/root\n"
         "Icon=utilities-system-monitor\n"
         "Terminal=false\n"
         "Categories=System;\n"
     ),
-    "🌐_Navegador_Web.desktop": (
+    "Navegador_Web.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=🌐 Navegador Web Chromium\n"
         "Exec=chromium-browser --no-sandbox\n"
+        "Path=/root\n"
         "Icon=browser\n"
         "Terminal=false\n"
         "Categories=Network;\n"
@@ -310,7 +321,7 @@ shortcuts = {
 
 for fname, content in shortcuts.items():
     s_path = desktop_dir / fname
-    s_path.write_text(content)
+    s_path.write_text(content, encoding="utf-8")
     s_path.chmod(0o755)
 
 # ==============================================================================
@@ -484,6 +495,7 @@ print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
 print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
+print("   • 📜 Transmisión de errores y logs activa en tiempo real.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
 # Función de auto-guardado a Google Drive
