@@ -1,29 +1,32 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE EJECUCIÓN Y MONITOREO EN VIVO
+🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS DE KAGGLE (CELDA 1 Y CELDA 2)
 ================================================================================
 
 🖥️ CELDA 1: ARRANCAR TU PC EN LA NUBE (LA PRINCIPAL)
-Pega esto en la primera celda y dale Play (▶️):
+--------------------------------------------------------------------------------
+Copia y pega este comando en la Celda 1 y dale Play (▶️):
 
 !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
+
 ================================================================================
 📊 CELDA 2: MONITOR DE LOGS Y DIAGNÓSTICO EN VIVO (OPCIONAL / SOLITARIA)
-================================================================================
-Crea una segunda celda solitaria abajo y dale Play (▶️) para ver en tiempo real
-todo lo que se instala, los servicios y cualquier error para copiarlo:
+--------------------------------------------------------------------------------
+Toca "+ Code" en Kaggle para crear una celda abajo, pega esto y dale Play (▶️):
 
 !python3 /kaggle/working/StreamerIAWife/debug_monitor.py
 
+
 ================================================================================
-📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER
+📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER EN TU CELULAR
 ================================================================================
-1. En la salida de la Celda 1, verás:
+1. En la salida de la Celda 1, verás la dirección de conexión:
    👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
-2. En la app RealVNC Viewer de tu celular:
+2. En la app RealVNC Viewer de tu teléfono:
    - Toca '+' para agregar conexión.
-   - Pega esa dirección (ej: xxxxxx.free.pinggy.link:12345).
-   - Nombre: Ubuntu Kaggle PC.
+   - En Address, pega la dirección (ej: xxxxxx.free.pinggy.link:12345).
+   - En Name, pon: Ubuntu Kaggle PC.
    - Toca 'Connect'.
-3. ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS y tus 5TB de Google Drive listos!
+3. ¡Listo! Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS, tus 5TB de Google Drive y tu
+   Waifu IA 3D en pantalla lista para transmitir.
 ================================================================================
