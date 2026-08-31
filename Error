@@ -1,10 +1,10 @@
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 466, done.
-remote: Counting objects: 100% (106/106), done.
-remote: Compressing objects: 100% (85/85), done.
-remote: Total 466 (delta 60), reused 56 (delta 21), pack-reused 360 (from 1)
-Receiving objects: 100% (466/466), 6.66 MiB | 15.90 MiB/s, done.
-Resolving deltas: 100% (269/269), done.
+remote: Enumerating objects: 472, done.
+remote: Counting objects: 100% (112/112), done.
+remote: Compressing objects: 100% (90/90), done.
+remote: Total 472 (delta 63), reused 59 (delta 22), pack-reused 360 (from 1)
+Receiving objects: 100% (472/472), 6.67 MiB | 23.96 MiB/s, done.
+Resolving deltas: 100% (272/272), done.
 
 ==============================================================================
 🌸 INICIANDO LINUWAIFU CLOUD PC (KASMVNC 60 FPS WEBRTC + 5TB GDRIVE)...
@@ -13,10 +13,19 @@ Resolving deltas: 100% (269/269), done.
   ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
 📦 [2/5] Instalando Ubuntu ligero + Motor KasmVNC WebRTC H.264 (60 FPS)...
   🚀 Descargando e instalando KasmVNC 60 FPS (H.264 / WebRTC)...
+Adding user `root' to group `ssl-cert' ...
+Adding user root to group ssl-cert
+Done.
   ℹ️ Primera ejecución: Creando entorno inicial limpio.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
-🖥️ [4/5] Levantando pantalla 1080p y servidor KasmVNC 60 FPS...
-🌐 [5/5] Conectando túneles de transmisión WebRTC 60 FPS...
+🖥️ [4/5] Levantando pantalla 1080p y servidor gráfico optimizado a 60 FPS...
+⚠️ (wrapper-2.0:5346): Gtk-WARNING **: 05:50:52.522: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
+⚠️ (wrapper-2.0:5383): Gtk-WARNING **: 05:50:52.592: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
+🔴 31/08/2026 05:50:53   errors, etc) it may be disabled:
+🔴 31/08/2026 05:50:53   errors, etc) it may be disabled via: '-noscr'
+🔴 31/08/2026 05:50:53   painting errors, etc) it may be disabled via: '-ncache 0'
+⚠️ Warning: could not find self.pem
+🌐 [5/5] Conectando túneles de transmisión a 60 FPS...
 
 🎮 GPUs NVIDIA Tesla Activas: 2
   • GPU 0: Tesla T4 (14.6 GB VRAM)
@@ -24,35 +33,26 @@ Resolving deltas: 100% (269/269), done.
 💾 Espacio Libre en Disco: 20G disponibles de 20G
 
 ==============================================================================
-🎉 🌸 ¡TU LINUWAIFU CLOUD PC (KASMVNC 60 FPS) ESTÁ 100% ONLINE!
+🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE A 60 FPS REALES!
 ==============================================================================
-🚀 ENLACE WEB DIRECTO KASMVNC 60 FPS (ABRE EN CHROME / BRAVE MÓVIL):
-👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev
-   • Transmisión de video continua WebRTC H.264 a 60 FPS reales.
-   • Calidad cristalina, controles táctiles, zoom y cero latencia.
+🚀 OPCIÓN 1: ENLACE WEB DIRECTO (CHROME / BRAVE CELULAR CON CALIDAD 9):
+👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale&quality=9
+   • Auto-conecta en pantalla completa con calidad HD y render 60 FPS.
+------------------------------------------------------------------------------
+📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y 60 FPS):
+👉 Servidor VNC: free.pinggy.link (Consultando...)
+   • Abre RealVNC Viewer en tu celular -> Botón '+'
+   • Pega la dirección de arriba y toca 'Connect'.
 ==============================================================================
 💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
    • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
    • 📦 Para instalar cualquier cosa usa: instalar <nombre>
    • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
-   • ⚡ Video H.264 / WebRTC acelerado a 60 FPS nativo.
+   • ⚡ Render 60 FPS con ncache y cero delay activo.
 ==============================================================================
 
-t=2026-08-31T05:46:58+0000 lvl=warn msg="failed to open private leg" id=d75be0741ddf privaddr=localhost:8444 err="dial tcp [::1]:8444: connect: connection refused"
+🔴 (xfce4-panel:5299): xfce4-panel-CRITICAL **: 05:51:27.915: panel-window.c:2391 (panel_window_active_window_geometry_changed): expression 'WNCK_IS_WINDOW (active_window)' failed.
+🔴 (xfce4-panel:5299): xfce4-panel-CRITICAL **: 05:51:32.829: panel-window.c:2391 (panel_window_active_window_geometry_changed): expression 'WNCK_IS_WINDOW (active_window)' failed.
+...
 
-Y esto es en la pagina:
-
-ERR_NGROK_8012
-Traffic successfully made it to the ngrok agent, but the agent failed to establish a connection to the upstream web service at http://localhost:8444. The error encountered was:
-
-dial tcp [::1]:8444: connect: connection refused
-Get help with this error
-If you're the developer of this page
-On the machine where the ngrok agent is running, make sure a service is running on http://localhost:8444. Try to cURL or open the address in a browser to see that you get the correct response.
-
-Check out the docs to get help with this error.
-
-If you're a visitor of this page
-Wait a few minutes and refresh the page. If that still doesn't work, please contact the developer of this page for more information.
-
-Powered by ngrok
+Y me sale la pantalla como una pulgada, ve la imagen que esta en github
