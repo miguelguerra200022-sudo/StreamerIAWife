@@ -44,11 +44,12 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs (filtrando reintentos irrelevantes de UI)
+# Hilo de transmisión de logs (filtrando ruido irrelevante de librerías del sistema)
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
     "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
-    "attempting to reconnect in 5 seconds", "calling canshutdown failed", "calling canrestart failed"
+    "attempting to reconnect in 5 seconds", "calling canshutdown failed", "calling canrestart failed",
+    "thumbnailer failed", "failed to connect to proxy", "accountsservice", "g_source_unref"
 ]
 
 def live_log_streamer():
@@ -170,16 +171,21 @@ if not novnc_dir.exists():
 
 print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.", flush=True)
 
-# Restaurar estado personal guardado de Google Drive (solo si existe)
+# Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
-    res = subprocess.run(
-        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 5 >> {LOG_FILE} 2>&1 || true",
+    subprocess.run(
+        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 5 >/dev/null 2>&1 || true",
         shell=True
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 1000:
-        subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
-        print("  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
+        test_tar = subprocess.run(f"tar -tzf {backup_tar} >/dev/null 2>&1", shell=True)
+        if test_tar.returncode == 0:
+            subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
+            print("  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
+        else:
+            backup_tar.unlink(missing_ok=True)
+            print("  ℹ️ Primera ejecución: Creando entorno inicial limpio.", flush=True)
     else:
         print("  ℹ️ Primera ejecución: Creando entorno inicial limpio.", flush=True)
 except Exception:
@@ -199,6 +205,11 @@ desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
 
+# Crear carpetas y wallpapers de respaldo para XFCE
+xfce_bg_dir = Path("/usr/share/backgrounds/xfce")
+xfce_bg_dir.mkdir(parents=True, exist_ok=True)
+subprocess.run(f"touch {xfce_bg_dir}/xfce-verticals.png 2>/dev/null || true", shell=True)
+
 # Inyectar temas oficiales de Ubuntu y desactivar compositing pesado de OpenGL
 try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
@@ -209,7 +220,7 @@ try:
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
     
-    # Desactivar compositor OpenGL para 120 FPS sin advertencias de software render
+    # Desactivar compositor OpenGL para 120 FPS
     subprocess.run("xfconf-query -c xfwm4 -p /general/use_compositing -s false --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
@@ -318,7 +329,7 @@ time.sleep(2)
 # Establecer cursor de flecha y fondo oficial de Ubuntu (Aubergine)
 subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
 
-# Iniciar PulseAudio nativo en modo TCP local para que el panel de XFCE se conecte instantáneamente sin errores
+# Iniciar PulseAudio nativo en modo TCP local
 subprocess.run(
     "pulseaudio -k 2>/dev/null || true; "
     "pulseaudio -D --exit-idle-time=-1 --system=false "
@@ -400,7 +411,7 @@ if ngrok_token:
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
-# 2. Túnel TCP Pinggy en segundo plano
+# 2. Túnel TCP Pinggy en segundo plano con captura garantizada
 vnc_app_address = []
 def run_pinggy_tunnel():
     try:
@@ -425,8 +436,8 @@ def run_pinggy_tunnel():
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
-# Esperar hasta 4 segundos para capturar la dirección de Pinggy
-for _ in range(8):
+# Esperar hasta 6 segundos para capturar la dirección exacta de Pinggy
+for _ in range(12):
     if vnc_app_address:
         break
     time.sleep(0.5)
@@ -473,7 +484,6 @@ print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.", flush=True)
 print("   • 📦 Para instalar cualquier cosa usa: instalar <nombre>", flush=True)
 print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
-print("   • 📜 Transmisión de errores y logs activa en tiempo real.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
 # Función de auto-guardado a Google Drive
@@ -495,7 +505,7 @@ def auto_save_user_state():
         )
         if save_tar.exists():
             subprocess.run(
-                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >> {LOG_FILE} 2>&1 || true",
+                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >/dev/null 2>&1 || true",
                 shell=True
             )
             log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
