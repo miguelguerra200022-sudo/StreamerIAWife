@@ -17,17 +17,25 @@ from pathlib import Path
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-# Limpiar log de sesiones pasadas para que la pantalla esté 100% limpia
+# 1. Limpieza radical: Terminar procesos residuales de pruebas anteriores
+subprocess.run(
+    "pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge' 2>/dev/null || true",
+    shell=True
+)
+
+# 2. Borrar logs viejos para empezar completamente limpios
 try:
     if LOG_FILE.exists():
         LOG_FILE.unlink()
 except Exception:
     pass
 
+time.sleep(1)
+
 print("=" * 78, flush=True)
-print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (REGISTRO DESDE EL SEGUNDO 1)", flush=True)
+print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (SESIÓN 100% FRESCA Y LIMPIA)", flush=True)
 print("=" * 78, flush=True)
-print("🟢 [LISTO]: El monitor ya está activo y escuchando.", flush=True)
+print("🟢 [LISTO]: Monitor inicializado desde cero. Procesos viejos limpiados.", flush=True)
 print("👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).", flush=True)
 print("=" * 78 + "\n", flush=True)
 
@@ -46,7 +54,7 @@ def get_services_status():
     active = []
     for name, proc in services.items():
         try:
-            out = subprocess.check_output(f"pgrep -f {proc} || true", shell=True, text=True).strip()
+            out = subprocess.check_output(f"pgrep -f '{proc}' || true", shell=True, text=True).strip()
             if out:
                 active.append((name, out.split()[0]))
         except Exception:
@@ -77,7 +85,7 @@ while True:
         time.sleep(0.5)
         seconds_counter += 0.5
         
-        # Leer nuevas líneas del archivo de log
+        # Leer nuevas líneas del archivo de log en tiempo real
         if LOG_FILE.exists():
             curr_size = LOG_FILE.stat().st_size
             if curr_size > last_size:
@@ -92,14 +100,14 @@ while True:
                                 print(f"🔴 {line_str}", flush=True)
                             elif "warning" in line_str.lower() or "warn" in line_str.lower():
                                 print(f"⚠️ {line_str}", flush=True)
-                            elif "[success]" in line_str.lower() or "éxito" in line_str.lower() or "conectado" in line_str.lower():
+                            elif "[success]" in line_str.lower() or "éxito" in line_str.lower() or "online" in line_str.lower():
                                 print(f"🟢 {line_str}", flush=True)
                             else:
                                 print(f"  {line_str}", flush=True)
             elif curr_size < last_size:
                 last_size = 0
         
-        # Comprobar si los 7 servicios están activos y mostrar los enlaces
+        # Comprobar estado de servicios cada 5 segundos
         if int(seconds_counter) % 5 == 0 and seconds_counter == int(seconds_counter):
             active_list, total_services = get_services_status()
             
@@ -114,11 +122,11 @@ while True:
                     print("-" * 78, flush=True)
                 print("📱 APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
                 print("   • Abre la app en tu celular -> Toca '+'", flush=True)
-                print("   • Busca la dirección tcp://... de Pinggy que aparece arriba en el log.", flush=True)
+                print("   • Busca la dirección tcp://... de Pinggy que aparece en el log.", flush=True)
                 print("=" * 78 + "\n", flush=True)
                 links_shown = True
             elif len(active_list) > 0 and not links_shown:
-                print(f"⚡ [INICIANDO]: {len(active_list)}/{total_services} servicios activos...", flush=True)
+                print(f"⚡ [INICIANDO]: {len(active_list)}/{total_services} servicios encendiéndose...", flush=True)
                 
     except KeyboardInterrupt:
         print("\n🛑 Monitor detenido por el usuario.", flush=True)
