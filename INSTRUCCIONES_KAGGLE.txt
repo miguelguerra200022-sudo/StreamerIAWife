@@ -1,16 +1,32 @@
 ================================================================================
-🐧 PRUEBA PURA: UBUNTU BASE OFICIAL + XFCE4 (KAGGLE TURNKEY 1-CLICK)
+🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS MAESTROS (KAGGLE & TERMINAL UBUNTU)
 ================================================================================
 
-🚀 COMANDO DE PRUEBA PURA (COPIAR Y PEGAR EN KAGGLE):
+🚀 1. SISTEMA MAESTRO COMPLETO (UBUNTU 24.04 + 5TB GOOGLE DRIVE + IA VTUBER):
+--------------------------------------------------------------------------------
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+
+
+📦 2. PRUEBA DE UBUNTU COMPLETO DE GIGABYTES (UBUNTU-DESKTOP + LIBREOFFICE):
 --------------------------------------------------------------------------------
 !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_pure_ubuntu_test.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-================================================================================
-🌸 SISTEMA COMPLETO: UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE + WAIFU IA
-================================================================================
 
-🚀 COMANDO MAESTRO COMPLETO:
+🩺 3. AUDITORÍA PROFUNDA DE PAQUETES (VERIFICAR ABSOLUTAMENTE TODO LO INSTALADO):
 --------------------------------------------------------------------------------
-!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+• En una Celda de Kaggle:
+!git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/inspect_ubuntu_packages.py
+
+• En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
+cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
+
+
+🔍 4. AUDITORÍA DE HARDWARE, 2x GPUS TESLA T4 Y PUERTOS DE RED:
+--------------------------------------------------------------------------------
+• En una Celda de Kaggle:
+!git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/check_system_full_audit.py
+
+• En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
+cd /kaggle/working/StreamerIAWife && git pull && python3 check_system_full_audit.py
+
 ================================================================================
