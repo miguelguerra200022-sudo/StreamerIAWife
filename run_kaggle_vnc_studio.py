@@ -111,9 +111,22 @@ subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/nul
 # ==============================================================================
 # 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
 # ==============================================================================
-print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...", flush=True)
+print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...", flush=True)
 log("Iniciando conexión de Google Drive...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
+
+# 1. Configurar API de Kaggle
+KAGGLE_API_DIR = Path.home() / ".kaggle"
+KAGGLE_API_DIR.mkdir(parents=True, exist_ok=True)
+KAGGLE_API_FILE = KAGGLE_API_DIR / "kaggle.json"
+REPO_KAGGLE_JSON = BASE_DIR / "kaggle legacy.json"
+
+if REPO_KAGGLE_JSON.exists():
+    try:
+        subprocess.run(f"cp '{REPO_KAGGLE_JSON}' '{KAGGLE_API_FILE}'", shell=True)
+        subprocess.run(f"chmod 600 '{KAGGLE_API_FILE}'", shell=True)
+    except Exception:
+        pass
 
 if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     try:
@@ -122,26 +135,80 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     except Exception:
         pass
 
-# Instalar rclone rápido si no está presente
-subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
+# Instalar rclone y fuse3 rápido si no están presentes
+subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
 
-# Iniciar servidor Rclone WebDAV
+# Iniciar Rclone Mount (FUSE) para permitir Symlinks
 try:
+    # Crear la carpeta raíz en Drive por si no existe
+    subprocess.run("rclone mkdir gdrive:PC_Kaggle >/dev/null 2>&1 || true", shell=True)
+    
+    # Montar Drive físicamente en el sistema
+    os.makedirs("/root/gdrive", exist_ok=True)
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
-        "rclone", "serve", "webdav", "gdrive:",
-        "--addr", "127.0.0.1:8088",
-        "--read-only=false",
+        "rclone", "mount", "gdrive:PC_Kaggle", "/root/gdrive",
         "--vfs-cache-mode", "writes",
         "--tpslimit", "5",
-        "--drive-chunk-size", "64M"
+        "--drive-chunk-size", "64M",
+        "--daemon"
     ], stdout=log_rclone, stderr=log_rclone)
-    time.sleep(1)
+    time.sleep(3) # Esperar a que monte
     
-    print("  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.", flush=True)
+    print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
+    
+    # ==============================================================================
+    # Sincronización Simbólica Inteligente (Solo Carpetas de Usuario)
+    # ==============================================================================
+    print("  🔄 [✓] Estableciendo Sincronización Simbólica para carpetas pesadas...", flush=True)
+    sync_dirs = {
+        "/root/Descargas": "/root/gdrive/Descargas",
+        "/root/Documentos": "/root/gdrive/Documentos",
+        "/root/Juegos": "/root/gdrive/Juegos",
+        "/root/.config/Steam": "/root/gdrive/SteamConfig",
+        "/root/.local/share/Steam": "/root/gdrive/SteamData"
+    }
+    
+    for local_dir, drive_dir in sync_dirs.items():
+        subprocess.run(f"mkdir -p '{drive_dir}'", shell=True)
+        # Solo creamos el symlink si la ruta local no existe
+        if not os.path.exists(local_dir):
+            os.makedirs(os.path.dirname(local_dir), exist_ok=True)
+            os.symlink(drive_dir, local_dir)
+
+    # Inyectar Comando Mágico: subir_juego_a_kaggle
+    script_kaggle = """#!/bin/bash
+if [ "$#" -ne 2 ]; then
+    echo "Uso: subir_juego_a_kaggle \\"Nombre Del Juego\\" /ruta/a/la/carpeta/del/juego"
+    echo "Ejemplo: subir_juego_a_kaggle \\"Cyberpunk 2077\\" /root/Juegos/Cyberpunk"
+    exit 1
+fi
+JUEGO_NOMBRE=$1
+RUTA_JUEGO=$2
+DATASET_ID=$(echo "$JUEGO_NOMBRE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+USUARIO=$(grep -o '"username":"[^"]*' ~/.kaggle/kaggle.json | cut -d'"' -f4)
+
+if [ ! -d "$RUTA_JUEGO" ]; then
+    echo "Error: La ruta $RUTA_JUEGO no existe."
+    exit 1
+fi
+
+echo "Iniciando Dataset de Kaggle en $RUTA_JUEGO..."
+kaggle datasets init -p "$RUTA_JUEGO"
+sed -i "s/\\"title\\": \\".*\\"/\\"title\\": \\"$JUEGO_NOMBRE\\"/" "$RUTA_JUEGO/dataset-metadata.json"
+sed -i "s/\\"id\\": \\".*\\"/\\"id\\": \\"$USUARIO\/$DATASET_ID\\"/" "$RUTA_JUEGO/dataset-metadata.json"
+
+echo "Subiendo juego a Kaggle Datasets (Velocidad Gigabit interna)..."
+kaggle datasets create -p "$RUTA_JUEGO" --dir-mode tar
+echo "¡Listo! El juego se está procesando. Revisa tu perfil de Kaggle."
+"""
+    script_path = Path("/usr/local/bin/subir_juego_a_kaggle")
+    script_path.write_text(script_kaggle)
+    script_path.chmod(0o755)
+
 except Exception as e:
-    log(f"Aviso Rclone: {e}", "WARNING")
+    log(f"Aviso Rclone/Symlink: {e}", "WARNING")
 
 # ==============================================================================
 # 2. INSTALACIÓN DE LA SUITE COMPLETA UBUNTU (GIGABYTES) + LIBREOFFICE + CODECS
