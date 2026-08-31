@@ -9,7 +9,7 @@ Guarda y restaura el estado completo de tu PC entre CUALQUIER cuenta de Kaggle
 usando tu Google Drive de 5TB y GitHub.
 
 1. Al Iniciar (En CUALQUIER cuenta de Kaggle):
-   - Restaura credenciales de Google Drive (rclone.conf).
+   - Restaura credenciales de Google Drive (rclone_gdrive.b64).
    - Restaura todas las dependencias y programas APT que hayas instalado antes.
    - Restaura el escritorio, configuraciones, partidas de juegos y navegador.
    - Conecta la carpeta de 5TB de juegos (GTA V, RDR2, ROMs) en ~/Games y Escritorio.
@@ -27,6 +27,7 @@ import sys
 import time
 import re
 import shutil
+import base64
 import subprocess
 import threading
 import signal
@@ -45,7 +46,7 @@ print("=" * 78)
 # Directorios Clave
 GDRIVE_CONF_DIR = Path.home() / ".config" / "rclone"
 GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
-REPO_RCLONE_FILE = BASE_DIR / "rclone.conf"
+REPO_RCLONE_B64 = BASE_DIR / "rclone_gdrive.b64"
 EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
 STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -56,11 +57,19 @@ STATE_DIR.mkdir(parents=True, exist_ok=True)
 print("☁️ [1/6] Sincronizando credenciales de Google Drive (5TB)...", flush=True)
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
-if REPO_RCLONE_FILE.exists() and REPO_RCLONE_FILE.stat().st_size > 10:
-    shutil.copy(REPO_RCLONE_FILE, GDRIVE_CONF_FILE)
-    print("  ✅ [✓] Credenciales de 5TB restauradas automáticamente desde GitHub.", flush=True)
+if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
+    try:
+        decoded = base64.b64decode(REPO_RCLONE_B64.read_text().strip())
+        GDRIVE_CONF_FILE.write_bytes(decoded)
+        print("  ✅ [✓] Credenciales de 5TB restauradas automáticamente desde GitHub.", flush=True)
+    except Exception as e:
+        print(f"  ⚠️ Error decodificando credenciales: {e}")
 elif GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
-    shutil.copy(GDRIVE_CONF_FILE, REPO_RCLONE_FILE)
+    try:
+        encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
+        REPO_RCLONE_B64.write_text(encoded)
+    except Exception:
+        pass
 
 # Iniciar servidor Rclone WebDAV en segundo plano
 try:
@@ -89,7 +98,6 @@ def setup_dependencies():
         "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
     ]
     
-    # Leer paquetes extra guardados de sesiones anteriores
     extra_pkgs = []
     if EXTRA_PKGS_FILE.exists():
         try:
@@ -122,7 +130,6 @@ setup_dependencies()
 # ==============================================================================
 print("📂 [3/6] Restaurando partidas, escritorio y estado personal de Google Drive...", flush=True)
 try:
-    # Intentar descargar el respaldo de configuraciones de Google Drive si existe
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
     subprocess.run(
         f"rclone copy gdrive:LinuWaifu_PC/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} >/dev/null 2>&1 || true",
@@ -412,12 +419,13 @@ print("=" * 78 + "\n")
 # Función de auto-guardado a Google Drive y GitHub
 def auto_save_user_state():
     try:
-        # 1. Respaldar rclone.conf si fue modificado
+        # 1. Respaldar rclone si fue modificado
         if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
-            if not REPO_RCLONE_FILE.exists() or GDRIVE_CONF_FILE.read_text() != REPO_RCLONE_FILE.read_text():
-                shutil.copy(GDRIVE_CONF_FILE, REPO_RCLONE_FILE)
+            encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
+            if not REPO_RCLONE_B64.exists() or REPO_RCLONE_B64.read_text().strip() != encoded:
+                REPO_RCLONE_B64.write_text(encoded)
                 subprocess.run(
-                    f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
+                    f"cd {BASE_DIR} && git add rclone_gdrive.b64 && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
                     shell=True
                 )
         
