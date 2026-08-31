@@ -7,7 +7,7 @@
 1. Instala Chrome Remote Desktop oficial de Google y Suite Ubuntu 24.04 LTS.
 2. Monta tus 5TB de Google Drive (PC_Kaggle).
 3. Vincula tu máquina a tu cuenta de Google con tu código de autorización y PIN.
-4. Conexión directa a través de la App Oficial "Escritorio Remoto de Chrome".
+4. Transmisión de logs y diagnóstico de errores en tiempo real.
 ================================================================================
 """
 
@@ -19,25 +19,78 @@ import shutil
 import base64
 import subprocess
 import threading
-import getpass
+import glob
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+os.environ["LC_ALL"] = "C.UTF-8"
+os.environ["LANG"] = "C.UTF-8"
 
 LOG_FILE = Path("/kaggle/working/linuwaifu_crd_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+# 0. Limpieza previa
+subprocess.run("pkill -9 -f 'chrome-remote-desktop|Xvfb|xfce4|rclone|cloud_bridge' 2>/dev/null || true", shell=True)
+time.sleep(0.5)
+
+with open(LOG_FILE, "w", encoding="utf-8") as f:
+    f.write(f"=== INICIO DE SESIÓN CHROME REMOTE DESKTOP ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+
+# Hilo de transmisión de logs y errores en tiempo real a la pantalla
+IGNORE_KEYWORDS = [
+    "unsupported gl renderer", "remote volume monitor", "not starting for system user",
+    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning"
+]
+
+def live_log_streamer():
+    last_size = 0
+    while True:
+        try:
+            # Revisar log principal
+            if LOG_FILE.exists():
+                curr_size = LOG_FILE.stat().st_size
+                if curr_size > last_size:
+                    with open(LOG_FILE, "r", encoding="utf-8", errors="ignore") as f:
+                        f.seek(last_size)
+                        new_text = f.read()
+                        last_size = curr_size
+                        for line in new_text.splitlines():
+                            l_strip = line.strip()
+                            if l_strip and not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
+                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower():
+                                    print(f"🔴 {l_strip}", flush=True)
+                                elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
+                                    print(f"⚠️ {l_strip}", flush=True)
+            
+            # Revisar logs internos de Chrome Remote Desktop
+            crd_logs = glob.glob("/tmp/chrome_remote_desktop*.log") + glob.glob("/home/linuwaifu/.config/chrome-remote-desktop/*.log")
+            for cl in crd_logs:
+                try:
+                    p = Path(cl)
+                    if p.exists() and p.stat().st_size > 0:
+                        lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()[-5:]
+                        for line in lines:
+                            l_strip = line.strip()
+                            if "error" in l_strip.lower() or "failed" in l_strip.lower() or "fatal" in l_strip.lower():
+                                if not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
+                                    print(f"🔴 [CRD Engine]: {l_strip}", flush=True)
+                except Exception:
+                    pass
+            time.sleep(1)
+        except Exception:
+            time.sleep(1)
+
+threading.Thread(target=live_log_streamer, daemon=True).start()
 
 print("\n" + "=" * 78, flush=True)
 print("🌸 INICIANDO UBUNTU 24.04 EN GOOGLE CHROME REMOTE DESKTOP (CRD)...", flush=True)
 print("=" * 78, flush=True)
 
-# 0. Limpieza previa
-subprocess.run("pkill -9 -f 'chrome-remote-desktop|Xvfb|xfce4|rclone|cloud_bridge' 2>/dev/null || true", shell=True)
-
 # 1. Crear usuario de sistema no-root si no existe (CRD requiere usuario estándar)
-subprocess.run("id -u linuwaifu >/dev/null 2>&1 || (useradd -m -s /bin/bash -G sudo linuwaifu && echo 'linuwaifu:123456' | chpasswd)", shell=True)
+subprocess.run("id -u linuwaifu >/dev/null 2>&1 || (useradd -m -s /bin/bash -G sudo,audio,video linuwaifu && echo 'linuwaifu:123456' | chpasswd)", shell=True)
 subprocess.run("echo 'linuwaifu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 2>/dev/null || true", shell=True)
+subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
 
 USER_HOME = Path("/home/linuwaifu")
 
@@ -100,7 +153,6 @@ print("🎨 [3/4] Configurando sesión de escritorio...", flush=True)
 session_file = USER_HOME / ".chrome-remote-desktop-session"
 session_file.write_text("exec /etc/X11/Xsession /usr/bin/startxfce4\n")
 session_file.chmod(0o755)
-subprocess.run(f"chown -R linuwaifu:linuwaifu {USER_HOME}", shell=True)
 
 # Configurar XFCE en usuario linuwaifu
 xfconf_dir = USER_HOME / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
@@ -177,7 +229,7 @@ redirect_url = redirect_match.group(1) if redirect_match else "https://remotedes
 
 host_name = "LinuWaifu-CloudPC"
 
-# Ejecutar el start-host bajo el usuario linuwaifu
+# Ejecutar el start-host bajo el usuario linuwaifu y capturar la salida
 cmd_crd = (
     f"su - linuwaifu -c '"
     f"/opt/google/chrome-remote-desktop/start-host "
@@ -188,6 +240,19 @@ cmd_crd = (
 )
 
 res = subprocess.run(cmd_crd, shell=True, capture_output=True, text=True)
+if res.stdout:
+    print(f"  {res.stdout.strip()}", flush=True)
+if res.stderr:
+    for line in res.stderr.splitlines():
+        line_str = line.strip()
+        if line_str and not any(ign in line_str.lower() for ign in IGNORE_KEYWORDS):
+            print(f"🔴 {line_str}", flush=True)
+
+# Iniciar el servicio CRD en segundo plano si no arrancó automáticamente
+subprocess.run(
+    f"su - linuwaifu -c '/opt/google/chrome-remote-desktop/chrome-remote-desktop --start >> {LOG_FILE} 2>&1 || true'",
+    shell=True
+)
 
 print("\n" + "=" * 78, flush=True)
 print("🎉 🌸 ¡TU PC EN CHROME REMOTE DESKTOP ESTÁ VINCULADA Y ONLINE!", flush=True)
@@ -199,9 +264,10 @@ print(f"   • Toca en tu PC: 💻 [{host_name}] (Aparece en VERDE)", flush=True
 print(f"   • Ingresa tu PIN de seguridad: 🔑 {pin}", flush=True)
 print("=" * 78)
 print("💾 SISTEMA DE PERSISTENCIA ACTIVO: 5TB de Google Drive montados.")
+print("📜 Monitoreo de errores activo en tiempo real.")
 print("=" * 78 + "\n", flush=True)
 
-# Mantener viva la sesión
+# Mantener viva la sesión y respaldar
 try:
     minutos = 0
     while True:
