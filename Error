@@ -1,59 +1,14 @@
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 394, done.
-remote: Counting objects: 100% (34/34), done.
-remote: Compressing objects: 100% (28/28), done.
-remote: Total 394 (delta 19), reused 16 (delta 6), pack-reused 360 (from 1)
-Receiving objects: 100% (394/394), 6.63 MiB | 14.98 MiB/s, done.
-Resolving deltas: 100% (228/228), done.
+remote: Enumerating objects: 409, done.
+remote: Counting objects: 100% (49/49), done.
+remote: Compressing objects: 100% (40/40), done.
+remote: Total 409 (delta 28), reused 24 (delta 9), pack-reused 360 (from 1)
+Receiving objects: 100% (409/409), 6.63 MiB | 21.77 MiB/s, done.
+Resolving deltas: 100% (237/237), done.
 
 ==============================================================================
-🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE)...
+🌸 INICIANDO UBUNTU 24.04 EN GOOGLE CHROME REMOTE DESKTOP (CRD)...
 ==============================================================================
-☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
-🔴 2026/08/31 04:02:04 Failed to create file system for "gdrive:": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
-  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
-📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, Thunar, Audio)...
-  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.
-  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
-🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
-🖥️ [4/5] Levantando pantalla 1080p y servidor de escritorio...
-🔴 ModuleNotFoundError: No module named 'cups'
-⚠️ (wrapper-2.0:11872): Gtk-WARNING **: 04:03:39.754: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
-🔴 31/08/2026 04:03:42   errors, etc) it may be disabled:
-🔴 31/08/2026 04:03:42   errors, etc) it may be disabled via: '-noscr'
-⚠️ Warning: could not find self.pem
-🌐 [5/5] Conectando túneles de acceso remoto...
-
-🎮 GPUs NVIDIA Tesla Activas: 2
-  • GPU 0: Tesla T4 (14.6 GB VRAM)
-  • GPU 1: Tesla T4 (14.6 GB VRAM)
-💾 Espacio Libre en Disco: 19G disponibles de 20G
-
-==============================================================================
-🎉 🌸 ¡TU UBUNTU 24.04 PRO ESTÁ 100% ONLINE Y FUNCIONANDO!
-==============================================================================
-🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):
-👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale
-------------------------------------------------------------------------------
-📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
-👉 Servidor VNC: free.pinggy.link (Consultando...)
-   • Abre RealVNC Viewer en tu celular -> Botón '+'
-   • Pega la dirección de arriba y toca 'Connect'.
-==============================================================================
-💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
-   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
-   • 📦 Para instalar cualquier cosa usa: instalar <nombre>
-   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
-==============================================================================
-
-...🔴 ThunarThumbnailer: Failed to retrieve supported types: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.thumbnails.Thumbnailer1 was not provided by any .service files
-🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:05:43.859: g_variant_new_string: assertion 'string != NULL' failed
-.🔴 Thunar: Failed to open "dav://127.0.0.1:8088/": The specified location is not supported
-🔴 ThunarThumbnailer: Failed to retrieve supported types: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.thumbnails.Thumbnailer1 was not provided by any .service files
-🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:12.958: g_variant_new_string: assertion 'string != NULL' failed
-🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:16.610: g_variant_new_string: assertion 'string != NULL' failed
-🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:19.853: g_variant_new_string: assertion 'string != NULL' failed
-🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:21.482: g_variant_new_string: assertion 'string != NULL' failed
-🔴 Working directory "/kaggle/working/StreamerIAWife/[Invalid UTF-8]" does not exist. It won't be used when spawning "exo-open".GDBus.Error:org.freedesktop.DBus.Error.NoReply: Message recipient disconnected from message bus without replying
-.
+📦 [1/4] Instalando Google Chrome Remote Desktop y Suite de Ubuntu...
+W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
+add Codeadd Markdown
