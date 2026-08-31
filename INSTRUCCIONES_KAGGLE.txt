@@ -1,12 +1,12 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (REGISTRO DESDE EL SEGUNDO 1)
+🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (REGISTRO EN VIVO)
 ================================================================================
 
 📊 CELDA 1: EL MONITOR DE REGISTROS (EJECUTAR DE PRIMERO)
 --------------------------------------------------------------------------------
-Pega esto en la Celda 1 y dale Play (▶️). Se quedará escuchando desde el segundo 1:
+Pega esto en la Celda 1 y dale Play (▶️):
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/debug_monitor.py
+!rm -rf /kaggle/working/StreamerIAWife && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
 
 
 ================================================================================
@@ -14,17 +14,17 @@ Pega esto en la Celda 1 y dale Play (▶️). Se quedará escuchando desde el se
 --------------------------------------------------------------------------------
 Toca "+ Code" en Kaggle para crear la Celda 2 abajo, pega esto y dale Play (▶️):
 
-!cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+!cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 
 ================================================================================
-📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER
+📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER EN TU CELULAR
 ================================================================================
 1. En la salida verás tu dirección de conexión:
-   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
-2. En la app RealVNC Viewer de tu celular:
+   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345 (o tu enlace de Ngrok)
+2. En la app RealVNC Viewer de tu teléfono:
    - Toca '+' para agregar conexión.
-   - Pega esa dirección (ej: xxxxxx.free.pinggy.link:12345).
+   - Pega esa dirección.
    - Nombre: Ubuntu Kaggle PC.
    - Toca 'Connect'.
 3. ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS, tus 5TB de Google Drive y tu
