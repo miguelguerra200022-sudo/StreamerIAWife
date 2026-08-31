@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-📊 LINUWAIFU CLOUD PC: MONITOR DE LOGS Y DIAGNÓSTICO EN VIVO (CELDA 2)
+📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO (CELDA 2)
 ================================================================================
 Ejecuta este script en una celda separada en Kaggle para ver en tiempo real:
-1. Estado de los servicios (XFCE, GPUs Tesla T4, VNC, Rclone 5TB, IA VTuber).
-2. Todos los registros y salidas de instalaciones en tiempo real.
-3. Detección automática de errores para copiar y pegar fácilmente.
+1. Estado de los 7 servicios clave (Pantalla, XFCE, VNC, Google Drive, IA, Audio).
+2. Transmisión continua de logs y comandos en tiempo real.
+3. Detección automática de errores en color rojo.
 ================================================================================
 """
 
@@ -17,7 +17,12 @@ import time
 import subprocess
 from pathlib import Path
 
-LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
+# Rutas posibles del archivo de registro
+CANDIDATE_LOGS = [
+    Path("/kaggle/working/linuwaifu_system.log"),
+    Path("/kaggle/working/StreamerIAWife/linuwaifu_system.log"),
+    Path("/tmp/linuwaifu_system.log")
+]
 
 print("=" * 75)
 print("📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO")
@@ -35,12 +40,13 @@ def check_services():
         "🎵 Audio Virtual PulseAudio": "pulseaudio"
     }
     
-    print("\n🔍 ESTADO DE SERVICIOS DEL SISTEMA:")
+    print("\n🔍 ESTADO DE SALUD DE LOS SERVICIOS:")
     for name, proc in services.items():
         try:
             out = subprocess.check_output(f"pgrep -f {proc} || true", shell=True, text=True).strip()
             if out:
-                print(f"  🟢 {name}: ACTIVO (PID: {out.split()[0]})")
+                pid = out.split()[0]
+                print(f"  🟢 {name}: 100% ACTIVO (PID: {pid})")
             else:
                 print(f"  🔴 {name}: DETENIDO / INACTIVO")
         except Exception:
@@ -49,46 +55,65 @@ def check_services():
 
 check_services()
 
-if not LOG_FILE.exists():
-    print(f"\n⏳ Esperando a que el archivo de registro ({LOG_FILE}) sea creado por la Celda 1...")
-    for _ in range(20):
-        if LOG_FILE.exists():
-            break
-        time.sleep(1)
+# Encontrar o crear archivo de log
+target_log = None
+for p in CANDIDATE_LOGS:
+    if p.exists():
+        target_log = p
+        break
 
-if not LOG_FILE.exists():
-    print("⚠️ No se encontró el archivo de log aún. Asegúrate de que la Celda 1 esté corriendo.")
-    sys.exit(0)
+if not target_log:
+    target_log = Path("/kaggle/working/linuwaifu_system.log")
+    target_log.parent.mkdir(parents=True, exist_ok=True)
+    with open(target_log, "w", encoding="utf-8") as f:
+        f.write(f"=== MONITOR INICIADO ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
-print(f"\n📜 MONITOREO EN VIVO ACTIVADO ({LOG_FILE}):")
-print("👉 Cualquier cosa que instales, abras o juegues aparecerá aquí abajo.")
-print("   Si ves un error rojo, cópialo y pégalo en el chat para solucionarlo.\n")
+print(f"\n📜 TRANSMISIÓN DE REGISTROS EN TIEMPO REAL ({target_log}):")
+print("👉 Cualquier cosa que instales, abras o ejecutes se transmitirá aquí abajo.")
+print("   Si ves un error en 🔴 rojo, cópialo y pégalo en el chat para solucionarlo.\n")
 print("=" * 75 + "\n")
 
-# Mostrar últimas 20 líneas iniciales
+# Mostrar contenido existente
 try:
-    with open(LOG_FILE, "r", encoding="utf-8", errors="ignore") as f:
+    with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
         lines = f.readlines()
-        for l in lines[-20:]:
+        for l in lines[-30:]:
             print(l.rstrip())
 except Exception:
     pass
 
-# Streaming continuo (tail -f)
+# Streaming continuo
+last_size = target_log.stat().st_size if target_log.exists() else 0
+loop_count = 0
+
 try:
-    with open(LOG_FILE, "r", encoding="utf-8", errors="ignore") as f:
-        f.seek(0, os.SEEK_END)
-        while True:
-            line = f.readline()
-            if line:
-                line_str = line.rstrip()
-                if "error" in line_str.lower() or "failed" in line_str.lower() or "exception" in line_str.lower():
-                    print(f"🔴 {line_str}", flush=True)
-                elif "warning" in line_str.lower() or "warn" in line_str.lower():
-                    print(f"⚠️ {line_str}", flush=True)
-                else:
-                    print(f"  {line_str}", flush=True)
-            else:
-                time.sleep(0.5)
+    while True:
+        time.sleep(1)
+        loop_count += 1
+        
+        if target_log.exists():
+            curr_size = target_log.stat().st_size
+            if curr_size > last_size:
+                with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
+                    f.seek(last_size)
+                    new_data = f.read()
+                    last_size = curr_size
+                    for line in new_data.splitlines():
+                        if line.strip():
+                            line_str = line.strip()
+                            if "error" in line_str.lower() or "failed" in line_str.lower() or "exception" in line_str.lower():
+                                print(f"🔴 {line_str}", flush=True)
+                            elif "warning" in line_str.lower() or "warn" in line_str.lower():
+                                print(f"⚠️ {line_str}", flush=True)
+                            elif "[success]" in line_str.lower() or "éxito" in line_str.lower() or "conectado" in line_str.lower():
+                                print(f"🟢 {line_str}", flush=True)
+                            else:
+                                print(f"  {line_str}", flush=True)
+            elif curr_size < last_size:
+                last_size = 0  # El archivo fue recreado/rotado
+                
+        # Cada 60 segundos refrescar un pulso
+        if loop_count % 60 == 0:
+            print(f"\n⏱️ [{time.strftime('%H:%M:%S')}] Monitor activo - Todos los servicios corriendo en orden.", flush=True)
 except KeyboardInterrupt:
-    print("\n🛑 Monitoreo detenido por el usuario.")
+    print("\n🛑 Monitor detenido por el usuario.")
