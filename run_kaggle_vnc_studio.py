@@ -66,7 +66,10 @@ IGNORE_KEYWORDS = [
     "attempting to reconnect in 5 seconds", "calling canshutdown failed", "calling canrestart failed",
     "thumbnailer failed", "failed to connect to proxy", "accountsservice", "g_source_unref",
     "assertion 'string != null' failed", "dbind-warning", "failed to resolve group 'kvm'",
-    "wnck_is_window"
+    "wnck_is_window", "tpm0: failed to write", "tpmrm0: failed to write", "sda: failed to write",
+    "failed to send reload request", "g_value_get_string", "another compositing manager is running",
+    "g_str_has_prefix", "update-rc.d: warning", "update-inetd: warning",
+    "the home dir /var/lib/usbmux", "adduser: warning"
 ]
 
 def live_log_streamer():
@@ -193,14 +196,14 @@ try:
     (cursor_conf / "index.theme").write_text("[Icon Theme]\nInherits=Yaru\n")
 
     # Inyectar Comando Mágico: subir_juego_a_kaggle
-    script_kaggle = """#!/bin/bash
+    script_kaggle = r"""#!/bin/bash
 if [ "$#" -ne 2 ]; then
-    echo "Uso: subir_juego_a_kaggle \\"Nombre Del Juego\\" /ruta/a/la/carpeta/del/juego"
-    echo "Ejemplo: subir_juego_a_kaggle \\"Cyberpunk 2077\\" /root/Juegos/Cyberpunk"
+    echo 'Uso: subir_juego_a_kaggle "Nombre Del Juego" /ruta/a/la/carpeta/del/juego'
+    echo 'Ejemplo: subir_juego_a_kaggle "Cyberpunk 2077" /root/Juegos/Cyberpunk'
     exit 1
 fi
-JUEGO_NOMBRE=$1
-RUTA_JUEGO=$2
+JUEGO_NOMBRE="$1"
+RUTA_JUEGO="$2"
 DATASET_ID=$(echo "$JUEGO_NOMBRE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
 USUARIO=$(grep -o '"username":"[^"]*' ~/.kaggle/kaggle.json | cut -d'"' -f4)
 
@@ -211,8 +214,8 @@ fi
 
 echo "Iniciando Dataset de Kaggle en $RUTA_JUEGO..."
 kaggle datasets init -p "$RUTA_JUEGO"
-sed -i "s/\\"title\\": \\".*\\"/\\"title\\": \\"$JUEGO_NOMBRE\\"/" "$RUTA_JUEGO/dataset-metadata.json"
-sed -i "s/\\"id\\": \\".*\\"/\\"id\\": \\"$USUARIO\/$DATASET_ID\\"/" "$RUTA_JUEGO/dataset-metadata.json"
+sed -i 's/"title": ".*"/"title": "'"$JUEGO_NOMBRE"'"/' "$RUTA_JUEGO/dataset-metadata.json"
+sed -i 's|"id": ".*"|"id": "'"$USUARIO/$DATASET_ID"'"|' "$RUTA_JUEGO/dataset-metadata.json"
 
 echo "Subiendo juego a Kaggle Datasets (Velocidad Gigabit interna)..."
 kaggle datasets create -p "$RUTA_JUEGO" --dir-mode tar
@@ -240,7 +243,7 @@ full_ubuntu_pkgs = [
     "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
     "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
     "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
-    "wget", "curl", "psmisc", "openssh-client", "chromium-browser", "p7zip-full", "unzip"
+    "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
 ]
 
 extra_pkgs = []
@@ -364,7 +367,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=🌸 LinuWaifu AI VTuber Studio\n"
         "Comment=Panel de IA VTuber 3D en vivo con Voz y Chat\n"
-        "Exec=chromium-browser --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
+        "Exec=google-chrome --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
         "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=applications-multimedia\n"
         "Terminal=false\n"
@@ -376,7 +379,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
         "Comment=Carpeta persistente con todos tus juegos y partidas\n"
-        "Exec=thunar dav://127.0.0.1:8088/\n"
+        "Exec=thunar /root/gdrive\n"
         "Path=/root\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
@@ -409,10 +412,10 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🌐 Navegador Web Chromium\n"
-        "Exec=chromium-browser --no-sandbox\n"
+        "Name=🌐 Google Chrome Oficial\n"
+        "Exec=google-chrome --no-sandbox\n"
         "Path=/root\n"
-        "Icon=browser\n"
+        "Icon=google-chrome\n"
         "Terminal=false\n"
         "Categories=Network;\n"
     )
@@ -487,9 +490,10 @@ def start_linuwaifu_backend():
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
 
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu con Chrome
+chrome_bin = "google-chrome" if shutil.which("google-chrome") else ("google-chrome-stable" if shutil.which("google-chrome-stable") else "chromium-browser")
 subprocess.Popen([
-    "chromium-browser",
+    chrome_bin,
     "--no-sandbox",
     "--window-size=480,720",
     "--window-position=1440,0",

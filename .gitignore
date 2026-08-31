@@ -2,3 +2,4 @@ rclone.conf
 .env
 __pycache__/
 *.pyc
+CODIGO_COMPLETO_PROYECTO.md
