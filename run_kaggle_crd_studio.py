@@ -2,12 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: EDICIÓN GOOGLE CHROME REMOTE DESKTOP (CRD)
-================================================================================
-1. Instala Chrome Remote Desktop oficial de Google y Suite Ubuntu 24.04 LTS.
-2. Monta tus 5TB de Google Drive (PC_Kaggle).
-3. Vincula tu máquina a tu cuenta de Google con tu código de autorización y PIN.
-4. Transmisión de logs y diagnóstico de errores en tiempo real.
+🌸 LINUWAIFU CLOUD PC: EDICIÓN GOOGLE CHROME REMOTE DESKTOP (RECETA OFICIAL)
 ================================================================================
 """
 
@@ -41,15 +36,13 @@ with open(LOG_FILE, "w", encoding="utf-8") as f:
 # Hilo de transmisión de logs y errores en tiempo real a la pantalla
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
-    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
-    "skipping acquire of configured file"
+    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning"
 ]
 
 def live_log_streamer():
     last_size = 0
     while True:
         try:
-            # Revisar log principal
             if LOG_FILE.exists():
                 curr_size = LOG_FILE.stat().st_size
                 if curr_size > last_size:
@@ -64,21 +57,6 @@ def live_log_streamer():
                                     print(f"🔴 {l_strip}", flush=True)
                                 elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
                                     print(f"⚠️ {l_strip}", flush=True)
-            
-            # Revisar logs internos de Chrome Remote Desktop
-            crd_logs = glob.glob("/tmp/chrome_remote_desktop*.log") + glob.glob("/home/linuwaifu/.config/chrome-remote-desktop/*.log")
-            for cl in crd_logs:
-                try:
-                    p = Path(cl)
-                    if p.exists() and p.stat().st_size > 0:
-                        lines = p.read_text(encoding="utf-8", errors="ignore").splitlines()[-5:]
-                        for line in lines:
-                            l_strip = line.strip()
-                            if "error" in l_strip.lower() or "failed" in l_strip.lower() or "fatal" in l_strip.lower():
-                                if not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
-                                    print(f"🔴 [CRD Engine]: {l_strip}", flush=True)
-                except Exception:
-                    pass
             time.sleep(1)
         except Exception:
             time.sleep(1)
@@ -89,7 +67,7 @@ print("\n" + "=" * 78, flush=True)
 print("🌸 INICIANDO UBUNTU 24.04 EN GOOGLE CHROME REMOTE DESKTOP (CRD)...", flush=True)
 print("=" * 78, flush=True)
 
-# 1. Crear usuario de sistema no-root si no existe (CRD requiere usuario estándar)
+# 1. Crear usuario de sistema estándar linuwaifu
 subprocess.run("id -u linuwaifu >/dev/null 2>&1 || (useradd -m -s /bin/bash -G sudo,audio,video linuwaifu && echo 'linuwaifu:123456' | chpasswd)", shell=True)
 subprocess.run("echo 'linuwaifu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 2>/dev/null || true", shell=True)
 subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
@@ -151,14 +129,10 @@ print("  ✅ [✓] Unidad 5TB Google Drive conectada.", flush=True)
 # ==============================================================================
 print("🎨 [3/4] Configurando sesión de escritorio...", flush=True)
 
-# Archivo de sesión de Chrome Remote Desktop
 session_file = USER_HOME / ".chrome-remote-desktop-session"
 session_file.write_text("exec /etc/X11/Xsession /usr/bin/startxfce4\n")
 session_file.chmod(0o755)
 
-# Configurar XFCE en usuario linuwaifu
-xfconf_dir = USER_HOME / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
-xfconf_dir.mkdir(parents=True, exist_ok=True)
 desktop_dir = USER_HOME / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
 
