@@ -1,0 +1,5 @@
+# Lista de paquetes y programas adicionales que se instalan y recuerdan automáticamente
+# Puedes añadir paquetes aquí o usar el comando 'instalar <paquete>' dentro de tu PC en la nube
+neofetch
+p7zip-full
+unzip

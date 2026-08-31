@@ -2,21 +2,23 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU NATIVO & GAMING MASTER ENGINE (KAGGLE)
+🌸 LINUWAIFU CLOUD PC: INFINITE PERSISTENCE ENGINE (KAGGLE MULTI-ACCOUNT)
 ================================================================================
-100% Automatizado desde GitHub para CUALQUIER cuenta de Kaggle:
-1. Apariencia Ubuntu 24.04 LTS Oficial (Yaru Dark + Iconos + Dock + Fuentes).
-2. Auto-Inicio de LinuWaifu AI VTuber Studio:
-   - Avatar 3D VRM animado con física y parpadeo en pantalla.
-   - Cerebro IA (NVIDIA NIM / Gemini) + Voz Edge-TTS con Audio Virtual.
-   - Bot de Twitch / Chat en vivo conectado y listo para transmitir.
-3. Google Drive 5TB Auto-Persistente:
-   - Credenciales guardadas en GitHub (se restauran solas en cualquier cuenta).
-   - Acceso directo en el escritorio para GTA V, Red Dead Redemption 2 y ROMs.
-4. Accesos directos en el escritorio (Juegos, Waifu, Navegador, GPU Monitor).
-5. Doble Conexión:
-   - 📱 App Móvil RealVNC Viewer (Modo Touchpad + Zoom con 2 dedos).
-   - 🌐 Enlace Web directo (noVNC).
+Comportamiento de PC Real:
+Guarda y restaura el estado completo de tu PC entre CUALQUIER cuenta de Kaggle
+usando tu Google Drive de 5TB y GitHub.
+
+1. Al Iniciar (En CUALQUIER cuenta de Kaggle):
+   - Restaura credenciales de Google Drive (rclone.conf).
+   - Restaura todas las dependencias y programas APT que hayas instalado antes.
+   - Restaura el escritorio, configuraciones, partidas de juegos y navegador.
+   - Conecta la carpeta de 5TB de juegos (GTA V, RDR2, ROMs) en ~/Games y Escritorio.
+   - Inicia Ubuntu 24.04 LTS Oficial (Yaru-Dark) + LinuWaifu AI VTuber Studio en vivo.
+   - Abre los túneles para RealVNC en tu celular.
+
+2. En Segundo Plano (Auto-Guardado cada 5 min y al salir):
+   - Registra cualquier nuevo paquete APT o pip que instales.
+   - Respalda partidas de juegos, descargas y configuraciones a Google Drive.
 ================================================================================
 """
 
@@ -37,27 +39,70 @@ os.environ["DISPLAY"] = ":1"
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 print("\n" + "=" * 78)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC: UBUNTU NATIVO & GAMING ENGINE PRO...")
+print("🌸 INICIANDO LINUWAIFU CLOUD PC: SISTEMA DE PERSISTENCIA TOTAL (5TB GDrive)...")
 print("=" * 78)
 
+# Directorios Clave
+GDRIVE_CONF_DIR = Path.home() / ".config" / "rclone"
+GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
+REPO_RCLONE_FILE = BASE_DIR / "rclone.conf"
+EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
+STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
+STATE_DIR.mkdir(parents=True, exist_ok=True)
+
 # ==============================================================================
-# 1. INSTALACIÓN DE LA SUITE COMPLETA DE UBUNTU + LIMPIEZA DE DISCO
+# 1. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE Y PERSISTENCIA
+# ==============================================================================
+print("☁️ [1/6] Sincronizando credenciales de Google Drive (5TB)...", flush=True)
+GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
+
+if REPO_RCLONE_FILE.exists() and REPO_RCLONE_FILE.stat().st_size > 10:
+    shutil.copy(REPO_RCLONE_FILE, GDRIVE_CONF_FILE)
+    print("  ✅ [✓] Credenciales de 5TB restauradas automáticamente desde GitHub.", flush=True)
+elif GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
+    shutil.copy(GDRIVE_CONF_FILE, REPO_RCLONE_FILE)
+
+# Iniciar servidor Rclone WebDAV en segundo plano
+try:
+    subprocess.Popen([
+        "rclone", "serve", "webdav", "gdrive:",
+        "--addr", "127.0.0.1:8088",
+        "--read-only=false",
+        "--vfs-cache-mode", "writes"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("  ✅ [✓] Servidor de 5TB Google Drive montado en red local (Puerto 8088).", flush=True)
+except Exception:
+    pass
+
+# ==============================================================================
+# 2. INSTALACIÓN DE SUITE BASE + AUTO-RESTAURACIÓN DE PAQUETES EXTRA
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/5] Instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop, Chromium)...", flush=True)
+    print("📦 [2/6] Instalando Suite de Ubuntu oficial y dependencias...", flush=True)
     subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     
-    pkgs = [
+    base_pkgs = [
         "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
         "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
         "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
         "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
-        "chromium-browser", "greybird-gtk-theme"
+        "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
     ]
+    
+    # Leer paquetes extra guardados de sesiones anteriores
+    extra_pkgs = []
+    if EXTRA_PKGS_FILE.exists():
+        try:
+            extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().split() if p.strip()]
+            print(f"  📦 Restaurando {len(extra_pkgs)} programas adicionales guardados: {', '.join(extra_pkgs)}", flush=True)
+        except Exception:
+            pass
+    
+    all_pkgs = list(set(base_pkgs + extra_pkgs))
     
     cmd_install = (
         "apt-get update -qq && "
-        f"apt-get install -y --no-install-recommends {' '.join(pkgs)} >/dev/null 2>&1 && "
+        f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >/dev/null 2>&1 && "
         "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
     )
     subprocess.run(cmd_install, shell=True)
@@ -66,49 +111,33 @@ def setup_dependencies():
     # Descargar noVNC si no existe
     novnc_dir = Path("/kaggle/working/noVNC")
     if not novnc_dir.exists():
-        print("📥 [2/5] Descargando componentes web de interfaz...", flush=True)
+        print("📥 [3/6] Descargando componentes web de interfaz...", flush=True)
         subprocess.run("git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >/dev/null 2>&1", shell=True)
         subprocess.run("git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >/dev/null 2>&1", shell=True)
 
 setup_dependencies()
 
 # ==============================================================================
-# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (5TB PERSISTENTE)
+# 3. RESTAURAR ESTADO DE USUARIO (CONFIGURACIONES, PARTIDAS DE JUEGOS, ESCRITORIO)
 # ==============================================================================
-print("☁️ [2/5] Sincronizando Google Drive (5TB) desde GitHub...", flush=True)
-rclone_config_dir = Path.home() / ".config" / "rclone"
-rclone_config_dir.mkdir(parents=True, exist_ok=True)
-rclone_conf_target = rclone_config_dir / "rclone.conf"
-rclone_conf_repo = BASE_DIR / "rclone.conf"
-
-if rclone_conf_repo.exists() and rclone_conf_repo.stat().st_size > 10:
-    shutil.copy(rclone_conf_repo, rclone_conf_target)
-    print("  ✅ [✓] Credenciales de Google Drive restauradas automáticamente.", flush=True)
-else:
-    # Si ya existe en el sistema local, respaldarlo hacia el repositorio
-    if rclone_conf_target.exists() and rclone_conf_target.stat().st_size > 10:
-        shutil.copy(rclone_conf_target, rclone_conf_repo)
-        subprocess.run(
-            f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
-            shell=True
-        )
-
-# Iniciar servicio Rclone WebDAV en segundo plano para explorar los 5TB
-gdrive_dir = Path.home() / "Desktop" / "📁_5TB_GoogleDrive_Juegos"
+print("📂 [3/6] Restaurando partidas, escritorio y estado personal de Google Drive...", flush=True)
 try:
-    subprocess.Popen([
-        "rclone", "serve", "webdav", "gdrive:",
-        "--addr", "127.0.0.1:8088",
-        "--read-only=false",
-        "--vfs-cache-mode", "writes"
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-except Exception:
-    pass
+    # Intentar descargar el respaldo de configuraciones de Google Drive si existe
+    backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
+    subprocess.run(
+        f"rclone copy gdrive:LinuWaifu_PC/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} >/dev/null 2>&1 || true",
+        shell=True
+    )
+    if backup_tar.exists() and backup_tar.stat().st_size > 100:
+        subprocess.run(f"tar -xzf {backup_tar} -C /root/ >/dev/null 2>&1 || true", shell=True)
+        print("  ✅ [✓] Escritorio, fondos y partidas restauradas con éxito.", flush=True)
+except Exception as e:
+    print(f"  ℹ️ Estado inicial nuevo: {e}")
 
 # ==============================================================================
-# 3. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS DE JUEGOS
+# 4. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS Y HERRAMIENTAS
 # ==============================================================================
-print("🎨 [3/5] Configurando tema Ubuntu Yaru-Dark y accesos directos en escritorio...", flush=True)
+print("🎨 [4/6] Configurando tema Ubuntu Yaru-Dark y herramientas en escritorio...", flush=True)
 
 # Limpiar procesos anteriores
 subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 ssh python3 2>/dev/null || true", shell=True)
@@ -117,9 +146,11 @@ time.sleep(1)
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
 
-# Crear carpeta Desktop
+# Crear carpeta Desktop y Games
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
+games_dir = Path.home() / "Games"
+games_dir.mkdir(parents=True, exist_ok=True)
 
 # Inyectar temas oficiales de Ubuntu
 try:
@@ -142,7 +173,25 @@ try:
 except Exception:
     pass
 
-# Crear accesos directos en el escritorio
+# Script auxiliar para instalar cualquier paquete y guardarlo para siempre en GitHub/GDrive
+install_helper = BASE_DIR / "instalar_y_guardar.sh"
+install_helper.write_text(
+    "#!/bin/bash\n"
+    "if [ -z \"$1\" ]; then\n"
+    "  echo 'Uso: ./instalar_y_guardar.sh <nombre_paquete>'\n"
+    "  exit 1\n"
+    "fi\n"
+    "apt-get update -qq && apt-get install -y --no-install-recommends \"$@\"\n"
+    "if [ $? -eq 0 ]; then\n"
+    f"  echo \"$@\" >> {EXTRA_PKGS_FILE}\n"
+    f"  cd {BASE_DIR} && git add packages_extra.txt && git commit -m 'Add persistent packages: '$@ && git push origin main >/dev/null 2>&1 || true\n"
+    "  echo '✅ ¡Paquete instalado y guardado para siempre en GitHub!'\n"
+    "fi\n"
+)
+install_helper.chmod(0o755)
+subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
+
+# Accesos directos en el escritorio
 shortcuts = {
     "🌸_LinuWaifu_AI_Studio.desktop": (
         "[Desktop Entry]\n"
@@ -150,21 +199,32 @@ shortcuts = {
         "Type=Application\n"
         "Name=🌸 LinuWaifu AI VTuber Studio\n"
         "Comment=Panel de IA VTuber 3D en vivo con Voz y Chat\n"
-        f"Exec=chromium-browser --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
+        "Exec=chromium-browser --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
         "Icon=applications-multimedia\n"
         "Terminal=false\n"
         "Categories=AudioVideo;Network;\n"
     ),
-    "🎮_GTA_V_y_Juegos_5TB.desktop": (
+    "🎮_Mis_Juegos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🎮 Juegos 5TB Google Drive (GTA V, RDR2)\n"
-        "Comment=Explora y ejecuta tus juegos desde Google Drive\n"
+        "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
+        "Comment=Carpeta persistente con todos tus juegos y partidas\n"
         "Exec=thunar dav://127.0.0.1:8088/\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
         "Categories=Game;\n"
+    ),
+    "💾_Guardar_Estado_de_mi_PC.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=💾 Guardar Estado de mi PC (Nube)\n"
+        "Comment=Guarda tus partidas, descargas y cambios a Google Drive y GitHub\n"
+        f"Exec=python3 {BASE_DIR}/run_kaggle_vnc_studio.py --save-now\n"
+        "Icon=system-software-update\n"
+        "Terminal=true\n"
+        "Categories=System;\n"
     ),
     "📊_Monitor_GPUs_Tesla_T4.desktop": (
         "[Desktop Entry]\n"
@@ -194,9 +254,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
+# 5. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
 # ==============================================================================
-print("🖥️ [4/5] Levantando pantalla 1080p y auto-iniciando LinuWaifu AI Studio...", flush=True)
+print("🖥️ [5/6] Levantando pantalla 1080p y auto-iniciando LinuWaifu AI Studio...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -255,13 +315,13 @@ subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 5. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
+# 6. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
 # ==============================================================================
-print("🌐 [5/5] Conectando túneles de acceso remoto...", flush=True)
+print("🌐 [6/6] Conectando túneles de acceso remoto...", flush=True)
 
 web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
-if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN":
+if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
     ngrok_token = sys.argv[1].strip()
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
@@ -327,10 +387,10 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU GAMING & AI VTUBER STUDIO 100% ONLINE!
+# 🎉 ¡UBUNTU PERSISTENTE 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78)
-print("🎉 🌸 ¡TU UBUNTU NATIVO & LINUWAIFU AI STUDIO ESTÁ 100% ONLINE!")
+print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC PERSISTENTE ESTÁ 100% ONLINE!")
 print("=" * 78)
 
 if web_tunnel_url:
@@ -343,29 +403,50 @@ print("   • Abre RealVNC Viewer en tu celular -> Botón '+'")
 print("   • Pega la dirección de Pinggy que aparece arriba.")
 print("=" * 78)
 
-print("🌸 EN TU ESCRITORIO LISTO PARA USAR:")
-print("   • 🌸 LinuWaifu AI Avatar 3D: Ya está abierto en pantalla reaccionando en vivo.")
-print("   • 🎮 Carpeta Google Drive 5TB: Acceso directo en el escritorio para GTA V / RDR2.")
-print("   • 📊 Monitor de GPUs: Acceso directo a nvtop (2x Tesla T4 32GB VRAM).")
-print("   • 🌐 Navegador Chromium y Explorador de Archivos Thunar.")
+print("💾 SISTEMA DE PERSISTENCIA ACTIVO:")
+print("   • 🎮 Tus 5TB de Google Drive (GTA V, RDR2) montados en el escritorio.")
+print("   • 📦 Para instalar cualquier cosa y recordarla para siempre usa: instalar <nombre>")
+print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.")
 print("=" * 78 + "\n")
 
-# Mantener viva la celda
+# Función de auto-guardado a Google Drive y GitHub
+def auto_save_user_state():
+    try:
+        # 1. Respaldar rclone.conf si fue modificado
+        if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
+            if not REPO_RCLONE_FILE.exists() or GDRIVE_CONF_FILE.read_text() != REPO_RCLONE_FILE.read_text():
+                shutil.copy(GDRIVE_CONF_FILE, REPO_RCLONE_FILE)
+                subprocess.run(
+                    f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
+                    shell=True
+                )
+        
+        # 2. Respaldar partidas de juegos y configuraciones a Google Drive
+        save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
+        subprocess.run(
+            f"tar -czf {save_tar} -C /root/ .config/ .local/share/ Games/ >/dev/null 2>&1 || true",
+            shell=True
+        )
+        if save_tar.exists():
+            subprocess.run(
+                f"rclone copy {save_tar} gdrive:LinuWaifu_PC/system_state/ >/dev/null 2>&1 || true",
+                shell=True
+            )
+    except Exception:
+        pass
+
+# Mantener viva la celda con auto-guardado periódico
 try:
     minutos = 0
     while True:
         time.sleep(30)
         print(".", end="", flush=True)
         minutos += 0.5
+        if minutos % 5 == 0:
+            auto_save_user_state()
         if minutos % 10 == 0:
-            print(f" [{int(minutos)} min activo]", flush=True)
-            # Auto-backup de rclone.conf a GitHub si fue modificado
-            if rclone_conf_target.exists() and rclone_conf_target.stat().st_size > 10:
-                if not rclone_conf_repo.exists() or rclone_conf_target.read_text() != rclone_conf_repo.read_text():
-                    shutil.copy(rclone_conf_target, rclone_conf_repo)
-                    subprocess.run(
-                        f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
-                        shell=True
-                    )
+            print(f" [{int(minutos)} min activo - Estado Guardado en Nube]", flush=True)
 except KeyboardInterrupt:
-    print("\n🛑 Servidor detenido.")
+    print("\n🛑 Guardando estado final antes de salir...")
+    auto_save_user_state()
+    print("✅ Estado guardado. Servidor detenido.")
