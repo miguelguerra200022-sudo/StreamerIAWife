@@ -2,21 +2,21 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU NATIVO PRO EDITION (KAGGLE MASTER ENGINE)
+🌸 LINUWAIFU CLOUD PC: UBUNTU NATIVO & GAMING MASTER ENGINE (KAGGLE)
 ================================================================================
-Entorno de escritorio oficial estilo Ubuntu Nativo:
-1. Apariencia Ubuntu 100%: Tema Yaru-Dark, Iconos Yaru, Fuentes Ubuntu,
-   Barra superior con Menú de Aplicaciones, Reloj, Bandeja de sistema y Dock.
-2. Suite Completa de Programas:
-   - 📁 Explorador de Archivos (Thunar) con carpetas visuales y papelera.
-   - 📝 Editor de Texto y Código (Mousepad) con resaltado de sintaxis.
-   - 📊 Monitores de Rendimiento: nvtop (2x GPUs Tesla T4) y htop (CPU/RAM).
-   - 🎬 Reproductor Multimedia (mpv) y Audio Virtual PulseAudio.
-   - 💾 Google Drive (5TB vía Rclone WebDAV integrado).
-3. Conexión Dual No-Bloqueante:
-   - 🌐 Enlace Web inmediato (noVNC) vía Ngrok HTTP.
-   - 📱 App Móvil RealVNC / AVNC (Modo Touchpad, Zoom con 2 dedos, 1080p).
-4. Optimización de Almacenamiento: Ocupa < 550 MB, dejando +19 GB libres.
+100% Automatizado desde GitHub para CUALQUIER cuenta de Kaggle:
+1. Apariencia Ubuntu 24.04 LTS Oficial (Yaru Dark + Iconos + Dock + Fuentes).
+2. Auto-Inicio de LinuWaifu AI VTuber Studio:
+   - Avatar 3D VRM animado con física y parpadeo en pantalla.
+   - Cerebro IA (NVIDIA NIM / Gemini) + Voz Edge-TTS con Audio Virtual.
+   - Bot de Twitch / Chat en vivo conectado y listo para transmitir.
+3. Google Drive 5TB Auto-Persistente:
+   - Credenciales guardadas en GitHub (se restauran solas en cualquier cuenta).
+   - Acceso directo en el escritorio para GTA V, Red Dead Redemption 2 y ROMs.
+4. Accesos directos en el escritorio (Juegos, Waifu, Navegador, GPU Monitor).
+5. Doble Conexión:
+   - 📱 App Móvil RealVNC Viewer (Modo Touchpad + Zoom con 2 dedos).
+   - 🌐 Enlace Web directo (noVNC).
 ================================================================================
 """
 
@@ -24,6 +24,7 @@ import os
 import sys
 import time
 import re
+import shutil
 import subprocess
 import threading
 import signal
@@ -35,17 +36,15 @@ os.environ["DISPLAY"] = ":1"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-print("\n" + "=" * 75)
-print("🌸 INICIANDO UBUNTU NATIVO PRO EDITION EN KAGGLE (1080p FULL HD)...")
-print("=" * 75)
+print("\n" + "=" * 78)
+print("🌸 INICIANDO LINUWAIFU CLOUD PC: UBUNTU NATIVO & GAMING ENGINE PRO...")
+print("=" * 78)
 
 # ==============================================================================
-# 1. INSTALACIÓN DE LA SUITE DE UBUNTU + LIMPIEZA DE ALMACENAMIENTO
+# 1. INSTALACIÓN DE LA SUITE COMPLETA DE UBUNTU + LIMPIEZA DE DISCO
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Verificando e instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop)...", flush=True)
-    
-    # Limpiar repositorios rotos de Kaggle si los hay
+    print("📦 [1/5] Instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop, Chromium)...", flush=True)
     subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     
     pkgs = [
@@ -53,7 +52,7 @@ def setup_dependencies():
         "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
         "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
         "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
-        "greybird-gtk-theme"
+        "chromium-browser", "greybird-gtk-theme"
     ]
     
     cmd_install = (
@@ -62,30 +61,67 @@ def setup_dependencies():
         "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
     )
     subprocess.run(cmd_install, shell=True)
-    subprocess.run("pip install -q pyngrok >/dev/null 2>&1", shell=True)
+    subprocess.run("pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >/dev/null 2>&1", shell=True)
 
     # Descargar noVNC si no existe
     novnc_dir = Path("/kaggle/working/noVNC")
     if not novnc_dir.exists():
-        print("📥 [2/4] Descargando componentes web de interfaz...", flush=True)
+        print("📥 [2/5] Descargando componentes web de interfaz...", flush=True)
         subprocess.run("git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >/dev/null 2>&1", shell=True)
         subprocess.run("git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >/dev/null 2>&1", shell=True)
 
 setup_dependencies()
 
 # ==============================================================================
-# 2. CONFIGURACIÓN DE APARIENCIA OFICIAL UBUNTU (YARU DARK + DOCK + ICONOS)
+# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (5TB PERSISTENTE)
 # ==============================================================================
-print("🎨 [2/4] Configurando apariencia oficial Ubuntu (Yaru Dark, Dock, Fuentes)...", flush=True)
+print("☁️ [2/5] Sincronizando Google Drive (5TB) desde GitHub...", flush=True)
+rclone_config_dir = Path.home() / ".config" / "rclone"
+rclone_config_dir.mkdir(parents=True, exist_ok=True)
+rclone_conf_target = rclone_config_dir / "rclone.conf"
+rclone_conf_repo = BASE_DIR / "rclone.conf"
+
+if rclone_conf_repo.exists() and rclone_conf_repo.stat().st_size > 10:
+    shutil.copy(rclone_conf_repo, rclone_conf_target)
+    print("  ✅ [✓] Credenciales de Google Drive restauradas automáticamente.", flush=True)
+else:
+    # Si ya existe en el sistema local, respaldarlo hacia el repositorio
+    if rclone_conf_target.exists() and rclone_conf_target.stat().st_size > 10:
+        shutil.copy(rclone_conf_target, rclone_conf_repo)
+        subprocess.run(
+            f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
+            shell=True
+        )
+
+# Iniciar servicio Rclone WebDAV en segundo plano para explorar los 5TB
+gdrive_dir = Path.home() / "Desktop" / "📁_5TB_GoogleDrive_Juegos"
+try:
+    subprocess.Popen([
+        "rclone", "serve", "webdav", "gdrive:",
+        "--addr", "127.0.0.1:8088",
+        "--read-only=false",
+        "--vfs-cache-mode", "writes"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except Exception:
+    pass
+
+# ==============================================================================
+# 3. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS DE JUEGOS
+# ==============================================================================
+print("🎨 [3/5] Configurando tema Ubuntu Yaru-Dark y accesos directos en escritorio...", flush=True)
 
 # Limpiar procesos anteriores
-subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 ssh 2>/dev/null || true", shell=True)
+subprocess.run("killall -9 Xvfb x11vnc websockify novnc_proxy ngrok xfce4-session startxfce4 ssh python3 2>/dev/null || true", shell=True)
 time.sleep(1)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
 
-# Inyectar configuración de temas oficiales
+# Crear carpeta Desktop
+desktop_dir = Path.home() / "Desktop"
+desktop_dir.mkdir(parents=True, exist_ok=True)
+
+# Inyectar temas oficiales de Ubuntu
 try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
     xfconf_dir.mkdir(parents=True, exist_ok=True)
@@ -98,6 +134,7 @@ try:
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 10' --create -t string 2>/dev/null || true", shell=True, env=env)
 
+    # Mostrar iconos de escritorio
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
@@ -105,10 +142,61 @@ try:
 except Exception:
     pass
 
+# Crear accesos directos en el escritorio
+shortcuts = {
+    "🌸_LinuWaifu_AI_Studio.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=🌸 LinuWaifu AI VTuber Studio\n"
+        "Comment=Panel de IA VTuber 3D en vivo con Voz y Chat\n"
+        f"Exec=chromium-browser --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
+        "Icon=applications-multimedia\n"
+        "Terminal=false\n"
+        "Categories=AudioVideo;Network;\n"
+    ),
+    "🎮_GTA_V_y_Juegos_5TB.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=🎮 Juegos 5TB Google Drive (GTA V, RDR2)\n"
+        "Comment=Explora y ejecuta tus juegos desde Google Drive\n"
+        "Exec=thunar dav://127.0.0.1:8088/\n"
+        "Icon=applications-games\n"
+        "Terminal=false\n"
+        "Categories=Game;\n"
+    ),
+    "📊_Monitor_GPUs_Tesla_T4.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=📊 Monitor de 2x GPUs NVIDIA (nvtop)\n"
+        "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
+        "Icon=utilities-system-monitor\n"
+        "Terminal=false\n"
+        "Categories=System;\n"
+    ),
+    "🌐_Navegador_Web.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=🌐 Navegador Web Chromium\n"
+        "Exec=chromium-browser --no-sandbox\n"
+        "Icon=browser\n"
+        "Terminal=false\n"
+        "Categories=Network;\n"
+    )
+}
+
+for fname, content in shortcuts.items():
+    s_path = desktop_dir / fname
+    s_path.write_text(content)
+    s_path.chmod(0o755)
+
 # ==============================================================================
-# 3. LEVANTAR SERVIDOR GRÁFICO 1080p FULL HD Y ESCRITORIO
+# 4. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
 # ==============================================================================
-print("🖥️ [3/4] Levantando servidor gráfico Full HD (1920x1080) y sesión D-Bus...", flush=True)
+print("🖥️ [4/5] Levantando pantalla 1080p y auto-iniciando LinuWaifu AI Studio...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -118,11 +206,34 @@ xvfb_proc = subprocess.Popen([
 ], env=env)
 time.sleep(2)
 
-# Iniciar escritorio XFCE4 completo con sesión D-Bus
+# Iniciar sesión de escritorio completa XFCE4
 subprocess.Popen([
     "dbus-launch", "--exit-with-session", "startxfce4"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(3)
+
+# Iniciar PulseAudio virtual
+subprocess.run("pulseaudio --start --exit-idle-time=-1 2>/dev/null || true", shell=True)
+subprocess.run("pactl load-module module-null-sink sink_name=VirtualSink 2>/dev/null || true", shell=True)
+
+# Iniciar el servidor backend de LinuWaifu (Cloud Bridge + IA Brain) en puerto 8000
+def start_linuwaifu_backend():
+    try:
+        subprocess.run(f"python3 {BASE_DIR}/cloud_bridge.py", shell=True, env=env)
+    except Exception as e:
+        print(f"Aviso LinuWaifu Backend: {e}")
+
+threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
+time.sleep(2)
+
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu en la esquina de la pantalla
+subprocess.Popen([
+    "chromium-browser",
+    "--no-sandbox",
+    "--window-size=480,720",
+    "--window-position=1440,0",
+    f"--app=http://localhost:8000/avatars/studio.html"
+], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # Servidor VNC optimizado para 60 FPS con noxdamage y noxfixes
 subprocess.Popen([
@@ -144,9 +255,9 @@ subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 4. TÚNELES DE ALTA VELOCIDAD (CONEXIÓN INMEDIATA SIN BLOQUEO)
+# 5. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
 # ==============================================================================
-print("🌐 [4/4] Conectando túneles de acceso remoto...", flush=True)
+print("🌐 [5/5] Conectando túneles de acceso remoto...", flush=True)
 
 web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
@@ -155,7 +266,7 @@ if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOK
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Conectar Túnel Web Ngrok HTTP primero (Instantáneo)
+# 1. Túnel Web Ngrok HTTP
 if ngrok_token:
     try:
         from pyngrok import ngrok
@@ -168,20 +279,8 @@ if ngrok_token:
         web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
     except Exception as e:
         print(f"⚠️ Aviso Ngrok HTTP: {e}")
-        try:
-            subprocess.run("npm install -g localtunnel >/dev/null 2>&1 || true", shell=True)
-            lt_proc = subprocess.Popen(["lt", "--port", "6080"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            time.sleep(3)
-            for _ in range(5):
-                line = lt_proc.stdout.readline()
-                if "your url is:" in line:
-                    raw_url = line.split("your url is:")[1].strip()
-                    web_tunnel_url = f"{raw_url}/vnc.html?autoconnect=true&resize=scale"
-                    break
-        except Exception:
-            pass
 
-# 2. Conectar Túnel TCP Pinggy en hilo de segundo plano (Nunca bloquea)
+# 2. Túnel TCP Pinggy en segundo plano
 vnc_app_address = []
 def run_pinggy_tunnel():
     try:
@@ -221,7 +320,6 @@ try:
 except Exception:
     pass
 
-# Espacio libre en disco
 try:
     df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
     print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}")
@@ -229,30 +327,28 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU NATIVO ONLINE!
+# 🎉 ¡UBUNTU GAMING & AI VTUBER STUDIO 100% ONLINE!
 # ==============================================================================
-print("\n" + "=" * 75)
-print("🎉 🌸 ¡TU UBUNTU NATIVO PRO ESTÁ 100% ONLINE EN KAGGLE!")
-print("=" * 75)
+print("\n" + "=" * 78)
+print("🎉 🌸 ¡TU UBUNTU NATIVO & LINUWAIFU AI STUDIO ESTÁ 100% ONLINE!")
+print("=" * 78)
 
 if web_tunnel_url:
     print("🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):")
     print(f"👉 {web_tunnel_url}")
-    print("=" * 75)
+    print("=" * 78)
 
 print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):")
 print("   • Abre RealVNC Viewer en tu celular -> Botón '+'")
-print("   • Pega la dirección de Pinggy que aparece arriba (o conéctate con la Web).")
-print("=" * 75)
+print("   • Pega la dirección de Pinggy que aparece arriba.")
+print("=" * 78)
 
-print("🖥️ PROGRAMAS INSTALADOS LISTOS EN EL MENÚ:")
-print("   • 📁 Thunar (Explorador de archivos visual y Google Drive)")
-print("   • 📝 Mousepad (Editor de código y texto)")
-print("   • 📊 nvtop (Monitor visual de las 2 GPUs Tesla T4)")
-print("   • 📊 htop (Monitor de CPU y 30GB de RAM)")
-print("   • 🎬 mpv (Reproductor multimedia y audio virtual)")
-print("   • 💾 Para vincular tus 5TB de Google Drive: Abre Terminal y escribe rclone config")
-print("=" * 75 + "\n")
+print("🌸 EN TU ESCRITORIO LISTO PARA USAR:")
+print("   • 🌸 LinuWaifu AI Avatar 3D: Ya está abierto en pantalla reaccionando en vivo.")
+print("   • 🎮 Carpeta Google Drive 5TB: Acceso directo en el escritorio para GTA V / RDR2.")
+print("   • 📊 Monitor de GPUs: Acceso directo a nvtop (2x Tesla T4 32GB VRAM).")
+print("   • 🌐 Navegador Chromium y Explorador de Archivos Thunar.")
+print("=" * 78 + "\n")
 
 # Mantener viva la celda
 try:
@@ -263,5 +359,13 @@ try:
         minutos += 0.5
         if minutos % 10 == 0:
             print(f" [{int(minutos)} min activo]", flush=True)
+            # Auto-backup de rclone.conf a GitHub si fue modificado
+            if rclone_conf_target.exists() and rclone_conf_target.stat().st_size > 10:
+                if not rclone_conf_repo.exists() or rclone_conf_target.read_text() != rclone_conf_repo.read_text():
+                    shutil.copy(rclone_conf_target, rclone_conf_repo)
+                    subprocess.run(
+                        f"cd {BASE_DIR} && git add rclone.conf && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
+                        shell=True
+                    )
 except KeyboardInterrupt:
     print("\n🛑 Servidor detenido.")
