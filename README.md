@@ -1,43 +1,47 @@
 # 🌸 LinuWaifu Cloud Gaming & AI VTuber Studio Pro
 
-> **Ubuntu Nativo Pro Edition en Kaggle** con 2x GPUs NVIDIA Tesla T4 (32GB VRAM), Google Drive (5TB vía Rclone), Modo Touchpad y Zoom con 2 dedos en RealVNC Viewer.
+> **Ubuntu 24.04 LTS Full Edition en Kaggle** con 2x GPUs NVIDIA Tesla T4 (30GB VRAM), Google Drive de 5TB (`PC_Kaggle`), Suite Ofimática LibreOffice, Suite Multimedia y Pantalla Completa 16:9 Full HD.
 
 ---
 
-## 🚀 Comando Rápido para Kaggle (1 Sola Celda)
+## 🚀 Comando Maestro Único para Kaggle (1 Solo Clic)
 
-Copia y pega este comando en tu Notebook de Kaggle y dale **Play (▶️)**:
+Copia y pega este comando en tu Celda de Kaggle y dale **Play (▶️)**:
 
 ```python
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 ```
+
+---
+
+## ✨ Características Principales
+* 📦 **Suite Oficial de Canonical Ubuntu (Gigabytes)**: `ubuntu-desktop` completo.
+* 🏢 **Suite Ofimática LibreOffice**: Writer (Word), Calc (Excel) e Impress (PowerPoint).
+* 🎬 **Suite Multimedia y Códecs**: Soporte completo para video MP4/MKV y audio virtual PulseAudio.
+* 🖥️ **Pantalla Completa 16:9 Nativa (1920x1080)**: De borde a borde sin franjas angostas.
+* ☁️ **5TB Google Drive (`PC_Kaggle`)**: Sincronizado automáticamente como disco principal.
+* 🌸 **LinuWaifu 3D IA Studio**: Panel interactivo con voz y chat en vivo en pantalla.
+* 💾 **Auto-guardado continuo**: Tus partidas y cambios se respaldan en Google Drive cada 5 minutos.
 
 ---
 
 ## 📱 Cómo Conectarte desde tu Celular
 
-1. Descarga la app gratuita **RealVNC Viewer** en tu teléfono (Google Play Store).
-2. Al ejecutar el comando en Kaggle, copia la dirección generada:
-   ```text
-   🌟 OPCIÓN 1: APP MÓVIL RECOMENDADA:
-      👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
-   ```
-3. En la app **RealVNC Viewer**:
-   - Toca el botón **`+`**.
-   - En **Address**, pega la dirección (ej: `xxxxxx.free.pinggy.link:12345`).
-   - En **Name**, escribe: `Ubuntu Kaggle PC`.
-   - Toca **Connect**.
-4. ¡Listo! Tendrás:
-   - 🖱️ **Modo Touchpad**: Deslizas el dedo como el ratón de una laptop.
-   - 🔍 **Pinch-to-Zoom**: Agrandas y achicas la pantalla con 2 dedos en **Full HD 1080p**.
-   - 🎨 **Tema Oficial Ubuntu Yaru-Dark**, explorador Thunar, editor Mousepad y monitor de GPUs `nvtop`.
+### Opción 1: Enlace Web Directo (Chrome / Brave Móvil)
+1. Al ejecutar la celda, copia el enlace generado:
+   `https://xxxx.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale&quality=9`
+2. Pégalo en el navegador de tu celular y ¡listo! Se ajusta a pantalla completa automáticamente.
+
+### Opción 2: App RealVNC Viewer
+1. Abre la app **RealVNC Viewer** en tu teléfono -> Toca el botón **`+`**.
+2. Pega la dirección de Pinggy que sale en el log (ej: `xxxx.free.pinggy.link:12345`).
+3. Toca **Connect** y disfruta de control con touchpad y zoom con 2 dedos.
 
 ---
 
-## 💾 Usar tus 5TB de Google Drive
+## 🩺 Comando de Auditoría del Sistema (Opcional)
 
-En la terminal de tu Ubuntu o en Kaggle escribe:
+Para auditar y verificar el 100% de los paquetes y servicios instalados:
 ```bash
-rclone config
+cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
 ```
-Sigue los pasos interactivos para vincular tu cuenta de Google Drive y acceder a tus archivos a más de 500 MB/s.
