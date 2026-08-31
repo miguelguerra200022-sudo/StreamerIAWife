@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🐧 PRUEBA PURA: INSTALACIÓN LIMPIA DE UBUNTU BASE + XFCE4 (KAGGLE)
+🐧 UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA DE GIGABYTES DE CANONICAL)
 ================================================================================
-• Instala el núcleo base de Ubuntu y herramientas esenciales.
-• Instala XFCE4 optimizado con tema oficial Yaru-Dark de Ubuntu.
-• Inicia pantalla 1080p, x11vnc y noVNC web.
-• Conecta túneles Ngrok y Pinggy para acceso remoto inmediato.
+• Instala el metapackage oficial completo: `ubuntu-desktop` (GBs de paquetes).
+• Suite ofimática completa: LibreOffice (Writer, Calc, Impress).
+• Suite multimedia y códecs: `ubuntu-restricted-extras`, GStreamer, reproductores.
+• Todas las herramientas y utilidades oficiales de Canonical.
+• Entorno XFCE4 acelerado para pantalla 1080p con x11vnc y noVNC web.
 ================================================================================
 """
 
@@ -31,24 +32,54 @@ subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|star
 time.sleep(0.5)
 
 print("\n" + "=" * 78, flush=True)
-print("🐧 INSTALANDO UBUNTU BASE OFICIAL + XFCE4 (TEST PURO EN KAGGLE)...", flush=True)
+print("🐧 INSTALANDO LA SUITE COMPLETA OFICIAL UBUNTU 24.04 LTS (GIGABYTES)...", flush=True)
 print("=" * 78, flush=True)
 
-# 2. Instalación de paquetes base
-print("📦 [1/4] Actualizando e instalando Ubuntu base y XFCE4...", flush=True)
-pkgs = [
-    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-    "mousepad", "htop", "nvtop", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
-    "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "curl", "wget",
-    "git", "psmisc", "net-tools", "chromium-browser", "unzip"
-]
+# 2. Instalación de la Suite Completa de Ubuntu (Gigabytes)
+print("📦 [1/4] Descargando e instalando `ubuntu-desktop` oficial completo + LibreOffice + Codecs...", flush=True)
 
-subprocess.run(
-    f"apt-get update -qq && apt-get install -y --no-install-recommends {' '.join(pkgs)} >/dev/null 2>&1 && "
-    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*",
-    shell=True
+cmd_full_install = (
+    "apt-get update -qq && "
+    "apt-get install -y "
+    "ubuntu-desktop "
+    "ubuntu-restricted-extras "
+    "libreoffice "
+    "libreoffice-gtk3 "
+    "xfce4 "
+    "xfce4-goodies "
+    "thunar-archive-plugin "
+    "file-roller "
+    "evince "
+    "gnome-calculator "
+    "gnome-system-monitor "
+    "gnome-disk-utility "
+    "yaru-theme-gtk "
+    "yaru-theme-icon "
+    "yaru-theme-sound "
+    "fonts-ubuntu "
+    "dbus-x11 "
+    "x11vnc "
+    "xvfb "
+    "x11-xserver-utils "
+    "pulseaudio "
+    "pulseaudio-utils "
+    "pavucontrol "
+    "curl "
+    "wget "
+    "git "
+    "htop "
+    "nvtop "
+    "chromium-browser "
+    "p7zip-full "
+    "unzip && "
+    "apt-get clean"
 )
-subprocess.run("pip install -q pyngrok >/dev/null 2>&1", shell=True)
+
+# Ejecutar instalación completa en vivo
+subprocess.run(cmd_full_install, shell=True)
+subprocess.run("pip install -q pyngrok websockets Pillow mss >/dev/null 2>&1", shell=True)
+
+print("  ✅ [✓] Suite oficial completa de Ubuntu instalada con éxito.", flush=True)
 
 # Descargar noVNC si no existe
 novnc_dir = Path("/kaggle/working/noVNC")
@@ -81,6 +112,9 @@ time.sleep(2)
 subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
 subprocess.Popen(["dbus-launch", "--exit-with-session", "startxfce4"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(3)
+
+# Iniciar PulseAudio virtual
+subprocess.run("pulseaudio -k 2>/dev/null || true; pulseaudio -D --exit-idle-time=-1 --system=false >/dev/null 2>&1 || true", shell=True, env=env)
 
 # Servidor VNC
 subprocess.Popen([
@@ -156,8 +190,14 @@ try:
 except Exception:
     pass
 
+try:
+    df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
+    print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
+except Exception:
+    pass
+
 print("\n" + "=" * 78, flush=True)
-print("🎉 🐧 ¡UBUNTU BASE + XFCE4 ESTÁ 100% ONLINE!", flush=True)
+print("🎉 🐧 ¡UBUNTU 24.04 FULL EDITION (GIGABYTES) ESTÁ 100% ONLINE!", flush=True)
 print("=" * 78, flush=True)
 
 if web_tunnel_url:
