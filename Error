@@ -1,66 +1,50 @@
-Ahora si sabemos que ocurre, ¿Verdad?, Mira:
-
-The history saving thread hit an unexpected error (OperationalError('attempt to write a readonly database')).History will not be written to the database.
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 376, done.
-remote: Counting objects: 100% (16/16), done.
-remote: Compressing objects: 100% (13/13), done.
-remote: Total 376 (delta 8), reused 10 (delta 3), pack-reused 360 (from 1)
-Receiving objects: 100% (376/376), 6.62 MiB | 23.94 MiB/s, done.
-Resolving deltas: 100% (217/217), done.
+remote: Enumerating objects: 382, done.
+remote: Counting objects: 100% (22/22), done.
+remote: Compressing objects: 100% (18/18), done.
+remote: Total 382 (delta 11), reused 12 (delta 4), pack-reused 360 (from 1)
+Receiving objects: 100% (382/382), 6.62 MiB | 15.00 MiB/s, done.
+Resolving deltas: 100% (220/220), done.
 
 ==============================================================================
 🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE)...
 ==============================================================================
 ☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
+🔴 2026/08/31 03:46:18 Failed to create file system for "gdrive:PC_Kaggle/system_state": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
+🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+🔴 2026/08/31 03:46:19 Failed to create file system for "gdrive:PC_Kaggle/Games": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
+🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
   ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
 📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, Thunar, Audio)...
-🔴 2026/08/31 03:37:10 Failed to create file system for "gdrive:": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
-🔴 2026/08/31 03:37:10 Failed to create file system for "gdrive:PC_Kaggle/system_state": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
-🔴 2026/08/31 03:37:10 Failed to create file system for "gdrive:PC_Kaggle/Games": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
-🔴 2026/08/31 03:37:10 Failed to create file system for "gdrive:PC_Kaggle/system_packages": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
+🔴 2026/08/31 03:46:20 Failed to create file system for "gdrive:PC_Kaggle/system_packages": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
 🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
   ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.
-🔴 2026/08/31 03:37:30 ERROR : : error reading source directory: directory not found
-🔴 2026/08/31 03:37:30 ERROR : Attempt 1/3 failed with 1 errors and: directory not found
-🔴 2026/08/31 03:37:30 ERROR : : error reading source directory: directory not found
-🔴 2026/08/31 03:37:30 ERROR : Attempt 2/3 failed with 1 errors and: directory not found
-🔴 2026/08/31 03:37:30 ERROR : : error reading source directory: directory not found
-🔴 2026/08/31 03:37:30 ERROR : Attempt 3/3 failed with 1 errors and: directory not found
-🔴 2026/08/31 03:37:30 Failed to copy: directory not found
+🔴 2026/08/31 03:46:35 ERROR : : error reading source directory: directory not found
+🔴 2026/08/31 03:46:35 ERROR : Attempt 1/3 failed with 1 errors and: directory not found
+🔴 2026/08/31 03:46:35 ERROR : : error reading source directory: directory not found
+🔴 2026/08/31 03:46:35 ERROR : Attempt 2/3 failed with 1 errors and: directory not found
+🔴 2026/08/31 03:46:35 ERROR : : error reading source directory: directory not found
+🔴 2026/08/31 03:46:35 ERROR : Attempt 3/3 failed with 1 errors and: directory not found
+🔴 2026/08/31 03:46:35 Failed to copy: directory not found
   ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
 🖥️ [4/5] Levantando pantalla 1080p y servidor de escritorio...
 🔴 tar: Error is not recoverable: exiting now
-⚠️ (xfwm4:8780): xfwm4-WARNING **: 03:38:03.558: Unsupported GL renderer (llvmpipe (LLVM 15.0.7, 256 bits)).
-⚠️ (xfsettingsd:8797): libupower-glib-WARNING **: 03:38:03.621: Couldn't connect to proxy: Could not connect: No such file or directory
-🔴 ** (xfdesktop:8809): WARNING **: 03:38:04.148: Thumbnailer failed calling GetFlavors
-🔴 ** (agent:8820): CRITICAL **: 03:38:04.171: Failed to get connection to system bus: Could not connect: No such file or directory
-🔴 pa_context_connect() failed: Connection refused
-⚠️ (xfdesktop:8809): GVFS-RemoteVolumeMonitor-WARNING **: 03:38:04.205: remote volume monitor with dbus name org.gtk.vfs.UDisks2VolumeMonitor is not supported
-⚠️ ** (update-notifier:8814): WARNING **: 03:38:04.218: not starting for system user
-🔴 ** (xfdesktop:8809): WARNING **: 03:38:04.367: Failed to get system bus: Could not connect: No such file or directory
+🔴 ** (xfdesktop:10028): WARNING **: 03:47:06.807: Thumbnailer failed calling GetFlavors
 🔴 ModuleNotFoundError: No module named 'cups'
-🔴 (wrapper-2.0:8880): libnotify-WARNING **: 03:38:05.406: Failed to connect to proxy
-🔴 (wrapper-2.0:8901): libactions-WARNING **: 03:38:05.480: Calling CanShutdown failed GDBus.Error:org.xfce.SessionManager.Error.Failed: Could not connect: No such file or directory
-🔴 (wrapper-2.0:8901): libactions-WARNING **: 03:38:05.481: Calling CanRestart failed GDBus.Error:org.xfce.SessionManager.Error.Failed: Could not connect: No such file or directory
-🔴 (xfce4-session:8718): xfce4-session-WARNING **: 03:38:05.485: failed to run script: Failed to execute child process “/usr/bin/pm-is-supported” (No such file or directory)
-🔴 (xfce4-session:8718): xfce4-session-WARNING **: 03:38:05.489: failed to run script: Failed to execute child process “/usr/bin/pm-is-supported” (No such file or directory)
-🔴 (xfce4-session:8718): xfce4-session-WARNING **: 03:38:05.493: failed to run script: Failed to execute child process “/usr/bin/pm-is-supported” (No such file or directory)
-⚠️ (wrapper-2.0:8880): Gtk-WARNING **: 03:38:05.507: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
-⚠️ (wrapper-2.0:8901): Gtk-WARNING **: 03:38:05.514: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
-⚠️ (tracker-miner-fs-3:8821): GVFS-RemoteVolumeMonitor-WARNING **: 03:38:07.113: remote volume monitor with dbus name org.gtk.vfs.UDisks2VolumeMonitor is not supported
-⚠️ (tracker-miner-fs-3:8821): libupower-glib-WARNING **: 03:38:07.115: Couldn't connect to proxy: Could not connect: No such file or directory
-⚠️ (tracker-miner-fs-3:8821): Tracker-WARNING **: 03:38:07.115: Unable to connect to UPower
-🔴 (tracker-miner-fs-3:8821): GLib-CRITICAL **: 03:38:07.116: g_source_destroy: assertion 'source != NULL' failed
-🔴 (tracker-miner-fs-3:8821): GLib-CRITICAL **: 03:38:07.116: g_source_unref: assertion 'source != NULL' failed
-🔴 31/08/2026 03:38:07   errors, etc) it may be disabled:
-🔴 31/08/2026 03:38:07   errors, etc) it may be disabled via: '-noscr'
+🔴 ** (xfdesktop:10028): WARNING **: 03:47:07.146: Failed to set the background '/usr/share/backgrounds/xfce/xfce-verticals.png': GDBus.Error:org.freedesktop.DBus.Error.InvalidArgs: No such interface “org.freedesktop.DisplayManager.AccountsService”
+🔴 (wrapper-2.0:10099): libnotify-WARNING **: 03:47:07.975: Failed to connect to proxy
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:08.048: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): Gtk-WARNING **: 03:47:08.061: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
+🔴 (wrapper-2.0:10147): libactions-WARNING **: 03:47:08.127: Calling CanShutdown failed GDBus.Error:org.xfce.SessionManager.Error.Failed: GDBus.Error:org.freedesktop.DBus.Error.Spawn.ChildExited: Launch helper exited with unknown return code 1
+🔴 (wrapper-2.0:10147): libactions-WARNING **: 03:47:08.134: Calling CanRestart failed GDBus.Error:org.xfce.SessionManager.Error.Failed: GDBus.Error:org.freedesktop.DBus.Error.Spawn.ChildExited: Launch helper exited with unknown return code 1
+⚠️ (wrapper-2.0:10147): Gtk-WARNING **: 03:47:08.176: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
+🔴 31/08/2026 03:47:10   errors, etc) it may be disabled:
+🔴 31/08/2026 03:47:10   errors, etc) it may be disabled via: '-noscr'
 ⚠️ Warning: could not find self.pem
 🌐 [5/5] Conectando túneles de acceso remoto...
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:13.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:18.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
 
 🎮 GPUs NVIDIA Tesla Activas: 2
   • GPU 0: Tesla T4 (14.6 GB VRAM)
@@ -84,3 +68,19 @@ Resolving deltas: 100% (217/217), done.
    • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
    • 📜 Transmisión de errores y logs activa en tiempo real.
 ==============================================================================
+
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:23.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:28.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:33.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:38.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:43.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:48.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+.⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:53.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:47:58.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:03.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:08.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:13.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:18.512: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+.⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:23.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:28.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
+⚠️ (wrapper-2.0:10099): pulseaudio-plugin-WARNING **: 03:48:33.513: Disconected from the PulseAudio server. Attempting to reconnect in 5 seconds.
