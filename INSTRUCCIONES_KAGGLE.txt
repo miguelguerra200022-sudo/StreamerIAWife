@@ -1,44 +1,29 @@
 ================================================================================
-🌸 UBUNTU NATIVO PRO EDITION EN KAGGLE (GUÍA DEFINITIVA)
+🌸 LINUWAIFU CLOUD PC: GUÍA DE EJECUCIÓN Y MONITOREO EN VIVO
 ================================================================================
 
-🖥️ ¿QUÉ INCLUYE ESTA PC EN LA NUBE?
-1. Aspecto 100% Ubuntu: Tema oficial Yaru-Dark, iconos oficiales Yaru,
-   fuentes Ubuntu, barra superior con Menú de Aplicaciones y Reloj.
-2. Suite completa de programas:
-   - 📁 Explorador de archivos Thunar (carpetas visuales, papelera).
-   - 📝 Editor de texto y código Mousepad.
-   - 📊 Monitor gráfico de GPUs Tesla T4 (nvtop) y de CPU (htop).
-   - 🎬 Reproductor multimedia mpv y audio virtual.
-   - 💾 Soporte de Google Drive de 5TB vía Rclone.
-3. 2x GPUs NVIDIA Tesla T4 con 32GB de VRAM total.
-4. Almacenamiento optimizado: Más de 19 GB libres en Kaggle.
-
-================================================================================
-📋 COMANDO ÚNICO PARA PEGAR EN KAGGLE (1 SOLA CELDA)
-================================================================================
-Copia y pega este comando en una sola celda y dale Play (▶️):
+🖥️ CELDA 1: ARRANCAR TU PC EN LA NUBE (LA PRINCIPAL)
+Pega esto en la primera celda y dale Play (▶️):
 
 !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 ================================================================================
-📱 CÓMO CONECTARTE CON LA MÁXIMA EXPERIENCIA (MODO GOOGLE CLOUD)
+📊 CELDA 2: MONITOR DE LOGS Y DIAGNÓSTICO EN VIVO (OPCIONAL / SOLITARIA)
 ================================================================================
-1. Descarga en tu celular la app gratuita "RealVNC Viewer" de la Play Store.
-2. Al ejecutar el comando en Kaggle, verás la dirección generada:
-   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
-3. En la app RealVNC Viewer:
-   - Toca el botón '+' para agregar conexión.
-   - Pega la dirección en Address (ej: xxxxxx.free.pinggy.link:12345).
-   - En Name pon: Ubuntu Kaggle.
-   - Toca 'Connect'.
-4. ¡Listo! Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS y resolución FULL HD 1080p.
+Crea una segunda celda solitaria abajo y dale Play (▶️) para ver en tiempo real
+todo lo que se instala, los servicios y cualquier error para copiarlo:
+
+!python3 /kaggle/working/StreamerIAWife/debug_monitor.py
 
 ================================================================================
-💾 CÓMO USAR TUS 5TB DE GOOGLE DRIVE EN ESTA PC
+📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER
 ================================================================================
-1. Dentro de la terminal de tu Ubuntu (o en Kaggle), escribe:
-   rclone config
-2. Sigue los pasos para vincular tu cuenta de Google Drive de 5TB.
-3. ¡Podrás descargar, jugar y transferir archivos a más de 500 MB/s!
+1. En la salida de la Celda 1, verás:
+   👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
+2. En la app RealVNC Viewer de tu celular:
+   - Toca '+' para agregar conexión.
+   - Pega esa dirección (ej: xxxxxx.free.pinggy.link:12345).
+   - Nombre: Ubuntu Kaggle PC.
+   - Toca 'Connect'.
+3. ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS y tus 5TB de Google Drive listos!
 ================================================================================
