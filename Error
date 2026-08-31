@@ -1,31 +1,27 @@
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 388, done.
-remote: Counting objects: 100% (28/28), done.
-remote: Compressing objects: 100% (23/23), done.
-remote: Total 388 (delta 15), reused 14 (delta 5), pack-reused 360 (from 1)
-Receiving objects: 100% (388/388), 6.62 MiB | 20.55 MiB/s, done.
-Resolving deltas: 100% (224/224), done.
+remote: Enumerating objects: 394, done.
+remote: Counting objects: 100% (34/34), done.
+remote: Compressing objects: 100% (28/28), done.
+remote: Total 394 (delta 19), reused 16 (delta 6), pack-reused 360 (from 1)
+Receiving objects: 100% (394/394), 6.63 MiB | 14.98 MiB/s, done.
+Resolving deltas: 100% (228/228), done.
 
 ==============================================================================
 🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 24.04 PRO + 5TB GOOGLE DRIVE)...
 ==============================================================================
 ☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
+🔴 2026/08/31 04:02:04 Failed to create file system for "gdrive:": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
+🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
   ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
 📦 [2/5] Instalando Suite de Ubuntu 24.04 LTS (Yaru-Dark, Thunar, Audio)...
   ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.
-🔴 2026/08/31 03:52:20 Failed to create file system for "gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
   ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
-🔴 tar: Error is not recoverable: exiting now
 🖥️ [4/5] Levantando pantalla 1080p y servidor de escritorio...
-🔴 ** (xfdesktop:10991): WARNING **: 03:52:53.191: Thumbnailer failed calling GetFlavors
-🔴 ** (xfdesktop:10991): WARNING **: 03:52:53.451: Failed to set the background '/usr/share/backgrounds/xfce/xfce-verticals.png': GDBus.Error:org.freedesktop.DBus.Error.InvalidArgs: No such interface “org.freedesktop.DisplayManager.AccountsService”
 🔴 ModuleNotFoundError: No module named 'cups'
-🔴 (wrapper-2.0:11075): libnotify-WARNING **: 03:52:54.477: Failed to connect to proxy
-⚠️ (wrapper-2.0:11075): Gtk-WARNING **: 03:52:54.540: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
-🔴 31/08/2026 03:52:57   errors, etc) it may be disabled:
-🔴 31/08/2026 03:52:57   errors, etc) it may be disabled via: '-noscr'
+⚠️ (wrapper-2.0:11872): Gtk-WARNING **: 04:03:39.754: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
+🔴 31/08/2026 04:03:42   errors, etc) it may be disabled:
+🔴 31/08/2026 04:03:42   errors, etc) it may be disabled via: '-noscr'
 ⚠️ Warning: could not find self.pem
 🌐 [5/5] Conectando túneles de acceso remoto...
 
@@ -49,5 +45,15 @@ Resolving deltas: 100% (224/224), done.
    • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
    • 📦 Para instalar cualquier cosa usa: instalar <nombre>
    • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
-   • 📜 Transmisión de errores y logs activa en tiempo real.
 ==============================================================================
+
+...🔴 ThunarThumbnailer: Failed to retrieve supported types: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.thumbnails.Thumbnailer1 was not provided by any .service files
+🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:05:43.859: g_variant_new_string: assertion 'string != NULL' failed
+.🔴 Thunar: Failed to open "dav://127.0.0.1:8088/": The specified location is not supported
+🔴 ThunarThumbnailer: Failed to retrieve supported types: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.thumbnails.Thumbnailer1 was not provided by any .service files
+🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:12.958: g_variant_new_string: assertion 'string != NULL' failed
+🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:16.610: g_variant_new_string: assertion 'string != NULL' failed
+🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:19.853: g_variant_new_string: assertion 'string != NULL' failed
+🔴 (xfdesktop:11795): GLib-CRITICAL **: 04:06:21.482: g_variant_new_string: assertion 'string != NULL' failed
+🔴 Working directory "/kaggle/working/StreamerIAWife/[Invalid UTF-8]" does not exist. It won't be used when spawning "exo-open".GDBus.Error:org.freedesktop.DBus.Error.NoReply: Message recipient disconnected from message bus without replying
+.
