@@ -4,12 +4,6 @@
 ================================================================================
 🧪 PRUEBA PURA Y AISLADA: SOLO GOOGLE CHROME REMOTE DESKTOP (CRD) EN KAGGLE
 ================================================================================
-Este script instala ÚNICAMENTE lo mínimo necesario para probar Chrome Remote Desktop:
-1. Instala el paquete oficial de Google Chrome Remote Desktop (.deb) y XFCE mínimo.
-2. Crea el usuario 'linuwaifu' y configura la sesión.
-3. Te pide el comando de autorización de Google y lo vincula con PIN: 123456.
-4. Te muestra en pantalla cada segundo cualquier log o error de Google.
-================================================================================
 """
 
 import os
@@ -61,19 +55,22 @@ print("  ✅ [✓] Paquetes de Google y sesión listos.", flush=True)
 print("\n" + "=" * 78, flush=True)
 print("🔑 [3/3] VINCULACIÓN CON GOOGLE", flush=True)
 print("=" * 78, flush=True)
-print("👉 1. Abre este enlace en tu navegador o celular:", flush=True)
-print("   🔗 https://remotedesktop.google.com/headless", flush=True)
-print("👉 2. Toca 'Configurar otra computadora' ➔ 'Comenzar' ➔ 'Autorizar'.", flush=True)
-print("👉 3. Copia el comando que te da Google para Debian Linux.", flush=True)
-print("-" * 78, flush=True)
 
-try:
-    crd_auth_cmd = input("📋 Pega aquí el comando de Google: ").strip()
-except EOFError:
-    crd_auth_cmd = ""
+crd_auth_cmd = ""
+# 1. Revisar si se pasó como argumento
+if len(sys.argv) > 1 and sys.argv[1].strip() and not sys.argv[1].startswith("--"):
+    crd_auth_cmd = " ".join(sys.argv[1:]).strip()
+
+# 2. Revisar si está en archivo crd_code.txt
+code_file = Path("/kaggle/working/crd_code.txt")
+if not crd_auth_cmd and code_file.exists() and code_file.stat().st_size > 10:
+    crd_auth_cmd = code_file.read_text().strip()
 
 if not crd_auth_cmd:
-    print("❌ No se proporcionó el comando de Google. Cancelando.", flush=True)
+    print("❌ INSTRUCCIÓN:", flush=True)
+    print("👉 Pega tu comando de Google directamente al final de la línea de Python entre comillas, así:", flush=True)
+    print('   python3 -u test_solo_crd.py "DISPLAY= /opt/google/chrome-remote-desktop/start-host --code=4/0A..."', flush=True)
+    print("=" * 78 + "\n", flush=True)
     sys.exit(1)
 
 # Extraer parámetros
@@ -85,7 +82,7 @@ redirect_url = redirect_match.group(1) if redirect_match else "https://remotedes
 host_name = "Kaggle-PureCRD"
 pin = "123456"
 
-print(f"\n⚡ Ejecutando start-host para vincular [{host_name}] con PIN: {pin}...", flush=True)
+print(f"⚡ Ejecutando start-host para vincular [{host_name}] con PIN: {pin}...", flush=True)
 
 cmd_crd = (
     f"su - linuwaifu -c '"
@@ -108,8 +105,7 @@ subprocess.run(
     shell=True
 )
 
-# Verificar si el proceso de Google está corriendo
-time.sleep(2)
+time.sleep(3)
 ps_crd = subprocess.run("pgrep -f 'chrome-remote-desktop' >/dev/null 2>&1", shell=True)
 
 print("\n" + "=" * 78, flush=True)
@@ -121,16 +117,14 @@ if ps_crd.returncode == 0:
     print(f"   • Toca en tu PC: 💻 [{host_name}] (Color Verde)")
     print(f"   • Ingresa tu PIN: 🔑 {pin}")
 else:
-    print("⚠️ El proceso de CRD no quedó en ejecución. Revisa los logs abajo:", flush=True)
+    print("⚠️ El proceso de CRD no quedó en ejecución.", flush=True)
 
 print("=" * 78 + "\n", flush=True)
 
-# Bucle de diagnóstico continuo
+# Diagnóstico continuo
 try:
-    minutos = 0
     while True:
         time.sleep(10)
-        minutos += (10 / 60)
         crd_logs = glob.glob("/tmp/chrome_remote_desktop*.log") + glob.glob("/home/linuwaifu/.config/chrome-remote-desktop/*.log")
         for cl in crd_logs:
             try:
