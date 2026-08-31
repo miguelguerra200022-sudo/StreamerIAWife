@@ -1,19 +1,45 @@
-Me sigue apareciendo igual cuando ejecuto la celda 2 de monitoreo, como si la celda 1 de limpieza no hiciera nada:
+Ya me cargo completo:
+
+Cloning into '/kaggle/working/StreamerIAWife'...
+remote: Enumerating objects: 370, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (8/8), done.
+remote: Total 370 (delta 4), reused 8 (delta 2), pack-reused 360 (from 1)
+Receiving objects: 100% (370/370), 6.61 MiB | 21.71 MiB/s, done.
+Resolving deltas: 100% (213/213), done.
 
 ==============================================================================
-📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (SESIÓN 100% FRESCA Y LIMPIA)
+🌸 INICIANDO UBUNTU 24.04 LTS OFICIAL GNOME (5TB GOOGLE DRIVE + WAIFU IA)...
 ==============================================================================
-🟢 [LISTO]: Monitor inicializado desde cero. Procesos viejos limpiados.
-👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).
+☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
+  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
+📦 [2/5] Activando Suite Oficial Ubuntu Desktop (GNOME Shell, Nautilus, Yaru)...
+  ✅ [✓] Entorno Oficial Ubuntu Desktop GNOME listo.
+  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
+🎨 [3/5] Configurando apariencia oficial de Canonical Ubuntu...
+🖥️ [4/5] Levantando pantalla 1080p e iniciando sesión oficial Ubuntu GNOME...
+🌐 [5/5] Conectando túneles de acceso remoto...
+
+🎮 GPUs NVIDIA Tesla Activas: 2
+  • GPU 0: Tesla T4 (14.6 GB VRAM)
+  • GPU 1: Tesla T4 (14.6 GB VRAM)
+💾 Espacio Libre en Disco: 19G disponibles de 20G
+
+==============================================================================
+🎉 🌸 ¡TU UBUNTU 24.04 LTS OFICIAL GNOME ESTÁ 100% ONLINE!
+==============================================================================
+🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):
+👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale
+------------------------------------------------------------------------------
+📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
+👉 Servidor VNC: free.pinggy.link (Consultando...)
+   • Abre RealVNC Viewer en tu celular -> Botón '+'
+   • Pega la dirección de arriba y toca 'Connect'.
+==============================================================================
+💾 SISTEMA DE PERSISTENCIA ACTIVO:
+   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
+   • 📦 Para instalar cualquier cosa usa: instalar <nombre>
+   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
 ==============================================================================
 
-
-==============================================================================
-🎉 🌸 ¡TU PC EN LA NUBE ESTÁ 100% ONLINE Y FUNCIONANDO!
-==============================================================================
-📱 APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
-   • Abre la app en tu celular -> Toca '+'
-   • Busca la dirección tcp://... de Pinggy que aparece en el log.
-==============================================================================
-
-Y sigo sin todavia ejecutar la celda 3 del sistema
+Pero la pantalla me sale en negro y el puntero como una X negra
