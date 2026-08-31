@@ -1,44 +1,22 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS MAESTROS PARA KAGGLE
+🌸 LINUWAIFU CLOUD PC: COMANDO MAESTRO ÚNICO (TODO EN 1 CELDA)
 ================================================================================
 
+🚀 UN SOLO CLIC: ARRANCAR TU PC EN LA NUBE
 --------------------------------------------------------------------------------
-🚀 OPCIÓN 1: SISTEMA COMPLETO 1-CLIC (REALVNC + NOVNC WEB + 5TB GDRIVE)
---------------------------------------------------------------------------------
-(El sistema probado y funcional: arranca tu PC en 1 solo segundo)
-
-Pega este comando en una celda de Kaggle y dale Play (▶️):
+En tu libreta de Kaggle, pega este comando único en la Celda y dale Play (▶️):
 
 !rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-✨ ¿Qué obtienes?
-• Enlace Web directo para Chrome / Brave en celular (noVNC).
-• Dirección directa para la App "RealVNC Viewer" / "AVNC" con Touchpad y Zoom.
-• 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
-• Waifu IA 3D en vivo con voz y chat lista para transmitir.
-• Auto-guardado de partidas cada 5 minutos.
 
-
---------------------------------------------------------------------------------
-🧪 OPCIÓN 2: PRUEBA PURA Y AISLADA DE CHROME REMOTE DESKTOP (CRD)
---------------------------------------------------------------------------------
-(Prueba experimental aislada sin extras para probar la conexión con Google)
-
-1️⃣ Paso 1 (Obtener código de autorización):
-   • Abre: https://remotedesktop.google.com/headless
-   • Toca "Configurar otra computadora" ➔ "Comenzar" ➔ "Autorizar".
-   • Copia el comando que te da Google para Debian Linux.
-
-2️⃣ Paso 2 (Ejecutar en Kaggle):
-   • Pega este comando en tu celda de Kaggle y dale Play (▶️):
-
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u test_solo_crd.py
-
-3️⃣ Paso 3 (Vincular):
-   • Pega el comando de Google cuando te lo pida en pantalla.
-   • PIN de seguridad: 123456
-
-4️⃣ Paso 4 (Conectar desde tu celular):
-   • Entra a https://remotedesktop.google.com/access o en la app "Escritorio Remoto de Chrome".
-   • Toca en tu PC "Kaggle-PureCRD" (en verde) y pon el PIN: 123456.
+================================================================================
+✨ ¿QUÉ HACE ESTE COMANDO AUTOMÁTICAMENTE?
+================================================================================
+1. 🧹 Limpia cualquier proceso residual en 0.5 segundos.
+2. 📦 Instala la Suite oficial Ubuntu 24.04 LTS (Yaru-Dark, Thunar, GVFS, audio).
+3. ☁️ Conecta y monta tu Google Drive de 5TB (carpeta PC_Kaggle).
+4. 🌸 Enciende tus 2 GPUs Tesla T4 y abre a LinuWaifu 3D IA en pantalla.
+5. 🌐 Te entrega tu enlace Web directo (noVNC) y tu dirección para la App RealVNC Viewer.
+6. 💾 Auto-guarda tus partidas, descargas y cambios a tu Google Drive cada 5 min.
+7. 📜 Transmite los registros y diagnósticos del sistema en tiempo real.
 ================================================================================
