@@ -1,6 +1,19 @@
-¿Porque me aparece esto cuando ejecuto la celda de la limpieza?:
+Me sigue apareciendo igual cuando ejecuto la celda 2 de monitoreo, como si la celda 1 de limpieza no hiciera nada:
+
+==============================================================================
+📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (SESIÓN 100% FRESCA Y LIMPIA)
+==============================================================================
+🟢 [LISTO]: Monitor inicializado desde cero. Procesos viejos limpiados.
+👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).
+==============================================================================
 
 
+==============================================================================
+🎉 🌸 ¡TU PC EN LA NUBE ESTÁ 100% ONLINE Y FUNCIONANDO!
+==============================================================================
+📱 APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
+   • Abre la app en tu celular -> Toca '+'
+   • Busca la dirección tcp://... de Pinggy que aparece en el log.
+==============================================================================
 
-Oops something went wrong
-An unknown error occurred. We suggest downloading a copy of your notebook to avoid losing your work, then refresh your browser.
+Y sigo sin todavia ejecutar la celda 3 del sistema
