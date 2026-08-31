@@ -5,7 +5,7 @@
 --------------------------------------------------------------------------------
 🚀 OPCIÓN 1: SISTEMA COMPLETO 1-CLIC (REALVNC + NOVNC WEB + 5TB GDRIVE)
 --------------------------------------------------------------------------------
-(Ideal si quieres arrancar tu PC en 1 solo segundo sin configurar nada más)
+(El sistema probado y funcional: arranca tu PC en 1 solo segundo)
 
 Pega este comando en una celda de Kaggle y dale Play (▶️):
 
@@ -13,16 +13,16 @@ Pega este comando en una celda de Kaggle y dale Play (▶️):
 
 ✨ ¿Qué obtienes?
 • Enlace Web directo para Chrome / Brave en celular (noVNC).
-• Dirección de red directa para la App "RealVNC Viewer" / "AVNC" con Touchpad y Zoom.
+• Dirección directa para la App "RealVNC Viewer" / "AVNC" con Touchpad y Zoom.
 • 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
 • Waifu IA 3D en vivo con voz y chat lista para transmitir.
 • Auto-guardado de partidas cada 5 minutos.
 
 
 --------------------------------------------------------------------------------
-🌐 OPCIÓN 2: EDICIÓN GOOGLE CHROME REMOTE DESKTOP (CRD WEBRTC 60 FPS)
+🧪 OPCIÓN 2: PRUEBA PURA Y AISLADA DE CHROME REMOTE DESKTOP (CRD)
 --------------------------------------------------------------------------------
-(Ideal para conectarte a través de la app oficial "Escritorio Remoto de Chrome" de Google)
+(Prueba experimental aislada sin extras para probar la conexión con Google)
 
 1️⃣ Paso 1 (Obtener código de autorización):
    • Abre: https://remotedesktop.google.com/headless
@@ -32,13 +32,13 @@ Pega este comando en una celda de Kaggle y dale Play (▶️):
 2️⃣ Paso 2 (Ejecutar en Kaggle):
    • Pega este comando en tu celda de Kaggle y dale Play (▶️):
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_crd_studio.py
+!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u test_solo_crd.py
 
 3️⃣ Paso 3 (Vincular):
-   • Pega el comando que copiaste en el paso 1 cuando la celda te lo pida.
-   • Tu PIN de seguridad es: 123456
+   • Pega el comando de Google cuando te lo pida en pantalla.
+   • PIN de seguridad: 123456
 
 4️⃣ Paso 4 (Conectar desde tu celular):
-   • Abre la app "Escritorio Remoto de Chrome" en tu celular o entra a https://remotedesktop.google.com/access
-   • Toca en tu PC "LinuWaifu-CloudPC" (en color verde) y pon el PIN: 123456.
+   • Entra a https://remotedesktop.google.com/access o en la app "Escritorio Remoto de Chrome".
+   • Toca en tu PC "Kaggle-PureCRD" (en verde) y pon el PIN: 123456.
 ================================================================================
