@@ -32,6 +32,7 @@ LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 # 0. Limpieza previa
 subprocess.run("pkill -9 -f 'chrome-remote-desktop|Xvfb|xfce4|rclone|cloud_bridge' 2>/dev/null || true", shell=True)
+subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 time.sleep(0.5)
 
 with open(LOG_FILE, "w", encoding="utf-8") as f:
@@ -40,7 +41,8 @@ with open(LOG_FILE, "w", encoding="utf-8") as f:
 # Hilo de transmisión de logs y errores en tiempo real a la pantalla
 IGNORE_KEYWORDS = [
     "unsupported gl renderer", "remote volume monitor", "not starting for system user",
-    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning"
+    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
+    "skipping acquire of configured file"
 ]
 
 def live_log_streamer():
