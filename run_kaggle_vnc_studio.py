@@ -136,8 +136,14 @@ try:
         "--read-only=false",
         "--vfs-cache-mode", "writes"
     ], stdout=log_rclone, stderr=log_rclone)
-    print("  ✅ [✓] Servidor de 5TB Google Drive montado en red local (Puerto 8088).", flush=True)
-    log("Servidor Rclone WebDAV montado en puerto 8088.", "SUCCESS")
+    
+    # Crear estructura base en Google Drive (solo si no existen)
+    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/system_state >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/Games >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
+    
+    print("  ✅ [✓] Servidor de 5TB Google Drive montado y carpetas vinculadas (Puerto 8088).", flush=True)
+    log("Servidor Rclone WebDAV montado y estructura de 5TB vinculada.", "SUCCESS")
 except Exception as e:
     log(f"Error iniciando Rclone WebDAV: {e}", "ERROR")
 
