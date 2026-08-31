@@ -2,90 +2,73 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO DESDE EL SEGUNDO 1 (CELDA 1)
+📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO EN TIEMPO REAL (CELDA 2)
 ================================================================================
+Usa detección real por puertos y sockets (0 falsos positivos).
 """
 
 import os
 import sys
 import time
 import json
+import socket
 import urllib.request
 import subprocess
 from pathlib import Path
 
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
-LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-
-# 1. Limpieza radical: Terminar procesos residuales de pruebas anteriores
-subprocess.run(
-    "pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge' 2>/dev/null || true",
-    shell=True
-)
-
-# 2. Borrar logs viejos para empezar completamente limpios
-try:
-    if LOG_FILE.exists():
-        LOG_FILE.unlink()
-except Exception:
-    pass
-
-time.sleep(1)
 
 print("=" * 78, flush=True)
-print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (SESIÓN 100% FRESCA Y LIMPIA)", flush=True)
+print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (ESCUCHANDO EN VIVO)", flush=True)
 print("=" * 78, flush=True)
-print("🟢 [LISTO]: Monitor inicializado desde cero. Procesos viejos limpiados.", flush=True)
-print("👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).", flush=True)
+print("🟢 [LISTO]: Monitor esperando el arranque de la Celda 3...", flush=True)
+print("👉 Ahora dale Play (▶️) a la Celda 3 (Arranque del Sistema).", flush=True)
 print("=" * 78 + "\n", flush=True)
 
-# Comprobar servicios activos
+# Función de comprobación real por sockets (0 falsos positivos)
+def check_port(port):
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.1):
+            return True
+    except Exception:
+        return False
+
 def get_services_status():
     services = {
-        "🖥️ Pantalla Xvfb (1080p)": "Xvfb",
-        "🎨 Escritorio XFCE4": "xfce4-session",
-        "📡 Servidor VNC (:5900)": "x11vnc",
-        "🌐 Servidor Web noVNC (:6080)": "websockify",
-        "☁️ Google Drive 5TB (Rclone)": "rclone",
-        "🌸 LinuWaifu IA Backend": "cloud_bridge",
-        "🎵 Audio Virtual PulseAudio": "pulseaudio"
+        "🖥️ Pantalla Xvfb (1080p)": os.path.exists("/tmp/.X11-unix/X1"),
+        "☁️ Google Drive 5TB (Puerto 8088)": check_port(8088),
+        "🌸 LinuWaifu IA (Puerto 8000)": check_port(8000),
+        "📡 Servidor VNC (Puerto 5900)": check_port(5900),
+        "🌐 Servidor Web noVNC (Puerto 6080)": check_port(6080)
     }
-    
-    active = []
-    for name, proc in services.items():
-        try:
-            out = subprocess.check_output(f"pgrep -f '{proc}' || true", shell=True, text=True).strip()
-            if out:
-                active.append((name, out.split()[0]))
-        except Exception:
-            pass
+    active = [k for k, v in services.items() if v]
     return active, len(services)
 
 # Extraer URL de Ngrok en vivo
 def get_ngrok_url():
     try:
         req = urllib.request.Request("http://127.0.0.1:4040/api/tunnels")
-        with urllib.request.urlopen(req, timeout=1) as response:
+        with urllib.request.urlopen(req, timeout=0.5) as response:
             data = json.loads(response.read().decode())
             for t in data.get("tunnels", []):
                 p_url = t.get("public_url", "")
-                if "ngrok" in p_url:
+                if "ngrok" in p_url and "http" in p_url:
                     return f"{p_url}/vnc.html?autoconnect=true&resize=scale"
     except Exception:
         pass
     return None
 
-# Streaming continuo infinito
 last_size = 0
 seconds_counter = 0
-links_shown = False
+system_online = False
+last_active_count = -1
 
 while True:
     try:
         time.sleep(0.5)
         seconds_counter += 0.5
         
-        # Leer nuevas líneas del archivo de log en tiempo real
+        # 1. Leer nuevas líneas del archivo de log en tiempo real
         if LOG_FILE.exists():
             curr_size = LOG_FILE.stat().st_size
             if curr_size > last_size:
@@ -107,11 +90,17 @@ while True:
             elif curr_size < last_size:
                 last_size = 0
         
-        # Comprobar estado de servicios cada 5 segundos
-        if int(seconds_counter) % 5 == 0 and seconds_counter == int(seconds_counter):
+        # 2. Comprobar servicios cada 3 segundos
+        if int(seconds_counter) % 3 == 0 and seconds_counter == int(seconds_counter):
             active_list, total_services = get_services_status()
+            curr_count = len(active_list)
             
-            if len(active_list) == total_services and not links_shown:
+            if curr_count > 0 and curr_count != last_active_count and not system_online:
+                print(f"⚡ [PROGRESO]: {curr_count}/{total_services} servicios encendidos...", flush=True)
+                last_active_count = curr_count
+            
+            # Si todos los puertos están abiertos y el sistema está listo
+            if curr_count == total_services and not system_online:
                 ngrok_url = get_ngrok_url()
                 print("\n" + "=" * 78, flush=True)
                 print("🎉 🌸 ¡TU PC EN LA NUBE ESTÁ 100% ONLINE Y FUNCIONANDO!", flush=True)
@@ -122,11 +111,9 @@ while True:
                     print("-" * 78, flush=True)
                 print("📱 APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
                 print("   • Abre la app en tu celular -> Toca '+'", flush=True)
-                print("   • Busca la dirección tcp://... de Pinggy que aparece en el log.", flush=True)
+                print("   • Pega la dirección tcp://... de Pinggy que aparece en el log.", flush=True)
                 print("=" * 78 + "\n", flush=True)
-                links_shown = True
-            elif len(active_list) > 0 and not links_shown:
-                print(f"⚡ [INICIANDO]: {len(active_list)}/{total_services} servicios encendiéndose...", flush=True)
+                system_online = True
                 
     except KeyboardInterrupt:
         print("\n🛑 Monitor detenido por el usuario.", flush=True)
