@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS Y DIAGNÓSTICO EN VIVO (CELDA 2)
+📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO DESDE EL SEGUNDO 1 (CELDA 1)
 ================================================================================
-Ejecuta este script en una celda separada en Kaggle.
-Se mantiene en ejecución INFINITA (nunca se apaga):
-1. Transmite en vivo segundo a segundo todo lo que pasa en la PC.
-2. Comprueba la salud de los 7 servicios en tiempo real.
-3. Resalta errores en 🔴 rojo y éxitos en 🟢 verde.
-4. Mantiene un latido continuo para que Kaggle nunca pause la celda.
+Ejecuta esta celda PRIMERO.
+1. Se inicializa desde el segundo 1 y se queda escuchando.
+2. En cuanto ejecutes la Celda 2, captura TODO: instalación, paquetes, GPUs y errores.
+3. Se mantiene en ejecución continua sin apagarse.
 ================================================================================
 """
 
@@ -19,15 +17,21 @@ import time
 import subprocess
 from pathlib import Path
 
-CANDIDATE_LOGS = [
-    Path("/kaggle/working/linuwaifu_system.log"),
-    Path("/kaggle/working/StreamerIAWife/linuwaifu_system.log"),
-    Path("/tmp/linuwaifu_system.log")
-]
+LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+# Crear archivo de log inicial si no existe
+if not LOG_FILE.exists():
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        f.write(f"=== REGISTRO DEL SISTEMA INICIADO ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 print("=" * 78)
-print("📊 LINUWAIFU CLOUD PC: MONITOR DE REGISTROS EN VIVO (EJECUCIÓN CONTINUA)")
+print("📊 LINUWAIFU CLOUD PC: MONITOR MAESTRO ACTIVO (REGISTRO DESDE EL SEGUNDO 1)")
 print("=" * 78)
+print("🟢 [LISTO]: El monitor ya está activo y escuchando.")
+print("👉 Ahora dale Play (▶️) a la Celda 2 (Arranque del Sistema).")
+print("   Todo lo que ocurra se transmitirá aquí abajo en tiempo real sin perder nada.")
+print("=" * 78 + "\n")
 
 # Función de comprobación de servicios
 def check_services():
@@ -41,70 +45,30 @@ def check_services():
         "🎵 Audio Virtual PulseAudio": "pulseaudio"
     }
     
-    print("\n🔍 ESTADO DE SALUD DE LOS SERVICIOS:")
+    active_count = 0
     for name, proc in services.items():
         try:
             out = subprocess.check_output(f"pgrep -f {proc} || true", shell=True, text=True).strip()
             if out:
-                pid = out.split()[0]
-                print(f"  🟢 {name}: 100% ACTIVO (PID: {pid})")
-            else:
-                print(f"  🔴 {name}: DETENIDO / INACTIVO")
+                active_count += 1
         except Exception:
-            print(f"  ⚠️ {name}: NO DETECTADO")
-    print("-" * 78)
+            pass
+    return active_count, len(services)
 
-check_services()
-
-# Encontrar o crear archivo de log
-target_log = None
-for p in CANDIDATE_LOGS:
-    if p.exists():
-        target_log = p
-        break
-
-if not target_log:
-    target_log = Path("/kaggle/working/linuwaifu_system.log")
-    target_log.parent.mkdir(parents=True, exist_ok=True)
-    with open(target_log, "w", encoding="utf-8") as f:
-        f.write(f"=== MONITOR INICIADO ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
-
-print(f"\n📜 TRANSMISIÓN DE REGISTROS EN TIEMPO REAL ({target_log}):")
-print("👉 Esta celda se quedará ejecutándose INDEFINIDAMENTE transmitiendo todo.")
-print("   Cualquier comando, juego o error aparecerá aquí abajo en tiempo real.\n")
-print("=" * 78 + "\n")
-
-# Mostrar contenido inicial
-try:
-    if target_log.exists():
-        with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-            for l in lines[-30:]:
-                print(l.rstrip())
-except Exception:
-    pass
-
-# Streaming continuo infinito (Nunca se apaga)
-last_size = target_log.stat().st_size if target_log.exists() else 0
+# Streaming continuo infinito
+last_size = 0
 seconds_counter = 0
+last_active = -1
 
 while True:
     try:
-        time.sleep(1)
-        seconds_counter += 1
+        time.sleep(0.5)
+        seconds_counter += 0.5
         
-        # Buscar log si cambió de ubicación
-        if not target_log.exists():
-            for p in CANDIDATE_LOGS:
-                if p.exists():
-                    target_log = p
-                    last_size = 0
-                    break
-        
-        if target_log.exists():
-            curr_size = target_log.stat().st_size
+        if LOG_FILE.exists():
+            curr_size = LOG_FILE.stat().st_size
             if curr_size > last_size:
-                with open(target_log, "r", encoding="utf-8", errors="ignore") as f:
+                with open(LOG_FILE, "r", encoding="utf-8", errors="ignore") as f:
                     f.seek(last_size)
                     new_data = f.read()
                     last_size = curr_size
@@ -115,19 +79,22 @@ while True:
                                 print(f"🔴 {line_str}", flush=True)
                             elif "warning" in line_str.lower() or "warn" in line_str.lower():
                                 print(f"⚠️ {line_str}", flush=True)
-                            elif "[success]" in line_str.lower() or "éxito" in line_str.lower() or "conectado" in line_str.lower():
+                            elif "[success]" in line_str.lower() or "éxito" in line_str.lower() or "online" in line_str.lower():
                                 print(f"🟢 {line_str}", flush=True)
                             else:
                                 print(f"  {line_str}", flush=True)
             elif curr_size < last_size:
                 last_size = 0  # Rotación de log
         
-        # Latido y re-chequeo cada 60 segundos
-        if seconds_counter % 60 == 0:
-            print(f"⏱️ [{time.strftime('%H:%M:%S')}] Monitor activo ({seconds_counter // 60} min) - 7 servicios OK.", flush=True)
-            
+        # Cada 30 segundos mostrar resumen de salud si hay servicios activos
+        if int(seconds_counter) % 30 == 0 and seconds_counter == int(seconds_counter):
+            act, total = check_services()
+            if act > 0 and act != last_active:
+                print(f"\n⚡ [ESTADO]: {act}/{total} servicios de la PC activos y funcionando.", flush=True)
+                last_active = act
+                
     except KeyboardInterrupt:
         print("\n🛑 Monitor detenido por el usuario.")
         break
-    except Exception as e:
-        time.sleep(2)
+    except Exception:
+        time.sleep(1)

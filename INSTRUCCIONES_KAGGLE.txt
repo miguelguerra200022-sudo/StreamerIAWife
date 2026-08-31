@@ -1,32 +1,32 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS DE KAGGLE (CELDA 1 Y CELDA 2)
+🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (REGISTRO DESDE EL SEGUNDO 1)
 ================================================================================
 
-🖥️ CELDA 1: ARRANCAR TU PC EN LA NUBE (LA PRINCIPAL)
+📊 CELDA 1: EL MONITOR DE REGISTROS (EJECUTAR DE PRIMERO)
 --------------------------------------------------------------------------------
-Copia y pega este comando en la Celda 1 y dale Play (▶️):
+Pega esto en la Celda 1 y dale Play (▶️). Se quedará escuchando desde el segundo 1:
 
-!rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+!rm -rf /kaggle/working/StreamerIAWife && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/debug_monitor.py
 
 
 ================================================================================
-📊 CELDA 2: MONITOR DE LOGS Y DIAGNÓSTICO EN VIVO (OPCIONAL / SOLITARIA)
+🖥️ CELDA 2: ARRANQUE DE LA PC EN LA NUBE (EJECUTAR DESPUÉS)
 --------------------------------------------------------------------------------
-Toca "+ Code" en Kaggle para crear una celda abajo, pega esto y dale Play (▶️):
+Toca "+ Code" en Kaggle para crear la Celda 2 abajo, pega esto y dale Play (▶️):
 
-!python3 /kaggle/working/StreamerIAWife/debug_monitor.py
+!cd /kaggle/working/StreamerIAWife && python3 run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
 
 ================================================================================
-📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER EN TU CELULAR
+📱 CÓMO CONECTARTE CON LA APP REALVNC VIEWER
 ================================================================================
-1. En la salida de la Celda 1, verás la dirección de conexión:
+1. En la salida verás tu dirección de conexión:
    👉 Servidor VNC: xxxxxx.free.pinggy.link:12345
-2. En la app RealVNC Viewer de tu teléfono:
+2. En la app RealVNC Viewer de tu celular:
    - Toca '+' para agregar conexión.
-   - En Address, pega la dirección (ej: xxxxxx.free.pinggy.link:12345).
-   - En Name, pon: Ubuntu Kaggle PC.
+   - Pega esa dirección (ej: xxxxxx.free.pinggy.link:12345).
+   - Nombre: Ubuntu Kaggle PC.
    - Toca 'Connect'.
-3. ¡Listo! Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS, tus 5TB de Google Drive y tu
-   Waifu IA 3D en pantalla lista para transmitir.
+3. ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS, tus 5TB de Google Drive y tu
+   Waifu IA 3D en pantalla lista para transmitir!
 ================================================================================
