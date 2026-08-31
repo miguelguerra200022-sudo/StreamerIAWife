@@ -98,8 +98,9 @@ print("🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE
 print("=" * 78, flush=True)
 
 # Directorios Clave
-GDRIVE_CONF_DIR = Path.home() / ".config" / "rclone"
+GDRIVE_CONF_DIR = Path.home() / ".rclone"
 GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
+os.environ["RCLONE_CONFIG"] = str(GDRIVE_CONF_FILE)
 REPO_RCLONE_B64 = BASE_DIR / "rclone_gdrive.b64"
 EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
 STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
@@ -159,23 +160,37 @@ try:
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
     
     # ==============================================================================
-    # Sincronización Simbólica Inteligente (Solo Carpetas de Usuario)
+    # Sincronización Simbólica Inteligente (Master Folders)
     # ==============================================================================
-    print("  🔄 [✓] Estableciendo Sincronización Simbólica para carpetas pesadas...", flush=True)
+    print("  🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...", flush=True)
     sync_dirs = {
+        "/root/.config": "/root/gdrive/Master_Config",
+        "/root/.local/share": "/root/gdrive/Master_LocalData",
+        "/root/.local/state": "/root/gdrive/Master_State",
+        "/root/.mozilla": "/root/gdrive/Master_Mozilla",
+        "/root/.ssh": "/root/gdrive/Master_SSH",
+        "/root/.pki": "/root/gdrive/Master_PKI",
         "/root/Descargas": "/root/gdrive/Descargas",
         "/root/Documentos": "/root/gdrive/Documentos",
         "/root/Juegos": "/root/gdrive/Juegos",
-        "/root/.config/Steam": "/root/gdrive/SteamConfig",
-        "/root/.local/share/Steam": "/root/gdrive/SteamData"
+        "/root/Escritorio": "/root/gdrive/Escritorio",
     }
     
     for local_dir, drive_dir in sync_dirs.items():
         subprocess.run(f"mkdir -p '{drive_dir}'", shell=True)
-        # Solo creamos el symlink si la ruta local no existe
         if not os.path.exists(local_dir):
             os.makedirs(os.path.dirname(local_dir), exist_ok=True)
             os.symlink(drive_dir, local_dir)
+        elif os.path.isdir(local_dir) and not os.path.islink(local_dir):
+            # Mover el contenido existente a Drive de forma segura y luego hacer symlink
+            subprocess.run(f"cp -a '{local_dir}'/* '{drive_dir}/' 2>/dev/null || true", shell=True)
+            subprocess.run(f"rm -rf '{local_dir}'", shell=True)
+            os.symlink(drive_dir, local_dir)
+
+    # 1.5. Configuración Base del Puntero (Eliminar X negra)
+    cursor_conf = Path("/root/.icons/default")
+    cursor_conf.mkdir(parents=True, exist_ok=True)
+    (cursor_conf / "index.theme").write_text("[Icon Theme]\nInherits=Yaru\n")
 
     # Inyectar Comando Mágico: subir_juego_a_kaggle
     script_kaggle = """#!/bin/bash
@@ -230,22 +245,23 @@ full_ubuntu_pkgs = [
 
 extra_pkgs = []
 if EXTRA_PKGS_FILE.exists():
-    try:
-        for line in EXTRA_PKGS_FILE.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#"):
-                for p in line.split():
-                    if p and not p.startswith("#"):
-                        extra_pkgs.append(p)
-    except Exception:
-        pass
+    extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().splitlines() if p.strip() and not p.startswith("#")]
 
 all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 
+# Descargar Google Chrome Oficial
+subprocess.run(
+    "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb",
+    shell=True, cwd="/kaggle/working"
+)
+if Path("/kaggle/working/google-chrome-stable_current_amd64.deb").exists():
+    all_pkgs.append("/kaggle/working/google-chrome-stable_current_amd64.deb")
+
 cmd_install = (
     "apt-get update -qq && "
-    f"apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
+    f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && "
+    "rm -f /kaggle/working/google-chrome-stable_current_amd64.deb"
 )
 subprocess.run(cmd_install, shell=True)
 subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
@@ -609,6 +625,31 @@ def auto_save_user_state():
             log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
     except Exception as e:
         log(f"Error en auto-guardado: {e}", "ERROR")
+
+# ==============================================================================
+# Instalador Inteligente (Secuestrador de APT)
+# ==============================================================================
+apt_wrapper = """#!/bin/bash
+if [[ " $@ " =~ " install " ]] && command -v zenity &> /dev/null && [ -n "$DISPLAY" ]; then
+    zenity --question --title="🛡️ Instalador Inteligente LinuWaifu" \\
+           --text="⚠️ Estás instalando software en la <b>Raíz de Kaggle</b> (límite 20GB).\\n\\nEste programa NO se guardará en Google Drive, pero sí sus configuraciones.\\n\\n¿Continuar con la instalación?" \\
+           --width=450
+    if [ $? -ne 0 ]; then
+        echo "❌ Instalación cancelada para proteger los 20GB."
+        exit 1
+    fi
+fi
+if [ "$(basename "$0")" = "apt" ]; then
+    /usr/bin/apt.real "$@"
+else
+    /usr/bin/apt-get.real "$@"
+fi
+"""
+if not Path("/usr/bin/apt.real").exists():
+    subprocess.run("mv /usr/bin/apt /usr/bin/apt.real && mv /usr/bin/apt-get /usr/bin/apt-get.real", shell=True)
+    Path("/usr/bin/apt").write_text(apt_wrapper)
+    Path("/usr/bin/apt-get").write_text(apt_wrapper)
+    subprocess.run("chmod +x /usr/bin/apt /usr/bin/apt-get", shell=True)
 
 # Mantener viva la celda con auto-guardado y transmisión
 try:
