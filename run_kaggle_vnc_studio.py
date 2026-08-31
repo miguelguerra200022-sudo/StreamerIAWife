@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: MOTOR MAESTRO TURNKEY TODO-EN-UNO (KAGGLE)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS NOBLE NUMBAT PRO (5TB GOOGLE DRIVE)
 ================================================================================
-1. Limpia procesos y archivos anteriores automáticamente.
-2. Instala Suite oficial Ubuntu 24.04 LTS (Yaru-Dark, XFCE, audio, herramientas).
-3. Conecta y monta tu Google Drive de 5TB (PC_Kaggle) con enlaces simbólicos.
-4. Inicia pantalla 1080p, 2x GPUs NVIDIA Tesla T4 y LinuWaifu 3D AI Studio.
-5. Abre túneles de alta velocidad (Pinggy TCP para app móvil + Ngrok Web).
-6. Auto-guarda partidas y cambios a tu Google Drive cada 5 minutos.
+1. [PASO 1]: Conecta y monta Google Drive (PC_Kaggle) inmediatamente.
+2. [PASO 2]: Aplica la apariencia oficial Ubuntu 24.04 LTS Noble Numbat:
+   - Fondo de pantalla oficial Ubuntu 24.04 (Noble Numbat Dark HD).
+   - Dock lateral estilo Ubuntu con iconos Yaru oficiales.
+   - Tema Yaru-Dark con acentos naranja oficial y fuentes Ubuntu.
+   - Panel superior con menú oficial, reloj y monitor del sistema.
+3. [PASO 3]: Enciende 2x GPUs NVIDIA Tesla T4, Audio y Waifu 3D IA en pantalla.
+4. [PASO 4]: Sincronización continua de partidas y archivos a tus 5TB de Google Drive.
 ================================================================================
 """
 
@@ -21,7 +23,6 @@ import shutil
 import base64
 import subprocess
 import threading
-import signal
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -45,14 +46,14 @@ def log(msg, level="INFO"):
 
 # 0. Limpieza segura de procesos residuales
 subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
-time.sleep(1)
+time.sleep(0.5)
 
 # Inicializar archivo de log limpio
 with open(LOG_FILE, "w", encoding="utf-8") as f:
     f.write(f"=== INICIO DE SESIÓN LINUWAIFU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO LINUWAIFU CLOUD PC (UBUNTU 1080p + 5TB GDRIVE + IA VTUBER)...", flush=True)
+print("🌸 INICIANDO UBUNTU 24.04 LTS PRO EDITION (5TB GOOGLE DRIVE + WAIFU IA)...", flush=True)
 print("=" * 78, flush=True)
 
 # Directorios Clave
@@ -64,56 +65,10 @@ STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==============================================================================
-# 1. INSTALACIÓN DE SUITE BASE + DEPENDENCIAS
+# 1. [PASO 1 INMEDIATO] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
 # ==============================================================================
-print("📦 [1/6] Instalando Suite de Ubuntu oficial y herramientas...", flush=True)
-log("Instalando dependencias de Ubuntu...")
-subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
-
-base_pkgs = [
-    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-    "yaru-theme-gtk", "yaru-theme-icon", "fonts-ubuntu", "pulseaudio",
-    "net-tools", "wget", "curl", "rclone", "psmisc", "openssh-client",
-    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
-]
-
-extra_pkgs = []
-if EXTRA_PKGS_FILE.exists():
-    try:
-        for line in EXTRA_PKGS_FILE.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#"):
-                for p in line.split():
-                    if p and not p.startswith("#"):
-                        extra_pkgs.append(p)
-        if extra_pkgs:
-            print(f"  📦 Restaurando programas guardados: {', '.join(extra_pkgs)}", flush=True)
-    except Exception:
-        pass
-
-all_pkgs = list(set(base_pkgs + extra_pkgs))
-
-cmd_install = (
-    "apt-get update -qq && "
-    f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
-)
-subprocess.run(cmd_install, shell=True)
-subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas listas.", flush=True)
-
-# Descargar noVNC si no existe
-novnc_dir = Path("/kaggle/working/noVNC")
-if not novnc_dir.exists():
-    print("📥 [2/6] Descargando componentes web de interfaz...", flush=True)
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
-
-# ==============================================================================
-# 2. AUTO-RESTAURAR CREDENCIALES DE GOOGLE DRIVE (5TB)
-# ==============================================================================
-print("☁️ [3/6] Sincronizando Google Drive (5TB - PC_Kaggle)...", flush=True)
+print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...", flush=True)
+log("Iniciando conexión de Google Drive...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
 if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
@@ -123,7 +78,10 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     except Exception:
         pass
 
-# Iniciar servidor Rclone WebDAV en segundo plano
+# Instalar rclone rápido si no está presente
+subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >/dev/null 2>&1)", shell=True)
+
+# Iniciar servidor Rclone WebDAV
 try:
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
@@ -138,11 +96,57 @@ try:
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games >> {LOG_FILE} 2>&1 || true", shell=True)
     subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
     
-    print("  ✅ [✓] Unidad de 5TB Google Drive montada en red local (Puerto 8088).", flush=True)
-except Exception:
-    pass
+    print("  ✅ [✓] Unidad de 5TB Google Drive vinculada como Disco Principal.", flush=True)
+    log("Google Drive 5TB montado con éxito.", "SUCCESS")
+except Exception as e:
+    log(f"Aviso Rclone: {e}", "WARNING")
 
-# Restaurar estado personal
+# ==============================================================================
+# 2. INSTALACIÓN DE LA SUITE OFICIAL UBUNTU 24.04 LTS (YARU-DARK & TOOLS)
+# ==============================================================================
+print("📦 [2/5] Instalando Suite oficial Ubuntu 24.04 LTS (Yaru, XFCE, Multimedia)...", flush=True)
+log("Instalando paquetes de Ubuntu...")
+subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+
+base_pkgs = [
+    "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+    "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+    "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
+    "pulseaudio", "net-tools", "wget", "curl", "psmisc", "openssh-client",
+    "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
+]
+
+extra_pkgs = []
+if EXTRA_PKGS_FILE.exists():
+    try:
+        for line in EXTRA_PKGS_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                for p in line.split():
+                    if p and not p.startswith("#"):
+                        extra_pkgs.append(p)
+    except Exception:
+        pass
+
+all_pkgs = list(set(base_pkgs + extra_pkgs))
+
+cmd_install = (
+    "apt-get update -qq && "
+    f"apt-get install -y --no-install-recommends {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*"
+)
+subprocess.run(cmd_install, shell=True)
+subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+
+# Descargar noVNC si no existe
+novnc_dir = Path("/kaggle/working/noVNC")
+if not novnc_dir.exists():
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+
+print("  ✅ [✓] Suite Ubuntu 24.04 LTS instalada.", flush=True)
+
+# Restaurar estado personal guardado de Google Drive
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
     subprocess.run(
@@ -151,14 +155,14 @@ try:
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 100:
         subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
-        print("  ✅ [✓] Partidas guardadas y configuraciones de usuario restauradas.", flush=True)
+        print("  ✅ [✓] Partidas y preferencias de usuario restauradas.", flush=True)
 except Exception:
     pass
 
 # ==============================================================================
-# 3. CONFIGURAR ESCRITORIO UBUNTU YARU-DARK + ACCESOS DIRECTOS Y HERRAMIENTAS
+# 3. APARIENCIA OFICIAL UBUNTU 24.04 NOBLE NUMBAT (WALLPAPER HD, DOCK, YARU)
 # ==============================================================================
-print("🎨 [4/6] Configurando tema oficial Ubuntu Yaru-Dark y accesos directos...", flush=True)
+print("🎨 [3/5] Aplicando diseño oficial Ubuntu 24.04 Noble Numbat...", flush=True)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
@@ -167,19 +171,43 @@ desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
 games_dir = Path.home() / "Games"
 games_dir.mkdir(parents=True, exist_ok=True)
+bg_dir = Path("/usr/share/backgrounds")
+bg_dir.mkdir(parents=True, exist_ok=True)
 
+# Descargar Wallpaper oficial de Ubuntu 24.04 Noble Numbat Dark
+wallpaper_file = bg_dir / "ubuntu_noble_numbat_dark.png"
+if not wallpaper_file.exists():
+    try:
+        subprocess.run(
+            f"wget -q -O {wallpaper_file} 'https://raw.githubusercontent.com/Ubuntu/yaru/master/default-wallpaper/warty-final-ubuntu.png' 2>/dev/null || "
+            f"curl -s -L -o {wallpaper_file} 'https://assets.ubuntu.com/v1/5b35c05c-ubuntu_noble_numbat_dark_4k.png' 2>/dev/null || true",
+            shell=True
+        )
+    except Exception:
+        pass
+
+# Inyectar configuración completa de Ubuntu Yaru-Dark oficial
 try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
     xfconf_dir.mkdir(parents=True, exist_ok=True)
     
+    # 1. Tema GTK e Iconos Yaru
     subprocess.run("xfconf-query -c xsettings -p /Net/ThemeName -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Net/IconThemeName -s 'Yaru' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 10' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 11' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
     
+    # 2. Ventanas y Botones estilo Ubuntu
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
-    subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 10' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 11' --create -t string 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfwm4 -p /general/button_layout -s 'CHM|' --create -t string 2>/dev/null || true", shell=True, env=env)
 
+    # 3. Fondo de pantalla oficial
+    if wallpaper_file.exists():
+        subprocess.run(f"xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s '{wallpaper_file}' --create -t string 2>/dev/null || true", shell=True, env=env)
+        subprocess.run(f"xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/image-style -s 5 --create -t int 2>/dev/null || true", shell=True, env=env)
+
+    # 4. Iconos en el escritorio
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
@@ -187,7 +215,7 @@ try:
 except Exception:
     pass
 
-# Script auxiliar para instalar cualquier paquete
+# Script auxiliar para instalar cualquier paquete y recordarlo en GitHub
 install_helper = BASE_DIR / "instalar_y_guardar.sh"
 install_helper.write_text(
     "#!/bin/bash\n"
@@ -205,7 +233,7 @@ install_helper.write_text(
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
 
-# Accesos directos en el escritorio
+# Accesos directos oficiales en el escritorio
 shortcuts = {
     "🌸_LinuWaifu_AI_Studio.desktop": (
         "[Desktop Entry]\n"
@@ -244,7 +272,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📊 Monitor de 2x GPUs NVIDIA (nvtop)\n"
+        "Name=📊 Monitor GPUs Tesla T4 (nvtop)\n"
         "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
         "Icon=utilities-system-monitor\n"
         "Terminal=false\n"
@@ -268,9 +296,9 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDOR GRÁFICO 1080p Y AUTO-INICIAR LINUWAIFU STUDIO
+# 4. LEVANTAR SERVIDOR GRÁFICO FULL HD Y AUTO-INICIAR LINUWAIFU STUDIO
 # ==============================================================================
-print("🖥️ [5/6] Levantando pantalla 1080p y servidor gráfico...", flush=True)
+print("🖥️ [4/5] Levantando pantalla 1080p y servidor gráfico...", flush=True)
 
 # Iniciar servidor Xvfb a 1920x1080 24-bit
 xvfb_proc = subprocess.Popen([
@@ -301,7 +329,7 @@ def start_linuwaifu_backend():
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(2)
 
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu en la esquina de la pantalla
 subprocess.Popen([
     "chromium-browser",
     "--no-sandbox",
@@ -310,7 +338,7 @@ subprocess.Popen([
     f"--app=http://localhost:8000/avatars/studio.html"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-# Servidor VNC optimizado
+# Servidor VNC optimizado para 60 FPS
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "x11vnc", "-display", ":1",
@@ -333,7 +361,7 @@ time.sleep(2)
 # ==============================================================================
 # 5. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
 # ==============================================================================
-print("🌐 [6/6] Conectando túneles de acceso remoto...", flush=True)
+print("🌐 [5/5] Conectando túneles de acceso remoto...", flush=True)
 
 web_tunnel_url = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
@@ -402,10 +430,10 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU PERSISTENTE 100% ONLINE!
+# 🎉 ¡UBUNTU 24.04 NOBLE NUMBAT 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
-print("🎉 🌸 ¡TU LINUWAIFU CLOUD PC ESTÁ 100% ONLINE Y FUNCIONANDO!", flush=True)
+print("🎉 🌸 ¡TU UBUNTU 24.04 LTS NOBLE NUMBAT ESTÁ 100% ONLINE!", flush=True)
 print("=" * 78, flush=True)
 
 if web_tunnel_url:
@@ -413,7 +441,6 @@ if web_tunnel_url:
     print(f"👉 {web_tunnel_url}", flush=True)
     print("-" * 78, flush=True)
 
-# Buscar dirección de Pinggy
 pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
 print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
 print(f"👉 Servidor VNC: {pinggy_addr}", flush=True)
