@@ -1,18 +1,28 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: GUÍA DE COMANDOS (SESIÓN 100% LIMPIA)
+🌸 LINUWAIFU CLOUD PC: ARQUITECTURA MAESTRA DE 3 CELDAS
 ================================================================================
 
-📊 CELDA 1: EL MONITOR DE REGISTROS (EJECUTAR DE PRIMERO)
+🧹 CELDA 1: LIMPIEZA TOTAL Y RESETEO A CERO (EJECUTAR DE PRIMERO)
 --------------------------------------------------------------------------------
-Pega esto en la Celda 1 y dale Play (▶️):
+Pega esto en la Celda 1 y dale Play (▶️) para matar procesos viejos y limpiar la memoria:
 
-!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
+!pkill -9 -f 'python|Xvfb|x11vnc|novnc|websockify|ngrok|xfce|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true
+!rm -rf /kaggle/working/* /tmp/* /tmp/.* 2>/dev/null || true
+!echo "✅ [LIMPIEZA TOTAL]: Todos los procesos apagados y memoria reseteada a Cero."
 
 
 ================================================================================
-🖥️ CELDA 2: ARRANQUE DE LA PC EN LA NUBE (EJECUTAR DESPUÉS)
+📊 CELDA 2: MONITOR DE LOGS EN VIVO (EJECUTAR DESPUÉS)
 --------------------------------------------------------------------------------
-Toca "+ Code" en Kaggle para crear la Celda 2 abajo, pega esto y dale Play (▶️):
+Pega esto en la Celda 2 y dale Play (▶️). Se quedará escuchando en tiempo real:
+
+!git clone -q https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 -u /kaggle/working/StreamerIAWife/debug_monitor.py
+
+
+================================================================================
+🖥️ CELDA 3: ARRANQUE DE LA PC EN LA NUBE (EJECUTAR AL FINAL)
+--------------------------------------------------------------------------------
+Pega esto en la Celda 3 y dale Play (▶️) para encender tu PC, 5TB GDrive y Waifu IA:
 
 !cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
