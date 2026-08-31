@@ -1,14 +1,14 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: ARQUITECTURA MAESTRA DE 3 CELDAS
+🌸 LINUWAIFU CLOUD PC: ARQUITECTURA MAESTRA DE 3 CELDAS (100% SEGURA)
 ================================================================================
 
-🧹 CELDA 1: LIMPIEZA TOTAL Y RESETEO A CERO (EJECUTAR DE PRIMERO)
+🧹 CELDA 1: LIMPIEZA SEGURA Y RESETEO A CERO (EJECUTAR DE PRIMERO)
 --------------------------------------------------------------------------------
-Pega esto en la Celda 1 y dale Play (▶️) para matar procesos viejos y limpiar la memoria:
+Pega esto en la Celda 1 y dale Play (▶️) para limpiar procesos viejos en 1 segundo:
 
-!pkill -9 -f 'python|Xvfb|x11vnc|novnc|websockify|ngrok|xfce|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true
-!rm -rf /kaggle/working/* /tmp/* /tmp/.* 2>/dev/null || true
-!echo "✅ [LIMPIEZA TOTAL]: Todos los procesos apagados y memoria reseteada a Cero."
+!pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log /kaggle/working/noVNC /kaggle/working/LinuWaifu_State
+!echo "✅ [LIMPIEZA SEGURA]: Procesos apagados y memoria reseteada a 0."
 
 
 ================================================================================
