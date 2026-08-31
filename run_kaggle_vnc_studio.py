@@ -138,12 +138,12 @@ try:
     ], stdout=log_rclone, stderr=log_rclone)
     
     # Crear estructura base en Google Drive (solo si no existen)
-    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/system_state >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/Games >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"rclone mkdir gdrive:LinuWaifu_PC/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_state >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages >> {LOG_FILE} 2>&1 || true", shell=True)
     
     print("  ✅ [✓] Servidor de 5TB Google Drive montado y carpetas vinculadas (Puerto 8088).", flush=True)
-    log("Servidor Rclone WebDAV montado y estructura de 5TB vinculada.", "SUCCESS")
+    log("Servidor Rclone WebDAV montado y estructura de 5TB (PC_Kaggle) vinculada.", "SUCCESS")
 except Exception as e:
     log(f"Error iniciando Rclone WebDAV: {e}", "ERROR")
 
@@ -155,7 +155,7 @@ log("Restaurando estado personal del usuario desde Google Drive...")
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
     subprocess.run(
-        f"rclone copy gdrive:LinuWaifu_PC/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} >> {LOG_FILE} 2>&1 || true",
+        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} >> {LOG_FILE} 2>&1 || true",
         shell=True
     )
     if backup_tar.exists() and backup_tar.stat().st_size > 100:
@@ -462,15 +462,15 @@ def auto_save_user_state():
         
         save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
         subprocess.run(
-            f"tar -czf {save_tar} -C /root/ .config/ .local/share/ Games/ >> {LOG_FILE} 2>&1 || true",
+            f"tar -czf {save_tar} -C /root/ . >> {LOG_FILE} 2>&1 || true",
             shell=True
         )
         if save_tar.exists():
             subprocess.run(
-                f"rclone copy {save_tar} gdrive:LinuWaifu_PC/system_state/ >> {LOG_FILE} 2>&1 || true",
+                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ >> {LOG_FILE} 2>&1 || true",
                 shell=True
             )
-            log("Auto-guardado a Google Drive completado.", "SUCCESS")
+            log("Auto-guardado del sistema completo a Google Drive (PC_Kaggle) completado.", "SUCCESS")
     except Exception as e:
         log(f"Error en auto-guardado: {e}", "ERROR")
 
