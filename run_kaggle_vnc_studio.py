@@ -8,15 +8,14 @@ Entorno de escritorio oficial estilo Ubuntu Nativo:
 1. Apariencia Ubuntu 100%: Tema Yaru-Dark, Iconos Yaru, Fuentes Ubuntu,
    Barra superior con Menú de Aplicaciones, Reloj, Bandeja de sistema y Dock.
 2. Suite Completa de Programas:
-   - 🌐 Navegador Web rápido con aceleración GPU.
    - 📁 Explorador de Archivos (Thunar) con carpetas visuales y papelera.
    - 📝 Editor de Texto y Código (Mousepad) con resaltado de sintaxis.
    - 📊 Monitores de Rendimiento: nvtop (2x GPUs Tesla T4) y htop (CPU/RAM).
    - 🎬 Reproductor Multimedia (mpv) y Audio Virtual PulseAudio.
    - 💾 Google Drive (5TB vía Rclone WebDAV integrado).
-3. Conexión Dual:
+3. Conexión Dual No-Bloqueante:
+   - 🌐 Enlace Web inmediato (noVNC) vía Ngrok HTTP.
    - 📱 App Móvil RealVNC / AVNC (Modo Touchpad, Zoom con 2 dedos, 1080p).
-   - 🌐 Enlace Web directo (noVNC).
 4. Optimización de Almacenamiento: Ocupa < 550 MB, dejando +19 GB libres.
 ================================================================================
 """
@@ -44,14 +43,11 @@ print("=" * 75)
 # 1. INSTALACIÓN DE LA SUITE DE UBUNTU + LIMPIEZA DE ALMACENAMIENTO
 # ==============================================================================
 def setup_dependencies():
-    print("📦 [1/4] Instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop)...", flush=True)
+    print("📦 [1/4] Verificando e instalando Suite de Ubuntu (Yaru, XFCE4, Thunar, Mousepad, nvtop)...", flush=True)
     
-    # Mirror rápido y limpio
-    subprocess.run(
-        "rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True
-    )
+    # Limpiar repositorios rotos de Kaggle si los hay
+    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
     
-    # Paquetes esenciales seleccionados
     pkgs = [
         "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
         "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
@@ -94,17 +90,14 @@ try:
     xfconf_dir = Path.home() / ".config" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
     xfconf_dir.mkdir(parents=True, exist_ok=True)
     
-    # xsettings (Tema Yaru-dark, Iconos Yaru, Fuente Ubuntu)
     subprocess.run("xfconf-query -c xsettings -p /Net/ThemeName -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Net/IconThemeName -s 'Yaru' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 10' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 11' --create -t string 2>/dev/null || true", shell=True, env=env)
     
-    # xfwm4 (Bordes de ventana modernos oscuros)
     subprocess.run("xfconf-query -c xfwm4 -p /general/theme -s 'Yaru-dark' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfwm4 -p /general/title_font -s 'Ubuntu Bold 10' --create -t string 2>/dev/null || true", shell=True, env=env)
 
-    # xfdesktop (Iconos visibles en el escritorio)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/style -s 2 --create -t int 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
@@ -151,39 +144,18 @@ subprocess.Popen([
 time.sleep(2)
 
 # ==============================================================================
-# 4. TÚNELES DE ALTA VELOCIDAD (PINGGY TCP PARA APP + NGROK HTTP PARA WEB)
+# 4. TÚNELES DE ALTA VELOCIDAD (CONEXIÓN INMEDIATA SIN BLOQUEO)
 # ==============================================================================
 print("🌐 [4/4] Conectando túneles de acceso remoto...", flush=True)
 
-vnc_app_address = None
 web_tunnel_url = None
-
-# A) Túnel TCP Gratuito para App Móvil RealVNC (Pinggy - Cero tarjeta)
-try:
-    pinggy_proc = subprocess.Popen(
-        ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
-    for _ in range(25):
-        line = pinggy_proc.stdout.readline()
-        if "tcp://" in line:
-            match = re.search(r'tcp://([^\s]+)', line)
-            if match:
-                vnc_app_address = match.group(1)
-                break
-        time.sleep(0.3)
-except Exception as e:
-    print(f"⚠️ Aviso Pinggy TCP: {e}")
-
-# B) Túnel HTTP para Navegador Web (Ngrok HTTP)
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN":
     ngrok_token = sys.argv[1].strip()
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
+# 1. Conectar Túnel Web Ngrok HTTP primero (Instantáneo)
 if ngrok_token:
     try:
         from pyngrok import ngrok
@@ -194,8 +166,8 @@ if ngrok_token:
         ngrok.set_auth_token(ngrok_token)
         http_tunnel = ngrok.connect(6080, "http")
         web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale"
-    except Exception:
-        # Fallback a LocalTunnel
+    except Exception as e:
+        print(f"⚠️ Aviso Ngrok HTTP: {e}")
         try:
             subprocess.run("npm install -g localtunnel >/dev/null 2>&1 || true", shell=True)
             lt_proc = subprocess.Popen(["lt", "--port", "6080"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -208,6 +180,33 @@ if ngrok_token:
                     break
         except Exception:
             pass
+
+# 2. Conectar Túnel TCP Pinggy en hilo de segundo plano (Nunca bloquea)
+vnc_app_address = []
+def run_pinggy_tunnel():
+    try:
+        proc = subprocess.Popen(
+            ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            if "tcp://" in line or "pinggy" in line:
+                match = re.search(r'(?:tcp://)?([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
+                if match:
+                    addr = match.group(1).strip()
+                    if addr not in vnc_app_address:
+                        vnc_app_address.append(addr)
+                        print(f"\n📱 [PINGGY ACTIVO] Dirección para RealVNC Viewer: {addr}\n", flush=True)
+    except Exception:
+        pass
+
+threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
+time.sleep(3)
 
 # ==============================================================================
 # INFORMACIÓN DE HARDWARE Y DISCO
@@ -236,19 +235,15 @@ print("\n" + "=" * 75)
 print("🎉 🌸 ¡TU UBUNTU NATIVO PRO ESTÁ 100% ONLINE EN KAGGLE!")
 print("=" * 75)
 
-if vnc_app_address:
-    print("🌟 OPCIÓN 1: APP MÓVIL (Como Google Cloud + Chrome Desktop):")
-    print("   📱 Abre 'RealVNC Viewer' o 'AVNC' en tu celular.")
-    print("   ➕ Toca el botón '+' para agregar conexión.")
-    print(f"   👉 Servidor VNC: {vnc_app_address}")
-    print("   👉 Nombre: Ubuntu Kaggle PC")
-    print("   ✨ ¡Tendrás modo TOUCHPAD, ZOOM CON 2 DEDOS Y RESOLUCIÓN 1080P!")
+if web_tunnel_url:
+    print("🌐 OPCIÓN 1: ENLACE WEB DIRECTO (Chrome / Brave en celular):")
+    print(f"👉 {web_tunnel_url}")
     print("=" * 75)
 
-if web_tunnel_url:
-    print("🌐 OPCIÓN 2: ENLACE WEB DIRECTO (Chrome / Brave en celular):")
-    print(f"   👉 {web_tunnel_url}")
-    print("=" * 75)
+print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):")
+print("   • Abre RealVNC Viewer en tu celular -> Botón '+'")
+print("   • Pega la dirección de Pinggy que aparece arriba (o conéctate con la Web).")
+print("=" * 75)
 
 print("🖥️ PROGRAMAS INSTALADOS LISTOS EN EL MENÚ:")
 print("   • 📁 Thunar (Explorador de archivos visual y Google Drive)")
