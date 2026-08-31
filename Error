@@ -1,181 +1,75 @@
-¿Si tiene absolutamente todo lo que tiene que tener Ubuntu en una PC normal?
+Cloning into '/kaggle/working/StreamerIAWife'...
+remote: Enumerating objects: 460, done.
+remote: Counting objects: 100% (100/100), done.
+remote: Compressing objects: 100% (79/79), done.
+remote: Total 460 (delta 56), reused 55 (delta 21), pack-reused 360 (from 1)
+Receiving objects: 100% (460/460), 6.66 MiB | 21.11 MiB/s, done.
+Resolving deltas: 100% (265/265), done.
 
-~/Desktop# cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
-remote: Enumerating objects: 11, done.
-remote: Counting objects: 100% (11/11), done.
-remote: Compressing objects: 100% (6/6), done.
-remote: Total 9 (delta 4), reused 8 (delta 3), pack-reused 0 (from 0)
-Unpacking objects: 100% (9/9), 6.87 KiB | 2.29 MiB/s, done.
-From https://github.com/miguelguerra200022-sudo/StreamerIAWife
-   731a3d8..2ce5d4c  main       -> origin/main
-Updating 731a3d8..2ce5d4c
-Fast-forward
- INSTRUCCIONES_KAGGLE.txt   |  30 ++++++---
- check_system_full_audit.py | 151 +++++++++++++++++++++++++++++++++++++++++++++
- inspect_ubuntu_packages.py | 150 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 324 insertions(+), 7 deletions(-)
- create mode 100644 check_system_full_audit.py
- create mode 100644 inspect_ubuntu_packages.py
+==============================================================================
+🌸 INICIANDO LINUWAIFU CLOUD PC (KASMVNC 60 FPS WEBRTC + 5TB GDRIVE)...
+==============================================================================
+☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle)...
+W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
+  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.
+📦 [2/5] Instalando Ubuntu ligero + Motor KasmVNC WebRTC H.264 (60 FPS)...
+🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:17: Failed to resolve group 'kvm'.
+🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:18: Failed to resolve group 'kvm'.
+🔴 /usr/lib/tmpfiles.d/static-nodes-permissions.conf:19: Failed to resolve group 'kvm'.
+🔴 sda: Failed to write 'change' to '/sys/devices/pci0000:00/0000:00:03.0/virtio0/host0/target0:0:1/0:0:1:0/block/sda/uevent': Read-only file system
+🔴 Failed to send reload request: No such file or directory
+  🚀 Descargando e instalando KasmVNC 60 FPS (H.264 / WebRTC)...
+  ✅ [✓] Motor KasmVNC 60 FPS y Suite de Ubuntu instalados.
+  ℹ️ Primera ejecución: Creando entorno inicial limpio.
+🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
+🖥️ [4/5] Levantando pantalla 1080p y servidor KasmVNC 60 FPS...
+🔴 (xfce4-session:4065): dbind-WARNING **: 05:42:08.665: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (xfwm4:4096): dbind-WARNING **: 05:42:08.753: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (xfwm4:4096): GLib-CRITICAL **: 05:42:08.850: g_str_has_prefix: assertion 'prefix != NULL' failed
+⚠️ (xfwm4:4096): xfwm4-WARNING **: 05:42:09.518: Another compositing manager is running on screen 0
+🔴 (xfsettingsd:4111): dbind-WARNING **: 05:42:09.558: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (xfsettingsd:4111): GLib-CRITICAL **: 05:42:09.594: g_str_has_prefix: assertion 'prefix != NULL' failed
+🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.598: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.601: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 (xfsettingsd:4111): GLib-GObject-CRITICAL **: 05:42:09.611: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 (xfce4-panel:4114): dbind-WARNING **: 05:42:09.706: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (migrate:4119): dbind-WARNING **: 05:42:09.767: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (Thunar:4118): dbind-WARNING **: 05:42:09.777: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (xfdesktop:4127): dbind-WARNING **: 05:42:09.917: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (xfsettingsd:4130): dbind-WARNING **: 05:42:10.350: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (wrapper-2.0:4156): dbind-WARNING **: 05:42:10.754: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (wrapper-2.0:4157): dbind-WARNING **: 05:42:10.767: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+🔴 (wrapper-2.0:4162): dbind-WARNING **: 05:42:10.941: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+⚠️ (wrapper-2.0:4157): Gtk-WARNING **: 05:42:11.799: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
+⚠️ (wrapper-2.0:4162): Gtk-WARNING **: 05:42:11.850: Negative content width -1 (allocation 1, extents 1x1) while allocating gadget (node button, owner XfceArrowButton)
+⚠️ Warning: could not find self.pem
+🔴 31/08/2026 05:42:13   errors, etc) it may be disabled:
+🔴 31/08/2026 05:42:13   errors, etc) it may be disabled via: '-noscr'
+🌐 [5/5] Conectando túneles de transmisión WebRTC 60 FPS...
+                                                                                                    
+🎮 GPUs NVIDIA Tesla Activas: 2
+  • GPU 0: Tesla T4 (14.6 GB VRAM)
+  • GPU 1: Tesla T4 (14.6 GB VRAM)
+💾 Espacio Libre en Disco: 20G disponibles de 20G
 
-================================================================================
-       \U0001fa7a AUDITORÍA PROFUNDA DE PAQUETES Y ESTADO DE SALUD DE UBUNTU
-================================================================================
+==============================================================================
+🎉 🌸 ¡TU LINUWAIFU CLOUD PC (KASMVNC 60 FPS) ESTÁ 100% ONLINE!
+==============================================================================
+🚀 OPCIÓN 1: KASMVNC WEBRTC H.264 (60 FPS CRISTALINOS EN NAVEGADOR):
+👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev
+   • Transmisión de video continua H.264 en tiempo real.
+   • Texto 100% nítido, controles táctiles y cero latencia.
+------------------------------------------------------------------------------
+📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
+👉 Servidor VNC: free.pinggy.link (Consultando...)
+   • Abre RealVNC Viewer en tu celular -> Botón '+'
+   • Pega la dirección de arriba y toca 'Connect'.
+==============================================================================
+💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
+   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en el escritorio.
+   • 📦 Para instalar cualquier cosa usa: instalar <nombre>
+   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
+   • ⚡ Video H.264 / WebRTC acelerado a 60 FPS nativo.
+==============================================================================
 
-\U0001fa7a [1/5] VERIFICACIÓN DE INTEGRIDAD Y PAQUETES ROTOS:
---------------------------------------------------------------------------------
-  \u2705 [EXCELENTE]: Cero paquetes rotos o incompletos. Base de datos DPKG 100% íntegra.
-  \U0001f4e6 Total de paquetes instalados en el sistema: 2367 paquetes oficiales
-
-\U0001f4c2 [2/5] VERIFICACIÓN DE COMPONENTES POR CATEGORÍA:
---------------------------------------------------------------------------------
-
-\U0001f5a5\ufe0f ENTORNO GRÁFICO & X11:
-  \u2705 [INSTALADO] xfce4                    (4.16              ) -> Entorno de escritorio XFCE4 base
-  \u2705 [INSTALADO] xfce4-panel              (4.16.3-1          ) -> Barra de tareas y paneles
-  \u2705 [INSTALADO] xfdesktop4               (4.16.0-1          ) -> Gestor de iconos y fondos de pantalla
-  \u2705 [INSTALADO] thunar                   (4.16.10-1         ) -> Explorador de archivos oficial
-  \u2705 [INSTALADO] x11vnc                   (0.9.16-8          ) -> Servidor de control remoto VNC 60fps
-  \u2705 [INSTALADO] xvfb                     (2:21.1.4-2ubuntu1.7~22.04.16) -> Servidor de pantalla virtual 1080p
-  \u2705 [INSTALADO] dbus-x11                 (1.12.20-2ubuntu4.1) -> Bus de comunicación entre aplicaciones
-  \u2705 [INSTALADO] yaru-theme-gtk           (22.04.5           ) -> Tema visual oficial Yaru-Dark de Ubuntu
-  \u2705 [INSTALADO] yaru-theme-icon          (22.04.5           ) -> Set de iconos oficiales de Ubuntu
-  \u2705 [INSTALADO] fonts-ubuntu             (0.83-6ubuntu1     ) -> Tipografías oficiales de Canonical
-
-\U0001f3e2 SUITE OFIMÁTICA & DOCUMENTOS:
-  \u2705 [INSTALADO] libreoffice              (1:7.3.7-0ubuntu0.22.04.12) -> Suite ofimática completa de Ubuntu
-  \u2705 [INSTALADO] libreoffice-writer       (1:7.3.7-0ubuntu0.22.04.12) -> Procesador de textos (Word)
-  \u2705 [INSTALADO] libreoffice-calc         (1:7.3.7-0ubuntu0.22.04.12) -> Hoja de cálculo (Excel)
-  \u2705 [INSTALADO] libreoffice-impress      (1:7.3.7-0ubuntu0.22.04.12) -> Presentaciones (PowerPoint)
-  \u2705 [INSTALADO] evince                   (42.3-0ubuntu3.2   ) -> Visor de documentos y PDFs de GNOME
-  \u2705 [INSTALADO] gnome-calculator         (1:41.1-2ubuntu2   ) -> Calculadora oficial de GNOME
-
-\U0001f3ac MULTIMEDIA, AUDIO & CÓDECS:
-  \u2705 [INSTALADO] pulseaudio               (1:15.99.1+dfsg1-1ubuntu2.2) -> Servidor de audio virtual para transmisión
-  \u2705 [INSTALADO] pulseaudio-utils         (1:15.99.1+dfsg1-1ubuntu2.2) -> Herramientas de control de audio
-  \u2705 [INSTALADO] pavucontrol              (5.0-2             ) -> Control de volumen avanzado PulseAudio
-  \u26aa [NO PRESENTE] mpv                                          -> Reproductor multimedia acelerado por hardware
-  \u2705 [INSTALADO] ubuntu-restricted-extras (67                ) -> Códecs multimedia MP4, AAC, MP3 propietarios
-
-\U0001f310 NAVEGACIÓN & HERRAMIENTAS DE RED:
-  \u2705 [INSTALADO] chromium-browser         (1:85.0.4183.83-0ubuntu2.22.04.1) -> Navegador web Chromium
-  \u2705 [INSTALADO] curl                     (7.81.0-1ubuntu1.27) -> Herramienta de transferencias HTTP/HTTPS
-  \u2705 [INSTALADO] wget                     (1.21.2-2ubuntu1.5 ) -> Descargador de archivos por red
-  \u2705 [INSTALADO] rclone                   (1.53.3-4ubuntu1.22.04.5) -> Controlador de almacenamiento en la nube 5TB
-  \u2705 [INSTALADO] openssh-client           (1:8.9p1-3ubuntu0.16) -> Cliente SSH para túneles remotos seguros
-
-\U0001f6e0\ufe0f DESARROLLO, MONITOREO & COMPRESIÓN:
-  \u2705 [INSTALADO] htop                     (3.0.5-7build2     ) -> Monitor interactivo de CPU y Memoria RAM
-  \u2705 [INSTALADO] nvtop                    (1.2.2-1           ) -> Monitor en tiempo real de 2x GPUs NVIDIA
-  \u2705 [INSTALADO] p7zip-full               (16.02+dfsg-8      ) -> Compresor y descompresor 7-Zip y RAR
-  \u2705 [INSTALADO] unzip                    (6.0-26ubuntu3.2   ) -> Extractor de archivos ZIP
-  \u2705 [INSTALADO] git                      (1:2.34.1-1ubuntu1.17) -> Sistema de control de versiones Git
-  \u2705 [INSTALADO] python3                  (3.10.6-1~22.04.1  ) -> Intérprete oficial de Python 3
-
-\U0001f418 [3/5] TOP 20 PAQUETES MÁS GRANDES EN EL DISCO:
---------------------------------------------------------------------------------
-  \u2022 libcublas-dev-12-8                     :  1210.88 MB (1,239,942 KB)
-  \u2022 nsight-compute-2025.1.1                :  1139.74 MB (1,167,089 KB)
-  \u2022 libcudnn9-cuda-12                      :   998.57 MB (1,022,539 KB)
-  \u2022 libcublas-12-8                         :   828.74 MB (848,629 KB)
-  \u2022 libmkl-computational-dev               :   639.51 MB (654,855 KB)
-  \u2022 libcufft-dev-12-8                      :   546.34 MB (559,455 KB)
-  \u2022 libcusparse-dev-12-8                   :   402.94 MB (412,608 KB)
-  \u2022 libcusolver-12-8                       :   384.23 MB (393,448 KB)
-  \u2022 libnccl-dev                            :   371.01 MB (379,918 KB)
-  \u2022 libcusparse-12-8                       :   368.76 MB (377,610 KB)
-  \u2022 libnccl2                               :   365.81 MB (374,588 KB)
-  \u2022 fonts-noto-extra                       :   326.40 MB (334,238 KB)
-  \u2022 libnpp-dev-12-8                        :   318.62 MB (326,266 KB)
-  \u2022 firefox                                :   310.47 MB (317,924 KB)
-  \u2022 libnpp-12-8                            :   305.40 MB (312,734 KB)
-  \u2022 thunderbird                            :   297.31 MB (304,447 KB)
-  \u2022 libcusolver-dev-12-8                   :   272.30 MB (278,833 KB)
-  \u2022 libmkl-threading-dev                   :   270.21 MB (276,690 KB)
-  \u2022 libcufft-12-8                          :   266.79 MB (273,190 KB)
-  \u2022 cuda-nvrtc-dev-12-8                    :   248.25 MB (254,209 KB)
-
-\u2699\ufe0f [4/5] ESTADO EN VIVO DE LOS SERVICIOS Y PROCESOS:
---------------------------------------------------------------------------------
-  \U0001f7e2 Pantalla Virtual X11 (:1)        : ACTIVO (PID: 21021)
-  \U0001f7e2 Escritorio XFCE4 / Session       : ACTIVO (PID: 21026)
-  \U0001f7e2 Panel de Escritorio XFCE         : ACTIVO (PID: 21114)
-  \U0001f7e2 Gestor de Fondos xfdesktop       : ACTIVO (PID: 21123)
-  \U0001f7e2 Audio Virtual PulseAudio         : ACTIVO (PID: 21184)
-  \U0001f7e2 Servidor Remoto x11vnc           : ACTIVO (PID: 21436)
-  \U0001f7e2 Servidor Web noVNC / Proxy       : ACTIVO (PID: 21445)
-  \U0001f7e2 Servidor Google Drive 5TB        : ACTIVO (PID: 24110)
-  \U0001f7e2 Túnel Seguro Pinggy TCP          : ACTIVO (PID: 21475)
-  \U0001f7e2 Túnel Web Ngrok HTTP             : ACTIVO (PID: 21462)
-
-================================================================================
-\U0001f4ca BALANCE GENERAL: 31 de 32 componentes verificados (96.9% de cobertura)
-\U0001f389 [ESTADO DEL SISTEMA]: \U0001f7e2 100% SALUDABLE Y LISTO PARA TRABAJAR Y JUGAR
-================================================================================
-/kaggle/working/StreamerIAWife# cd /kaggle/working/StreamerIAWife && git pull && python3 check_system_full_audit.py
-Already up to date.
-
-================================================================================
-             \U0001f50d REPORTE DE AUDITORÍA COMPLETA DEL SISTEMA EN LA NUBE
-================================================================================
-
-\U0001f427 [1/7] SISTEMA OPERATIVO Y KERNEL:
---------------------------------------------------------------------------------
-  \u2022 Distribución:   Description:	Ubuntu 22.04.5 LTS
-  \u2022 Kernel Linux:   6.12.90+
-  \u2022 Arquitectura:   x86_64
-  \u2022 Tiempo Activo:  up 45 minutes
-
-\u2699\ufe0f [2/7] PROCESADOR Y MEMORIA RAM:
---------------------------------------------------------------------------------
-  \u2022 CPU Modelo:     Intel(R) Xeon(R) CPU @ 2.00GHz
-  \u2022 Núcleos CPU:    4 vCPUs
-  \u2022 Memoria RAM:    Total: 31Gi | Usada: 2.6Gi | Libre: 14Gi | Disponible: 28Gi
-
-\U0001f3ae [3/7] TARJETAS GRÁFICAS NVIDIA TESLA (GPU ACELERACIÓN):
---------------------------------------------------------------------------------
-  \u2022 GPUs Detectadas: 2 Activas
-    \u25b6 GPU 0: Tesla T4 | VRAM: 14.56 GB | Compute Cap: 7.5
-    \u25b6 GPU 1: Tesla T4 | VRAM: 14.56 GB | Compute Cap: 7.5
-  \u2022 Versión CUDA:    12.8
-
-\U0001f4be [4/7] ALMACENAMIENTO EN DISCO:
---------------------------------------------------------------------------------
-  Filesystem      Size  Used Avail Use% Mounted on
-  overlay         7.9T  6.9T  1.0T  88% /
-  /dev/loop1       20G   22M   20G   1% /kaggle/working
-
-\U0001f5a5\ufe0f [5/7] INTERFAZ GRÁFICA, ESCRITORIO Y AUDIO:
---------------------------------------------------------------------------------
-  \u2022 Servidor X11 Display :1 (1080p): \U0001f7e2 ACTIVO (1920x1080)
-  \u2022 Entorno de Escritorio XFCE4:    \U0001f7e2 ACTIVO
-  \u2022 Servidor de Audio PulseAudio:   \U0001f534 INACTIVO
-  \u2022 Tema Visual Oficial:            Greybird
-  \u2022 Iconos Oficiales:               elementary-xfce-dark
-
-\U0001f310 [6/7] MAPA DE PUERTOS DE RED Y CONECTIVIDAD:
---------------------------------------------------------------------------------
-  \u2022 Puerto 5900: \U0001f7e2 ABIERTO / ESCUCHANDO    -> x11vnc (Servidor VNC Nativo TCP)
-  \u2022 Puerto 6080: \U0001f7e2 ABIERTO / ESCUCHANDO    -> noVNC (Servidor Web VNC para Navegador)
-  \u2022 Puerto 8088: \u26aa NO INICIADO             -> Google Drive 5TB (Servidor WebDAV Rclone)
-  \u2022 Puerto 8000: \u26aa NO INICIADO             -> LinuWaifu IA Studio 3D (WebSocket & Audio)
-
-\U0001f4e6 [7/7] SUITES DE SOFTWARE Y APLICACIONES INSTALADAS:
---------------------------------------------------------------------------------
-  \u2022 Total Paquetes del Sistema:   2367 instalados
-  \u2705 LibreOffice Suite       : LibreOffice 7.3.7.2 30(Build:2)
-  \u26aa Chromium Browser        : No instalado
-  \u2705 Explorador Thunar       : thunar 4.16.10 (Xfce 4.16)
-  \u2705 Visor Evince PDF        : GNOME Document Viewer 42.3
-  \u26aa Calculadora GNOME       : No instalado
-  \u2705 Monitor nvtop (GPU)     : nvtop version 1.2.2
-  \u2705 Monitor htop (CPU)      : htop 3.0.5
-  \u2705 Compresor 7-Zip         : 7-Zip [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
-  \u2705 Rclone 5TB Cloud        : rclone v1.53.3-DEV
-  \u2705 Python 3                : Python 3.12.13
-  \u2705 Git Version Control     : git version 2.34.1
-
-================================================================================
-\U0001f389 AUDITORÍA FINALIZADA: Tu sistema en la nube está completamente inspeccionado.
-================================================================================
-
-/kaggle/working/StreamerIAWife# 
+t=2026-08-31T05:42:33+0000 lvl=warn msg="failed to open private leg" id=660fb95b9485 privaddr=localhost:8444 err="dial tcp [::1]:8444: connect: connection refused"
