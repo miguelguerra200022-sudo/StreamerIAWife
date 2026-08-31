@@ -44,8 +44,12 @@ def log(msg, level="INFO"):
     except Exception:
         pass
 
-# Hilo de transmisión de logs y errores en tiempo real a la consola (filtrando ruido irrelevante)
-IGNORE_KEYWORDS = ["unsupported gl renderer", "remote volume monitor", "not starting for system user", "pm-is-supported", "assertion 'source != null'"]
+# Hilo de transmisión de logs (filtrando reintentos irrelevantes de UI)
+IGNORE_KEYWORDS = [
+    "unsupported gl renderer", "remote volume monitor", "not starting for system user",
+    "pm-is-supported", "assertion 'source != null'", "pulseaudio-plugin-warning",
+    "attempting to reconnect in 5 seconds", "calling canshutdown failed", "calling canrestart failed"
+]
 
 def live_log_streamer():
     last_size = 0
@@ -61,7 +65,7 @@ def live_log_streamer():
                         for line in new_text.splitlines():
                             l_strip = line.strip()
                             if l_strip and not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
-                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower() or "quota exceeded" in l_strip.lower():
+                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower():
                                     print(f"🔴 {l_strip}", flush=True)
                                 elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
                                     print(f"⚠️ {l_strip}", flush=True)
@@ -103,7 +107,7 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
 # Instalar rclone rápido si no está presente
 subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
 
-# Iniciar servidor Rclone WebDAV con límite de peticiones (tpslimit) para evitar Error 403 Rate Limit
+# Iniciar servidor Rclone WebDAV
 try:
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
@@ -111,17 +115,10 @@ try:
         "--addr", "127.0.0.1:8088",
         "--read-only=false",
         "--vfs-cache-mode", "writes",
-        "--tpslimit", "10",
+        "--tpslimit", "5",
         "--drive-chunk-size", "64M"
     ], stdout=log_rclone, stderr=log_rclone)
     time.sleep(1)
-    
-    # Crear estructura base en Google Drive de forma pausada
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_state --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
-    time.sleep(0.5)
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/Games --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
-    time.sleep(0.5)
-    subprocess.run(f"rclone mkdir gdrive:PC_Kaggle/system_packages --tpslimit 5 >> {LOG_FILE} 2>&1 || true", shell=True)
     
     print("  ✅ [✓] Unidad de 5TB Google Drive conectada como Disco Principal.", flush=True)
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
@@ -139,7 +136,7 @@ base_pkgs = [
     "xfce4", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
     "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb", "x11-xserver-utils",
     "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound", "fonts-ubuntu",
-    "pulseaudio", "pulseaudio-utils", "net-tools", "wget", "curl", "psmisc", "openssh-client",
+    "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools", "wget", "curl", "psmisc", "openssh-client",
     "chromium-browser", "greybird-gtk-theme", "p7zip-full", "unzip"
 ]
 
@@ -173,16 +170,18 @@ if not novnc_dir.exists():
 
 print("  ✅ [✓] Suite de Ubuntu 24.04 y herramientas instaladas.", flush=True)
 
-# Restaurar estado personal guardado de Google Drive
+# Restaurar estado personal guardado de Google Drive (solo si existe)
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
-    subprocess.run(
+    res = subprocess.run(
         f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 5 >> {LOG_FILE} 2>&1 || true",
         shell=True
     )
-    if backup_tar.exists() and backup_tar.stat().st_size > 100:
+    if backup_tar.exists() and backup_tar.stat().st_size > 1000:
         subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
         print("  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
+    else:
+        print("  ℹ️ Primera ejecución: Creando entorno inicial limpio.", flush=True)
 except Exception:
     pass
 
@@ -193,6 +192,7 @@ print("🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...", 
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
+env["PULSE_SERVER"] = "127.0.0.1"
 
 desktop_dir = Path.home() / "Desktop"
 desktop_dir.mkdir(parents=True, exist_ok=True)
@@ -303,7 +303,7 @@ for fname, content in shortcuts.items():
     s_path.chmod(0o755)
 
 # ==============================================================================
-# 4. LEVANTAR SERVIDOR GRÁFICO 1080p, ESCRITORIO Y BACKEND IA
+# 4. LEVANTAR SERVIDOR GRÁFICO 1080p, ESCRITORIO Y PULSEAUDIO NATIVO TCP
 # ==============================================================================
 print("🖥️ [4/5] Levantando pantalla 1080p y servidor de escritorio...", flush=True)
 
@@ -315,8 +315,18 @@ xvfb_proc = subprocess.Popen([
 ], env=env)
 time.sleep(2)
 
-# Establecer cursor de flecha y fondo oficial de Ubuntu (Aubergine) para evitar pantalla negra con X
+# Establecer cursor de flecha y fondo oficial de Ubuntu (Aubergine)
 subprocess.run("xsetroot -display :1 -solid '#2c001e' -cursor_name left_ptr 2>/dev/null || true", shell=True)
+
+# Iniciar PulseAudio nativo en modo TCP local para que el panel de XFCE se conecte instantáneamente sin errores
+subprocess.run(
+    "pulseaudio -k 2>/dev/null || true; "
+    "pulseaudio -D --exit-idle-time=-1 --system=false "
+    "--load='module-native-protocol-tcp auth-anonymous=1 port=4713' "
+    "--load='module-null-sink sink_name=VirtualSink' >> {LOG_FILE} 2>&1 || true",
+    shell=True, env=env
+)
+time.sleep(1)
 
 # Iniciar sesión de escritorio completa XFCE4
 log_xfce = open(LOG_FILE, "a", encoding="utf-8")
@@ -324,10 +334,6 @@ subprocess.Popen([
     "dbus-launch", "--exit-with-session", "startxfce4"
 ], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(3)
-
-# Iniciar PulseAudio virtual
-subprocess.run(f"pulseaudio --start --exit-idle-time=-1 --daemonize=true >> {LOG_FILE} 2>&1 || true", shell=True)
-subprocess.run(f"pactl load-module module-null-sink sink_name=VirtualSink >> {LOG_FILE} 2>&1 || true", shell=True)
 
 # Iniciar backend de LinuWaifu
 def start_linuwaifu_backend():
