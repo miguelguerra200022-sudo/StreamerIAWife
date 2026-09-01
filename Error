@@ -1,21 +1,98 @@
-Mira lo que me salio:
+Mira lo que me salio ahora:
 
 
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 512, done.
-remote: Counting objects: 100% (152/152), done.
-remote: Compressing objects: 100% (125/125), done.
-remote: Total 512 (delta 85), reused 73 (delta 26), pack-reused 360 (from 1)
-Receiving objects: 100% (512/512), 6.73 MiB | 20.46 MiB/s, done.
-Resolving deltas: 100% (294/294), done.
+remote: Enumerating objects: 518, done.
+remote: Counting objects: 100% (158/158), done.
+remote: Compressing objects: 100% (130/130), done.
+remote: Total 518 (delta 89), reused 75 (delta 27), pack-reused 360 (from 1)
+Receiving objects: 100% (518/518), 6.73 MiB | 18.59 MiB/s, done.
+Resolving deltas: 100% (298/298), done.
 
 ==============================================================================
 🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...
 ==============================================================================
 ☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...
-W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
   ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.
   🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...
+🔴 2026/09/01 01:13:25 Fatal error: Directory is not empty: /root/gdrive If you want to mount it anyway use: --allow-non-empty option
 📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...
-🔴 2026/09/01 00:57:15 Failed to create file system for "gdrive:PC_Kaggle": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
-🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.
+  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
+🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
+🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...
+🔴 ** (xfce4-power-manager:22129): WARNING **: 01:15:25.396: Failed to get name owner: GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Could not get owner of name 'org.freedesktop.PowerManagement': no such name
+🔴 ** (xfce4-power-manager:22129): WARNING **: 01:15:25.397: Failed to get name owner: GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Could not get owner of name 'org.xfce.PowerManager': no such name
+🔴 01/09/2026 01:15:25   errors, etc) it may be disabled:
+🔴 01/09/2026 01:15:25   errors, etc) it may be disabled via: '-noscr'
+⚠️ (xfce4-power-manager:22129): xfce4-power-manager-WARNING **: 01:15:25.559: Monitor is not DPMS capable
+🔴 01/09/2026 01:15:25 webSocketsHandshake: unknown connection error
+⚠️ Warning: could not find self.pem
+⚠️ (xfce4-power-manager:22129): GLib-GObject-WARNING **: 01:15:25.752: ../../../gobject/gsignal.c:2613: signal 'Changed' is invalid for instance '0x5717d7997170' of type 'GDBusProxy'
+⚠️ ** (xfce4-screensaver:22128): WARNING **: 01:15:25.779: screensaver already running in this session
+🔴 ModuleNotFoundError: No module named 'cups'
+⚠️ (xfce4-power-manager:22129): xfce4-power-manager-WARNING **: 01:15:25.909: could not map keysym 1008ffa8 to keycode
+🔴 ** (xfce4-power-manager:22129): WARNING **: 01:15:25.910: Failed to get name owner: GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Could not get owner of name 'org.freedesktop.login1': no such name
+⚠️ ** (xfce4-power-manager:22129): WARNING **: 01:15:25.920: No outputs have backlight property
+🔴 ** (xfpm-power-backlight-helper:22234): WARNING **: 01:15:25.926: failed to find any devices: Error opening directory ?/sys/class/backlight?: No such file or directory
+🔴 (xfce4-power-manager:22129): xfce4-power-manager-WARNING **: 01:15:25.930: Failed to get keyboard max brightness level : GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: Object does not exist at path “/org/freedesktop/UPower/KbdBacklight”
+⚠️ ** (xiccd:22178): WARNING **: 01:15:26.135: EDID is empty
+🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...
+⚠️ ** (wrapper-2.0:22227): WARNING **: 01:15:27.483: No outputs have backlight property
+🔴 ** (xfpm-power-backlight-helper:22416): WARNING **: 01:15:27.499: failed to find any devices: Error opening directory ?/sys/class/backlight?: No such file or directory
+🔴 (wrapper-2.0:22229): GLib-GIO-CRITICAL **: 01:15:27.577: g_file_new_for_path: assertion 'path != NULL' failed
+🔴 (wrapper-2.0:22229): GLib-GIO-CRITICAL **: 01:15:27.577: g_file_monitor_file: assertion 'G_IS_FILE (file)' failed
+⚠️ (wrapper-2.0:22229): GLib-GObject-WARNING **: 01:15:27.577: invalid (NULL) pointer instance
+🔴 (wrapper-2.0:22229): GLib-GObject-CRITICAL **: 01:15:27.577: g_signal_connect_data: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed
+⚠️ (wrapper-2.0:22229): Gtk-WARNING **: 01:15:27.578: Attempting to add a widget with type GtkToggleButton to a container of type XfcePanelPlugin, but the widget is already inside a container of type XfcePanelPlugin, please remove the widget from its existing container first.
+🔴 (wrapper-2.0:22227): Gtk-CRITICAL **: 01:15:27.710: gtk_icon_theme_has_icon: assertion 'icon_name != NULL' failed
+🔴 (wrapper-2.0:22227): Gtk-CRITICAL **: 01:15:27.718: gtk_icon_theme_has_icon: assertion 'icon_name != NULL' failed
+🔴 (wrapper-2.0:22227): Gtk-CRITICAL **: 01:15:27.718: gtk_icon_theme_has_icon: assertion 'icon_name != NULL' failed
+⚠️ (wrapper-2.0:22226): Gtk-WARNING **: 01:15:27.903: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PulseaudioButton)
+🔴 (wrapper-2.0:22227): Gtk-CRITICAL **: 01:15:28.057: gtk_icon_theme_has_icon: assertion 'icon_name != NULL' failed
+⚠️ (wrapper-2.0:22229): Gtk-WARNING **: 01:15:28.937: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner GtkToggleButton)
+⚠️ (wrapper-2.0:22227): Gtk-WARNING **: 01:15:28.959: Negative content width -3 (allocation 1, extents 2x2) while allocating gadget (node button, owner PowerManagerButton)
+
+🎮 GPUs NVIDIA Tesla Activas: 2
+  • GPU 0: Tesla T4 (14.6 GB VRAM)
+  • GPU 1: Tesla T4 (14.6 GB VRAM)
+💾 Espacio Libre en Disco: 19G disponibles de 20G
+
+==============================================================================
+🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!
+==============================================================================
+  • Servidor X11 Display :1 (1080p):  🟢 OPERATIVO
+  • Servidor VNC Nativo (5900):       🟢 OPERATIVO
+  • Servidor Web noVNC (6080):        🟢 OPERATIVO
+  • Google Drive 5TB FUSE Mount:      🟢 MONTADO (/root/gdrive)
+------------------------------------------------------------------------------
+🚀 OPCIÓN 1: ENLACE WEB DIRECTO (PANTALLA COMPLETA 1080p NATIVA):
+👉 https://thoroughgoingly-unrefreshing-alishia.ngrok-free.dev/vnc.html?autoconnect=true&resize=scale&quality=9
+   • Abre en Chrome o Brave móvil: se expande 100% de borde a borde.
+------------------------------------------------------------------------------
+📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):
+👉 Servidor VNC: free.pinggy.link (Consultando...)
+   • Abre RealVNC Viewer en tu celular -> Botón '+'
+   • Pega la dirección de arriba y toca 'Connect'.
+==============================================================================
+💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:
+   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en /root/gdrive.
+   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.
+   • 🎬 Suite Multimedia y Códecs oficiales de Ubuntu listos.
+   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.
+   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.
+==============================================================================
+
+..........Author identity unknown
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'root@84493d457952.(none)')
