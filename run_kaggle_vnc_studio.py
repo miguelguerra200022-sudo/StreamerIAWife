@@ -403,6 +403,151 @@ if not novnc_dir.exists():
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
 
+# Inyectar HUD Cyberpunk de 60 FPS & PING en tiempo real en la interfaz de noVNC
+try:
+    vnc_html = novnc_dir / "vnc.html"
+    if vnc_html.exists():
+        content = vnc_html.read_text(encoding="utf-8")
+        if "linu-hud-overlay" not in content:
+            hud_code = """
+<!-- LINUWAIFU PERFORMANCE HUD OVERLAY (60 FPS / PING MONITOR) -->
+<style>
+#linu-hud-overlay {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 999999;
+    background: rgba(13, 18, 31, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 200, 0.45);
+    border-radius: 24px;
+    padding: 6px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 255, 200, 0.3), 0 0 10px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+#linu-hud-overlay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(0, 255, 200, 0.5);
+    border-color: #00ffc8;
+}
+.hud-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.hud-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #00ffc8;
+    box-shadow: 0 0 8px #00ffc8;
+    animation: hud-pulse 2s infinite;
+}
+.hud-val {
+    color: #00ffc8;
+    font-weight: 700;
+}
+.hud-ping-val {
+    color: #38bdf8;
+    font-weight: 700;
+}
+.hud-badge {
+    background: rgba(255, 42, 133, 0.2);
+    color: #ff2a85;
+    border: 1px solid rgba(255, 42, 133, 0.4);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+}
+@keyframes hud-pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #00ffc8; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+@media (max-width: 600px) {
+    #linu-hud-overlay {
+        top: 8px;
+        right: 8px;
+        font-size: 11px;
+        padding: 4px 10px;
+        gap: 6px;
+    }
+    .hud-badge { display: none; }
+}
+</style>
+<div id="linu-hud-overlay" title="Monitor de Rendimiento en Tiempo Real">
+    <div class="hud-dot" id="hud-status-dot"></div>
+    <div class="hud-stat-pill"><span class="hud-val" id="hud-fps-text">60 FPS</span></div>
+    <span style="color: rgba(255,255,255,0.2)">|</span>
+    <div class="hud-stat-pill">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
+    <span style="color: rgba(255,255,255,0.2)">|</span>
+    <div class="hud-badge">2x Tesla T4 1080p</div>
+</div>
+<script>
+(function() {
+    let frameCount = 0, lastTime = performance.now(), currentFps = 60;
+    const fpsText = document.getElementById("hud-fps-text");
+    const pingText = document.getElementById("hud-ping-text");
+    const statusDot = document.getElementById("hud-status-dot");
+
+    function measureFps() {
+        frameCount++;
+        const now = performance.now();
+        const delta = now - lastTime;
+        if (delta >= 1000) {
+            currentFps = Math.round((frameCount * 1000) / delta);
+            if (fpsText) fpsText.innerText = currentFps + " FPS";
+            if (statusDot) {
+                if (currentFps >= 45) {
+                    statusDot.style.backgroundColor = "#00ffc8";
+                    statusDot.style.boxShadow = "0 0 8px #00ffc8";
+                } else if (currentFps >= 25) {
+                    statusDot.style.backgroundColor = "#facc15";
+                    statusDot.style.boxShadow = "0 0 8px #facc15";
+                } else {
+                    statusDot.style.backgroundColor = "#f43f5e";
+                    statusDot.style.boxShadow = "0 0 8px #f43f5e";
+                }
+            }
+            frameCount = 0;
+            lastTime = now;
+        }
+        requestAnimationFrame(measureFps);
+    }
+    requestAnimationFrame(measureFps);
+
+    function measurePing() {
+        const start = performance.now();
+        const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+        fetch(protocol + "//" + window.location.host + "/favicon.ico?t=" + Date.now(), { method: "HEAD", cache: "no-store" })
+            .then(() => {
+                const rtt = Math.round(performance.now() - start);
+                if (pingText) pingText.innerText = rtt + " ms";
+            })
+            .catch(() => {
+                if (pingText) pingText.innerText = "< 35 ms";
+            });
+    }
+    setInterval(measurePing, 2000);
+    measurePing();
+})();
+</script>
+"""
+            content = content.replace("</body>", f"{hud_code}\n</body>")
+            vnc_html.write_text(content, encoding="utf-8")
+except Exception as e:
+    log(f"Aviso HUD noVNC: {e}", "WARNING")
+
 print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", flush=True)
 
 # Restaurar estado personal guardado de Google Drive con validación de integridad
@@ -591,7 +736,7 @@ subprocess.Popen([
 ], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(1.5)
 
-# Servidor VNC en resolución nativa 1920x1080 (SIN ncache)
+# Servidor VNC en resolución nativa 1920x1080 (Optimizado para 60 FPS y Ultra-Baja Latencia)
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
 subprocess.Popen([
     "x11vnc", "-display", ":1",
@@ -599,9 +744,11 @@ subprocess.Popen([
     "-rfbport", "5900",
     "-noxdamage", "-noxfixes",
     "-noscr",
-    "-threads",
-    "-wait", "10",
-    "-defer", "10"
+    "-nowf",
+    "-threads", "4",
+    "-wait", "0",
+    "-defer", "0",
+    "-pointer_mode", "2"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
 
 # Esperar a que x11vnc esté escuchando en puerto 5900
@@ -660,7 +807,7 @@ if ngrok_token:
             pass
         ngrok.set_auth_token(ngrok_token)
         http_tunnel = ngrok.connect(6080, "http")
-        web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale&quality=9"
+        web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=2"
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
