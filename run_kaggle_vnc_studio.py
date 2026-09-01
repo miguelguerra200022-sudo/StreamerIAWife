@@ -417,10 +417,12 @@ if master_archives_dir and master_archives_dir.exists():
     os.environ["NEEDRESTART_SUSPEND"] = "1"
     subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
 
-    # 2. Desempaquetado masivo de los 1,109 paquetes oficiales del Dataset (Ultra-rápido en NVMe)
+    # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo: evita error de argumento largo)
     print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset a disco local...", flush=True)
-    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1", shell=True)
-    
+    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
+    if res_dpkg.returncode != 0:
+        log(f"Aviso en dpkg unpack (código {res_dpkg.returncode}). Continuando con configuración...", "WARNING")
+
     # 3. Configuración y resolución de dependencias del sistema
     print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
     res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a >> {LOG_FILE} 2>&1", shell=True)
