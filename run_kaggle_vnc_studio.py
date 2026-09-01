@@ -69,7 +69,14 @@ IGNORE_KEYWORDS = [
     "wnck_is_window", "tpm0: failed to write", "tpmrm0: failed to write", "sda: failed to write",
     "failed to send reload request", "g_value_get_string", "another compositing manager is running",
     "g_str_has_prefix", "update-rc.d: warning", "update-inetd: warning",
-    "the home dir /var/lib/usbmux", "adduser: warning"
+    "the home dir /var/lib/usbmux", "adduser: warning", "xfce4-power-manager",
+    "xfpm-power-backlight-helper", "wrapper-2.0", "xiccd", "websocketshandshake",
+    "could not find self.pem", "screensaver already running", "no module named 'cups'",
+    "org.freedesktop.powermanagement", "org.xfce.powermanager", "org.freedesktop.login1",
+    "monitor is not dpms capable", "failed to find any devices", "no outputs have backlight property",
+    "g_file_new_for_path", "gtk-warning", "gtk-critical", "glib-gio-critical",
+    "glib-gobject-critical", "glib-gobject-warning", "negative content width",
+    "attempting to add a widget with type", "edid is empty", "could not map keysym"
 ]
 
 def live_log_streamer():
@@ -128,6 +135,9 @@ def wait_for_port(port, timeout=15):
         except Exception:
             time.sleep(0.2)
     return False
+
+# Configuración global de identidad Git para auto-guardado
+subprocess.run("git config --global user.email 'miguelguerra200022@gmail.com' && git config --global user.name 'Miguel Guerra' 2>/dev/null || true", shell=True)
 
 # Función de auto-guardado a Google Drive (Excluyendo gdrive para evitar loops recursivos)
 def auto_save_user_state():
@@ -220,6 +230,7 @@ try:
         "rclone", "mount", "gdrive:", "/root/gdrive",
         "--vfs-cache-mode", "writes",
         "--vfs-cache-max-age", "24h",
+        "--allow-non-empty",
         "--tpslimit", "3",
         "--tpslimit-burst", "1",
         "--drive-pacer-min-sleep", "100ms",
