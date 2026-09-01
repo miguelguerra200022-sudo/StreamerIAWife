@@ -95,9 +95,14 @@ def live_log_streamer():
                             l_strip = line.strip()
                             if l_strip and not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
                                 ts = time.strftime("%H:%M:%S")
-                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower() or "fatal" in l_strip.lower() or "critical" in l_strip.lower():
+                                l_low = l_strip.lower()
+                                if "got connection" in l_low or "client connected" in l_low or "new client" in l_low:
+                                    print(f"\n👥 [{ts}] [CONEXIÓN CLIENTE VNC] {l_strip}", flush=True)
+                                elif "client closed" in l_low or "client disconnected" in l_low or "closing connection" in l_low:
+                                    print(f"\n🔌 [{ts}] [DESCONEXIÓN CLIENTE VNC] {l_strip}", flush=True)
+                                elif "error" in l_low or "failed" in l_low or "exception" in l_low or "fatal" in l_low or "critical" in l_low:
                                     print(f"\n🔴 [{ts}] [FALLO DETECTADO] {l_strip}", flush=True)
-                                elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
+                                elif "warning" in l_low or "warn" in l_low or "slow" in l_low or "drop" in l_low:
                                     print(f"\n⚠️ [{ts}] [ADVERTENCIA] {l_strip}", flush=True)
             time.sleep(0.5)
         except Exception:
@@ -953,7 +958,21 @@ try:
             try:
                 ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
                 disk_str = subprocess.check_output("df -h /kaggle/working | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
-                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | 🟢 RAM: {ram_str} | 💾 Disco: {disk_str} | ☁️ Drive: {'Conectado' if drive_alive else 'Desconectado'} | Estado Guardado ✅", flush=True)
+                gpu_info = ""
+                try:
+                    gpu_lines = subprocess.check_output("nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True).strip().splitlines()
+                    if gpu_lines:
+                        gpu_parts = []
+                        for g in gpu_lines:
+                            parts = [x.strip() for x in g.split(",")]
+                            if len(parts) >= 4:
+                                idx, util, mem_u, mem_t = parts[0], parts[1], parts[2], parts[3]
+                                gpu_parts.append(f"T4-{idx}: {util}% ({mem_u}/{mem_t}MB)")
+                        if gpu_parts:
+                            gpu_info = " | 🎮 " + ", ".join(gpu_parts)
+                except Exception:
+                    pass
+                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | 🟢 RAM: {ram_str} | 💾 Disco: {disk_str}{gpu_info} | ☁️ Drive: {'Conectado' if drive_alive else 'Desconectado'} | Estado Guardado ✅", flush=True)
             except Exception:
                 print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
         else:
