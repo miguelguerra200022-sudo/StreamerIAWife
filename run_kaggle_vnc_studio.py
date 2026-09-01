@@ -147,11 +147,22 @@ def auto_save_user_state():
             shell=True
         )
         if save_tar.exists() and save_tar.stat().st_size > 100:
-            subprocess.run(
-                f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 5 >/dev/null 2>&1 || true",
-                shell=True
-            )
-            log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
+            target_gdrive_dir = Path("/root/gdrive/PC_Kaggle/system_state")
+            if target_gdrive_dir.exists():
+                try:
+                    shutil.copy2(save_tar, target_gdrive_dir / "linuwaifu_user_state.tar.gz")
+                    log("Auto-guardado del sistema a Google Drive (FUSE Directo) completado.", "SUCCESS")
+                except Exception:
+                    subprocess.run(
+                        f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                        shell=True
+                    )
+            else:
+                subprocess.run(
+                    f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                    shell=True
+                )
+                log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
     except Exception as e:
         log(f"Error en auto-guardado: {e}", "ERROR")
 
@@ -202,22 +213,26 @@ subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get i
 
 # Iniciar Rclone Mount (FUSE) para permitir Symlinks
 try:
-    # Crear la carpeta raíz en Drive por si no existe
-    subprocess.run("rclone mkdir gdrive:PC_Kaggle >/dev/null 2>&1 || true", shell=True)
-    
-    # Montar Drive físicamente en el sistema
+    # Montar la raíz de Google Drive físicamente en /root/gdrive (Evita error de 'couldn't find root directory ID')
     os.makedirs("/root/gdrive", exist_ok=True)
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     subprocess.Popen([
-        "rclone", "mount", "gdrive:PC_Kaggle", "/root/gdrive",
+        "rclone", "mount", "gdrive:", "/root/gdrive",
         "--vfs-cache-mode", "writes",
-        "--tpslimit", "5",
+        "--vfs-cache-max-age", "24h",
+        "--tpslimit", "3",
+        "--tpslimit-burst", "1",
+        "--drive-pacer-min-sleep", "100ms",
+        "--drive-pacer-burst", "1",
+        "--low-level-retries", "10",
+        "--retries", "5",
+        "--dir-cache-time", "72h",
         "--drive-chunk-size", "64M",
         "--daemon"
     ], stdout=log_rclone, stderr=log_rclone)
     
     # Espera activa inteligente para confirmación del montaje
-    drive_ready = wait_for_path("/root/gdrive", timeout=15)
+    drive_ready = wait_for_path("/root/gdrive", timeout=20)
     if drive_ready:
         print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
         log("Google Drive 5TB montado con éxito.", "SUCCESS")
@@ -225,32 +240,42 @@ try:
         print("  ⚠️ [!] Montaje de Google Drive tardando más de lo normal...", flush=True)
     
     # ==============================================================================
-    # Sincronización Simbólica Inteligente (Master Folders)
+    # Sincronización Simbólica Inteligente (Master Folders en PC_Kaggle)
     # ==============================================================================
     print("  🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...", flush=True)
     sync_dirs = {
-        "/root/.config": "/root/gdrive/Master_Config",
-        "/root/.local/share": "/root/gdrive/Master_LocalData",
-        "/root/.local/state": "/root/gdrive/Master_State",
-        "/root/.mozilla": "/root/gdrive/Master_Mozilla",
-        "/root/.ssh": "/root/gdrive/Master_SSH",
-        "/root/.pki": "/root/gdrive/Master_PKI",
-        "/root/Descargas": "/root/gdrive/Descargas",
-        "/root/Documentos": "/root/gdrive/Documentos",
-        "/root/Juegos": "/root/gdrive/Juegos",
-        "/root/Escritorio": "/root/gdrive/Escritorio",
+        "/root/.config": "/root/gdrive/PC_Kaggle/Master_Config",
+        "/root/.local/share": "/root/gdrive/PC_Kaggle/Master_LocalData",
+        "/root/.local/state": "/root/gdrive/PC_Kaggle/Master_State",
+        "/root/.mozilla": "/root/gdrive/PC_Kaggle/Master_Mozilla",
+        "/root/.ssh": "/root/gdrive/PC_Kaggle/Master_SSH",
+        "/root/.pki": "/root/gdrive/PC_Kaggle/Master_PKI",
+        "/root/Descargas": "/root/gdrive/PC_Kaggle/Descargas",
+        "/root/Documentos": "/root/gdrive/PC_Kaggle/Documentos",
+        "/root/Juegos": "/root/gdrive/PC_Kaggle/Juegos",
+        "/root/Escritorio": "/root/gdrive/PC_Kaggle/Escritorio",
     }
     
     for local_dir, drive_dir in sync_dirs.items():
-        subprocess.run(f"mkdir -p '{drive_dir}'", shell=True)
+        try:
+            os.makedirs(drive_dir, exist_ok=True)
+        except Exception:
+            pass
         if not os.path.exists(local_dir):
             os.makedirs(os.path.dirname(local_dir), exist_ok=True)
-            os.symlink(drive_dir, local_dir)
+            try:
+                os.symlink(drive_dir, local_dir)
+            except Exception:
+                pass
         elif os.path.isdir(local_dir) and not os.path.islink(local_dir):
             # Mover el contenido existente a Drive de forma segura y luego hacer symlink
             subprocess.run(f"cp -a '{local_dir}'/* '{drive_dir}/' 2>/dev/null || true", shell=True)
             subprocess.run(f"rm -rf '{local_dir}'", shell=True)
-            os.symlink(drive_dir, local_dir)
+            try:
+                os.symlink(drive_dir, local_dir)
+            except Exception:
+                pass
+        time.sleep(0.05)
 
     # 1.5. Configuración Base del Puntero (Eliminar X negra)
     cursor_conf = Path("/root/.icons/default")
@@ -316,7 +341,7 @@ all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 
 # Descargar o reutilizar Google Chrome Oficial desde caché de Drive
 chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
-gdrive_cache_deb = Path("/root/gdrive/Cache/google-chrome-stable_current_amd64.deb")
+gdrive_cache_deb = Path("/root/gdrive/PC_Kaggle/Cache/google-chrome-stable_current_amd64.deb")
 
 if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
     print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
@@ -331,8 +356,8 @@ if not chrome_deb.exists() or chrome_deb.stat().st_size < 1000:
         shell=True
     )
     if chrome_deb.exists() and chrome_deb.stat().st_size > 50_000_000 and os.path.exists("/root/gdrive"):
-        os.makedirs("/root/gdrive/Cache", exist_ok=True)
         try:
+            os.makedirs("/root/gdrive/PC_Kaggle/Cache", exist_ok=True)
             shutil.copy2(chrome_deb, gdrive_cache_deb)
         except Exception:
             pass
@@ -360,10 +385,14 @@ print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", f
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
     backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
-    subprocess.run(
-        f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 5 >/dev/null 2>&1 || true",
-        shell=True
-    )
+    direct_backup = Path("/root/gdrive/PC_Kaggle/system_state/linuwaifu_user_state.tar.gz")
+    if direct_backup.exists() and direct_backup.stat().st_size > 1000:
+        shutil.copy2(direct_backup, backup_tar)
+    else:
+        subprocess.run(
+            f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
+            shell=True
+        )
     if backup_tar.exists() and backup_tar.stat().st_size > 1000:
         test_tar = subprocess.run(f"tar -tzf {backup_tar} >/dev/null 2>&1", shell=True)
         if test_tar.returncode == 0:
@@ -459,7 +488,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
         "Comment=Carpeta persistente con todos tus juegos y partidas\n"
-        "Exec=thunar /root/gdrive\n"
+        "Exec=thunar /root/gdrive/PC_Kaggle\n"
         "Path=/root\n"
         "Icon=applications-games\n"
         "Terminal=false\n"
