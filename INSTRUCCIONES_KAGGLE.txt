@@ -49,4 +49,24 @@ B) SI QUIERES CREAR TU PROPIA BASE DE DATOS EN LA CUENTA NUEVA:
 
 • En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
   cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
+
+================================================================================
+👥 5. CÓMO ADMINISTRAR Y ENTREGAR CLOUD PCS A CLIENTES (MODELO SAAS):
+--------------------------------------------------------------------------------
+💡 Puedes ofrecer este servicio de Cloud PC a clientes cobrando una suscripción mensual ($5 - $15 USD).
+
+OPCIÓN A: MODO 100% GESTIONADO (RECOMENDADO — EL CLIENTE NO TOCA CÓDIGO NI KAGGLE):
+1. Tú abres la cuenta de Kaggle del cliente (o una de tus cuentas de rotación).
+2. Ejecutas la libreta con el Comando Maestro del Paso 1.
+3. Le envías al cliente por WhatsApp / Telegram su Enlace Web Directo (1080p) o los datos de conexión de RealVNC.
+4. El cliente entra con 1 clic desde su celular o PC y usa su supercomputadora con 2x GPUs Tesla T4 sin saber qué hay debajo.
+
+OPCIÓN B: MODO CLIENTE INDEPENDIENTE (EL CLIENTE ENCIENDE SU PC):
+1. Le entregas su libreta de Kaggle ya guardada con el comando maestro listo.
+2. Le adjuntas el Dataset público 'miguelguerra26/linuwaifu-ubuntu-master-100gb'.
+3. El cliente solo tiene que entrar a Kaggle, darle a "Run" (▶️) y tocar su enlace.
+
+🔒 PERSISTENCIA Y AISLAMIENTO DE CLIENTES:
+• Cada cuenta tiene sus propias 30 horas semanales de GPU gratuitas.
+• Los datos de cada cliente se guardan de forma aislada en su propia carpeta de Google Drive o en su propio Dataset.
 ================================================================================
