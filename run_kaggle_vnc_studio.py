@@ -76,7 +76,8 @@ IGNORE_KEYWORDS = [
     "monitor is not dpms capable", "failed to find any devices", "no outputs have backlight property",
     "g_file_new_for_path", "gtk-warning", "gtk-critical", "glib-gio-critical",
     "glib-gobject-critical", "glib-gobject-warning", "negative content width",
-    "attempting to add a widget with type", "edid is empty", "could not map keysym"
+    "attempting to add a widget with type", "edid is empty", "could not map keysym",
+    "-noscr", "it may be disabled"
 ]
 
 def live_log_streamer():
@@ -597,6 +598,7 @@ subprocess.Popen([
     "-forever", "-nopw", "-shared",
     "-rfbport", "5900",
     "-noxdamage", "-noxfixes",
+    "-noscr",
     "-threads",
     "-wait", "10",
     "-defer", "10"
