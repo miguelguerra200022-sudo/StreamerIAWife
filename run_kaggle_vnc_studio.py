@@ -412,21 +412,25 @@ if master_archives_dir and master_archives_dir.exists():
     print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
     log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
-    # 1. Configuración del entorno de instalación DPKG 100% no interactivo
+    # 1. Configuración del entorno de instalación DPKG 100% no interactivo y aceleración I/O
     os.environ["DEBIAN_FRONTEND"] = "noninteractive"
     os.environ["NEEDRESTART_MODE"] = "a"
     os.environ["NEEDRESTART_SUSPEND"] = "1"
-    subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
+    subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
+    subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
+    subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
+    subprocess.run("dpkg-divert --divert /usr/bin/mandb.real --rename /usr/bin/mandb 2>/dev/null || true; ln -sf /bin/true /usr/bin/mandb 2>/dev/null || true", shell=True)
+    subprocess.run("dpkg-divert --divert /usr/sbin/update-initramfs.real --rename /usr/sbin/update-initramfs 2>/dev/null || true; ln -sf /bin/true /usr/sbin/update-initramfs 2>/dev/null || true", shell=True)
 
-    # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo: evita error de argumento largo)
-    print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset a disco local...", flush=True)
-    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
+    # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo + I/O Acelerado)
+    print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset con aceleración I/O...", flush=True)
+    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all --force-unsafe-io --no-triggers '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
     if res_dpkg.returncode != 0:
         log(f"Aviso en dpkg unpack (código {res_dpkg.returncode}). Continuando con configuración...", "WARNING")
 
     # 3. Configuración y resolución de dependencias del sistema
     print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
-    res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a >> {LOG_FILE} 2>&1", shell=True)
+    res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a --force-unsafe-io >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y >> {LOG_FILE} 2>&1 || true", shell=True)
     
     # 4. Reutilizar noVNC pre-empaquetado si está presente
@@ -447,7 +451,7 @@ if master_archives_dir and master_archives_dir.exists():
     # Instalar Google Chrome pre-empaquetado
     chrome_debs = list(master_dataset_path.rglob("google-chrome*.deb"))
     if chrome_debs:
-        subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
+        subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-unsafe-io {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
         
     subprocess.run(f"pip install -q --no-warn-script-location pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
     print("  ✅ [✓] Suite Oficial de Ubuntu activada con éxito desde Dataset (0 MB descargados).", flush=True)
@@ -895,16 +899,17 @@ subprocess.Popen([
     "-forever", "-nopw", "-shared",
     "-rfbport", "5900",
     "-noxdamage", "-noxfixes",
-    "-noscr",
-    "-nowf",
-    "-threads", "4",
-    "-wait", "0",
-    "-defer", "0",
-    "-pointer_mode", "2"
+    "-repeat", "-capslock",
+    "-nomodtweak",
+    "-threads", "4"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
 
 # Esperar a que x11vnc esté escuchando en puerto 5900
-vnc_ready = wait_for_port(5900, timeout=10)
+vnc_ready = wait_for_port(5900, timeout=8)
+if not vnc_ready:
+    # Intento de recuperación inmediata si falló el primer enlace
+    subprocess.Popen(["x11vnc", "-display", ":1", "-forever", "-nopw", "-shared", "-rfbport", "5900", "-bg"], env=env, stdout=log_vnc, stderr=log_vnc)
+    vnc_ready = wait_for_port(5900, timeout=5)
 
 # Asegurar permisos de ejecución en toda la suite noVNC
 novnc_proxy_bin = Path("/kaggle/working/noVNC/utils/novnc_proxy")
