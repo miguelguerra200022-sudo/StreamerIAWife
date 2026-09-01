@@ -103,7 +103,8 @@ IGNORE_KEYWORDS = [
     "g_file_new_for_path", "gtk-warning", "gtk-critical", "glib-gio-critical",
     "glib-gobject-critical", "glib-gobject-warning", "negative content width",
     "attempting to add a widget with type", "edid is empty", "could not map keysym",
-    "-noscr", "it may be disabled", "ignoring pre-dependency problem", "pre-dependency problem"
+    "-noscr", "it may be disabled", "ignoring pre-dependency problem", "pre-dependency problem",
+    "failed to resolve user", "tmpfiles.d", "config-error-dialog.sh", "speech-dispatcher", "colord"
 ]
 
 def live_log_streamer():
@@ -441,6 +442,7 @@ if master_archives_dir and master_archives_dir.exists():
         if not novnc_dir.exists():
             subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
             subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
             
     # Instalar Google Chrome pre-empaquetado
     chrome_debs = list(master_dataset_path.rglob("google-chrome*.deb"))
@@ -903,6 +905,13 @@ subprocess.Popen([
 
 # Esperar a que x11vnc esté escuchando en puerto 5900
 vnc_ready = wait_for_port(5900, timeout=10)
+
+# Asegurar permisos de ejecución en toda la suite noVNC
+novnc_proxy_bin = Path("/kaggle/working/noVNC/utils/novnc_proxy")
+if not novnc_proxy_bin.exists():
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1 || true", shell=True)
+subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
 
 # Servidor Web noVNC con WebSocket en puerto 6080
 subprocess.Popen([
