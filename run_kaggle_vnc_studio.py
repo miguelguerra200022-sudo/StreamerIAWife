@@ -306,44 +306,6 @@ try:
     else:
         print("  ⚠️ [!] Montaje de Google Drive tardando más de lo normal...", flush=True)
     
-    # ==============================================================================
-    # Sincronización Simbólica Inteligente (Master Folders en PC_Kaggle)
-    # ==============================================================================
-    print("  🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...", flush=True)
-    sync_dirs = {
-        "/root/.config": "/root/gdrive/PC_Kaggle/Master_Config",
-        "/root/.local/share": "/root/gdrive/PC_Kaggle/Master_LocalData",
-        "/root/.local/state": "/root/gdrive/PC_Kaggle/Master_State",
-        "/root/.mozilla": "/root/gdrive/PC_Kaggle/Master_Mozilla",
-        "/root/.ssh": "/root/gdrive/PC_Kaggle/Master_SSH",
-        "/root/.pki": "/root/gdrive/PC_Kaggle/Master_PKI",
-        "/root/Descargas": "/root/gdrive/PC_Kaggle/Descargas",
-        "/root/Documentos": "/root/gdrive/PC_Kaggle/Documentos",
-        "/root/Juegos": "/root/gdrive/PC_Kaggle/Juegos",
-        "/root/Escritorio": "/root/gdrive/PC_Kaggle/Escritorio",
-    }
-    
-    for local_dir, drive_dir in sync_dirs.items():
-        try:
-            os.makedirs(drive_dir, exist_ok=True)
-        except Exception:
-            pass
-        if not os.path.exists(local_dir):
-            os.makedirs(os.path.dirname(local_dir), exist_ok=True)
-            try:
-                os.symlink(drive_dir, local_dir)
-            except Exception:
-                pass
-        elif os.path.isdir(local_dir) and not os.path.islink(local_dir):
-            # Mover el contenido existente a Drive de forma segura y luego hacer symlink
-            subprocess.run(f"cp -a '{local_dir}'/* '{drive_dir}/' 2>/dev/null || true", shell=True)
-            subprocess.run(f"rm -rf '{local_dir}'", shell=True)
-            try:
-                os.symlink(drive_dir, local_dir)
-            except Exception:
-                pass
-        time.sleep(0.05)
-
     # 1.5. Configuración Base del Puntero (Eliminar X negra)
     cursor_conf = Path("/root/.icons/default")
     cursor_conf.mkdir(parents=True, exist_ok=True)
@@ -380,7 +342,7 @@ echo "¡Listo! El juego se está procesando. Revisa tu perfil de Kaggle."
     script_path.chmod(0o755)
 
 except Exception as e:
-    log(f"Aviso Rclone/Symlink: {e}", "WARNING")
+    log(f"Aviso Rclone: {e}", "WARNING")
 
 print(f"  ⏱️ [Paso 1/5 Completado en {time.time() - t_step1:.1f}s]", flush=True)
 
@@ -449,20 +411,22 @@ if master_archives_dir and master_archives_dir.exists():
     print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
     log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
-    # 1. Poblar caché de apt con los .deb del dataset para evitar descargas de internet
-    print("  📦 [1/3] Vinculando paquetes del Dataset al sistema local...", flush=True)
-    subprocess.run("mkdir -p /var/cache/apt/archives", shell=True)
-    subprocess.run(f"cp -n {master_archives_dir}/*.deb /var/cache/apt/archives/ 2>/dev/null || true", shell=True)
+    # 1. Configuración del entorno de instalación DPKG 100% no interactivo
+    os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+    os.environ["NEEDRESTART_MODE"] = "a"
+    os.environ["NEEDRESTART_SUSPEND"] = "1"
+    subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
+
+    # 2. Desempaquetado masivo de los 1,109 paquetes oficiales del Dataset (Ultra-rápido en NVMe)
+    print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset a disco local...", flush=True)
+    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1", shell=True)
     
-    # 2. Instalación nativa mediante apt con resolución de dependencias perfecta
-    print("  📦 [2/3] Instalando dependencias y componentes del sistema...", flush=True)
-    cmd_install_cache = (
-        f"DEBIAN_FRONTEND=noninteractive apt-get install -y --no-download {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 || "
-        f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1"
-    )
-    subprocess.run(cmd_install_cache, shell=True)
+    # 3. Configuración y resolución de dependencias del sistema
+    print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
+    res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y >> {LOG_FILE} 2>&1 || true", shell=True)
     
-    # Reutilizar noVNC pre-empaquetado si está presente
+    # 4. Reutilizar noVNC pre-empaquetado si está presente
     print("  📦 [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
     novnc_dir = Path("/kaggle/working/noVNC")
     if not novnc_dir.exists():
@@ -481,8 +445,8 @@ if master_archives_dir and master_archives_dir.exists():
     if chrome_debs:
         subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
         
-    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-    print("  ✅ [✓] Suite Oficial de Ubuntu cargada en segundos desde Dataset.", flush=True)
+    subprocess.run(f"pip install -q --no-warn-script-location pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+    print("  ✅ [✓] Suite Oficial de Ubuntu activada con éxito desde Dataset (0 MB descargados).", flush=True)
 else:
     # Método tradicional de descarga e instalación bajo demanda
     log("Instalando paquetes oficiales de Ubuntu bajo demanda...")
@@ -704,10 +668,45 @@ except Exception:
 print(f"  ⏱️ [Paso 2/5 Completado en {time.time() - t_step2:.1f}s]", flush=True)
 
 # ==============================================================================
-# 3. APARIENCIA OFICIAL UBUNTU YARU-DARK (WALLPAPER, ICONOS, ACCESOS)
+# 3. SINCRONIZACIÓN PERSISTENTE GOOGLE DRIVE 5TB & APARIENCIA YARU-DARK
 # ==============================================================================
 t_step3 = time.time()
-print("🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...", flush=True)
+print("🎨 [3/5] Estableciendo persistencia con Google Drive y apariencia Yaru-Dark...", flush=True)
+
+# 1. Sincronización Simbólica Inteligente (Master Folders en PC_Kaggle)
+sync_dirs = {
+    "/root/.config": "/root/gdrive/PC_Kaggle/Master_Config",
+    "/root/.local/share": "/root/gdrive/PC_Kaggle/Master_LocalData",
+    "/root/.local/state": "/root/gdrive/PC_Kaggle/Master_State",
+    "/root/.mozilla": "/root/gdrive/PC_Kaggle/Master_Mozilla",
+    "/root/.ssh": "/root/gdrive/PC_Kaggle/Master_SSH",
+    "/root/.pki": "/root/gdrive/PC_Kaggle/Master_PKI",
+    "/root/Descargas": "/root/gdrive/PC_Kaggle/Descargas",
+    "/root/Documentos": "/root/gdrive/PC_Kaggle/Documentos",
+    "/root/Juegos": "/root/gdrive/PC_Kaggle/Juegos",
+    "/root/Escritorio": "/root/gdrive/PC_Kaggle/Escritorio",
+}
+
+if Path("/root/gdrive").exists():
+    for local_dir, drive_dir in sync_dirs.items():
+        try:
+            os.makedirs(drive_dir, exist_ok=True)
+        except Exception:
+            pass
+        if not os.path.exists(local_dir):
+            os.makedirs(os.path.dirname(local_dir), exist_ok=True)
+            try:
+                os.symlink(drive_dir, local_dir)
+            except Exception:
+                pass
+        elif os.path.isdir(local_dir) and not os.path.islink(local_dir):
+            subprocess.run(f"cp -a '{local_dir}'/* '{drive_dir}/' 2>/dev/null || true", shell=True)
+            subprocess.run(f"rm -rf '{local_dir}'", shell=True)
+            try:
+                os.symlink(drive_dir, local_dir)
+            except Exception:
+                pass
+        time.sleep(0.02)
 
 env = os.environ.copy()
 env["DISPLAY"] = ":1"
