@@ -37,9 +37,35 @@ os.environ["NO_AT_BRIDGE"] = "1"
 
 DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
+import traceback
+
 # Archivo Maestro de Registros
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+def global_exception_handler(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    print("\n" + "=" * 78, flush=True)
+    print("🛑 [DIAGNÓSTICO DE CIERRE / DETECCIÓN DE ERROR]", flush=True)
+    print("=" * 78, flush=True)
+    print(f"Tipo de Error: {exc_type.__name__}", flush=True)
+    print(f"Mensaje: {exc_value}", flush=True)
+    print("\nTraza detallada del fallo:", flush=True)
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("=" * 78, flush=True)
+    if LOG_FILE.exists():
+        try:
+            print("\nÚltimos 25 registros del sistema (LOG):", flush=True)
+            lines = LOG_FILE.read_text(encoding="utf-8", errors="replace").splitlines()[-25:]
+            for l in lines:
+                print(f"  > {l}", flush=True)
+        except Exception:
+            pass
+    print("=" * 78 + "\n", flush=True)
+
+sys.excepthook = global_exception_handler
 
 # 0. Limpieza segura de procesos residuales
 subprocess.run("pkill -9 -f 'Xvfb|x11vnc|websockify|novnc_proxy|ngrok|gnome|xfce4|startxfce4|rclone|cloud_bridge|pulseaudio' 2>/dev/null || true", shell=True)
@@ -211,12 +237,19 @@ if "--save-now" in sys.argv:
     print("✅ Estado guardado exitosamente. Saliendo.", flush=True)
     sys.exit(0)
 
+# Iniciar cronómetro de arranque total
+t_start_total = time.time()
+
+# Limpiar fuentes de software obsoletas de Kaggle para evitar errores de red
+subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+
 # Iniciar servicio D-Bus del sistema
 subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
 
 # ==============================================================================
 # 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
 # ==============================================================================
+t_step1 = time.time()
 print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...", flush=True)
 log("Iniciando conexión de Google Drive...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
@@ -349,9 +382,12 @@ echo "¡Listo! El juego se está procesando. Revisa tu perfil de Kaggle."
 except Exception as e:
     log(f"Aviso Rclone/Symlink: {e}", "WARNING")
 
+print(f"  ⏱️ [Paso 1/5 Completado en {time.time() - t_step1:.1f}s]", flush=True)
+
 # ==============================================================================
 # 2. INSTALACIÓN DE LA SUITE COMPLETA UBUNTU (GIGABYTES) + LIBREOFFICE + CODECS
 # ==============================================================================
+t_step2 = time.time()
 print("📦 [2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
 full_ubuntu_pkgs = [
@@ -414,18 +450,20 @@ if master_archives_dir and master_archives_dir.exists():
     log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
     # 1. Poblar caché de apt con los .deb del dataset para evitar descargas de internet
+    print("  📦 [1/3] Vinculando paquetes del Dataset al sistema local...", flush=True)
     subprocess.run("mkdir -p /var/cache/apt/archives", shell=True)
     subprocess.run(f"cp -n {master_archives_dir}/*.deb /var/cache/apt/archives/ 2>/dev/null || true", shell=True)
     
     # 2. Instalación nativa mediante apt con resolución de dependencias perfecta
+    print("  📦 [2/3] Instalando dependencias y componentes del sistema...", flush=True)
     cmd_install_cache = (
-        "apt-get update -qq && "
         f"DEBIAN_FRONTEND=noninteractive apt-get install -y --no-download {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 || "
-        f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1"
+        f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1"
     )
     subprocess.run(cmd_install_cache, shell=True)
     
     # Reutilizar noVNC pre-empaquetado si está presente
+    print("  📦 [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
     novnc_dir = Path("/kaggle/working/noVNC")
     if not novnc_dir.exists():
         found_novnc = list(master_dataset_path.rglob("noVNC"))
@@ -663,9 +701,12 @@ try:
 except Exception:
     pass
 
+print(f"  ⏱️ [Paso 2/5 Completado en {time.time() - t_step2:.1f}s]", flush=True)
+
 # ==============================================================================
 # 3. APARIENCIA OFICIAL UBUNTU YARU-DARK (WALLPAPER, ICONOS, ACCESOS)
 # ==============================================================================
+t_step3 = time.time()
 print("🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...", flush=True)
 
 env = os.environ.copy()
@@ -808,9 +849,12 @@ for fname, content in shortcuts.items():
 subprocess.run(f"ln -sf '{BASE_DIR}/guardar_en_database_kaggle.py' /usr/local/bin/guardar_en_database_kaggle 2>/dev/null || true", shell=True)
 subprocess.run("chmod +x /usr/local/bin/guardar_en_database_kaggle 2>/dev/null || true", shell=True)
 
+print(f"  ⏱️ [Paso 3/5 Completado en {time.time() - t_step3:.1f}s]", flush=True)
+
 # ==============================================================================
 # 4. LEVANTAR PANTALLA COMPLETA 16:9 1080p (SIN NCACHE / RESOLUCIÓN NATIVA)
 # ==============================================================================
+t_step4 = time.time()
 print("🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...", flush=True)
 
 # Iniciar PulseAudio nativo en modo TCP local
@@ -890,9 +934,12 @@ subprocess.Popen([
     f"--app=http://localhost:8000/avatars/studio.html"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+print(f"  ⏱️ [Paso 4/5 Completado en {time.time() - t_step4:.1f}s]", flush=True)
+
 # ==============================================================================
 # 5. TÚNELES DE ALTA VELOCIDAD Y AUTO-RECONEXIÓN RESILIENTE
 # ==============================================================================
+t_step5 = time.time()
 print("🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...", flush=True)
 
 web_tunnel_url = None
@@ -950,6 +997,9 @@ for _ in range(12):
     if vnc_app_address:
         break
     time.sleep(0.5)
+
+print(f"  ⏱️ [Paso 5/5 Completado en {time.time() - t_step5:.1f}s]", flush=True)
+print(f"  ⚡ [Tiempo total de arranque: {time.time() - t_start_total:.1f}s]\n", flush=True)
 
 # ==============================================================================
 # VERIFICACIÓN DE ESTADO Y SALUD REAL DEL SISTEMA
