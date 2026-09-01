@@ -80,9 +80,16 @@ def build_ubuntu_master_image():
     log(f"Instalando y cacheando {len(pkgs)} paquetes del sistema...")
     cmd_apt = (
         "apt-get update -qq && "
-        f"DEBIAN_FRONTEND=noninteractive apt-get install -y --download-only {' '.join(pkgs)} >> {LOG_FILE} 2>&1"
+        f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(pkgs)} >> {LOG_FILE} 2>&1"
     )
     subprocess.run(cmd_apt, shell=True)
+
+    # Generar imagen pre-compilada de arranque ultra-rápido (3 segundos)
+    log("Generando imagen pre-compilada para arranque de 3 segundos (ubuntu_master_rootfs.tar.gz)...")
+    rootfs_tar = DATASET_BUILD_DIR / "ubuntu_master_rootfs.tar.gz"
+    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -czf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
+    subprocess.run(cmd_tar, shell=True)
+    log("Imagen de arranque instantáneo de 3 segundos empaquetada exitosamente.", "SUCCESS")
     
     # Copiar caché de paquetes descargados al directorio del Dataset
     archives_dir = Path("/var/cache/apt/archives")

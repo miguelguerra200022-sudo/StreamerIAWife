@@ -52,6 +52,19 @@ def update_dataset():
             except Exception:
                 pass
     
+    # 2.5 Generar imagen pre-compilada de Ubuntu para arranque en 3 segundos
+    notify("Generando imagen pre-compilada para arranque de 3 segundos...")
+    rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.gz"
+    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -czf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
+    subprocess.run(cmd_tar, shell=True)
+
+    # 2.6 Incluir suite noVNC pre-configurada
+    if Path("/kaggle/working/noVNC").exists():
+        try:
+            shutil.copytree("/kaggle/working/noVNC", PAYLOAD_DIR / "noVNC", dirs_exist_ok=True)
+        except Exception:
+            pass
+
     # 3. Metadatos del Dataset
     metadata = {
         "title": "LinuWaifu Ubuntu Master Suite 100GB",
@@ -62,7 +75,7 @@ def update_dataset():
     
     # 4. Enviar versión a la API de Kaggle
     ts_msg = time.strftime("%Y-%m-%d %H:%M:%S")
-    cmd_version = f"kaggle datasets version -p '{PAYLOAD_DIR}' -m 'Auto-backup desde Escritorio ({ts_msg})' --dir-mode tar"
+    cmd_version = f"kaggle datasets version -p '{PAYLOAD_DIR}' -m 'Auto-backup con imagen de 3s ({ts_msg})' --dir-mode tar"
     
     res = subprocess.run(cmd_version, shell=True, text=True, capture_output=True)
     if res.returncode == 0:

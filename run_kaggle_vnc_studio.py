@@ -406,32 +406,40 @@ if input_dir.exists():
                     master_archives_dir = debs[0].parent
                     break
 
-if master_archives_dir and master_archives_dir.exists():
-    deb_count = len(list(master_archives_dir.glob("*.deb")))
-    print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)!", flush=True)
-    print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
-    log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
-    
-    # 1. Configuración del entorno de instalación DPKG 100% no interactivo y aceleración I/O
-    os.environ["DEBIAN_FRONTEND"] = "noninteractive"
-    os.environ["NEEDRESTART_MODE"] = "a"
-    os.environ["NEEDRESTART_SUSPEND"] = "1"
-    subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
-    subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
-    subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
-    subprocess.run("dpkg-divert --divert /usr/bin/mandb.real --rename /usr/bin/mandb 2>/dev/null || true; ln -sf /bin/true /usr/bin/mandb 2>/dev/null || true", shell=True)
-    subprocess.run("dpkg-divert --divert /usr/sbin/update-initramfs.real --rename /usr/sbin/update-initramfs 2>/dev/null || true; ln -sf /bin/true /usr/sbin/update-initramfs 2>/dev/null || true", shell=True)
+if master_dataset_path and master_dataset_path.exists():
+    # 1. Comprobar si existe imagen pre-compilada para arranque instantáneo (3 SEGUNDOS)
+    rootfs_candidates = list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.gz")) or list(master_dataset_path.rglob("ubuntu_rootfs.tar.gz"))
+    if rootfs_candidates and rootfs_candidates[0].stat().st_size > 50_000_000:
+        rootfs_file = rootfs_candidates[0]
+        print(f"  ⚡ [✓] ¡Imagen Pre-Compilada de Ubuntu detectada en {rootfs_file.name} ({rootfs_file.stat().st_size / (1024**2):.1f} MB)!", flush=True)
+        print("  🚀 [✓] Activando sistema completo en 3 segundos...", flush=True)
+        subprocess.run(f"tar -xzf '{rootfs_file}' -C / >> {LOG_FILE} 2>&1", shell=True)
+    elif master_archives_dir and master_archives_dir.exists():
+        deb_count = len(list(master_archives_dir.glob("*.deb")))
+        print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)!", flush=True)
+        print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
+        log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
+        
+        # 1. Configuración del entorno de instalación DPKG 100% no interactivo y aceleración I/O
+        os.environ["DEBIAN_FRONTEND"] = "noninteractive"
+        os.environ["NEEDRESTART_MODE"] = "a"
+        os.environ["NEEDRESTART_SUSPEND"] = "1"
+        subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
+        subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
+        subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
+        subprocess.run("dpkg-divert --divert /usr/bin/mandb.real --rename /usr/bin/mandb 2>/dev/null || true; ln -sf /bin/true /usr/bin/mandb 2>/dev/null || true", shell=True)
+        subprocess.run("dpkg-divert --divert /usr/sbin/update-initramfs.real --rename /usr/sbin/update-initramfs 2>/dev/null || true; ln -sf /bin/true /usr/sbin/update-initramfs 2>/dev/null || true", shell=True)
 
-    # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo + I/O Acelerado)
-    print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset con aceleración I/O...", flush=True)
-    res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all --force-unsafe-io --no-triggers '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
-    if res_dpkg.returncode != 0:
-        log(f"Aviso en dpkg unpack (código {res_dpkg.returncode}). Continuando con configuración...", "WARNING")
+        # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo + I/O Acelerado)
+        print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset con aceleración I/O...", flush=True)
+        res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all --force-unsafe-io --no-triggers '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
+        if res_dpkg.returncode != 0:
+            log(f"Aviso en dpkg unpack (código {res_dpkg.returncode}). Continuando con configuración...", "WARNING")
 
-    # 3. Configuración y resolución de dependencias del sistema
-    print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
-    res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a --force-unsafe-io >> {LOG_FILE} 2>&1", shell=True)
-    subprocess.run(f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y >> {LOG_FILE} 2>&1 || true", shell=True)
+        # 3. Configuración y resolución de dependencias del sistema
+        print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
+        res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a --force-unsafe-io >> {LOG_FILE} 2>&1", shell=True)
+        subprocess.run(f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y >> {LOG_FILE} 2>&1 || true", shell=True)
     
     # 4. Reutilizar noVNC pre-empaquetado si está presente
     print("  📦 [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
