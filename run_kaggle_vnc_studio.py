@@ -241,8 +241,8 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     except Exception:
         pass
 
-# Instalar rclone y fuse3 rápido si no están presentes
-subprocess.run("which rclone >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1)", shell=True)
+# Instalar rclone y fuse3 rápido desde Dataset o apt si no están presentes
+subprocess.run("which rclone >/dev/null 2>&1 || (dpkg -i /kaggle/input/*/apt_archives/rclone*.deb /kaggle/input/*/apt_archives/fuse3*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1))", shell=True)
 
 # Iniciar Rclone Mount (FUSE) para permitir Symlinks
 try:
