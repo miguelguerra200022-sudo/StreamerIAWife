@@ -1,12 +1,13 @@
+Mira lo que me salio:
+
+
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 501, done.
-remote: Counting objects: 100% (141/141), done.41)
-remote: Compressing objects: 100% (116/116), done.
-remote: Total 501 (delta 78), reused 68 (delta 24), pack-reused 360 (from 1)
-Receiving objects: 100% (501/501), 6.73 MiB | 9.37 MiB/s, done.
-Resolving deltas: 100% (287/287), done.
-/kaggle/working/StreamerIAWife/run_kaggle_vnc_studio.py:215: SyntaxWarning: invalid escape sequence '\/'
-  sed -i "s/\\"id\\": \\".*\\"/\\"id\\": \\"$USUARIO\/$DATASET_ID\\"/" "$RUTA_JUEGO/dataset-metadata.json"
+remote: Enumerating objects: 512, done.
+remote: Counting objects: 100% (152/152), done.
+remote: Compressing objects: 100% (125/125), done.
+remote: Total 512 (delta 85), reused 73 (delta 26), pack-reused 360 (from 1)
+Receiving objects: 100% (512/512), 6.73 MiB | 20.46 MiB/s, done.
+Resolving deltas: 100% (294/294), done.
 
 ==============================================================================
 🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...
@@ -16,24 +17,5 @@ W: Skipping acquire of configured file 'main/source/Sources' as repository 'http
   ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.
   🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...
 📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...
-🔴 Failed to send reload request: No such file or directory
-🔴 tpm0: Failed to write 'change' to '/sys/devices/platform/MSFT0101:00/tpm/tpm0/uevent': Read-only file system
-🔴 tpm0: Failed to write 'add' to '/sys/devices/platform/MSFT0101:00/tpm/tpm0/uevent': Read-only file system
-🔴 tpmrm0: Failed to write 'add' to '/sys/devices/platform/MSFT0101:00/tpmrm/tpmrm0/uevent': Read-only file system
-⚠️ update-rc.d: warning: start and stop actions are no longer supported; falling back to defaults
-⚠️ update-rc.d: warning: start and stop actions are no longer supported; falling back to defaults
-⚠️ Warning: The home dir /var/lib/usbmux you specified can't be accessed: No such file or directory
-⚠️ update-inetd: warning: cannot add service, /etc/inetd.conf does not exist
-🔴 sda: Failed to write 'change' to '/sys/devices/pci0000:00/0000:00:03.0/virtio0/host0/target0:0:1/0:0:1:0/block/sda/uevent': Read-only file system
-⚠️ adduser: Warning: The home directory `/var/lib/sss' does not belong to the user you are currently creating.
-🔴 Failed to send reload request: No such file or directory
-  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.
-  ℹ️ Primera ejecución: Creando entorno inicial limpio.
-🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
-🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...
-🔴 (xfwm4:21128): GLib-CRITICAL **: 08:36:17.498: g_str_has_prefix: assertion 'prefix != NULL' failed
-⚠️ (xfwm4:21128): xfwm4-WARNING **: 08:36:18.079: Another compositing manager is running on screen 0
-🔴 (xfsettingsd:21136): GLib-CRITICAL **: 08:36:18.180: g_str_has_prefix: assertion 'prefix != NULL' failed
-🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.185: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
-🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.189: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
-🔴 (xfsettingsd:21136): GLib-GObject-CRITICAL **: 08:36:18.201: g_value_get_string: assertion 'G_VALUE_HOLDS_STRING (value)' failed
+🔴 2026/09/01 00:57:15 Failed to create file system for "gdrive:PC_Kaggle": couldn't find root directory ID: googleapi: Error 403: Quota exceeded for quota metric 'Queries' and limit 'Previous quota: Requests per minute' of service 'drive.googleapis.com' for consumer 'project_number:202264815644'.
+🔴 "@type": "type.googleapis.com/google.rpc.ErrorInfo",
