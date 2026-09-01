@@ -16,21 +16,21 @@
 • 🌸 LinuWaifu 3D IA Studio con voz, emociones y chat en pantalla.
 
 ================================================================================
-📦 2. CÓMO CREAR EL DATASET DE 100GB EN KAGGLE (SE HACE 1 SOLA VEZ):
+📦 2. CÓMO ADJUNTAR O CREAR EL DATASET DE 100GB EN CUALQUIER CUENTA DE KAGGLE:
 --------------------------------------------------------------------------------
-Si quieres crear tu propia Base de Datos de 100GB en Kaggle para que el sistema
-arranque en 2 segundos sin descargar nada:
+💡 Puedes usar cualquier cuenta de Kaggle (Cuenta 1, Cuenta 2, etc.) con el mismo sistema y tus 5TB de Google Drive.
 
-1. Ejecuta este comando en una celda de Kaggle:
-   !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 crear_ubuntu_master_dataset.py
+A) SI USAS OTRA CUENTA DE KAGGLE Y QUIERES USAR EL DATASET EXISTENTE:
+   1. En el panel derecho de tu Notebook en Kaggle -> Haz clic en "+ Add Input".
+   2. En la barra de búsqueda escribe: `linuwaifu-ubuntu-master-100gb` (o `miguelguerra26/linuwaifu-ubuntu-master-100gb`).
+   3. Haz clic en el botón "+" para adjuntarlo a tu libreta.
+   4. ¡Ejecuta el Comando Maestro del Paso 1 y listo!
 
-2. El script empaquetará el Ubuntu completo y lo subirá automáticamente a tu cuenta
-   como el Dataset: miguelguerra26/linuwaifu-ubuntu-master-100gb
-
-3. En el panel derecho de Kaggle -> "Input" -> "Add Input" -> "Your Datasets" ->
-   Selecciona 'linuwaifu-ubuntu-master-100gb' y dale a "Add".
-
-¡Listo! A partir de ese momento tu Cloud PC arrancará en 2 segundos.
+B) SI QUIERES CREAR TU PROPIA BASE DE DATOS EN LA CUENTA NUEVA:
+   1. Ejecuta este comando en una celda de Kaggle:
+      !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 crear_ubuntu_master_dataset.py
+   2. El script detectará tu usuario automáticamente y creará el Dataset en tu cuenta.
+   3. Dale a "+ Add Input" -> "Your Datasets" -> Agrega tu dataset y dale a Run.
 
 ================================================================================
 💾 3. BOTONES EN EL ESCRITORIO DE TU CLOUD PC:

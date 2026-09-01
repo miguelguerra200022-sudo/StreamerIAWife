@@ -65,10 +65,21 @@ def update_dataset():
         except Exception:
             pass
 
-    # 3. Metadatos del Dataset
+    # 3. Metadatos del Dataset con detección dinámica de usuario (Multi-Cuenta)
+    usuario_activo = "miguelguerra26"
+    if kaggle_file.exists():
+        try:
+            data = json.loads(kaggle_file.read_text())
+            if data.get("username"):
+                usuario_activo = data["username"]
+        except Exception:
+            pass
+    elif os.environ.get("KAGGLE_USERNAME"):
+        usuario_activo = os.environ["KAGGLE_USERNAME"]
+
     metadata = {
         "title": "LinuWaifu Ubuntu Master Suite 100GB",
-        "id": "miguelguerra26/linuwaifu-ubuntu-master-100gb",
+        "id": f"{usuario_activo}/linuwaifu-ubuntu-master-100gb",
         "licenses": [{"name": "CC0-1.0"}]
     }
     (PAYLOAD_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
@@ -79,13 +90,13 @@ def update_dataset():
     
     res = subprocess.run(cmd_version, shell=True, text=True, capture_output=True)
     if res.returncode == 0:
-        notify("🎉 ¡Todos tus programas y juegos han sido guardados permanentemente en tu Dataset de 100GB!", "✅ Guardado Exitoso")
+        notify(f"🎉 ¡Guardado exitoso en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
     else:
         # Si el dataset no existía, intentar crear
         cmd_create = f"kaggle datasets create -p '{PAYLOAD_DIR}' -u -r tar"
         res2 = subprocess.run(cmd_create, shell=True, text=True, capture_output=True)
         if res2.returncode == 0:
-            notify("🎉 ¡Dataset de 100GB creado y guardado en Kaggle!", "✅ Guardado Exitoso")
+            notify(f"🎉 ¡Dataset creado en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
         else:
             notify(f"Error al guardar en Dataset: {res.stderr or res.stdout}", "❌ Error de Guardado")
 

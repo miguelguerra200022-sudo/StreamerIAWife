@@ -119,10 +119,22 @@ def build_ubuntu_master_image():
         subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git {dataset_novnc} >> {LOG_FILE} 2>&1", shell=True)
         subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify {dataset_novnc}/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
     
-    # 4. Crear manifiesto de metadatos de Kaggle
+    # 4. Crear manifiesto de metadatos de Kaggle (Multi-Cuenta Dinámico)
+    usuario_activo = "miguelguerra26"
+    kaggle_file = Path.home() / ".kaggle" / "kaggle.json"
+    if kaggle_file.exists():
+        try:
+            data = json.loads(kaggle_file.read_text())
+            if data.get("username"):
+                usuario_activo = data["username"]
+        except Exception:
+            pass
+    elif os.environ.get("KAGGLE_USERNAME"):
+        usuario_activo = os.environ["KAGGLE_USERNAME"]
+
     metadata = {
         "title": "LinuWaifu Ubuntu Master Suite 100GB",
-        "id": "miguelguerra26/linuwaifu-ubuntu-master-100gb",
+        "id": f"{usuario_activo}/linuwaifu-ubuntu-master-100gb",
         "licenses": [{"name": "CC0-1.0"}]
     }
     (DATASET_BUILD_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
@@ -143,10 +155,23 @@ Incluye:
 
 def upload_to_kaggle():
     """Sube o versiona el dataset en la plataforma Kaggle."""
-    log("Iniciando subida a Kaggle Datasets mediante la API...")
+    usuario_activo = "miguelguerra26"
+    kaggle_file = Path.home() / ".kaggle" / "kaggle.json"
+    if kaggle_file.exists():
+        try:
+            data = json.loads(kaggle_file.read_text())
+            if data.get("username"):
+                usuario_activo = data["username"]
+        except Exception:
+            pass
+    elif os.environ.get("KAGGLE_USERNAME"):
+        usuario_activo = os.environ["KAGGLE_USERNAME"]
+
+    dataset_id = f"{usuario_activo}/linuwaifu-ubuntu-master-100gb"
+    log(f"Iniciando subida a Kaggle Datasets ({dataset_id}) mediante la API...")
     
     # Comprobar si el dataset ya existe en Kaggle
-    check_cmd = subprocess.run("kaggle datasets status miguelguerra26/linuwaifu-ubuntu-master-100gb 2>/dev/null", shell=True, text=True, capture_output=True)
+    check_cmd = subprocess.run(f"kaggle datasets status '{dataset_id}' 2>/dev/null", shell=True, text=True, capture_output=True)
     
     if "ready" in check_cmd.stdout.lower():
         log("Dataset detectado. Subiendo nueva versión...", "INFO")
@@ -158,8 +183,8 @@ def upload_to_kaggle():
     res = subprocess.run(push_cmd, shell=True, text=True, capture_output=True)
     if res.returncode == 0:
         log("🎉 ¡DATASET SUBIDO CON ÉXITO A KAGGLE!", "SUCCESS")
-        log("Identificador: miguelguerra26/linuwaifu-ubuntu-master-100gb", "SUCCESS")
-        log("Ahora puedes adjuntar este Dataset a tu libreta para arranques instantáneos de 3 segundos.", "SUCCESS")
+        log(f"Identificador: {dataset_id}", "SUCCESS")
+        log("Ahora puedes adjuntar este Dataset a cualquier libreta para arranques instantáneos de 3 segundos.", "SUCCESS")
         return True
     else:
         log(f"Error subiendo dataset: {res.stderr or res.stdout}", "ERROR")
