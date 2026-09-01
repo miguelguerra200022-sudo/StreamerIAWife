@@ -77,7 +77,7 @@ IGNORE_KEYWORDS = [
     "g_file_new_for_path", "gtk-warning", "gtk-critical", "glib-gio-critical",
     "glib-gobject-critical", "glib-gobject-warning", "negative content width",
     "attempting to add a widget with type", "edid is empty", "could not map keysym",
-    "-noscr", "it may be disabled"
+    "-noscr", "it may be disabled", "ignoring pre-dependency problem", "pre-dependency problem"
 ]
 
 def live_log_streamer():
@@ -397,8 +397,12 @@ if master_archives_dir and master_archives_dir.exists():
     log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
     # Instalar paquetes .deb pre-empaquetados en milisegundos sin descargar nada
-    subprocess.run(f"dpkg -i --force-depends {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"apt-get install -f -y -qq >> {LOG_FILE} 2>&1 || true", shell=True)
+    cmd_install_dataset = (
+        f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1 ; "
+        f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a >> {LOG_FILE} 2>&1 ; "
+        f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y --allow-downgrades >> {LOG_FILE} 2>&1 || true"
+    )
+    subprocess.run(cmd_install_dataset, shell=True)
     
     # Reutilizar noVNC pre-empaquetado si está presente
     novnc_dir = Path("/kaggle/working/noVNC")
