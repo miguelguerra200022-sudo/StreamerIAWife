@@ -22,7 +22,7 @@ Si quieres crear tu propia Base de Datos de 100GB en Kaggle para que el sistema
 arranque en 2 segundos sin descargar nada:
 
 1. Ejecuta este comando en una celda de Kaggle:
-   !cd /kaggle/working/StreamerIAWife && python3 crear_ubuntu_master_dataset.py
+   !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 crear_ubuntu_master_dataset.py
 
 2. El script empaquetará el Ubuntu completo y lo subirá automáticamente a tu cuenta
    como el Dataset: miguelguerra26/linuwaifu-ubuntu-master-100gb
