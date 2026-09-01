@@ -149,13 +149,19 @@ subprocess.run("git config --global user.email 'miguelguerra200022@gmail.com' &&
 # Función de auto-guardado a Google Drive (Excluyendo gdrive para evitar loops recursivos)
 def auto_save_user_state():
     try:
-        # 1. Guardar copia de credenciales directamente en Google Drive (seguro y privado)
+        # 1. Guardar copia de credenciales y lista de paquetes directamente en Google Drive
         target_gdrive_dir = Path("/root/gdrive/PC_Kaggle/system_state")
-        if target_gdrive_dir.exists() and GDRIVE_CONF_FILE.exists():
-            try:
-                shutil.copy2(GDRIVE_CONF_FILE, target_gdrive_dir / "rclone.conf")
-            except Exception:
-                pass
+        if target_gdrive_dir.exists():
+            if GDRIVE_CONF_FILE.exists():
+                try:
+                    shutil.copy2(GDRIVE_CONF_FILE, target_gdrive_dir / "rclone.conf")
+                except Exception:
+                    pass
+            if EXTRA_PKGS_FILE.exists():
+                try:
+                    shutil.copy2(EXTRA_PKGS_FILE, target_gdrive_dir / "packages_extra.txt")
+                except Exception:
+                    pass
 
         # 2. Respaldo cifrado en base64 sin bloquear la terminal jamás
         if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
@@ -346,61 +352,103 @@ except Exception as e:
 # ==============================================================================
 # 2. INSTALACIÓN DE LA SUITE COMPLETA UBUNTU (GIGABYTES) + LIBREOFFICE + CODECS
 # ==============================================================================
-print("📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...", flush=True)
-log("Instalando paquetes oficiales de Ubuntu...")
-subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+print("📦 [2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
-full_ubuntu_pkgs = [
-    "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
-    "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-    "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
-    "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
-    "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-    "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
-    "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
-    "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
-]
+# 1. Detección Inteligente de Base de Datos (100GB Kaggle Dataset)
+master_dataset_path = None
+for candidate in [
+    Path("/kaggle/input/linuwaifu-ubuntu-master-100gb"),
+    Path("/kaggle/input/linuwaifu-ubuntu-master"),
+    Path("/kaggle/input/linuwaifu_ubuntu_master_100gb"),
+]:
+    if candidate.exists():
+        master_dataset_path = candidate
+        break
 
-extra_pkgs = []
-if EXTRA_PKGS_FILE.exists():
-    extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().splitlines() if p.strip() and not p.startswith("#")]
+if not master_dataset_path and Path("/kaggle/input").exists():
+    for p in Path("/kaggle/input").iterdir():
+        if (p / "apt_archives").exists():
+            master_dataset_path = p
+            break
 
-all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
+if master_dataset_path and (master_dataset_path / "apt_archives").exists():
+    print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name}!", flush=True)
+    print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
+    log(f"Cargando paquetes base desde Dataset: {master_dataset_path}")
+    
+    # Instalar paquetes .deb pre-empaquetados en milisegundos sin descargar nada
+    subprocess.run(f"dpkg -i --force-depends {master_dataset_path}/apt_archives/*.deb >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"apt-get install -f -y -qq >> {LOG_FILE} 2>&1 || true", shell=True)
+    
+    # Reutilizar noVNC pre-empaquetado si está presente
+    novnc_dir = Path("/kaggle/working/noVNC")
+    if not novnc_dir.exists() and (master_dataset_path / "noVNC").exists():
+        shutil.copytree(master_dataset_path / "noVNC", novnc_dir)
+        
+    # Instalar Google Chrome pre-empaquetado
+    chrome_deb = master_dataset_path / "google-chrome-stable_current_amd64.deb"
+    if chrome_deb.exists():
+        subprocess.run(f"dpkg -i {chrome_deb} >> {LOG_FILE} 2>&1 || true", shell=True)
+        
+    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+    print("  ✅ [✓] Suite Oficial de Ubuntu cargada en 2 segundos desde Dataset.", flush=True)
+else:
+    # Método tradicional de descarga e instalación bajo demanda
+    log("Instalando paquetes oficiales de Ubuntu bajo demanda...")
+    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
 
-# Descargar o reutilizar Google Chrome Oficial desde caché de Drive
-chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
-gdrive_cache_deb = Path("/root/gdrive/PC_Kaggle/Cache/google-chrome-stable_current_amd64.deb")
+    full_ubuntu_pkgs = [
+        "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
+        "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+        "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
+        "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
+        "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+        "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
+        "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
+        "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
+    ]
 
-if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
-    print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
-    try:
-        shutil.copy2(gdrive_cache_deb, chrome_deb)
-    except Exception:
-        pass
+    extra_pkgs = []
+    if EXTRA_PKGS_FILE.exists():
+        extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().splitlines() if p.strip() and not p.startswith("#")]
 
-if not chrome_deb.exists() or chrome_deb.stat().st_size < 1000:
-    subprocess.run(
-        "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /kaggle/working/google-chrome-stable_current_amd64.deb",
-        shell=True
-    )
-    if chrome_deb.exists() and chrome_deb.stat().st_size > 50_000_000 and os.path.exists("/root/gdrive"):
+    all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
+
+    # Descargar o reutilizar Google Chrome Oficial desde caché de Drive
+    chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
+    gdrive_cache_deb = Path("/root/gdrive/PC_Kaggle/Cache/google-chrome-stable_current_amd64.deb")
+
+    if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
+        print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
         try:
-            os.makedirs("/root/gdrive/PC_Kaggle/Cache", exist_ok=True)
-            shutil.copy2(chrome_deb, gdrive_cache_deb)
+            shutil.copy2(gdrive_cache_deb, chrome_deb)
         except Exception:
             pass
 
-if chrome_deb.exists():
-    all_pkgs.append(str(chrome_deb))
+    if not chrome_deb.exists() or chrome_deb.stat().st_size < 1000:
+        subprocess.run(
+            "wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /kaggle/working/google-chrome-stable_current_amd64.deb",
+            shell=True
+        )
+        if chrome_deb.exists() and chrome_deb.stat().st_size > 50_000_000 and os.path.exists("/root/gdrive"):
+            try:
+                os.makedirs("/root/gdrive/PC_Kaggle/Cache", exist_ok=True)
+                shutil.copy2(chrome_deb, gdrive_cache_deb)
+            except Exception:
+                pass
 
-cmd_install = (
-    "apt-get update -qq && "
-    f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-    "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && "
-    "rm -f /kaggle/working/google-chrome-stable_current_amd64.deb"
-)
-subprocess.run(cmd_install, shell=True)
-subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+    if chrome_deb.exists():
+        all_pkgs.append(str(chrome_deb))
+
+    cmd_install = (
+        "apt-get update -qq && "
+        f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
+        "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && "
+        "rm -f /kaggle/working/google-chrome-stable_current_amd64.deb"
+    )
+    subprocess.run(cmd_install, shell=True)
+    subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
+    print("  ✅ [✓] Suite Oficial de Ubuntu instalada con éxito.", flush=True)
 
 # Descargar noVNC si no existe
 novnc_dir = Path("/kaggle/working/noVNC")
@@ -679,6 +727,18 @@ shortcuts = {
         "Terminal=true\n"
         "Categories=System;\n"
     ),
+    "Guardar_en_Database_Kaggle_100GB.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=📦 Guardar en Database Kaggle (100GB)\n"
+        "Comment=Guarda todos los programas instalados con apt y juegos en tu Dataset de 100GB\n"
+        f"Exec=python3 {BASE_DIR}/guardar_en_database_kaggle.py\n"
+        "Path=/kaggle/working/StreamerIAWife\n"
+        "Icon=drive-harddisk\n"
+        "Terminal=false\n"
+        "Categories=System;\n"
+    ),
     "Monitor_GPUs_Tesla_T4.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
@@ -707,6 +767,10 @@ for fname, content in shortcuts.items():
     s_path = desktop_dir / fname
     s_path.write_text(content, encoding="utf-8")
     s_path.chmod(0o755)
+
+# Instalar ejecutable /usr/local/bin/guardar_en_database_kaggle
+subprocess.run(f"ln -sf '{BASE_DIR}/guardar_en_database_kaggle.py' /usr/local/bin/guardar_en_database_kaggle 2>/dev/null || true", shell=True)
+subprocess.run("chmod +x /usr/local/bin/guardar_en_database_kaggle 2>/dev/null || true", shell=True)
 
 # ==============================================================================
 # 4. LEVANTAR PANTALLA COMPLETA 16:9 1080p (SIN NCACHE / RESOLUCIÓN NATIVA)

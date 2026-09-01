@@ -1,27 +1,52 @@
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 FULL EDITION (COMANDO PREDETERMINADO)
+🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 FULL EDITION (SUITE COMPLETA 100GB)
 ================================================================================
 
-🚀 COMANDO MAESTRO ÚNICO (TODO EN 1 CELDA):
+🚀 1. COMANDO MAESTRO DE ARRANQUE (COPIAR Y PEGAR EN CELDA DE KAGGLE):
 --------------------------------------------------------------------------------
 !rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 
-✨ ¿Qué incluye este comando predeterminado?:
-• 📦 Suite Oficial Completa de Ubuntu de Canonical (Gigabytes).
-• 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress).
-• 🎬 Suite Multimedia, audio virtual PulseAudio y códecs oficiales.
+✨ Características del Sistema:
+• ⚡ Detección automática de Dataset de 100GB (Arranque en 2 segundos si está conectado).
+• 📦 Suite Oficial Completa de Ubuntu de Canonical (Desktop XFCE + LibreOffice + Chrome).
+• 📊 HUD Cyberpunk flotante en pantalla con FPS en vivo (60 FPS) y PING (ms) en tiempo real.
 • 🖥️ Pantalla Completa 16:9 Full HD (1920x1080) nativa de borde a borde.
-• ☁️ Google Drive de 5TB (PC_Kaggle) conectado como disco principal.
-• 🌸 LinuWaifu 3D IA Studio con voz y chat en vivo en pantalla.
-• 🎮 2x GPUs NVIDIA Tesla T4 activas y auto-guardado cada 5 minutos.
-
+• ☁️ Google Drive de 5TB (PC_Kaggle) sincronizado como disco principal persistente.
+• 🎮 2x GPUs NVIDIA Tesla T4 activas con monitoreo de VRAM y carga cada 5 minutos.
+• 🌸 LinuWaifu 3D IA Studio con voz, emociones y chat en pantalla.
 
 ================================================================================
-🩺 COMANDO DE AUDITORÍA PROFUNDA DE PAQUETES (VERIFICAR EN CUALQUIER MOMENTO):
+📦 2. CÓMO CREAR EL DATASET DE 100GB EN KAGGLE (SE HACE 1 SOLA VEZ):
+--------------------------------------------------------------------------------
+Si quieres crear tu propia Base de Datos de 100GB en Kaggle para que el sistema
+arranque en 2 segundos sin descargar nada:
+
+1. Ejecuta este comando en una celda de Kaggle:
+   !cd /kaggle/working/StreamerIAWife && python3 crear_ubuntu_master_dataset.py
+
+2. El script empaquetará el Ubuntu completo y lo subirá automáticamente a tu cuenta
+   como el Dataset: miguelguerra26/linuwaifu-ubuntu-master-100gb
+
+3. En el panel derecho de Kaggle -> "Input" -> "Add Input" -> "Your Datasets" ->
+   Selecciona 'linuwaifu-ubuntu-master-100gb' y dale a "Add".
+
+¡Listo! A partir de ese momento tu Cloud PC arrancará en 2 segundos.
+
+================================================================================
+💾 3. BOTONES EN EL ESCRITORIO DE TU CLOUD PC:
+--------------------------------------------------------------------------------
+• 📦 'Guardar en Database Kaggle (100GB)': Guarda programas instalados con apt y juegos en tu Dataset.
+• 💾 'Guardar Estado de mi PC (Nube)': Guarda partidas, perfiles y descargas a Google Drive 5TB.
+• 🎮 'Mis Juegos 5TB Google Drive': Abre tu carpeta de 5TB con tus juegos y archivos.
+• 📊 'Monitor GPUs Tesla T4': Abre el monitor en vivo 'nvtop' de tus dos GPUs Tesla T4.
+• 🌐 'Google Chrome Oficial': Navegador web oficial con aceleración de hardware.
+
+================================================================================
+🩺 4. AUDITORÍA PROFUNDA DE HARDWARE Y PAQUETES:
 --------------------------------------------------------------------------------
 • En una Celda de Kaggle:
-!git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/inspect_ubuntu_packages.py
+  !git -C /kaggle/working/StreamerIAWife pull 2>/dev/null || git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && python3 /kaggle/working/StreamerIAWife/inspect_ubuntu_packages.py
 
 • En la Terminal DENTRO de Ubuntu (Ctrl + Alt + T):
-cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
+  cd /kaggle/working/StreamerIAWife && git pull && python3 inspect_ubuntu_packages.py
 ================================================================================
