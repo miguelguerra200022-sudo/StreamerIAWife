@@ -354,6 +354,23 @@ except Exception as e:
 # ==============================================================================
 print("📦 [2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
+full_ubuntu_pkgs = [
+    "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
+    "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
+    "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
+    "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
+    "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
+    "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
+    "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
+    "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
+]
+
+extra_pkgs = []
+if EXTRA_PKGS_FILE.exists():
+    extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().splitlines() if p.strip() and not p.startswith("#")]
+
+all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
+
 # 1. Detección Inteligente y Recursiva de Base de Datos (100GB Kaggle Dataset)
 input_dir = Path("/kaggle/input")
 input_contents = [p.name for p in input_dir.iterdir()] if input_dir.exists() else []
@@ -396,13 +413,17 @@ if master_archives_dir and master_archives_dir.exists():
     print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
     log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
-    # Instalar paquetes .deb pre-empaquetados en milisegundos sin descargar nada
-    cmd_install_dataset = (
-        f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-all {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1 ; "
-        f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a >> {LOG_FILE} 2>&1 ; "
-        f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y --allow-downgrades >> {LOG_FILE} 2>&1 || true"
+    # 1. Poblar caché de apt con los .deb del dataset para evitar descargas de internet
+    subprocess.run("mkdir -p /var/cache/apt/archives", shell=True)
+    subprocess.run(f"cp -n {master_archives_dir}/*.deb /var/cache/apt/archives/ 2>/dev/null || true", shell=True)
+    
+    # 2. Instalación nativa mediante apt con resolución de dependencias perfecta
+    cmd_install_cache = (
+        "apt-get update -qq && "
+        f"DEBIAN_FRONTEND=noninteractive apt-get install -y --no-download {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 || "
+        f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1"
     )
-    subprocess.run(cmd_install_dataset, shell=True)
+    subprocess.run(cmd_install_cache, shell=True)
     
     # Reutilizar noVNC pre-empaquetado si está presente
     novnc_dir = Path("/kaggle/working/noVNC")
@@ -420,31 +441,14 @@ if master_archives_dir and master_archives_dir.exists():
     # Instalar Google Chrome pre-empaquetado
     chrome_debs = list(master_dataset_path.rglob("google-chrome*.deb"))
     if chrome_debs:
-        subprocess.run(f"dpkg -i {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
+        subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
         
     subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-    print("  ✅ [✓] Suite Oficial de Ubuntu cargada en 2 segundos desde Dataset.", flush=True)
+    print("  ✅ [✓] Suite Oficial de Ubuntu cargada en segundos desde Dataset.", flush=True)
 else:
     # Método tradicional de descarga e instalación bajo demanda
     log("Instalando paquetes oficiales de Ubuntu bajo demanda...")
     subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
-
-    full_ubuntu_pkgs = [
-        "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
-        "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
-        "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
-        "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
-        "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
-        "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
-        "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
-        "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
-    ]
-
-    extra_pkgs = []
-    if EXTRA_PKGS_FILE.exists():
-        extra_pkgs = [p.strip() for p in EXTRA_PKGS_FILE.read_text().splitlines() if p.strip() and not p.startswith("#")]
-
-    all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 
     # Descargar o reutilizar Google Chrome Oficial desde caché de Drive
     chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
