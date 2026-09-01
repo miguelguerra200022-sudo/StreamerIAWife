@@ -354,41 +354,69 @@ except Exception as e:
 # ==============================================================================
 print("📦 [2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
-# 1. Detección Inteligente de Base de Datos (100GB Kaggle Dataset)
+# 1. Detección Inteligente y Recursiva de Base de Datos (100GB Kaggle Dataset)
+input_dir = Path("/kaggle/input")
+input_contents = [p.name for p in input_dir.iterdir()] if input_dir.exists() else []
+print(f"  🔍 Analizando entradas en /kaggle/input: {input_contents if input_contents else 'Ninguna adjunta'}", flush=True)
+
 master_dataset_path = None
-for candidate in [
-    Path("/kaggle/input/linuwaifu-ubuntu-master-100gb"),
-    Path("/kaggle/input/linuwaifu-ubuntu-master"),
-    Path("/kaggle/input/linuwaifu_ubuntu_master_100gb"),
-]:
-    if candidate.exists():
-        master_dataset_path = candidate
-        break
+master_archives_dir = None
 
-if not master_dataset_path and Path("/kaggle/input").exists():
-    for p in Path("/kaggle/input").iterdir():
-        if (p / "apt_archives").exists():
-            master_dataset_path = p
+if input_dir.exists():
+    # 1. Búsqueda profunda y recursiva de la carpeta apt_archives
+    for arch_candidate in input_dir.rglob("apt_archives"):
+        if arch_candidate.is_dir() and len(list(arch_candidate.glob("*.deb"))) > 10:
+            master_archives_dir = arch_candidate
+            master_dataset_path = arch_candidate.parent
             break
+            
+    # 2. Búsqueda por candidatos de nombres
+    if not master_archives_dir:
+        for candidate_name in ["linuwaifu-ubuntu-master-100gb", "linuwaifu-ubuntu-master", "linuwaifu_ubuntu_master_100gb"]:
+            cand_p = input_dir / candidate_name
+            if cand_p.exists():
+                master_dataset_path = cand_p
+                if (cand_p / "apt_archives").exists():
+                    master_archives_dir = cand_p / "apt_archives"
+                break
 
-if master_dataset_path and (master_dataset_path / "apt_archives").exists():
-    print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name}!", flush=True)
+    # 3. Búsqueda general de cualquier carpeta con debs
+    if not master_archives_dir:
+        for p in input_dir.iterdir():
+            if p.is_dir():
+                debs = list(p.rglob("*.deb"))
+                if len(debs) > 30:
+                    master_dataset_path = p
+                    master_archives_dir = debs[0].parent
+                    break
+
+if master_archives_dir and master_archives_dir.exists():
+    deb_count = len(list(master_archives_dir.glob("*.deb")))
+    print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)!", flush=True)
     print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
-    log(f"Cargando paquetes base desde Dataset: {master_dataset_path}")
+    log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
     
     # Instalar paquetes .deb pre-empaquetados en milisegundos sin descargar nada
-    subprocess.run(f"dpkg -i --force-depends {master_dataset_path}/apt_archives/*.deb >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"dpkg -i --force-depends {master_archives_dir}/*.deb >> {LOG_FILE} 2>&1 || true", shell=True)
     subprocess.run(f"apt-get install -f -y -qq >> {LOG_FILE} 2>&1 || true", shell=True)
     
     # Reutilizar noVNC pre-empaquetado si está presente
     novnc_dir = Path("/kaggle/working/noVNC")
-    if not novnc_dir.exists() and (master_dataset_path / "noVNC").exists():
-        shutil.copytree(master_dataset_path / "noVNC", novnc_dir)
-        
+    if not novnc_dir.exists():
+        found_novnc = list(master_dataset_path.rglob("noVNC"))
+        if found_novnc and found_novnc[0].is_dir():
+            try:
+                shutil.copytree(found_novnc[0], novnc_dir)
+            except Exception:
+                pass
+        if not novnc_dir.exists():
+            subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
+            subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+            
     # Instalar Google Chrome pre-empaquetado
-    chrome_deb = master_dataset_path / "google-chrome-stable_current_amd64.deb"
-    if chrome_deb.exists():
-        subprocess.run(f"dpkg -i {chrome_deb} >> {LOG_FILE} 2>&1 || true", shell=True)
+    chrome_debs = list(master_dataset_path.rglob("google-chrome*.deb"))
+    if chrome_debs:
+        subprocess.run(f"dpkg -i {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
         
     subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
     print("  ✅ [✓] Suite Oficial de Ubuntu cargada en 2 segundos desde Dataset.", flush=True)
