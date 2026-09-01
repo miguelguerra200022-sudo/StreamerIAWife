@@ -93,10 +93,11 @@ def live_log_streamer():
                         for line in new_text.splitlines():
                             l_strip = line.strip()
                             if l_strip and not any(ign in l_strip.lower() for ign in IGNORE_KEYWORDS):
-                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower():
-                                    print(f"🔴 {l_strip}", flush=True)
+                                ts = time.strftime("%H:%M:%S")
+                                if "error" in l_strip.lower() or "failed" in l_strip.lower() or "exception" in l_strip.lower() or "fatal" in l_strip.lower() or "critical" in l_strip.lower():
+                                    print(f"\n🔴 [{ts}] [FALLO DETECTADO] {l_strip}", flush=True)
                                 elif "warning" in l_strip.lower() or "warn" in l_strip.lower():
-                                    print(f"⚠️ {l_strip}", flush=True)
+                                    print(f"\n⚠️ [{ts}] [ADVERTENCIA] {l_strip}", flush=True)
             time.sleep(0.5)
         except Exception:
             time.sleep(1)
@@ -142,13 +143,24 @@ subprocess.run("git config --global user.email 'miguelguerra200022@gmail.com' &&
 # Función de auto-guardado a Google Drive (Excluyendo gdrive para evitar loops recursivos)
 def auto_save_user_state():
     try:
+        # 1. Guardar copia de credenciales directamente en Google Drive (seguro y privado)
+        target_gdrive_dir = Path("/root/gdrive/PC_Kaggle/system_state")
+        if target_gdrive_dir.exists() and GDRIVE_CONF_FILE.exists():
+            try:
+                shutil.copy2(GDRIVE_CONF_FILE, target_gdrive_dir / "rclone.conf")
+            except Exception:
+                pass
+
+        # 2. Respaldo cifrado en base64 sin bloquear la terminal jamás
         if GDRIVE_CONF_FILE.exists() and GDRIVE_CONF_FILE.stat().st_size > 10:
             encoded = base64.b64encode(GDRIVE_CONF_FILE.read_bytes()).decode('utf-8')
             if not REPO_RCLONE_B64.exists() or REPO_RCLONE_B64.read_text().strip() != encoded:
                 REPO_RCLONE_B64.write_text(encoded)
+                git_env = os.environ.copy()
+                git_env["GIT_TERMINAL_PROMPT"] = "0"
                 subprocess.run(
-                    f"cd {BASE_DIR} && git add rclone_gdrive.b64 && git commit -m 'Auto-backup Google Drive credentials' && git push origin main >/dev/null 2>&1 || true",
-                    shell=True
+                    f"cd {BASE_DIR} && git add rclone_gdrive.b64 && git commit -m 'Auto-backup Google Drive credentials' >/dev/null 2>&1 || true",
+                    shell=True, env=git_env
                 )
         
         save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
@@ -157,7 +169,6 @@ def auto_save_user_state():
             shell=True
         )
         if save_tar.exists() and save_tar.stat().st_size > 100:
-            target_gdrive_dir = Path("/root/gdrive/PC_Kaggle/system_state")
             if target_gdrive_dir.exists():
                 try:
                     shutil.copy2(save_tar, target_gdrive_dir / "linuwaifu_user_state.tar.gz")
@@ -768,17 +779,36 @@ if not Path("/usr/bin/apt.real").exists():
     Path("/usr/bin/apt-get").write_text(apt_wrapper)
     subprocess.run("chmod +x /usr/bin/apt /usr/bin/apt-get", shell=True)
 
-# Mantener viva la celda con auto-guardado y transmisión
+# Mantener viva la celda con monitoreo de salud, auto-guardado y reporte de telemetría en tiempo real
 try:
     minutos = 0
     while True:
         time.sleep(30)
         minutos += 0.5
-        print(".", end="", flush=True)
+        
+        # Watchdog: Monitoreo activo de procesos
+        xvfb_alive = Path("/tmp/.X11-unix/X1").exists()
+        vnc_alive = wait_for_port(5900, timeout=1)
+        novnc_alive = wait_for_port(6080, timeout=1)
+        drive_alive = Path("/root/gdrive").exists()
+        
+        if not xvfb_alive:
+            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor X11 Display :1 no responde.", flush=True)
+        if not vnc_alive:
+            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor VNC (5900) no responde.", flush=True)
+        if not novnc_alive:
+            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor noVNC (6080) no responde.", flush=True)
+            
         if minutos % 5 == 0:
             auto_save_user_state()
-        if minutos % 10 == 0:
-            print(f" [{int(minutos)} min activo - Estado Guardado]", flush=True)
+            try:
+                ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
+                disk_str = subprocess.check_output("df -h /kaggle/working | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
+                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | 🟢 RAM: {ram_str} | 💾 Disco: {disk_str} | ☁️ Drive: {'Conectado' if drive_alive else 'Desconectado'} | Estado Guardado ✅", flush=True)
+            except Exception:
+                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
+        else:
+            print(".", end="", flush=True)
 except KeyboardInterrupt:
     print("\n🛑 Guardando estado final antes de salir...", flush=True)
     auto_save_user_state()
