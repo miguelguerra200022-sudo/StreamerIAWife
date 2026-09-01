@@ -1,34 +1,33 @@
-Mira lo que me salio ahora, ¿Podemos hacer que muestre hasta el mas minimo error que se presente, cualquier cambio, cualquier fallo, cualquier cosa?:
-
-
 Cloning into '/kaggle/working/StreamerIAWife'...
-remote: Enumerating objects: 524, done.
-remote: Counting objects: 100% (164/164), done.
-remote: Compressing objects: 100% (135/135), done.
-remote: Total 524 (delta 92), reused 77 (delta 28), pack-reused 360 (from 1)
-Receiving objects: 100% (524/524), 6.74 MiB | 45.70 MiB/s, done.
-Resolving deltas: 100% (301/301), done.
+remote: Enumerating objects: 530, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (5/5), done.
+remote: Total 530 (delta 2), reused 3 (delta 1), pack-reused 524 (from 1)
+Receiving objects: 100% (530/530), 6.75 MiB | 25.31 MiB/s, done.
+Resolving deltas: 100% (306/306), done.
 
 ==============================================================================
 🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...
 ==============================================================================
 ☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...
-W: Skipping acquire of configured file 'main/source/Sources' as repository 'https://r2u.stat.illinois.edu/ubuntu jammy InRelease' does not seem to provide it (sources.list entry misspelt?)
   ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.
   🔄 [✓] Estableciendo Sincronización Inteligente para perfiles y credenciales...
 📦 [2/5] Descargando e instalando Suite Oficial Completa de Ubuntu (Gigabytes)...
+  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...
   ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.
-  ℹ️ Primera ejecución: Creando entorno inicial limpio.
+  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.
 🎨 [3/5] Configurando apariencia oficial Ubuntu 24.04 (Yaru-Dark)...
 🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...
-🔴 01/09/2026 01:40:22   errors, etc) it may be disabled:
-🔴 01/09/2026 01:40:22   errors, etc) it may be disabled via: '-noscr'
+
+🔴 [02:16:15] [FALLO DETECTADO] 01/09/2026 02:16:15   errors, etc) it may be disabled:
+
+🔴 [02:16:15] [FALLO DETECTADO] 01/09/2026 02:16:15   errors, etc) it may be disabled via: '-noscr'
 🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...
-                                                                                                    
+
 🎮 GPUs NVIDIA Tesla Activas: 2
   • GPU 0: Tesla T4 (14.6 GB VRAM)
   • GPU 1: Tesla T4 (14.6 GB VRAM)
-💾 Espacio Libre en Disco: 20G disponibles de 20G
+💾 Espacio Libre en Disco: 19G disponibles de 20G
 
 ==============================================================================
 🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!
@@ -55,11 +54,4 @@ W: Skipping acquire of configured file 'main/source/Sources' as repository 'http
    • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.
 ==============================================================================
 
-..........[main 161f2ce] Auto-backup Google Drive credentials
- 1 file changed, 1 insertion(+), 1 deletion(-)
- rewrite rclone_gdrive.b64 (71%)
-Username for 'https://github.com': 🔴 (xfsettingsd:21081): libxfce4ui-WARNING **: 01:50:46.147: ICE I/O Error
-⚠️ (xfsettingsd:21081): libxfce4ui-WARNING **: 01:50:46.147: Disconnected from session manager.
-🔴 (xfwm4:21073): libxfce4ui-WARNING **: 01:50:46.147: ICE I/O Error
-⚠️ (xfwm4:21073): libxfce4ui-WARNING **: 01:50:46.148: Disconnected from session manager.
-Password for 'https://%03@github.com': 
+...
