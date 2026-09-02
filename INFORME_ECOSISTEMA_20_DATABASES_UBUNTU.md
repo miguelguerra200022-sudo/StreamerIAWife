@@ -13,7 +13,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | **Gaming Portátil** | **[⚙️ LISTO PARA COMPILAR]** |
 | **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | **Gaming Nintendo** | **[⚙️ LISTO PARA COMPILAR]** |
 | **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | **Gaming Arcade** | **[⚙️ LISTO PARA COMPILAR]** |
-| **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | PC Gaming | [⏳ Planificado] |
+| **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | **PC Gaming** | **[⚙️ LISTO PARA COMPILAR]** |
 | **7** | **Ubuntu - 3D Avatar & VTuber Studio** | `ubuntu-3d-avatar-studio` | Creadores & 3D | [⏳ Planificado] |
 | **8** | **Ubuntu - Suite Streamer OBS Pro** | `ubuntu-streamer-obs-pro` | Streaming & Video | [⏳ Planificado] |
 | **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | Arte 2D | [⏳ Planificado] |
@@ -237,14 +237,28 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🏆 DATABASE 6: `Ubuntu - PC Gaming & Launchers`
+### 🏆 DATABASE 6: `Ubuntu - PC Gaming & Launchers` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-pc-gaming-launchers` | **Capacidad:** 100 GB
-* **Propósito:** Plataforma integral para jugar títulos de PC nativos de Steam y Epic Games.
-* **Contenido:**
-  - **Steam Oficial:** Pre-configurado con Proton-GE para máxima compatibilidad de juegos de Windows en Linux.
-  - **Heroic Games Launcher:** Acceso directo a tu biblioteca de Epic Games Store y GOG.
-  - **Lutris:** Instalador universal de juegos independientes.
-  - **GameMode & MangoHud:** Optimizador de rendimiento de CPU y overlay de FPS en pantalla.
+* **Propósito:** La plataforma definitiva de PC Master Race para jugar títulos nativos de Steam, Epic Games, GOG y Windows en Linux con aceleración por hardware NVIDIA Tesla T4, capas de traducción Vulkan (Proton-GE / DXVK / VKD3D) y optimizadores de FPS.
+* **Launchers & Plataformas Integradas:**
+  - **Steam Oficial para Linux:** Con soporte multi-arquitectura de 32-bit (i386) pre-configurado para ejecutar tanto juegos nativos de Linux como el 95% del catálogo de Windows.
+  - **Heroic Games Launcher (Epic Games & GOG):** Cliente visual de alto rendimiento con sincronización automática de partidas en la nube de Epic Games Store y GOG.
+  - **Lutris Gaming Platform:** Gestor universal para conectar librerías de EA App, Ubisoft Connect, Battle.net, GOG y juegos independientes.
+  - **Bottles (Windows Sandboxed Apps):** Gestor de prefijos Wine con dependencias preinstaladas (DirectX 9/10/11/12, Visual C++ 2005-2022, .NET Framework 4.8, PhysX).
+* **Capas de Traducción & Herramientas de Rendimiento (GPU Tesla T4):**
+  - **Proton-GE (GloriousEggroll Latest):** La versión más avanzada de Proton con códecs de video propietarios habilitados (WMA, MP4 para cinemáticas de juegos).
+  - **DXVK & VKD3D-Proton:** Conversión de instrucciones DirectX 9/10/11/12 a Vulkan en tiempo real con cero sobrecarga.
+  - **Feral GameMode (`gamemoderun`):** Ajusta automáticamente el gobernador de la CPU a modo Alto Rendimiento y prioridades de E/S de disco mientras juegas.
+  - **MangoHud (Overlay de FPS & Hardware):** Monitor visual en pantalla que muestra FPS en vivo, gráfica de frametimes, temperatura y uso de VRAM de la GPU Tesla T4.
+* **Integración con Almacenamiento Infinito (Google Drive 5TB):**
+  - Los launchers están preconfigurados para instalar bibliotecas de juegos pesados (como GTA V, Cyberpunk, RDR2) directamente en `/root/gdrive/PC_Kaggle/Juegos`, sin tocar los 20GB locales.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🎮 Steam Oficial (con Proton-GE).desktop`
+    - `🏆 Epic Games & GOG (Heroic Launcher).desktop`
+    - `🍷 Lutris Gaming Platform.desktop`
+    - `🍾 Bottles (Apps y Juegos Windows).desktop`
+    - `📁 Biblioteca de Juegos PC (Google Drive 5TB).desktop`
 
 ---
 
