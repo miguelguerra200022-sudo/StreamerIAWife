@@ -1562,6 +1562,14 @@ if web_tunnel_wifi:
         if Path("/root/gdrive/PC_Kaggle/system_state").exists():
             Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
         subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+        
+        # Enviar notificación automática a tu celular por Telegram
+        try:
+            telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
+            if telegram_script.exists():
+                subprocess.run(f"python3 '{telegram_script}' '🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE!</b>\\n\\n👉 <b>WiFi:</b> {web_tunnel_wifi}\\n📱 <b>Móvil:</b> {web_tunnel_mobile}\\n🔑 <b>Pass:</b> {VNC_PASSWORD}' >/dev/null 2>&1 || true", shell=True)
+        except Exception:
+            pass
     except Exception:
         pass
 
