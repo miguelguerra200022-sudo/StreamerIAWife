@@ -20,7 +20,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | **3D & VFX** | **[⚙️ LISTO PARA COMPILAR]** |
 | **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | **Inteligencia Artificial** | **[⚙️ LISTO PARA COMPILAR]** |
 | **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | **Audio & Voz IA** | **[⚙️ LISTO PARA COMPILAR]** |
-| **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | Inteligencia Artificial | [⏳ Planificado] |
+| **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | **Arte & Imagen IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | Música & Audio | [⏳ Planificado] |
 | **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | Programación | [⏳ Planificado] |
 | **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | Seguridad & Redes | [⏳ Planificado] |
@@ -438,13 +438,32 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🎨 DATABASE 13: `Ubuntu - Generador de Arte ComfyUI SDXL`
+### 🎨 DATABASE 13: `Ubuntu - Generador de Arte ComfyUI SDXL` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-ai-image-comfyui` | **Capacidad:** 100 GB
-* **Propósito:** Generación de imágenes y arte digital por Inteligencia Artificial con aceleración GPU.
-* **Contenido:**
-  - **ComfyUI & Automatic1111:** Interfaces profesionales basadas en nodos para Stable Diffusion.
-  - **Modelos SDXL:** Checkpoints de estilo anime, fotorrealismo, arte conceptual y 3D.
-  - **ControlNet & LoRAs:** Para controlar poses exactas, manos perfectas y estilos artísticos.
+* **Propósito:** El estudio de generación de imágenes, arte digital, fotorrealismo extremo, anime y animación por Inteligencia Artificial más potente y completo de Linux, acelerado por las GPUs NVIDIA Tesla T4 con arquitectura de nodos de bajo consumo de VRAM y generación en segundos.
+* **Interfaces de Generación SOTA & Animación:**
+  - **ComfyUI Pro (con ComfyUI-Manager):** El motor estándar de la industria basado en grafos y nodos. Consume un 40% menos de VRAM que interfaces tradicionales y permite encadenar escaladores, filtros y ControlNet.
+  - **Fooocus (Experiencia Estilo Midjourney):** Generación de imágenes fotorrealistas y estilizadas en 1 solo clic con interfaz minimalista (aplica automáticamente mejoras de iluminación, composición y paleta de color).
+  - **SD-WebUI Forge (Automatic1111 Optimizado):** Interfaz clásica con pestañas de *Text-to-Image*, *Image-to-Image* e *Inpainting* rápido para retocar áreas específicas.
+  - **AnimateDiff Evolved:** Generador de animaciones en bucle a 60 FPS, fondos en movimiento y videos cortos a partir de texto o imágenes estáticas.
+* **Catálogo Maestro de Checkpoints SDXL & FLUX.1:**
+  - **Pony Diffusion V6 XL / AutismMix:** El modelo insignia #1 del mundo para ilustración digital estilo anime, manga, VTubers y personajes fantásticos con perfecta comprensión de tags.
+  - **Juggernaut XL / RealVisXL:** El estándar de oro en fotorrealismo, textura de piel humana realista, retratos de estudio e iluminación cinemática.
+  - **FLUX.1 Schnell (Cuantizado GGUF/NF4):** El modelo de última generación de Black Forest Labs con renderizado perfecto de tipografía/textos legibles dentro de imágenes y anatomía impecable.
+  - **DreamShaper XL:** Ilustración 3D fantasy, arte conceptual de videojuegos y estética digital estilizada.
+* **ControlNet SDXL, Upscalers & Clonación de Rostros:**
+  - **ControlNet SDXL:** Modelos de *OpenPose* (control exacto de poses corporales), *Canny/Lineart* (convertir bocetos en dibujos acabados) y *Depth Maps*.
+  - **InstantID / IP-Adapter:** Clonación e inserción de rostros de personas reales en cualquier imagen o estilo artístico.
+  - **Upscalers 4K/8K:** `4x-UltraSharp` y `8x-NMKD-Superscale` para renderizar imágenes en resolución Ultra HD sin pérdida de nitidez.
+* **Servidor FastAPI Image Gateway (`fastapi_image_gateway.py`):**
+  - Expone un endpoint compatible al 100% con la API oficial de imágenes de OpenAI (`POST /v1/images/generations`) para crear imágenes desde bots de Discord, webs o apps móviles.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🎨 ComfyUI Pro (Nodos & SDXL / FLUX).desktop`
+    - `🚀 Fooocus (Generador Estilo Midjourney).desktop`
+    - `🎞️ AnimateDiff (Generador de Video & Bucles).desktop`
+    - `⚡ FastAPI Image Gateway (API OpenAI /v1/images).desktop`
+    - `📁 Bóveda de Checkpoints SDXL, LoRAs & ControlNet.desktop`
 
 ---
 
