@@ -517,7 +517,7 @@ try:
         content = vnc_html.read_text(encoding="utf-8")
         if "linu-hud-overlay" not in content:
             hud_code = """
-<!-- LINUWAIFU PERFORMANCE HUD OVERLAY (60 FPS / PING MONITOR) -->
+<!-- LINUWAIFU PERFORMANCE HUD OVERLAY (DRAGGABLE & COLLAPSIBLE 60 FPS / PING MONITOR) -->
 <style>
 #linu-hud-overlay {
     position: fixed;
@@ -538,14 +538,22 @@ try:
     display: flex;
     align-items: center;
     gap: 10px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: grab;
+    touch-action: none;
     user-select: none;
+    transition: box-shadow 0.2s, border-color 0.2s, opacity 0.2s;
 }
-#linu-hud-overlay:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(0, 255, 200, 0.5);
-    border-color: #00ffc8;
+#linu-hud-overlay:active {
+    cursor: grabbing;
+}
+#linu-hud-overlay.minimized {
+    padding: 5px 10px;
+    gap: 6px;
+    opacity: 0.8;
+    border-color: rgba(0, 255, 200, 0.3);
+}
+#linu-hud-overlay.minimized .hud-hideable {
+    display: none !important;
 }
 .hud-stat-pill {
     display: flex;
@@ -576,6 +584,26 @@ try:
     padding: 2px 8px;
     font-size: 11px;
 }
+.hud-toggle-btn {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 1;
+    color: #e2e8f0;
+    cursor: pointer;
+    margin-left: 2px;
+    transition: background 0.2s, transform 0.2s;
+}
+.hud-toggle-btn:hover {
+    background: rgba(255, 42, 133, 0.6);
+    transform: scale(1.15);
+}
 @keyframes hud-pulse {
     0% { transform: scale(0.95); opacity: 0.8; }
     50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #00ffc8; }
@@ -592,21 +620,103 @@ try:
     .hud-badge { display: none; }
 }
 </style>
-<div id="linu-hud-overlay" title="Monitor de Rendimiento en Tiempo Real">
+<div id="linu-hud-overlay" title="Arrastra para mover | Toca para minimizar/expandir">
     <div class="hud-dot" id="hud-status-dot"></div>
     <div class="hud-stat-pill"><span class="hud-val" id="hud-fps-text">60 FPS</span></div>
-    <span style="color: rgba(255,255,255,0.2)">|</span>
-    <div class="hud-stat-pill">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
-    <span style="color: rgba(255,255,255,0.2)">|</span>
-    <div class="hud-badge">2x Tesla T4 1080p</div>
+    <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
+    <div class="hud-stat-pill hud-hideable">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
+    <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
+    <div class="hud-badge hud-hideable">2x Tesla T4 1080p</div>
+    <div class="hud-toggle-btn" id="hud-toggle-btn" title="Minimizar / Expandir">−</div>
 </div>
 <script>
 (function() {
-    let frameCount = 0, lastTime = performance.now(), currentFps = 60;
+    const hud = document.getElementById("linu-hud-overlay");
+    const toggleBtn = document.getElementById("hud-toggle-btn");
     const fpsText = document.getElementById("hud-fps-text");
     const pingText = document.getElementById("hud-ping-text");
     const statusDot = document.getElementById("hud-status-dot");
 
+    // 1. Lógica de Minimizar / Esconder
+    let isMinimized = false;
+    function toggleMinimize(e) {
+        if (e) e.stopPropagation();
+        isMinimized = !isMinimized;
+        if (isMinimized) {
+            hud.classList.add("minimized");
+            if (toggleBtn) toggleBtn.innerText = "+";
+            hud.title = "Toca para expandir el monitor";
+        } else {
+            hud.classList.remove("minimized");
+            if (toggleBtn) toggleBtn.innerText = "−";
+            hud.title = "Arrastra para mover | Toca para minimizar";
+        }
+    }
+    if (toggleBtn) toggleBtn.addEventListener("click", toggleMinimize);
+
+    // 2. Lógica de Arrastre (Drag and Drop - Móvil y PC)
+    let isDragging = false;
+    let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
+    let hasMoved = false;
+
+    function onPointerDown(e) {
+        if (e.target === toggleBtn) return;
+        isDragging = true;
+        hasMoved = false;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        const rect = hud.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+        hud.style.left = initialLeft + "px";
+        hud.style.top = initialTop + "px";
+        hud.style.right = "auto";
+        hud.style.bottom = "auto";
+        document.addEventListener("mousemove", onPointerMove);
+        document.addEventListener("mouseup", onPointerUp);
+        document.addEventListener("touchmove", onPointerMove, { passive: false });
+        document.addEventListener("touchend", onPointerUp);
+    }
+
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasMoved = true;
+            if (e.cancelable) e.preventDefault();
+        }
+        let newLeft = initialLeft + dx;
+        let newTop = initialTop + dy;
+        const maxLeft = window.innerWidth - hud.offsetWidth - 5;
+        const maxTop = window.innerHeight - hud.offsetHeight - 5;
+        newLeft = Math.max(5, Math.min(newLeft, maxLeft));
+        newTop = Math.max(5, Math.min(newTop, maxTop));
+        hud.style.left = newLeft + "px";
+        hud.style.top = newTop + "px";
+    }
+
+    function onPointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        document.removeEventListener("mousemove", onPointerMove);
+        document.removeEventListener("mouseup", onPointerUp);
+        document.removeEventListener("touchmove", onPointerMove);
+        document.removeEventListener("touchend", onPointerUp);
+        if (!hasMoved && isMinimized) {
+            toggleMinimize();
+        }
+    }
+
+    hud.addEventListener("mousedown", onPointerDown);
+    hud.addEventListener("touchstart", onPointerDown, { passive: true });
+
+    // 3. Medición de FPS y Ping
+    let frameCount = 0, lastTime = performance.now(), currentFps = 60;
     function measureFps() {
         frameCount++;
         const now = performance.now();
