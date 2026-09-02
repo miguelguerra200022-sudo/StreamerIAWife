@@ -1101,6 +1101,8 @@ print("🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...",
 
 web_tunnel_wifi = None
 web_tunnel_mobile = None
+vnc_app_address = []
+
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
     ngrok_token = sys.argv[1].strip()
@@ -1124,14 +1126,6 @@ if ngrok_token:
             web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
         except Exception as e_ngrok:
             log(f"Ngrok endpoint ocupado o aviso: {e_ngrok}", "WARNING")
-            # Intento de reconexión sin dominio estático o túnel TCP
-            try:
-                tcp_tun = ngrok.connect(5900, "tcp")
-                tcp_clean = tcp_tun.public_url.replace("tcp://", "")
-                if tcp_clean:
-                    vnc_app_address.append(tcp_clean)
-            except Exception:
-                pass
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
@@ -1143,8 +1137,11 @@ if not web_tunnel_wifi:
             subprocess.run("wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
         if cf_bin.exists():
             proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://localhost:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for _ in range(25):
+            for _ in range(30):
                 line = proc_cf.stdout.readline()
+                if not line:
+                    time.sleep(0.3)
+                    continue
                 if "trycloudflare.com" in line:
                     match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
                     if match:
@@ -1152,7 +1149,6 @@ if not web_tunnel_wifi:
                         web_tunnel_wifi = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
                         web_tunnel_mobile = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
                         break
-                time.sleep(0.4)
     except Exception as e_cf:
         log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
@@ -1188,7 +1184,7 @@ def run_pinggy_tunnel():
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
-# Esperar activamente hasta 15 segundos para capturar la dirección exacta de Pinggy o Ngrok TCP
+# Esperar activamente hasta 15 segundos para capturar las conexiones
 for _ in range(30):
     if vnc_app_address and web_tunnel_wifi:
         break
