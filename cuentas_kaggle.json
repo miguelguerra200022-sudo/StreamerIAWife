@@ -7,6 +7,14 @@
       "titulo": "Cuenta Principal (djkevinzito@gmail.com / miguelguerra26)",
       "activa": true,
       "notas": "Cuenta master para Cloud PC y Datasets"
+    },
+    "miguelguerra200022@gmail.com": {
+      "email": "miguelguerra200022@gmail.com",
+      "username": "miguelguerra22",
+      "key": "b4031084ad25f34042347dfd7b6af451",
+      "titulo": "Cuenta 2 (miguelguerra200022@gmail.com / miguelguerra22)",
+      "activa": false,
+      "notas": "Segunda cuenta con cuota de GPU T4 x2 y CPU independiente"
     }
   },
   "cuenta_activa": "djkevinzito@gmail.com"
