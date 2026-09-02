@@ -26,7 +26,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | **Seguridad & Redes** | **[⚙️ LISTO PARA COMPILAR]** |
 | **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | **Finanzas & Cripto** | **[⚙️ LISTO PARA COMPILAR]** |
 | **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | **Educación & Ciencia** | **[⚙️ LISTO PARA COMPILAR]** |
-| **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | Entretenimiento | [⏳ Planificado] |
+| **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | **Anime & Mediateca** | **[⚙️ LISTO PARA COMPILAR]** |
 | **20** | **Ubuntu - Herramientas de Rescate & Diagnóstico** | `ubuntu-sysadmin-rescue-tools` | Mantenimiento | [⏳ Planificado] |
 
 ---
@@ -644,12 +644,37 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ### ⛩️ DATABASE 19: `Ubuntu - Anime Manga & Entretenimiento`
 * **Slug:** `ubuntu-anime-manga-media` | **Capacidad:** 100 GB
-* **Propósito:** Mediateca multimedia de entretenimiento, cine y lectura de cómics/manga.
-* **Contenido:**
-  - **Stremio:** Cine y series en streaming 1080p/4K con subtítulos automáticos.
-  - **Mihon / Tachiyomi Desktop:** Lector de manga, manhua y cómics con descarga para lectura offline.
-  - **Aniyomi:** Reproductor especializado de anime con sincronización de listas (MyAnimeList / AniList).
-  - **Kodi Media Center:** Centro multimedia completo para TV y música.
+* **Script Compilador:** `compilar_dataset19_anime_manga.py` | **Estado:** `[⚙️ LISTO PARA COMPILAR]`
+* **Propósito:** Mediateca multimedia integral de entretenimiento, streaming de cine y series en 4K, lectores de manga y cómics con descarga offline, reescalado neuronal en tiempo real mediante GPU y sincronización con redes de anime.
+* **Contenido de Alto Nivel:**
+  - **Streaming de Cine, Series & Anime:**
+    - **Stremio Desktop 4K:** Plataforma líder de streaming multimedia con catálogo infinito de películas, series y anime, subtítulos automáticos en español latino y addons comunitarios (Torrentio, Cyberflix, AnimeCatalogs).
+    - **Miru Anime Tracker:** Cliente moderno de streaming de animación japonesa con sincronización bidireccional automática con AniList, MyAnimeList y Kitsu.
+    - **Crunchyroll PWA:** Acceso web oficial a simulcasts directos desde Japón.
+  - **Lectores de Manga, Manhwa, Manhua & Cómics:**
+    - **Mihon / Tachiyomi Desktop:** El lector de manga más potente del mundo con soporte pre-configurado para más de 50 extensiones (TuMangaOnline, MangaDex, MangaPlus Shueisha, Webtoon, LeerCapitulo), modo cascada continua y descarga automática para lectura offline.
+    - **YACReader Pro:** Visualizador y catalogador profesional de historietas y cómics occidentales para formatos `.cbr`, `.cbz`, `.pdf` y `.rar`.
+  - **Reescalado Neuronal de Anime por GPU (Anime4K):**
+    - **MPV Anime4K Edition:** Reproductor multimedia ultraligero potenciado con shaders GLSL de Anime4K v4. Utiliza la GPU Nvidia Tesla T4 para reescalar animación clásica de 1080p a 4K 60FPS en tiempo real, restaurando líneas y aplicando interpolación de movimiento sin lag.
+  - **Centro Multimedia Completo:**
+    - **Kodi Media Center:** Centro de entretenimiento completo para cine en casa, gestión de películas, canales de TV en vivo y música.
+  - **🧠 AI Otaku Copilot (`ai_otaku_copilot.py`):**
+    - Asistente inteligente y recomendador de anime conectado a la Database 11 (Ollama Dual-GPU 32GB).
+    - Modos: Recomendador de joyas ocultas por tropos y sinopsis, Resumidor de arcos argumentales sin spoilers, Explicador de lore y referencias culturales japonesas, y Traductor de modismos y onomatopeyas de manga.
+  - **☁️ Persistencia Total en Google Drive (5TB):**
+    - Enlace automático a `/root/gdrive/PC_Kaggle/Anime_Manga_Media/`: guarda capítulos descargados de manga (`Manga_Descargas`), videos favoritos (`Anime_Videos`), bandas sonoras (`Musica_OST`), historial de Tachiyomi y caché de Stremio.
+* **Accesos Directos en el Escritorio:**
+  - `🎬 Stremio 4K (Cine, Series & Anime Streaming).desktop`
+  - `📖 Mihon / Tachiyomi (Lector de Manga & Manhwa).desktop`
+  - `⚡ MPV Anime4K (Reescalador Neuronal 4K en Vivo).desktop`
+  - `📺 Kodi Media Center (Cine en Casa & TV).desktop`
+  - `📚 YACReader (Visor de Cómics CBR/CBZ/PDF).desktop`
+  - `🌸 Miru (Anime Streaming & Sync AniList).desktop`
+  - `🧡 Crunchyroll (Simulcast Oficial de Anime).desktop`
+  - `📊 AniList (Seguimiento de Animes & Mangas).desktop`
+  - `⛩️ AI Otaku Copilot (Sensei de Anime & Lore).desktop`
+  - `📁 Bóveda de Manga, Wallpapers 4K & OSTs.desktop`
+  - `📁 Mis Descargas de Anime & Manga (5TB Google Drive).desktop`
 
 ---
 

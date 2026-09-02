@@ -1053,6 +1053,8 @@ sync_dirs = {
     "/root/Security_Reports": "/root/gdrive/PC_Kaggle/Security_Reports",
     "/root/Universidad_Ciencia": "/root/gdrive/PC_Kaggle/Universidad_Ciencia",
     "/root/Tesis_y_Papers": "/root/gdrive/PC_Kaggle/Universidad_Ciencia/Tesis_y_Papers",
+    "/root/Anime_Manga_Media": "/root/gdrive/PC_Kaggle/Anime_Manga_Media",
+    "/root/Manga_Descargas": "/root/gdrive/PC_Kaggle/Anime_Manga_Media/Manga_Descargas",
 }
 
 if Path("/root/gdrive").exists():
