@@ -97,7 +97,7 @@ def update_dataset():
     
     # 2.5 Generar imagen pre-compilada de Ubuntu para arranque en 3 segundos
     notify("Generando imagen pre-compilada para arranque de 3 segundos...")
-    rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.gz"
+    rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.data"
     cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -czf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
     subprocess.run(cmd_tar, shell=True)
 

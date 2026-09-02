@@ -414,7 +414,7 @@ if input_dir.exists():
 
 if master_dataset_path and master_dataset_path.exists():
     # 1. Comprobar si existe imagen pre-compilada para arranque instantáneo (3 SEGUNDOS)
-    rootfs_candidates = list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.gz")) or list(master_dataset_path.rglob("ubuntu_rootfs.tar.gz"))
+    rootfs_candidates = list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.data")) or list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.gz")) or list(master_dataset_path.rglob("ubuntu_rootfs.tar.gz"))
     if rootfs_candidates and rootfs_candidates[0].stat().st_size > 50_000_000:
         rootfs_file = rootfs_candidates[0]
         print(f"  ⚡ [✓] ¡Imagen Pre-Compilada de Ubuntu detectada en {rootfs_file.name} ({rootfs_file.stat().st_size / (1024**2):.1f} MB)!", flush=True)
@@ -430,6 +430,7 @@ if master_dataset_path and master_dataset_path.exists():
         os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         os.environ["NEEDRESTART_MODE"] = "a"
         os.environ["NEEDRESTART_SUSPEND"] = "1"
+        subprocess.run("dpkg --add-architecture i386", shell=True)
         subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
         subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
         subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
