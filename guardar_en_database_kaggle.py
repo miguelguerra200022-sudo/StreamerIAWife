@@ -99,7 +99,13 @@ def update_dataset():
     
     # Calcular tamaño total exacto en bytes para alimentar la barra de progreso (toma 2 segundos)
     notify("Calculando tamaño total de archivos...")
-    excludes = "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' --exclude='/usr/share/doc' --exclude='/usr/share/man'"
+    # EXCLUIR /opt/conda y /usr/local/cuda que ya vienen de fábrica en Kaggle y pesan más de 25GB innecesarios
+    excludes = (
+        "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' "
+        "--exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' "
+        "--exclude='/usr/share/doc' --exclude='/usr/share/man' --exclude='/opt/conda' "
+        "--exclude='/usr/local/cuda*' --exclude='/var/cache' --exclude='/var/log'"
+    )
     calc_cmd = f"du -sb {excludes} /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | awk '{{s+=$1}} END {{print s}}'"
     try:
         total_bytes_str = subprocess.check_output(calc_cmd, shell=True, text=True).strip()
