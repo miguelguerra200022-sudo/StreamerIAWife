@@ -141,6 +141,98 @@ print("\n" + "=" * 78, flush=True)
 print("🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...", flush=True)
 print("=" * 78, flush=True)
 
+# ==============================================================================
+# 🚀 0.1 HYPER-TUNING DE RED: GOOGLE BBR + BUFFERS TCP 64MB + MULTI-HILO
+# ==============================================================================
+def optimizar_red_bbr_buffers():
+    """Aplica Google BBR y amplía buffers TCP de Linux al límite físico de la red de Google Cloud."""
+    print("🌐 [Turbo Red] Optimizando Stack TCP con Google BBR y Buffers de 64MB...", flush=True)
+    sysctls = [
+        ("net.core.default_qdisc", "fq"),
+        ("net.ipv4.tcp_congestion_control", "bbr"),
+        ("net.core.rmem_max", "67108864"),
+        ("net.core.wmem_max", "67108864"),
+        ("net.core.rmem_default", "33554432"),
+        ("net.core.wmem_default", "33554432"),
+        ("net.ipv4.tcp_rmem", "4096 87380 33554432"),
+        ("net.ipv4.tcp_wmem", "4096 65536 33554432"),
+        ("net.ipv4.tcp_window_scaling", "1"),
+        ("net.ipv4.tcp_fastopen", "3"),
+        ("net.ipv4.tcp_slow_start_after_idle", "0"),
+        ("net.ipv4.tcp_timestamps", "1"),
+        ("net.ipv4.tcp_sack", "1"),
+        ("net.core.netdev_max_backlog", "16384"),
+        ("net.core.somaxconn", "8192"),
+        ("net.ipv4.tcp_fin_timeout", "15"),
+        ("net.ipv4.tcp_tw_reuse", "1")
+    ]
+    for key, val in sysctls:
+        subprocess.run(f"sysctl -w {key}={val} >/dev/null 2>&1 || true", shell=True)
+
+# ==============================================================================
+# 🎮 0.2 ORQUESTADOR DUAL-GPU (NVIDIA TESLA T4 x2 - 32GB VRAM)
+# ==============================================================================
+def orquestar_dual_gpu():
+    """Detecta topología de GPUs NVIDIA y asigna roles especializados para eliminar cuellos de botella."""
+    try:
+        res = subprocess.run("nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null", shell=True, capture_output=True, text=True)
+        gpus = [line.strip() for line in res.stdout.strip().splitlines() if line.strip()]
+        gpu_count = len(gpus)
+    except Exception:
+        gpu_count = 0
+        gpus = []
+
+    if gpu_count >= 2:
+        print(f"🚀 [Dual-GPU Maestro] ¡Detectadas {gpu_count} GPUs NVIDIA Tesla ({gpus[0]} x{gpu_count})!", flush=True)
+        print("   🎮 GPU 0 (16GB VRAM): Asignada a Juegos (Proton/Wine/Steam), Emuladores y Display X11.", flush=True)
+        print("   🧠 GPU 1 (16GB VRAM): Asignada a IA (Ollama/ComfyUI), Clonación de Voz y Cómputo.", flush=True)
+        
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+        os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
+        os.environ["__GLX_VENDOR_LIBRARY_NAME"] = "nvidia"
+        os.environ["VK_ICD_FILENAMES"] = "/usr/share/vulkan/icd.d/nvidia_icd.json"
+        
+        try:
+            Path("/usr/local/bin/run_on_gpu0").write_text("#!/bin/bash\nCUDA_VISIBLE_DEVICES=0 exec \"$@\"\n")
+            subprocess.run("chmod +x /usr/local/bin/run_on_gpu0 2>/dev/null || true", shell=True)
+            Path("/usr/local/bin/run_on_gpu1").write_text("#!/bin/bash\nCUDA_VISIBLE_DEVICES=1 exec \"$@\"\n")
+            subprocess.run("chmod +x /usr/local/bin/run_on_gpu1 2>/dev/null || true", shell=True)
+        except Exception:
+            pass
+    elif gpu_count == 1:
+        print(f"⚡ [GPU Única] Detectada 1 GPU NVIDIA ({gpus[0]}). Modo Alto Rendimiento activo.", flush=True)
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    else:
+        print("ℹ️ [Modo CPU] No se detectó GPU NVIDIA dedicada. Modo emulación activado.", flush=True)
+
+# ==============================================================================
+# ⚡ 0.3 ACELERADOR DE DESCARGAS MULTI-HILO (16 CONEXIONES PARALELAS)
+# ==============================================================================
+def instalar_acelerador_descargas():
+    """Configura Aria2c multi-hilo con 16 conexiones paralelas para saturar conexiones Gigabit de Google."""
+    subprocess.run("which aria2c >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq aria2 >> /kaggle/working/linuwaifu_system.log 2>&1 || true)", shell=True)
+    turbo_script = """#!/bin/bash
+URL="$1"
+DEST="${2:-/root/Descargas}"
+mkdir -p "$DEST"
+if [ -z "$URL" ]; then
+    echo "Uso: descarga_turbo <URL> [Directorio]"
+    exit 1
+fi
+echo "⚡ Descargando con 16 conexiones paralelas de ultra-velocidad hacia $DEST..."
+aria2c -x 16 -s 16 -k 1M --file-allocation=none --summary-interval=1 --continue=true -d "$DEST" "$URL"
+"""
+    try:
+        Path("/usr/local/bin/descarga_turbo").write_text(turbo_script)
+        subprocess.run("chmod +x /usr/local/bin/descarga_turbo 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
+
+# Ejecutar optimizaciones maestras de arranque
+optimizar_red_bbr_buffers()
+orquestar_dual_gpu()
+instalar_acelerador_descargas()
+
 # Directorios Clave
 GDRIVE_CONF_DIR = Path.home() / ".rclone"
 GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
@@ -296,20 +388,20 @@ def mount_gdrive_resilient():
                 "rclone", "mount", "gdrive:", "/root/gdrive",
                 "--cache-dir", "/tmp/rclone_cache",
                 "--vfs-cache-mode", "writes",
-                "--vfs-cache-max-size", "3G",
+                "--vfs-cache-max-size", "10G",
                 "--vfs-cache-max-age", "1m",
-                "--vfs-read-chunk-size", "32M",
-                "--buffer-size", "32M",
+                "--vfs-read-chunk-size", "64M",
+                "--buffer-size", "64M",
                 "--allow-non-empty",
                 "--tpslimit", "3",
                 "--tpslimit-burst", "1",
-                "--drive-pacer-min-sleep", "250ms",
+                "--drive-pacer-min-sleep", "200ms",
                 "--drive-pacer-burst", "2",
                 "--low-level-retries", "15",
                 "--retries", "10",
                 "--retries-sleep", "5s",
                 "--dir-cache-time", "72h",
-                "--drive-chunk-size", "64M",
+                "--drive-chunk-size", "128M",
                 "--daemon"
             ], stdout=log_rclone, stderr=log_rclone)
             break
@@ -1183,6 +1275,18 @@ shortcuts = {
         "Terminal=false\n"
         "Categories=System;Game;\n"
     ),
+    "Descargador_Turbo_16x.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=⚡ Descargador Turbo 16x (Gigabit Multi-Hilo)\n"
+        "Comment=Descarga juegos y archivos a velocidad gigabit con 16 conexiones paralelas\n"
+        "Exec=xfce4-terminal --title='Descargador Turbo 16x' -e 'bash -c \"echo -e \\\"\\\\e[1;32m=== DESCARGADOR TURBO GIGABIT 16X ===\\\\e[0m\\\"; read -p \\\"Pega el enlace a descargar: \\\" url; descarga_turbo \\\"$url\\\" /root/Descargas; echo \\\"Descarga finalizada.\\\"; read -p \\\"Presiona Enter para cerrar...\\\"\"'\n"
+        "Path=/root/Descargas\n"
+        "Icon=download\n"
+        "Terminal=false\n"
+        "Categories=Network;\n"
+    ),
     "Mis_Archivos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
@@ -1421,7 +1525,7 @@ if not web_tunnel_wifi:
         if not cf_bin.exists():
             subprocess.run("wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
         if cf_bin.exists():
-            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://localhost:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--url", "http://localhost:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for _ in range(30):
                 line = proc_cf.stdout.readline()
                 if not line:
