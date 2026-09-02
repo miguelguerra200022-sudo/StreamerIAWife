@@ -27,7 +27,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | **Finanzas & Cripto** | **[⚙️ LISTO PARA COMPILAR]** |
 | **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | **Educación & Ciencia** | **[⚙️ LISTO PARA COMPILAR]** |
 | **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | **Anime & Mediateca** | **[⚙️ LISTO PARA COMPILAR]** |
-| **20** | **Ubuntu - Herramientas de Rescate & Diagnóstico** | `ubuntu-sysadmin-rescue-tools` | Mantenimiento | [⏳ Planificado] |
+| **20** | **Ubuntu - Android Cloud Phone & Mobile Gaming** | `ubuntu-android-cloud-phone` | **Emulación & Móvil** | **[⚙️ LISTO PARA COMPILAR]** |
 
 ---
 
@@ -678,14 +678,45 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🔧 DATABASE 20: `Ubuntu - Herramientas de Rescate & Diagnóstico`
-* **Slug:** `ubuntu-sysadmin-rescue-tools` | **Capacidad:** 100 GB
-* **Propósito:** Herramientas de administración de sistemas, recuperación de datos y diagnóstico profundo.
-* **Contenido:**
-  - **GParted:** Gestor visual de particiones y discos.
-  - **TestDisk & PhotoRec:** Recuperación de archivos y particiones borradas por accidente.
-  - **Rclone Browser / GUI:** Gestor gráfico para transferir archivos entre Google Drive, Dropbox, OneDrive y Mega.
-  - **Monitores de Rendimiento:** HTop, Glances, NVTop (Monitoreo de GPUs NVIDIA), IOTop (Velocidad de disco).
+### 📱 DATABASE 20: `Ubuntu - Android Cloud Phone & Mobile Gaming`
+* **Slug:** `ubuntu-android-cloud-phone` | **Capacidad:** 100 GB
+* **Script Compilador:** `compilar_dataset20_android_cloud_phone.py` | **Estado:** `[⚙️ LISTO PARA COMPILAR]`
+* **Propósito:** Superestación integral de teléfono Android virtual gamer de alta gama en la nube (ASUS ROG Phone 8 Pro / RedMagic 9S Pro), acelerado por GPU Nvidia Tesla T4, con controles gamer WASD + apuntado de ratón FPS a 60 FPS, tiendas de apps privadas, laboratorio de ingeniería inversa de APKs y copiloto de IA móvil.
+* **Contenido de Alto Nivel:**
+  - **Celular Gamer de Alta Gama en la Nube:**
+    - Perfil de hardware emulado ASUS ROG Phone 8 Pro / RedMagic 9S Pro con aceleración por hardware GPU Nvidia (OpenGL ES 3.2 y Vulkan).
+    - Servidor de transmisión Scrcpy a 60 FPS ultra-low latency con audio Opus de alta fidelidad.
+    - Soporte de pantalla adaptable: modo smartphone vertical o modo tablet gamer 16:9 Full-HD.
+  - **Motor de Mapeo Gamer (Keymapper Pro WASD + Mouse Aim Lock):**
+    - Perfiles tácticos pre-configurados para **Free Fire MAX, Roblox, Call of Duty Mobile, Brawl Stars y Genshin Impact Mobile**.
+    - Apuntado estilo PC Shooter con bloqueo de cursor mediante tecla `F1`, disparo con clic izquierdo, mira con clic derecho y movimiento analógico con `W-A-S-D`.
+  - **Tiendas Oficiales y Servicios de Aplicaciones:**
+    - **Aurora Store:** Cliente oficial y privado de Google Play Store para descargar cualquier APK y juego sin cuenta de Google personal.
+    - **F-Droid:** Repositorio libre con miles de aplicaciones de código abierto sin rastreadores.
+    - Soporte MicroG (servicios de Google Play ligeros) y gestor Magisk / Superusuario para módulos de optimización extrema.
+  - **Gestión Multicuenta & Redes Sociales Móviles:**
+    - Instancias para correr WhatsApp Móvil, TikTok e Instagram en segundo plano sin desgastar la batería ni el almacenamiento de tu teléfono físico.
+  - **Laboratorio de Ingeniería Inversa & APK Modding:**
+    - **JADX GUI:** Descompilador visual de archivos `.apk` y `.dex` a código Java legible con explorador de clases.
+    - **APKTool:** Desensamblador y reensamblador de manifiestos Android (`AndroidManifest.xml`), recursos e imágenes.
+    - **Bytecode Viewer:** Suite de análisis profundo de seguridad y desensamblado Smali.
+  - **🧠 AI Android Gamer Copilot (`ai_android_gamer_copilot.py`):**
+    - Asistente inteligente conectado a la Database 11 (Ollama Dual-GPU 32GB).
+    - Modos: Optimizador de sensibilidad y DPI para shooters, Creador de mapeos de botones personalizados, Auditor de seguridad y permisos sospechosos en APKs, y Asistente de programación móvil en Kotlin/Flutter.
+  - **☁️ Persistencia Total en Google Drive (5TB):**
+    - Enlace automático a `/root/gdrive/PC_Kaggle/Android_Cloud_Phone/`: guarda de forma permanente `APKs_Instalados`, `Datos_Juegos_OBB`, `Perfiles_Mapeo_Gamer`, `Backups_WhatsApp` y `Proyectos_APK_Decompiled`.
+* **Accesos Directos en el Escritorio:**
+  - `📱 ROG_Phone_Android_Gamer.desktop`
+  - `🛍️ Aurora_Store_PlayStore.desktop`
+  - `🔥 Free_Fire_Roblox_Gamer_Profile.desktop`
+  - `🔍 JADX_GUI_APK_Decompilador.desktop`
+  - `📦 APKTool_Modding_Studio.desktop`
+  - `💬 WhatsApp_TikTok_Mobile.desktop`
+  - `⚡ Scrcpy_Control_Remoto_ADB.desktop`
+  - `🛡️ Magisk_Root_Manager.desktop`
+  - `🤖 AI_Android_Gamer_Copilot.desktop`
+  - `📁 Bóveda_APKs_Datos_OBB.desktop`
+  - `📁 Mis_Archivos_Android_5TB_GDrive.desktop`
 
 ---
 

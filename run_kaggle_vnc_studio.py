@@ -1055,6 +1055,8 @@ sync_dirs = {
     "/root/Tesis_y_Papers": "/root/gdrive/PC_Kaggle/Universidad_Ciencia/Tesis_y_Papers",
     "/root/Anime_Manga_Media": "/root/gdrive/PC_Kaggle/Anime_Manga_Media",
     "/root/Manga_Descargas": "/root/gdrive/PC_Kaggle/Anime_Manga_Media/Manga_Descargas",
+    "/root/Android_Cloud_Phone": "/root/gdrive/PC_Kaggle/Android_Cloud_Phone",
+    "/root/Android_APKs": "/root/gdrive/PC_Kaggle/Android_Cloud_Phone/APKs_Instalados",
 }
 
 if Path("/root/gdrive").exists():
