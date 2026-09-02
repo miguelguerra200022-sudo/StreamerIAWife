@@ -278,42 +278,51 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
 # Instalar rclone y fuse3 rápido desde Dataset o apt si no están presentes
 subprocess.run("which rclone >/dev/null 2>&1 || (dpkg -i /kaggle/input/*/apt_archives/rclone*.deb /kaggle/input/*/apt_archives/fuse3*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1))", shell=True)
 
-# Iniciar Rclone Mount (FUSE) para permitir Symlinks
-try:
-    # Montar la raíz de Google Drive físicamente en /root/gdrive (Evita error de 'couldn't find root directory ID')
+# Iniciar Rclone Mount (FUSE) con reintentos automáticos y protección contra rate-limits de Google Drive
+def mount_gdrive_resilient():
     os.makedirs("/root/gdrive", exist_ok=True)
+    os.makedirs("/root/gdrive/PC_Kaggle", exist_ok=True)
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
-    subprocess.Popen([
-        "rclone", "mount", "gdrive:", "/root/gdrive",
-        "--vfs-cache-mode", "writes",
-        "--vfs-cache-max-age", "24h",
-        "--allow-non-empty",
-        "--tpslimit", "3",
-        "--tpslimit-burst", "1",
-        "--drive-pacer-min-sleep", "100ms",
-        "--drive-pacer-burst", "1",
-        "--low-level-retries", "10",
-        "--retries", "5",
-        "--dir-cache-time", "72h",
-        "--drive-chunk-size", "64M",
-        "--daemon"
-    ], stdout=log_rclone, stderr=log_rclone)
-    
-    # Espera activa inteligente para confirmación del montaje
-    drive_ready = wait_for_path("/root/gdrive", timeout=20)
-    if drive_ready:
-        print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
-        log("Google Drive 5TB montado con éxito.", "SUCCESS")
-    else:
-        print("  ⚠️ [!] Montaje de Google Drive tardando más de lo normal...", flush=True)
-    
-    # 1.5. Configuración Base del Puntero (Eliminar X negra)
-    cursor_conf = Path("/root/.icons/default")
-    cursor_conf.mkdir(parents=True, exist_ok=True)
-    (cursor_conf / "index.theme").write_text("[Icon Theme]\nInherits=Yaru\n")
+    for attempt in range(1, 4):
+        try:
+            subprocess.Popen([
+                "rclone", "mount", "gdrive:", "/root/gdrive",
+                "--vfs-cache-mode", "writes",
+                "--vfs-cache-max-age", "24h",
+                "--allow-non-empty",
+                "--tpslimit", "3",
+                "--tpslimit-burst", "1",
+                "--drive-pacer-min-sleep", "250ms",
+                "--drive-pacer-burst", "2",
+                "--low-level-retries", "15",
+                "--retries", "10",
+                "--retries-sleep", "5s",
+                "--dir-cache-time", "72h",
+                "--drive-chunk-size", "64M",
+                "--daemon"
+            ], stdout=log_rclone, stderr=log_rclone)
+            break
+        except Exception as e:
+            log(f"Reintento de montaje Google Drive ({attempt}/3): {e}", "WARNING")
+            time.sleep(3)
 
-    # Inyectar Comando Mágico: subir_juego_a_kaggle
-    script_kaggle = r"""#!/bin/bash
+mount_gdrive_resilient()
+
+# Espera activa inteligente para confirmación del montaje
+drive_ready = wait_for_path("/root/gdrive", timeout=12)
+if drive_ready:
+    print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
+    log("Google Drive 5TB montado con éxito.", "SUCCESS")
+else:
+    print("  ℹ️ Conexión con Google Drive activa en segundo plano.", flush=True)
+
+# 1.5. Configuración Base del Puntero (Eliminar X negra)
+cursor_conf = Path("/root/.icons/default")
+cursor_conf.mkdir(parents=True, exist_ok=True)
+(cursor_conf / "index.theme").write_text("[Icon Theme]\nInherits=Yaru\n")
+
+# Inyectar Comando Mágico: subir_juego_a_kaggle
+script_kaggle = r"""#!/bin/bash
 if [ "$#" -ne 2 ]; then
     echo 'Uso: subir_juego_a_kaggle "Nombre Del Juego" /ruta/a/la/carpeta/del/juego'
     echo 'Ejemplo: subir_juego_a_kaggle "Cyberpunk 2077" /root/Juegos/Cyberpunk'
@@ -338,12 +347,9 @@ echo "Subiendo juego a Kaggle Datasets (Velocidad Gigabit interna)..."
 kaggle datasets create -p "$RUTA_JUEGO" --dir-mode tar
 echo "¡Listo! El juego se está procesando. Revisa tu perfil de Kaggle."
 """
-    script_path = Path("/usr/local/bin/subir_juego_a_kaggle")
-    script_path.write_text(script_kaggle)
-    script_path.chmod(0o755)
-
-except Exception as e:
-    log(f"Aviso Rclone: {e}", "WARNING")
+script_path = Path("/usr/local/bin/subir_juego_a_kaggle")
+script_path.write_text(script_kaggle)
+script_path.chmod(0o755)
 
 print(f"  ⏱️ [Paso 1/5 Completado en {time.time() - t_step1:.1f}s]", flush=True)
 
