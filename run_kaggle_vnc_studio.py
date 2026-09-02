@@ -995,7 +995,7 @@ if not shutil.which("steam") or not shutil.which("obs"):
     subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && apt-get install -y -qq /tmp/discord.deb", shell=True)
     
     print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
-    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb", shell=True)
+    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb || (wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb) || true", shell=True)
     
     print("  ✅ [✓] Ecosistema 'Modo Dios' instalado exitosamente.", flush=True)
 
