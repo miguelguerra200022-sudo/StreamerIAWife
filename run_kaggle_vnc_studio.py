@@ -1328,7 +1328,7 @@ print("=" * 78 + "\n", flush=True)
 # Instalador Inteligente (Secuestrador de APT)
 # ==============================================================================
 apt_wrapper = """#!/bin/bash
-if [[ " $@ " =~ " install " ]] && command -v zenity &> /dev/null && [ -n "$DISPLAY" ]; then
+if [[ " $@ " =~ " install " ]] && command -v zenity &> /dev/null && [ -n "$DISPLAY" ] && [ "$DEBIAN_FRONTEND" != "noninteractive" ]; then
     zenity --question --title="🛡️ Instalador Inteligente LinuWaifu" \\
            --text="⚠️ Estás instalando software en la <b>Raíz de Kaggle</b> (límite 20GB).\\n\\nEste programa NO se guardará en Google Drive, pero sí sus configuraciones.\\n\\n¿Continuar con la instalación?" \\
            --width=450
