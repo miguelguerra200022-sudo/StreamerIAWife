@@ -10,7 +10,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | :-: | :--- | :--- | :--- | :---: |
 | **1** | **Ubuntu - Core Desktop & Social Hub** | `ubuntu-core-os-social` | **Sistema Base & Redes** | **[✅ HECHO / LISTO]** |
 | **2** | **Ubuntu - Emuladores PS2 & PS1** | `ubuntu-ps2-ps1-vault` | **Gaming Retro** | **[⚙️ EN COMPILACIÓN / LISTO]** |
-| **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | Gaming Portátil | [⏳ Planificado] |
+| **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | **Gaming Portátil** | **[⚙️ EN COMPILACIÓN / LISTO]** |
 | **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | Gaming Nintendo | [⏳ Planificado] |
 | **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | Gaming Arcade | [⏳ Planificado] |
 | **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | PC Gaming | [⏳ Planificado] |
@@ -110,14 +110,50 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 📱 DATABASE 3: `Ubuntu - Emuladores PSP & Nintendo DS/GBA`
+### 📱 DATABASE 3: `Ubuntu - Emuladores PSP & Nintendo DS/GBA` **[⚙️ EN COMPILACIÓN / LISTO]**
 * **Slug:** `ubuntu-psp-ds-gba-vault` | **Capacidad:** 100 GB
-* **Propósito:** Bóveda de consolas portátiles retro con más de 200 títulos legendarios.
-* **Contenido:**
-  - **PPSSPP (PSP):** Escalado a 4K con texturas HD.
-  - **melonDS & DeSmuME (Nintendo DS):** Soporte de doble pantalla táctil.
-  - **mGBA (Game Boy Advance):** Emulación perfecta a 60 FPS.
-  - **Colección de Juegos:** *God of War Ghost of Sparta, Tekken 6, Monster Hunter Freedom Unite, Saga Pokémon (Esmeralda, FuegoRojo, Blanco/Negro, HeartGold), Castlevania Aria of Sorrow, GTA Vice City Stories.*
+* **Propósito:** Bóveda completa de consolas portátiles (Sony PSP, Nintendo DS, Game Boy Advance, Game Boy Color) con más de 250 títulos legendarios, BIOS oficiales, parches de 60 FPS y texturas HD.
+* **Emuladores & Mejoras Visuales:**
+  - **PPSSPP (Qt 64-bit v1.17+):** El mejor emulador de PSP con aceleración Vulkan, reescalado interno **4K / 5K**, shaders de color vibrante, cheats de 60 FPS y compatibilidad total con mandos.
+  - **melonDS (OpenGL 3D):** Emulador de Nintendo DS de alta fidelidad con reescalado 3D por hardware, emulación táctil por ratón/trackpad, layouts de pantalla vertical/horizontal y soporte de Wi-Fi local.
+  - **mGBA (Oficial Standalone & Qt):** Emulador ultra-preciso de Game Boy Advance / Color con soporte para reloj en tiempo real (RTC para Pokémon) y parches de Romhacks.
+  - **Pack Maestro de BIOS:** `gba_bios.bin` (con logo y sonido clásico de Nintendo), `bios7.bin`, `bios9.bin` y `firmware.bin` de NDS.
+* **Catálogo de Juegos Sony PSP (Formato CSO / ISO 60 FPS):**
+  - *God of War: Ghost of Sparta & Chains of Olympus*
+  - *Grand Theft Auto: Liberty City Stories, Vice City Stories & Chinatown Wars*
+  - *Tekken 6 & Tekken: Dark Resurrection*
+  - *Monster Hunter Freedom Unite & Portable 3rd HD*
+  - *Dragon Ball Z: Shin Budokai 1 & 2 (Another Road)*
+  - *Dragon Ball Z: Tenkaichi Tag Team (Mod Super con transformaciones)*
+  - *Naruto Shippuden: Ultimate Ninja Impact*
+  - *Crisis Core: Final Fantasy VII & Kingdom Hearts: Birth by Sleep*
+  - *Persona 3 Portable & Metal Gear Solid: Peace Walker*
+  - *Need for Speed: Most Wanted 5-1-0 & Midnight Club 3 DUB Edition*
+  - *Burnout Legends, Dante's Inferno & Assassin's Creed Bloodlines*
+  - *Silent Hill: Origins & Def Jam: Fight for NY The Takeover*
+  - *The 3rd Birthday, Castlevania The Dracula X Chronicles & Yu-Gi-Oh! GX Tag Force 3*
+* **Catálogo de Juegos Nintendo DS (Formato NDS):**
+  - *Pokémon HeartGold & SoulSilver, Pokémon Negro & Blanco (1 & 2), Pokémon Platino*
+  - *New Super Mario Bros, Mario Kart DS & Super Mario 64 DS*
+  - *The Legend of Zelda: Phantom Hourglass & Spirit Tracks*
+  - *Chrono Trigger DS, Castlevania: Dawn of Sorrow & Order of Ecclesia*
+  - *Mario & Luigi: Bowser's Inside Story, Phoenix Wright Ace Attorney*
+  - *Kingdom Hearts: 358/2 Days & Metroid Prime Hunters*
+* **Catálogo de Juegos Game Boy Advance (Formato GBA / Romhacks):**
+  - *Pokémon Esmeralda, Pokémon Rojo Fuego & Verde Hoja*
+  - *Los Mejores Romhacks Legendarios:* *Pokémon Radical Red, Pokémon Unbound (Edición Maestra), Pokémon Gaia & Pokémon Glazed.*
+  - *The Legend of Zelda: The Minish Cap & A Link to the Past*
+  - *Metroid Fusion & Metroid: Zero Mission*
+  - *Castlevania: Aria of Sorrow & Circle of the Moon*
+  - *Golden Sun 1 & 2, Mega Man Battle Network 6, Fire Emblem The Sacred Stones*
+  - *Advance Wars 2, Super Mario Advance 4 & Mario Kart Super Circuit*
+  - *Sonic Advance 3, Dragon Ball Z: Buu's Fury & Yu-Gi-Oh! The Sacred Cards*
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🎮 Sony PSP (PPSSPP 4K HD).desktop`
+    - `📱 Nintendo DS (melonDS 3D HD).desktop`
+    - `🕹️ Game Boy Advance (mGBA Oficial).desktop`
+    - `📂 Carpeta de Juegos Portatiles (PSP, DS, GBA).desktop`
 
 ---
 
