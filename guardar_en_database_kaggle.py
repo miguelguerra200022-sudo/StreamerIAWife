@@ -81,29 +81,23 @@ def update_dataset():
         shutil.copy2(legacy_json, kaggle_file)
         subprocess.run(f"chmod 600 '{kaggle_file}'", shell=True)
     
-    # 2. Recopilar nuevos paquetes .deb instalados
+    # 2. Limpiar caché de apt para liberar espacio crítico (Ya no necesitamos respaldar los .deb gracias a que el .data tiene todo instalado)
     archives_dir = Path("/var/cache/apt/archives")
-    dataset_archives = PAYLOAD_DIR / "apt_archives"
-    dataset_archives.mkdir(parents=True, exist_ok=True)
-    
-    new_debs = 0
     if archives_dir.exists():
         for deb in archives_dir.glob("*.deb"):
             try:
-                shutil.copy2(deb, dataset_archives)
-                deb.unlink() # Liberar espacio de disco vital en Kaggle
-                new_debs += 1
+                deb.unlink() # Destruir basura temporal para liberar gigabytes
             except Exception:
                 pass
     
     # 2.5 Generar imagen pre-compilada de Ubuntu para arranque en 3 segundos
-    notify("Generando imagen pre-compilada para arranque de 3 segundos (Compresión Ultra-Rápida)...")
+    notify("Generando imagen pre-compilada (Excluyendo docs/basura para ahorrar GBs)...")
     rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.data"
     
     # Usar pigz para compresión paralela súper rápida y evitar que Kaggle mate el proceso
     subprocess.run("apt-get install -y -qq pigz >/dev/null 2>&1", shell=True)
-    # Agregamos checkpoints para que muestre el progreso en pantalla cada 10,000 archivos
-    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --checkpoint=10000 --checkpoint-action=echo='⏳ Compilando... %u archivos procesados' -I 'pigz -1' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
+    # Agregamos exclusiones de basura pesada y mejoramos la compresión a nivel 4 para que no explote el disco
+    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' --exclude='/usr/share/doc' --exclude='/usr/share/man' --checkpoint=10000 --checkpoint-action=echo='⏳ Compilando... %u archivos procesados' -I 'pigz -4' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada
