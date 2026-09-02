@@ -102,7 +102,8 @@ def update_dataset():
     
     # Usar pigz para compresión paralela súper rápida y evitar que Kaggle mate el proceso
     subprocess.run("apt-get install -y -qq pigz >/dev/null 2>&1", shell=True)
-    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -I 'pigz -1' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
+    # Agregamos checkpoints para que muestre el progreso en pantalla cada 10,000 archivos
+    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --checkpoint=10000 --checkpoint-action=echo='⏳ Compilando... %u archivos procesados' -I 'pigz -1' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada
@@ -135,17 +136,20 @@ def update_dataset():
     ts_msg = time.strftime("%Y-%m-%d %H:%M:%S")
     cmd_version = f"kaggle datasets version -p '{PAYLOAD_DIR}' -m 'Auto-backup con imagen de 3s ({ts_msg})' --dir-mode tar"
     
-    res = subprocess.run(cmd_version, shell=True, text=True, capture_output=True)
+    notify("☁️ Subiendo a la nube de Kaggle (mostrando progreso en vivo)...")
+    # Quitamos capture_output=True para que se vea la barra de progreso de Kaggle en la terminal
+    res = subprocess.run(cmd_version, shell=True)
     if res.returncode == 0:
         notify(f"🎉 ¡Guardado exitoso en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
     else:
         # Si el dataset no existía, intentar crear
+        notify("Intentando crear dataset por primera vez...")
         cmd_create = f"kaggle datasets create -p '{PAYLOAD_DIR}' -u -r tar"
-        res2 = subprocess.run(cmd_create, shell=True, text=True, capture_output=True)
+        res2 = subprocess.run(cmd_create, shell=True)
         if res2.returncode == 0:
             notify(f"🎉 ¡Dataset creado en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
         else:
-            notify(f"Error al guardar en Dataset: {res.stderr or res.stdout}", "❌ Error de Guardado")
+            notify(f"❌ Error al guardar en Dataset (Revisa la consola para más detalles).", "❌ Error de Guardado")
 
 if __name__ == "__main__":
     update_dataset()
