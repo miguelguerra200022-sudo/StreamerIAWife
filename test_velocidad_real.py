@@ -29,6 +29,12 @@ TEST_SERVERS = [
         "mb": 1000
     },
     {
+        "nombre": "Hetzner Datacenter High-Speed (10,000 MB / 10 GB Reales)",
+        "url": "https://ash-speed.hetzner.com/10GB.bin",
+        "bytes": 10485760000,
+        "mb": 10000
+    },
+    {
         "nombre": "OVH Telecom Datacenter (100 MB)",
         "url": "http://proof.ovh.net/files/100Mio.dat",
         "bytes": 104857600,
@@ -37,7 +43,13 @@ TEST_SERVERS = [
 ]
 
 def ejecutar_benchmark(tamaño="100mb"):
-    servidor = TEST_SERVERS[1] if tamaño.lower() == "1gb" else TEST_SERVERS[0]
+    t_low = tamaño.lower()
+    if t_low == "10gb" or t_low == "20gb":
+        servidor = TEST_SERVERS[2]  # 10 GB
+    elif t_low == "1gb":
+        servidor = TEST_SERVERS[1]  # 1 GB
+    else:
+        servidor = TEST_SERVERS[0]  # 100 MB
     
     # Directorio temporal en memoria RAM (/dev/shm) o /tmp
     if Path("/dev/shm").exists() and shutil.disk_usage("/dev/shm").free > servidor["bytes"] * 1.5:
