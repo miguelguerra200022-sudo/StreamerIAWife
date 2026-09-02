@@ -19,7 +19,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | **Arte 2D** | **[⚙️ LISTO PARA COMPILAR]** |
 | **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | **3D & VFX** | **[⚙️ LISTO PARA COMPILAR]** |
 | **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | **Inteligencia Artificial** | **[⚙️ LISTO PARA COMPILAR]** |
-| **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | Inteligencia Artificial | [⏳ Planificado] |
+| **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | **Audio & Voz IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | Inteligencia Artificial | [⏳ Planificado] |
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | Música & Audio | [⏳ Planificado] |
 | **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | Programación | [⏳ Planificado] |
@@ -410,13 +410,31 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🎙️ DATABASE 12: `Ubuntu - Laboratorio de Voz & Audio IA`
+### 🎙️ DATABASE 12: `Ubuntu - Laboratorio de Voz & Audio IA` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-ai-voice-audio-lab` | **Capacidad:** 100 GB
-* **Propósito:** Síntesis de voz ultra-realista, clonación de voces y reconocimiento de audio.
-* **Contenido:**
-  - **Whisper Large-v3 (OpenAI):** Transcripción de audio y voz en tiempo real con precisión del 99%.
-  - **Kokoro-TTS & XTTS-v2:** Generación de voz humana femenina/masculina con entonación natural y emociones.
-  - **RVC (Retrieval-based Voice Conversion):** Modificador de voz en tiempo real para hablar con voz de personajes de anime o celebridades por micrófono.
+* **Propósito:** El laboratorio de síntesis vocal, clonación de voz en 3 segundos, modulación en tiempo real (RVC) y separación de pistas musicales con Inteligencia Artificial más avanzado del mundo. Diseñado para streamers, creadores de audiolibros, músicos y doblaje cinematográfico.
+* **Motores de Voz & Reconocimiento SOTA (State of the Art):**
+  - **Kokoro-82M (v1.0 SOTA):** La voz sintética humana más fotorrealista e indistinguible del mundo (arquitectura StyleTTS 2 + iSTFTNet). Genera respiración natural, entonación cálida y pausas realistas superando la calidad de servicios comerciales.
+  - **Coqui XTTS-v2 (Clonador Instantáneo en 3 Segundos):** Permite clonar la voz de cualquier persona, streamer o actor a partir de un clip de audio de tan solo 3 segundos en 17 idiomas con calidad de estudio 24kHz.
+  - **RVC v2 (Retrieval-based Voice Conversion):** Modulador de voz con **latencia cero** para transformar la voz de tu micrófono en tiempo real en la de cualquier personaje (Waifus anime, actores, cantantes) durante llamadas en Discord o directos en OBS Studio.
+  - **Faster-Whisper Large-v3 (OpenAI):** Transcriptor de voz a texto de máxima precisión (99.4%) y generador de subtítulos en vivo en más de 90 idiomas.
+  - **UVR5 (Ultimate Vocal Remover v5 - Demucs v4 & MDX-Net):** Herramienta líder para separar canciones en pistas aisladas de **Voz Acapella e Instrumental**, eliminando ruidos y eco.
+  - **Meta MusicGen (AudioCraft):** Generador de canciones completas, pistas de fondo y efectos de sonido a partir de descripciones de texto.
+* **Servidor FastAPI Speech Gateway (`fastapi_voice_gateway.py`):**
+  - Expone endpoints compatibles con la API de OpenAI:
+    - `POST /v1/audio/speech`: Para convertir texto a voz hiperrealista desde cualquier aplicación o script.
+    - `POST /v1/audio/transcriptions`: Para enviar audios y recibir el texto transcrito con marcas de tiempo.
+* **Bóveda de Voces de Estudio & Modelos RVC (50+ Voces):**
+  - **Banco Oficial Kokoro:** `af_heart` (voz femenina ultra-realista insignia), `ef_dora` y `em_alex` (voces nativas en español latino y castellano), `am_adam` (narrador de documental masculino) y `jf_alpha` (japonés puro).
+  - **50+ Modelos RVC:** Personajes de anime clásicos, streamers, celebridades y voces para VTubers.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🎙️ Kokoro TTS SOTA (La Voz Humana Más Real del Mundo).desktop`
+    - `🧬 XTTS-v2 (Clonador de Voz en 3 Segundos).desktop`
+    - `🎭 RVC v2 Modulador de Voz en Vivo (OBS/Discord).desktop`
+    - `🎧 UVR5 (Separador de Voces e Instrumentales).desktop`
+    - `📝 Whisper (Transcriptor & Subtítulos en Vivo).desktop`
+    - `📁 Bóveda de Modelos de Voz RVC & Audio IA.desktop`
 
 ---
 
