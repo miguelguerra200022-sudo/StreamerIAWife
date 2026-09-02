@@ -99,12 +99,13 @@ def update_dataset():
     
     # Calcular tamaño total exacto en bytes para alimentar la barra de progreso (toma 2 segundos)
     notify("Calculando tamaño total de archivos...")
-    # EXCLUIR /opt/conda y /usr/local/cuda que ya vienen de fábrica en Kaggle y pesan más de 25GB innecesarios
+    # EXCLUIR todo lo que ya viene en Kaggle y toda la basura temporal/documentación
     excludes = (
         "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' "
         "--exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' "
         "--exclude='/usr/share/doc' --exclude='/usr/share/man' --exclude='/opt/conda' "
-        "--exclude='/usr/local/cuda*' --exclude='/var/cache' --exclude='/var/log'"
+        "--exclude='/usr/local/cuda*' --exclude='/usr/local/share' --exclude='/var/cache' "
+        "--exclude='/var/log' --exclude='/var/tmp' --exclude='/root/.cache' --exclude='/root/.npm'"
     )
     calc_cmd = f"du -sb {excludes} /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | awk '{{s+=$1}} END {{print s}}'"
     try:
@@ -114,11 +115,11 @@ def update_dataset():
         total_bytes = 0
 
     if total_bytes <= 0:
-        total_bytes = 8 * 1024 * 1024 * 1024  # 8GB estimado si el cálculo fue omitido
+        total_bytes = 7 * 1024 * 1024 * 1024  # 7GB estimado
 
     notify("⏳ Compilando sistema operativo (Progreso en tiempo real con % y tiempo estimado):")
-    # pv -f fuerza la barra de progreso en Kaggle / Jupyter Notebook y 2>&1 muestra la salida en vivo
-    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb -s {total_bytes} | pigz -3 > '{rootfs_tar}'"
+    # pv -f fuerza la barra de progreso en Kaggle / Jupyter Notebook y compresión balanceada nivel 4
+    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb -s {total_bytes} | pigz -4 > '{rootfs_tar}'"
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada
@@ -152,7 +153,6 @@ def update_dataset():
     cmd_version = f"kaggle datasets version -p '{PAYLOAD_DIR}' -m 'Auto-backup con imagen de 3s ({ts_msg})' --dir-mode tar"
     
     notify("☁️ Subiendo a la nube de Kaggle (mostrando progreso en vivo)...")
-    # Quitamos capture_output=True para que se vea la barra de progreso de Kaggle en la terminal
     res = subprocess.run(cmd_version, shell=True)
     if res.returncode == 0:
         notify(f"🎉 ¡Guardado exitoso en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
@@ -165,6 +165,15 @@ def update_dataset():
             notify(f"🎉 ¡Dataset creado en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
         else:
             notify(f"❌ Error al guardar en Dataset (Revisa la consola para más detalles).", "❌ Error de Guardado")
+            return
+
+    # 5. Limpieza inmediata para dejar el disco de 20GB al 100% de espacio libre
+    notify("🧹 Eliminando archivos temporales locales para dejar los 20GB completamente libres...")
+    try:
+        shutil.rmtree(PAYLOAD_DIR)
+        notify("✨ ¡Disco temporal de 20GB limpio y libre!")
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     update_dataset()
