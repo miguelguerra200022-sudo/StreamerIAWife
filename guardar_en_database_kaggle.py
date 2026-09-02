@@ -16,8 +16,15 @@ import subprocess
 from pathlib import Path
 
 BASE_DIR = Path("/kaggle/working/StreamerIAWife") if Path("/kaggle/working/StreamerIAWife").exists() else Path(__file__).resolve().parent
-# Usar /tmp para no tocar ni consumir jamás la cuota de 20GB de /kaggle/working
-PAYLOAD_DIR = Path("/tmp/linuwaifu_dataset_update_payload")
+# Usar /dev/shm (RAM Disk de 16GB) para I/O ultra-rápido en memoria, o fallback a /tmp (Cero impacto en /kaggle/working)
+try:
+    if Path("/dev/shm").exists() and shutil.disk_usage("/dev/shm").free > 4 * 1024 * 1024 * 1024:
+        PAYLOAD_DIR = Path("/dev/shm/linuwaifu_dataset_update_payload")
+    else:
+        PAYLOAD_DIR = Path("/tmp/linuwaifu_dataset_update_payload")
+except Exception:
+    PAYLOAD_DIR = Path("/tmp/linuwaifu_dataset_update_payload")
+
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "09032000Mi.").strip()

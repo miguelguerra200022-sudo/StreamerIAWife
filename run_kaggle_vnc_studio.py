@@ -278,17 +278,28 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
 # Instalar rclone y fuse3 rápido desde Dataset o apt si no están presentes
 subprocess.run("which rclone >/dev/null 2>&1 || (dpkg -i /kaggle/input/*/apt_archives/rclone*.deb /kaggle/input/*/apt_archives/fuse3*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1))", shell=True)
 
+# Variables de entorno para redirigir prefijos pesados de Wine, Steam y Proton a 5TB de Google Drive
+os.environ["WINEPREFIX"] = "/root/gdrive/PC_Kaggle/wineprefix"
+os.environ["STEAM_EXTRA_COMPAT_TOOLS_PATHS"] = "/root/gdrive/PC_Kaggle/compatibilitytools.d"
+os.environ["PROTON_LOG_DIR"] = "/tmp"
+os.environ["NPM_CONFIG_CACHE"] = "/tmp/.npm"
+
 # Iniciar Rclone Mount (FUSE) con reintentos automáticos y protección contra rate-limits de Google Drive
 def mount_gdrive_resilient():
     os.makedirs("/root/gdrive", exist_ok=True)
     os.makedirs("/root/gdrive/PC_Kaggle", exist_ok=True)
+    os.makedirs("/tmp/rclone_cache", exist_ok=True)
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     for attempt in range(1, 4):
         try:
             subprocess.Popen([
                 "rclone", "mount", "gdrive:", "/root/gdrive",
+                "--cache-dir", "/tmp/rclone_cache",
                 "--vfs-cache-mode", "writes",
-                "--vfs-cache-max-age", "24h",
+                "--vfs-cache-max-size", "3G",
+                "--vfs-cache-max-age", "1m",
+                "--vfs-read-chunk-size", "32M",
+                "--buffer-size", "32M",
                 "--allow-non-empty",
                 "--tpslimit", "3",
                 "--tpslimit-burst", "1",
@@ -1318,6 +1329,9 @@ subprocess.Popen([
     chrome_bin,
     "--no-sandbox",
     "--user-data-dir=/root/.config/chrome-waifu",
+    "--disk-cache-dir=/tmp/chrome_cache",
+    "--disk-cache-size=104857600",
+    "--media-cache-size=52428800",
     "--window-size=480,720",
     "--window-position=1440,0",
     f"--app=http://localhost:8000/avatars/studio.html"
@@ -1583,6 +1597,17 @@ try:
             print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor VNC (5900) no responde.", flush=True)
         if not novnc_alive:
             print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor noVNC (6080) no responde.", flush=True)
+
+        # Storage Sentinel: Guardián de disco que auto-purga residuos en /kaggle/working cada 30 segundos
+        try:
+            kw_dir = Path("/kaggle/working")
+            if kw_dir.exists():
+                for tmp_f in kw_dir.glob("*.tmp"):
+                    tmp_f.unlink(missing_ok=True)
+                for stray_deb in kw_dir.glob("*.deb"):
+                    stray_deb.unlink(missing_ok=True)
+        except Exception:
+            pass
             
         if minutos % 5 == 0:
             auto_save_user_state()
