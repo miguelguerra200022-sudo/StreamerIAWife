@@ -91,13 +91,29 @@ def update_dataset():
                 pass
     
     # 2.5 Generar imagen pre-compilada de Ubuntu para arranque en 3 segundos
-    notify("Generando imagen pre-compilada (Excluyendo docs/basura para ahorrar GBs)...")
+    notify("Preparando acelerador multi-núcleo y medidor de progreso...")
     rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.data"
     
-    # Usar pigz para compresión paralela súper rápida y evitar que Kaggle mate el proceso
-    subprocess.run("apt-get install -y -qq pigz >/dev/null 2>&1", shell=True)
-    # Agregamos exclusiones de basura pesada y mejoramos la compresión a nivel 4 para que no explote el disco
-    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' --exclude='/usr/share/doc' --exclude='/usr/share/man' --checkpoint=10000 --checkpoint-action=echo='⏳ Compilando... %u archivos procesados' -I 'pigz -4' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
+    # Instalar pigz (compresión paralela) y pv (barra de progreso en tiempo real con % y ETA)
+    subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq pigz pv >/dev/null 2>&1", shell=True)
+    
+    # Calcular tamaño total exacto en bytes para alimentar la barra de progreso (toma 2 segundos)
+    notify("Calculando tamaño total de archivos...")
+    excludes = "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' --exclude='/usr/share/doc' --exclude='/usr/share/man'"
+    calc_cmd = f"du -sb {excludes} /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | awk '{{s+=$1}} END {{print s}}'"
+    try:
+        total_bytes_str = subprocess.check_output(calc_cmd, shell=True, text=True).strip()
+        total_bytes = int(total_bytes_str) if total_bytes_str.isdigit() and int(total_bytes_str) > 0 else 0
+    except Exception:
+        total_bytes = 0
+
+    notify("⏳ Compilando sistema operativo (Progreso en tiempo real con % y tiempo estimado):")
+    if total_bytes > 0 and shutil.which("pv"):
+        # Tubo de alto rendimiento: tar crudo | pv (progreso/ETA) | pigz (multi-núcleo) -> archivo final
+        cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -pterb -s {total_bytes} | pigz -3 > '{rootfs_tar}'"
+    else:
+        cmd_tar = f"tar {excludes} --checkpoint=5000 --checkpoint-action=echo='⏳ Compilando... %u bloques' -I 'pigz -3' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
+    
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada

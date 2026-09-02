@@ -419,7 +419,7 @@ if master_dataset_path and master_dataset_path.exists():
         rootfs_file = rootfs_candidates[0]
         print(f"  ⚡ [✓] ¡Imagen Pre-Compilada de Ubuntu detectada en {rootfs_file.name} ({rootfs_file.stat().st_size / (1024**2):.1f} MB)!", flush=True)
         print("  🚀 [✓] Activando sistema completo en 3 segundos...", flush=True)
-        subprocess.run(f"tar -xzf '{rootfs_file}' -C / >> {LOG_FILE} 2>&1", shell=True)
+        subprocess.run(f"which pigz >/dev/null 2>&1 && (pigz -dc '{rootfs_file}' | tar -xf - -C / >> {LOG_FILE} 2>&1) || tar -xzf '{rootfs_file}' -C / >> {LOG_FILE} 2>&1", shell=True)
     elif master_archives_dir and master_archives_dir.exists():
         deb_count = len(list(master_archives_dir.glob("*.deb")))
         print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)!", flush=True)
