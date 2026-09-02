@@ -24,7 +24,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | **Música & Audio** | **[⚙️ LISTO PARA COMPILAR]** |
 | **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | **Programación & IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | **Seguridad & Redes** | **[⚙️ LISTO PARA COMPILAR]** |
-| **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | Finanzas & Cripto | [⏳ Planificado] |
+| **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | **Finanzas & Cripto** | **[⚙️ LISTO PARA COMPILAR]** |
 | **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | Educación & Ciencia | [⏳ Planificado] |
 | **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | Entretenimiento | [⏳ Planificado] |
 | **20** | **Ubuntu - Herramientas de Rescate & Diagnóstico** | `ubuntu-sysadmin-rescue-tools` | Mantenimiento | [⏳ Planificado] |
@@ -567,13 +567,32 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 📈 DATABASE 17: `Ubuntu - Trading Cripto & Finanzas`
+### 📈 DATABASE 17: `Ubuntu - Trading Cripto & Finanzas` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-crypto-trading-desk` | **Capacidad:** 100 GB
-* **Propósito:** Estación de trading financiero, seguimiento de mercados y gestión de carteras de criptomonedas.
-* **Contenido:**
-  - **TradingView Desktop:** Plataforma de análisis técnico con gráficos en tiempo real.
-  - **Carteras Frías de Cripto:** Electrum (Bitcoin), Sparrow Wallet, Monero GUI.
-  - **Herramientas de Análisis:** Librerías de Python (*ccxt, pandas_ta, backtrader*) para crear y probar bots de trading algorítmico.
+* **Propósito:** La estación de análisis financiero, trading algorítmico cuantitativo (Quant), custodia fría de criptomonedas y **copiloto de Inteligencia Artificial conectado con la Database 11** más completa de Linux.
+* **Plataformas de Gráficos & Mercados en Vivo:**
+  - **TradingView Desktop:** Interfaz profesional para análisis técnico multi-pantalla, indicadores personalizados en Pine Script v5 y alertas en tiempo real.
+  - **DexScreener & DeFiLlama Hub:** Seguimiento de liquidez en cadenas descentralizadas, pares de trading y métricas on-chain.
+* **Bots de Trading Algorítmico & Motores Cuantitativos:**
+  - **Freqtrade (con FreqUI Web Dashboard):** Bot de trading algorítmico líder de código abierto con soporte para backtesting, optimización por hiperparámetros (Hyperopt), simulación en seco (*Dry-Run*) y notificaciones por Telegram.
+  - **Hummingbot:** Bot especializado en Market Making de alta frecuencia, arbitraje entre exchanges y Grid Trading.
+  - **VectorBT (vbt) & Backtrader:** Motores de simulación ultra-rápidos capaces de probar estrategias sobre millones de velas históricas en segundos.
+* **Librerías Financieras & APIs de Exchanges:**
+  - **CCXT & CCXT Pro:** Conexión estandarizada con más de 100 exchanges mundiales (Binance, Bybit, Coinbase, Kraken, OKX, KuCoin) con soporte de WebSockets en tiempo real.
+  - **Pandas-TA & TA-Lib:** Más de 200 indicadores técnicos (RSI, MACD, Bollinger Bands, Ichimoku Cloud, Supertrend, ATR, Medias Móviles Exponenciales).
+* **AI Financial Copilot (`ai_financial_copilot.py`):**
+  - Conectado a la **Database 11 (Ollama/FastAPI - Dual GPU 32GB)** para diseñar estrategias cuantitativas en Python/Pine Script, evaluar ratios de riesgo (Sharpe / Max Drawdown) y sintetizar noticias macroeconómicas.
+* **Billeteras Frías & Custodia Segura de Criptomonedas:**
+  - **Electrum Bitcoin Wallet:** Billetera fría de Bitcoin con soporte para multifirma (*multisig*) y conexión segura vía Tor.
+  - **Sparrow Wallet:** Gestor avanzado de Bitcoin con análisis visual de UTXOs y control granular de privacidad.
+  - **Monero GUI Wallet:** Billetera privada de Monero (XMR).
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `📈 TradingView (Gráficos & Análisis Técnico).desktop`
+    - `🤖 Freqtrade (Bot de Trading Cuantitativo & FreqUI).desktop`
+    - `🧠 AI Financial Copilot (Estrategias & Quant).desktop`
+    - `🪙 Electrum (Billetera Fría de Bitcoin).desktop`
+    - `📁 Bóveda de Estrategias & Datos Cuantitativos.desktop`
 
 ---
 
