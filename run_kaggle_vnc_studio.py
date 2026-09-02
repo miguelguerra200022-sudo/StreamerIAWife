@@ -430,9 +430,14 @@ if master_dataset_path and master_dataset_path.exists():
         os.environ["DEBIAN_FRONTEND"] = "noninteractive"
         os.environ["NEEDRESTART_MODE"] = "a"
         os.environ["NEEDRESTART_SUSPEND"] = "1"
+        os.environ["TMPDIR"] = "/tmp"
+        os.environ["PIP_CACHE_DIR"] = "/tmp/pip_cache"
+        os.environ["XDG_CACHE_HOME"] = "/tmp/.cache"
+        os.environ["HF_HOME"] = "/tmp/hf_cache"
+        os.environ["TORCH_HOME"] = "/tmp/torch_cache"
         subprocess.run("dpkg --add-architecture i386", shell=True)
         subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
-        subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; };' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
+        subprocess.run("mkdir -p /etc/apt/apt.conf.d && echo 'Dpkg::Options { \"--force-confdef\"; \"--force-confold\"; \"--force-unsafe-io\"; }; Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\"; APT::Keep-Downloaded-Packages \"0\";' > /etc/apt/apt.conf.d/99force-conf 2>/dev/null || true", shell=True)
         subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
         subprocess.run("dpkg-divert --divert /usr/bin/mandb.real --rename /usr/bin/mandb 2>/dev/null || true; ln -sf /bin/true /usr/bin/mandb 2>/dev/null || true", shell=True)
         subprocess.run("dpkg-divert --divert /usr/sbin/update-initramfs.real --rename /usr/sbin/update-initramfs 2>/dev/null || true; ln -sf /bin/true /usr/sbin/update-initramfs 2>/dev/null || true", shell=True)
