@@ -1318,6 +1318,20 @@ subprocess.Popen([
     f"--app=http://localhost:8000/avatars/studio.html"
 ], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+# Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)
+sunshine_bin = shutil.which("sunshine")
+if sunshine_bin:
+    try:
+        os.makedirs("/root/.config/sunshine", exist_ok=True)
+        conf_p = Path("/root/.config/sunshine/sunshine.conf")
+        if not conf_p.exists():
+            conf_p.write_text("origin_pin_allowed = pc\nmin_log_level = info\nport = 47989\n", encoding="utf-8")
+        subprocess.run(f"{sunshine_bin} --creds admin {VNC_PASSWORD} >/dev/null 2>&1 || true", shell=True)
+        subprocess.Popen([sunshine_bin], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log("Servidor Sunshine (Moonlight Host) iniciado exitosamente en segundo plano")
+    except Exception as e_sun:
+        log(f"Aviso Sunshine startup: {e_sun}", "WARNING")
+
 print(f"  ⏱️ [Paso 4/5 Completado en {time.time() - t_step4:.1f}s]", flush=True)
 
 # ==============================================================================
@@ -1483,27 +1497,33 @@ print(f"  • Enrutamiento de Mínima Latencia:  🇺🇸 US-East (Miami / Ruta 
 print("-" * 78, flush=True)
 
 if web_tunnel_wifi:
-    print("🌐 OPCIÓN 1: CONEXIÓN EN NAVEGADOR WEB (CHROME / BRAVE / SAFARI):", flush=True)
+    print("🌐 OPCIÓN 1: NAVEGADOR WEB CON MOTOR DE TRACKPAD DE LAPTOP INTEGRADO:", flush=True)
     print("------------------------------------------------------------------------------", flush=True)
-    print("📶 1. MODO WIFI / FIBRA (Máxima Calidad y Nitidez 1080p Crystal Clear):", flush=True)
+    print("📶 1. MODO WIFI / FIBRA (1080p Máxima Nitidez + Trackpad):", flush=True)
     print(f"👉 {web_tunnel_wifi}", flush=True)
-    print("   • Sin compresión visible: ideal para WiFi rápido o conexión de casa.", flush=True)
-    print("\n📱 2. MODO DATOS MÓVILES (Ultra-Baja Latencia / Ahorro de Megas en 4G/LTE):", flush=True)
+    print("\n📱 2. MODO DATOS MÓVILES (Ultra-Baja Latencia + Trackpad):", flush=True)
     print(f"👉 {web_tunnel_mobile}", flush=True)
-    print("   • Cuadros ultralivianos y auto-reconexión rápida: ideal para celular en la calle.", flush=True)
+    print("   • Desliza tu dedo en cualquier parte para mover la flecha del mouse suavemente.", flush=True)
     print("-" * 78, flush=True)
 
 pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
-print("📱 OPCIÓN 2: APP MÓVIL REALVNC VIEWER / AVNC (MÁXIMA VELOCIDAD BINARIA TCP):", flush=True)
+parts = pinggy_addr.split(":") if ":" in pinggy_addr else [pinggy_addr, "5900"]
+host_part = parts[0]
+port_part = parts[1] if len(parts) > 1 else "5900"
+
+print("📱 OPCIÓN 2: APP MÓVIL REALVNC VIEWER / AVNC (CONEXIÓN BINARIA TCP):", flush=True)
 print("------------------------------------------------------------------------------", flush=True)
-print(f"👉 Servidor VNC:    {pinggy_addr}", flush=True)
-print(f"🔑 Contraseña VNC:  {VNC_PASSWORD}", flush=True)
-print("\n💡 Pasos para conectar en RealVNC Viewer:", flush=True)
-print(f"   1. Abre RealVNC Viewer o AVNC en tu celular/PC y presiona el botón '+'.", flush=True)
-print(f"   2. En 'Address' pega: {pinggy_addr}", flush=True)
-print(f"   3. En 'Name' pon: LinuWaifu Cloud PC", flush=True)
-print(f"   4. Toca 'Connect' y cuando te pida la clave escribe: {VNC_PASSWORD}", flush=True)
-print("   • ¡Esta app usa conexión binaria TCP directa (la menor latencia: ~90-140ms)!", flush=True)
+print(f"👉 Para RealVNC Viewer pega:  {host_part}::{port_part}  (con dos puntos dobles)")
+print(f"👉 Para AVNC / bVNC pega:")
+print(f"   • Host / Servidor:         {host_part}")
+print(f"   • Puerto:                  {port_part}")
+print(f"🔑 Contraseña VNC:            {VNC_PASSWORD}")
+print("-" * 78, flush=True)
+
+print("🎮 OPCIÓN 3: MOONLIGHT + SUNSHINE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
+print("------------------------------------------------------------------------------", flush=True)
+print(f"👉 Servidor Sunshine:         🟢 Activo en segundo plano (Puerto 47989/47990)")
+print(f"🔑 Usuario Web: admin         Contraseña: {VNC_PASSWORD}")
 print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
