@@ -190,11 +190,37 @@ def upload_to_kaggle():
         log(f"Error subiendo dataset: {res.stderr or res.stdout}", "ERROR")
         return False
 
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "09032000Mi.").strip()
+
+def verify_admin():
+    if len(sys.argv) > 1 and sys.argv[1].strip() == ADMIN_PASSWORD:
+        return True
+    if "--password" in sys.argv:
+        try:
+            idx = sys.argv.index("--password")
+            if sys.argv[idx + 1].strip() == ADMIN_PASSWORD:
+                return True
+        except Exception:
+            pass
+    if sys.stdin.isatty():
+        import getpass
+        entered = getpass.getpass("🔐 Introduce la Contraseña de Administrador (LinuWaifu): ")
+        if entered.strip() == ADMIN_PASSWORD:
+            return True
+        else:
+            log("Acceso Denegado: Contraseña incorrecta.", "ERROR")
+            return False
+    log(f"Acceso Denegado: Se requiere Contraseña de Administrador. Uso: python3 {sys.argv[0]} '09032000Mi.'", "ERROR")
+    return False
+
 def main():
     print("\n" + "=" * 78)
     print("🌸 COMPILADOR DE UBUNTU MASTER SUITE EN KAGGLE DATASET (100 GB)")
     print("=" * 78 + "\n")
     
+    if not verify_admin():
+        sys.exit(1)
+        
     if not check_kaggle_auth():
         sys.exit(1)
     

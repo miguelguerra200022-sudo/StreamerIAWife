@@ -19,12 +19,55 @@ BASE_DIR = Path("/kaggle/working/StreamerIAWife") if Path("/kaggle/working/Strea
 PAYLOAD_DIR = Path("/kaggle/working/linuwaifu_dataset_update_payload")
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "09032000Mi.").strip()
+
 def notify(msg, title="💾 Base de Datos Kaggle"):
     print(f"[{title}] {msg}", flush=True)
     if os.environ.get("DISPLAY"):
         subprocess.run(f"notify-send '{title}' '{msg}' 2>/dev/null || true", shell=True)
 
+def verify_admin():
+    # 1. Si se pasa por argumento: python3 guardar_en_database_kaggle.py "09032000Mi."
+    if len(sys.argv) > 1 and sys.argv[1].strip() == ADMIN_PASSWORD:
+        return True
+    if "--password" in sys.argv:
+        try:
+            idx = sys.argv.index("--password")
+            if sys.argv[idx + 1].strip() == ADMIN_PASSWORD:
+                return True
+        except Exception:
+            pass
+    # 2. Si está en entorno gráfico (Escritorio XFCE), pedir contraseña con Zenity
+    if os.environ.get("DISPLAY") and shutil.which("zenity"):
+        try:
+            p_res = subprocess.run(
+                ["zenity", "--password", "--title=🔐 Seguridad LinuWaifu Master", "--text=Introduce la Contraseña de Administrador para modificar la Base de Datos de 100GB:"],
+                capture_output=True, text=True
+            )
+            if p_res.returncode == 0 and p_res.stdout.strip() == ADMIN_PASSWORD:
+                return True
+            else:
+                notify("❌ Acceso Denegado: Contraseña de Administrador incorrecta.", "🚫 Bloqueo de Seguridad")
+                return False
+        except Exception:
+            pass
+    # 3. Si se corre en Terminal interactiva
+    if sys.stdin.isatty():
+        import getpass
+        entered = getpass.getpass("🔐 Introduce la Contraseña de Administrador (LinuWaifu): ")
+        if entered.strip() == ADMIN_PASSWORD:
+            return True
+        else:
+            print("❌ Acceso Denegado: Contraseña incorrecta.", flush=True)
+            return False
+    # 4. Sin contraseña
+    notify("❌ Acceso Denegado: Se requiere la Contraseña de Administrador para modificar el Dataset Maestro.", "🚫 Bloqueo de Seguridad")
+    print(f"Uso: python3 {sys.argv[0]} '09032000Mi.'", flush=True)
+    return False
+
 def update_dataset():
+    if not verify_admin():
+        sys.exit(1)
     notify("Iniciando guardado de programas y cambios en el Dataset de 100GB...")
     PAYLOAD_DIR.mkdir(parents=True, exist_ok=True)
     
