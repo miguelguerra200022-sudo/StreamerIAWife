@@ -9,7 +9,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | # | Nombre de la Database | Slug Oficial | Categoría | Estado Actual |
 | :-: | :--- | :--- | :--- | :---: |
 | **1** | **Ubuntu - Core Desktop & Social Hub** | `ubuntu-core-os-social` | **Sistema Base & Redes** | **[✅ HECHO / LISTO]** |
-| **2** | **Ubuntu - Emuladores PS2 & PS1** | `ubuntu-ps2-ps1-vault` | Gaming Retro | [⏳ Planificado] |
+| **2** | **Ubuntu - Emuladores PS2 & PS1** | `ubuntu-ps2-ps1-vault` | **Gaming Retro** | **[⚙️ EN COMPILACIÓN / LISTO]** |
 | **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | Gaming Portátil | [⏳ Planificado] |
 | **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | Gaming Nintendo | [⏳ Planificado] |
 | **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | Gaming Arcade | [⏳ Planificado] |
@@ -71,13 +71,42 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🕹️ DATABASE 2: `Ubuntu - Emuladores PS2 & PS1`
+### 🕹️ DATABASE 2: `Ubuntu - Emuladores PS2 & PS1` **[⚙️ EN COMPILACIÓN / LISTO]**
 * **Slug:** `ubuntu-ps2-ps1-vault` | **Capacidad:** 100 GB
-* **Propósito:** Consola PlayStation 2 y PlayStation 1 definitiva con resolución escalada a 1080p 60FPS.
-* **Contenido:**
-  - **PCSX2 (PS2):** Con BIOS oficiales, shaders de mejora gráfica y compatibilidad de mandos Xbox/PS4/PS5.
-  - **DuckStation (PS1):** El mejor emulador de PlayStation 1 con texturas suavizadas.
-  - **Colección de Juegos:** *Dragon Ball Budokai Tenkaichi 3, God of War 1 & 2, GTA San Andreas, Def Jam Fight for NY, Silent Hill 2, Resident Evil 3 Nemesis, Crash Team Racing, Metal Gear Solid.*
+* **Propósito:** Consola PlayStation 2 y PlayStation 1 definitiva con resolución escalada a 1080p 60FPS, BIOS oficiales completas, Memory Cards 100% y catálogo curado en formato ultra-comprimido CHD/PBP.
+* **Emuladores & Mejoras Gráficas:**
+  - **PCSX2 (Qt 64-bit v2.0):** Emulador oficial de PS2 con renderizado Vulkan/OpenGL, reescalado interno 1080p/4K, filtro anisotrópico 16x y parches panorámicos 16:9 automáticos.
+  - **DuckStation (PS1 PGXP HD):** Emulador de PS1 con eliminación total de temblores poligonales (PGXP Geometry Correction), texturas suavizadas y audio sincronizado.
+  - **Pack Maestro de BIOS Oficiales:** SCPH-70012 (USA), SCPH-70004 (EUR), SCPH-70000 (JAP), SCPH-1001 y SCPH-5501.
+  - **Memory Cards Virtuales:** Tarjetas de 8MB y 128KB con partidas completadas al 100% para desbloquear todos los personajes y pistas.
+  - **Compatibilidad de Mandos:** Perfiles preconfigurados para mandos de PS4, PS5, Xbox One/Series y genéricos USB/Bluetooth.
+* **Catálogo de Juegos de PlayStation 2 (Formato CHD/ISO):**
+  - *Dragon Ball Z: Budokai Tenkaichi 3 (Versión Latino con voces en español)*
+  - *God of War (1 & 2)*
+  - *Grand Theft Auto: San Andreas & Vice City*
+  - *Def Jam: Fight for NY*
+  - *Resident Evil 4 & Silent Hill 2*
+  - *Need for Speed: Underground 2 & Most Wanted (Black Edition)*
+  - *Black & Shadow of the Colossus*
+  - *Devil May Cry 3: Dante's Awakening (Special Edition)*
+  - *Mortal Kombat: Shaolin Monks & Tekken 5*
+  - *Bully (Canis Canem Edit) & Burnout 3: Takedown*
+  - *Kingdom Hearts II & Naruto Shippuden: Ultimate Ninja 5*
+  - *Marvel vs Capcom 2*
+* **Catálogo de Juegos de PlayStation 1 (Formato CHD/PBP):**
+  - *Crash Bandicoot 1, 2, 3 Warped & Crash Team Racing (CTR)*
+  - *Resident Evil 1, 2 & 3 Nemesis*
+  - *Silent Hill & Metal Gear Solid*
+  - *Castlevania: Symphony of the Night & Tekken 3*
+  - *Pepsiman, Gran Turismo 2 & Dino Crisis 2*
+  - *Yu-Gi-Oh! Forbidden Memories (Mod 15 Drop)*
+  - *Jackie Chan Stuntmaster & Tony Hawk's Pro Skater 2*
+  - *Spider-Man (2000) & Marvel Super Heroes vs Street Fighter*
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🎮 PlayStation 2 (PCSX2 1080p HD).desktop`
+    - `🎮 PlayStation 1 (DuckStation PGXP).desktop`
+    - `📂 Carpeta de Juegos PS2 & PS1 (ROMs).desktop`
 
 ---
 
