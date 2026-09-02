@@ -586,6 +586,8 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
   - **Electrum Bitcoin Wallet:** Billetera fría de Bitcoin con soporte para multifirma (*multisig*) y conexión segura vía Tor.
   - **Sparrow Wallet:** Gestor avanzado de Bitcoin con análisis visual de UTXOs y control granular de privacidad.
   - **Monero GUI Wallet:** Billetera privada de Monero (XMR).
+* **Integración con Datos Masivos de Google Drive (CryptoDB 109GB):**
+  - Acceso directo y transparente mediante el montaje FUSE a `/root/gdrive/CryptoDB/trading_full_backup_20260525.tar.zst` (**109.2 GB**) para entrenar bots o ejecutar backtesting sobre años de datos históricos sin ocupar disco local.
 * **Activación 1-Clic (`setup.py`):**
   - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
     - `📈 TradingView (Gráficos & Análisis Técnico).desktop`
@@ -593,6 +595,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
     - `🧠 AI Financial Copilot (Estrategias & Quant).desktop`
     - `🪙 Electrum (Billetera Fría de Bitcoin).desktop`
     - `📁 Bóveda de Estrategias & Datos Cuantitativos.desktop`
+    - `📊 CryptoDB (Datos Históricos Masivos 109GB).desktop`
 
 ---
 

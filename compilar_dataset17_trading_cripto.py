@@ -198,6 +198,13 @@ shortcuts = {
         "Comment=Estrategias de trading, datos historicos, librerias CCXT y scripts quant\\n"
         f"Exec=thunar {DATASET_DIR}\\n"
         "Icon=folder-saved-search\\nTerminal=false\\nCategories=Office;Finance;\\n"
+    ),
+    "CryptoDB_GDrive_Historicos.desktop": (
+        "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
+        "Name=📊 CryptoDB (Datos Históricos Masivos 109GB)\\n"
+        "Comment=Acceso directo a trading_full_backup montado desde tu Google Drive sin ocupar disco local\\n"
+        "Exec=thunar /root/gdrive/CryptoDB || thunar /root/gdrive\\n"
+        "Icon=drive-harddisk\\nTerminal=false\\nCategories=Office;Finance;\\n"
     )
 }
 
