@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 ================================================================================
-🌸 LINUWAIFU CLOUD PC: UBUNTU 24.04 LTS FULL EDITION (DEFAULT MASTER SUITE)
+🐧 UBUNTU CLOUD PC: DESKTOP EDITION (CORE & SOCIAL HUB)
 ================================================================================
 1. [PASO 1]: Conecta y monta Google Drive (5TB - Carpeta PC_Kaggle) inmediatamente.
-2. [PASO 2]: Instala la Suite Oficial Completa de Ubuntu de Canonical (Gigabytes):
-   - `ubuntu-desktop` y herramientas oficiales de Canonical.
+2. [PASO 2]: Instala la Suite Oficial Completa de Ubuntu:
+   - Escritorio XFCE 4.18 con tema Yaru-Dark.
    - Suite ofimática LibreOffice completa (Writer, Calc, Impress).
-   - Suite multimedia con códecs propietarios (`ubuntu-restricted-extras`).
-   - Gestor de archivos GVFS para 5TB Google Drive, compresores 7-Zip.
-3. [PASO 3]: Configura tema oficial Ubuntu Yaru-Dark y accesos directos.
-4. [PASO 4]: Inicia pantalla 1080p nativa 16:9 completa, PulseAudio y Waifu IA 3D.
+   - Redes sociales y comunicación: Discord, Telegram, WhatsApp Web, Spotify, Chrome.
+   - Gestor de archivos GVFS para 5TB Google Drive, compresores 7-Zip, VLC.
+3. [PASO 3]: Configura tema oficial Ubuntu Yaru-Dark y Centro de Software 1-Clic.
+4. [PASO 4]: Inicia pantalla 1080p nativa 16:9 completa, PulseAudio, Trackpad y Sunshine 60 FPS.
 5. [PASO 5]: Auto-guarda todo a Google Drive y entrega enlaces de acceso remoto.
 ================================================================================
 """
@@ -40,7 +40,7 @@ DEFAULT_NGROK = "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
 import traceback
 
 # Archivo Maestro de Registros
-LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
+LOG_FILE = Path("/kaggle/working/ubuntu_system.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 def global_exception_handler(exc_type, exc_value, exc_traceback):
@@ -74,7 +74,7 @@ time.sleep(0.5)
 
 # Inicializar archivo de log limpio
 with open(LOG_FILE, "w", encoding="utf-8") as f:
-    f.write(f"=== INICIO DE SESIÓN LINUWAIFU UBUNTU FULL EDITION ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
+    f.write(f"=== INICIO DE SESIÓN UBUNTU CLOUD PC ({time.strftime('%Y-%m-%d %H:%M:%S')}) ===\n")
 
 def log(msg, level="INFO"):
     ts = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -147,7 +147,7 @@ GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
 os.environ["RCLONE_CONFIG"] = str(GDRIVE_CONF_FILE)
 REPO_RCLONE_B64 = BASE_DIR / "rclone_gdrive.b64"
 EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
-STATE_DIR = Path("/kaggle/working/LinuWaifu_State")
+STATE_DIR = Path("/kaggle/working/Ubuntu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Utilidades de Polling y Espera Activa (Elimina Race Conditions)
@@ -202,7 +202,7 @@ def auto_save_user_state():
                     shell=True, env=git_env
                 )
         
-        save_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
+        save_tar = STATE_DIR / "ubuntu_user_state.tar.gz"
         subprocess.run(
             f"tar --exclude='./gdrive' --exclude='./.cache' --exclude='./.config/google-chrome' -czf {save_tar} -C /root/ . >> {LOG_FILE} 2>&1 || true",
             shell=True
@@ -210,7 +210,7 @@ def auto_save_user_state():
         if save_tar.exists() and save_tar.stat().st_size > 100:
             if target_gdrive_dir.exists():
                 try:
-                    shutil.copy2(save_tar, target_gdrive_dir / "linuwaifu_user_state.tar.gz")
+                    shutil.copy2(save_tar, target_gdrive_dir / "ubuntu_user_state.tar.gz")
                     log("Auto-guardado del sistema a Google Drive (FUSE Directo) completado.", "SUCCESS")
                 except Exception:
                     subprocess.run(
@@ -971,13 +971,13 @@ print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", f
 
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
-    backup_tar = STATE_DIR / "linuwaifu_user_state.tar.gz"
-    direct_backup = Path("/root/gdrive/PC_Kaggle/system_state/linuwaifu_user_state.tar.gz")
+    backup_tar = STATE_DIR / "ubuntu_user_state.tar.gz"
+    direct_backup = Path("/root/gdrive/PC_Kaggle/system_state/ubuntu_user_state.tar.gz")
     if direct_backup.exists() and direct_backup.stat().st_size > 1000:
         shutil.copy2(direct_backup, backup_tar)
     else:
         subprocess.run(
-            f"rclone copy gdrive:PC_Kaggle/system_state/linuwaifu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
+            f"rclone copy gdrive:PC_Kaggle/system_state/ubuntu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
             shell=True
         )
     if backup_tar.exists() and backup_tar.stat().st_size > 1000:
@@ -1122,48 +1122,48 @@ subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true
 
 # Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
-    "LinuWaifu_AI_Studio.desktop": (
+    "Centro_de_Software_Ubuntu_1Clic.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🌸 LinuWaifu AI VTuber Studio\n"
-        "Comment=Panel de IA VTuber 3D en vivo con Voz y Chat\n"
-        "Exec=google-chrome --no-sandbox --app=http://localhost:8000/avatars/studio.html\n"
+        "Name=🛍️ Centro de Software Ubuntu (1-Clic)\n"
+        "Comment=Activa y descarga cualquiera de los 19 módulos adicionales en 1 clic\n"
+        f"Exec=python3 {BASE_DIR}/ubuntu_store.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
-        "Icon=applications-multimedia\n"
+        "Icon=system-software-install\n"
         "Terminal=false\n"
-        "Categories=AudioVideo;Network;\n"
+        "Categories=System;Utility;\n"
     ),
-    "Mis_Juegos_5TB_GoogleDrive.desktop": (
+    "Mis_Archivos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🎮 Mis Juegos 5TB Google Drive (GTA V, RDR2)\n"
-        "Comment=Carpeta persistente con todos tus juegos y partidas\n"
+        "Name=📁 Mis Archivos 5TB (Google Drive)\n"
+        "Comment=Carpeta persistente en la nube con 5TB para juegos y archivos\n"
         "Exec=thunar /root/gdrive/PC_Kaggle\n"
         "Path=/root\n"
-        "Icon=applications-games\n"
+        "Icon=folder-remote\n"
         "Terminal=false\n"
-        "Categories=Game;\n"
+        "Categories=System;Utility;\n"
     ),
     "Guardar_Estado_de_mi_PC.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
         "Name=💾 Guardar Estado de mi PC (Nube)\n"
-        "Comment=Guarda tus partidas, descargas y cambios a Google Drive y GitHub\n"
+        "Comment=Guarda tus partidas, descargas y cambios a Google Drive\n"
         f"Exec=python3 {BASE_DIR}/run_kaggle_vnc_studio.py --save-now\n"
         "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=system-software-update\n"
         "Terminal=true\n"
         "Categories=System;\n"
     ),
-    "Guardar_en_Database_Kaggle_100GB.desktop": (
+    "Guardar_en_Database_Ubuntu_100GB.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📦 Guardar en Database Kaggle (100GB)\n"
-        "Comment=Guarda todos los programas instalados con apt y juegos en tu Dataset de 100GB\n"
+        "Name=📦 Guardar en Database Ubuntu (100GB)\n"
+        "Comment=Actualiza la imagen maestra de tu sistema operativo en Kaggle Datasets\n"
         f"Exec=python3 {BASE_DIR}/guardar_en_database_kaggle.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=drive-harddisk\n"
@@ -1312,30 +1312,6 @@ subprocess.Popen([
 
 # Esperar a que noVNC esté escuchando en puerto 6080
 novnc_ready = wait_for_port(6080, timeout=10)
-
-# Iniciar backend de LinuWaifu
-def start_linuwaifu_backend():
-    try:
-        subprocess.run(f"python3 {BASE_DIR}/cloud_bridge.py >> {LOG_FILE} 2>&1", shell=True, env=env)
-    except Exception:
-        pass
-
-threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
-time.sleep(1)
-
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu con Chrome en perfil independiente
-chrome_bin = "google-chrome" if shutil.which("google-chrome") else ("google-chrome-stable" if shutil.which("google-chrome-stable") else "chromium-browser")
-subprocess.Popen([
-    chrome_bin,
-    "--no-sandbox",
-    "--user-data-dir=/root/.config/chrome-waifu",
-    "--disk-cache-dir=/tmp/chrome_cache",
-    "--disk-cache-size=104857600",
-    "--media-cache-size=52428800",
-    "--window-size=480,720",
-    "--window-position=1440,0",
-    f"--app=http://localhost:8000/avatars/studio.html"
-], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)
 sunshine_bin = shutil.which("sunshine")
@@ -1500,13 +1476,13 @@ except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡LINUWAIFU CLOUD PC 1080p PANTALLA COMPLETA 100% ONLINE!
+# 🎉 ¡UBUNTU CLOUD PC 1080p PANTALLA COMPLETA 100% ONLINE!
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
 if xvfb_ready and vnc_ready and novnc_ready:
-    print("🎉 🌸 ¡TU UBUNTU FULL EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
+    print("🎉 🐧 ¡TU UBUNTU DESKTOP EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
 else:
-    print("⚠️ 🌸 SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
+    print("⚠️ 🐧 SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
 print("=" * 78, flush=True)
 print(f"  • Servidor X11 Display :1 (1080p):  {'🟢 OPERATIVO' if xvfb_ready else '🔴 ERROR DE INICIO'}", flush=True)
 print(f"  • Servidor VNC Nativo (5900):       {'🟢 PROTEGIDO CON CONTRASEÑA' if vnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
@@ -1548,8 +1524,8 @@ print("=" * 78, flush=True)
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en /root/gdrive.", flush=True)
 print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
-print("   • 🎬 Suite Multimedia y Códecs oficiales de Ubuntu listos.", flush=True)
-print("   • 🌸 Tu Waifu 3D ya está abierta en pantalla lista para transmitir.", flush=True)
+print("   • 💬 Redes Sociales & Comunicación: Discord, Telegram, Spotify, Chrome listos.", flush=True)
+print("   • 🛍️ Centro de Software 1-Clic en el Escritorio (20 Databases Disponibles).", flush=True)
 print("   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
@@ -1558,7 +1534,7 @@ print("=" * 78 + "\n", flush=True)
 # ==============================================================================
 apt_wrapper = """#!/bin/bash
 if [[ " $@ " =~ " install " ]] && command -v zenity &> /dev/null && [ -n "$DISPLAY" ] && [ "$DEBIAN_FRONTEND" != "noninteractive" ]; then
-    zenity --question --title="🛡️ Instalador Inteligente LinuWaifu" \\
+    zenity --question --title="🛡️ Instalador Inteligente Ubuntu Cloud" \\
            --text="⚠️ Estás instalando software en la <b>Raíz de Kaggle</b> (límite 20GB).\\n\\nEste programa NO se guardará en Google Drive, pero sí sus configuraciones.\\n\\n¿Continuar con la instalación?" \\
            --width=450
     if [ $? -ne 0 ]; then

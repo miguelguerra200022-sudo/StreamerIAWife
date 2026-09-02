@@ -150,8 +150,8 @@ def update_dataset():
         usuario_activo = os.environ["KAGGLE_USERNAME"]
 
     metadata = {
-        "title": "LinuWaifu Ubuntu Master Suite 100GB",
-        "id": f"{usuario_activo}/linuwaifu-ubuntu-master-100gb",
+        "title": "Ubuntu - Core Desktop & Social Hub",
+        "id": f"{usuario_activo}/ubuntu-core-os-social",
         "licenses": [{"name": "CC0-1.0"}]
     }
     (PAYLOAD_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
@@ -163,17 +163,23 @@ def update_dataset():
     notify("☁️ Subiendo a la nube de Kaggle (mostrando progreso en vivo)...")
     res = subprocess.run(cmd_version, shell=True)
     if res.returncode == 0:
-        notify(f"🎉 ¡Guardado exitoso en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
+        notify(f"🎉 ¡Guardado exitoso en {usuario_activo}/ubuntu-core-os-social!", "✅ Guardado Exitoso")
     else:
         # Si el dataset no existía, intentar crear
         notify("Intentando crear dataset por primera vez...")
         cmd_create = f"kaggle datasets create -p '{PAYLOAD_DIR}' -u -r tar"
         res2 = subprocess.run(cmd_create, shell=True)
         if res2.returncode == 0:
-            notify(f"🎉 ¡Dataset creado en {usuario_activo}/linuwaifu-ubuntu-master-100gb!", "✅ Guardado Exitoso")
+            notify(f"🎉 ¡Dataset creado en {usuario_activo}/ubuntu-core-os-social!", "✅ Guardado Exitoso")
         else:
-            notify(f"❌ Error al guardar en Dataset (Revisa la consola para más detalles).", "❌ Error de Guardado")
-            return
+            # Fallback al dataset maestro anterior
+            cmd_fallback = f"kaggle datasets version -p '{PAYLOAD_DIR}' -m 'Auto-backup ({ts_msg})' -d miguelguerra26/linuwaifu-ubuntu-master-100gb --dir-mode tar"
+            res3 = subprocess.run(cmd_fallback, shell=True)
+            if res3.returncode == 0:
+                notify("🎉 ¡Guardado exitoso en dataset maestro!", "✅ Guardado Exitoso")
+            else:
+                notify(f"❌ Error al guardar en Dataset.", "❌ Error de Guardado")
+                return
 
     # 5. Limpieza inmediata para dejar el disco de 20GB al 100% de espacio libre
     notify("🧹 Eliminando archivos temporales locales para dejar los 20GB completamente libres...")

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 ================================================================================
-🌸 AUTO-COMPILADOR Y PUBLICADOR MAESTRO DE DATABASE KAGGLE (100GB)
+🐧 AUTO-COMPILADOR Y PUBLICADOR: UBUNTU CORE & SOCIAL HUB (100GB)
 ================================================================================
 Este script realiza el ciclo completo de forma 100% autónoma:
-1. Instala todo el Ecosistema 'Modo Dios' (Steam, OBS, Discord, Sunshine, Lutris, etc.)
+1. Instala el entorno base de Ubuntu, redes sociales, comunicación y utilidades.
 2. Aplica todas las reglas de blindaje de almacenamiento (evitando los 20GB).
 3. Compila la imagen maestra en /tmp o /dev/shm con pigz multi-núcleo.
-4. Sube la nueva versión a la base de datos de 100GB (linuwaifu-ubuntu-master-100gb).
+4. Sube la nueva versión a la base de datos de 100GB (ubuntu-core-os-social).
 5. Apaga la sesión inmediatamente al terminar para ahorrar todas las horas de GPU.
 """
 
@@ -22,7 +22,7 @@ BASE_DIR = Path("/kaggle/working/StreamerIAWife") if Path("/kaggle/working/Strea
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "09032000Mi.").strip()
 
 print("=" * 78, flush=True)
-print("🌸 INICIANDO PROCESO AUTÓNOMO: INSTALACIÓN, COMPILACIÓN Y PUBLICACIÓN EN DATABASE...", flush=True)
+print("🐧 INICIANDO PROCESO AUTÓNOMO: COMPILACIÓN Y PUBLICACIÓN EN UBUNTU CORE...", flush=True)
 print("=" * 78, flush=True)
 
 t_start = time.time()
