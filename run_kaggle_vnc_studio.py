@@ -1379,7 +1379,7 @@ if not web_tunnel_wifi:
     except Exception as e_cf:
         log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
-# 2. Túnel TCP Pinggy con bucle de auto-reconexión continua (Multi-nodo: a.pinggy.io / t.pinggy.io)
+# 2. Túnel TCP Pinggy / Localhost.run con bucle de auto-reconexión y API de depuración
 def run_pinggy_tunnel():
     nodes = ["a.pinggy.io", "free.pinggy.io", "t.pinggy.io"]
     idx = 0
@@ -1387,23 +1387,31 @@ def run_pinggy_tunnel():
         target_node = nodes[idx % len(nodes)]
         idx += 1
         try:
+            # Iniciamos SSH hacia Pinggy habilitando el puerto de depuración local 4300
             proc = subprocess.Popen(
-                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", f"tcp@{target_node}"],
+                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "-L4300:localhost:4300", f"tcp@{target_node}"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 bufsize=1
             )
-            for line in iter(proc.stdout.readline, ''):
-                if not line:
+            for raw_line in iter(proc.stdout.readline, ''):
+                if not raw_line:
                     break
-                if "pinggy" in line or "tcp://" in line or ".link" in line:
-                    match = re.search(r'([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
-                    if match:
-                        addr = match.group(1).strip()
-                        if addr not in vnc_app_address:
-                            vnc_app_address.clear()
-                            vnc_app_address.append(addr)
+                # Limpiar secuencias de escape ANSI para evitar que rompan la búsqueda
+                clean_line = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', raw_line).strip()
+                
+                # Coincidencia con cualquier formato de URL TCP de Pinggy
+                match = (
+                    re.search(r'tcp://([a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}:\d+)', clean_line) or
+                    re.search(r'([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', clean_line) or
+                    re.search(r'([a-zA-Z0-9.-]+\.pinggy\.io:\d+)', clean_line)
+                )
+                if match:
+                    addr = match.group(1).replace("tcp://", "").strip()
+                    if addr and addr not in vnc_app_address:
+                        vnc_app_address.clear()
+                        vnc_app_address.append(addr)
             proc.wait()
         except Exception:
             pass
@@ -1411,10 +1419,27 @@ def run_pinggy_tunnel():
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
-# Esperar activamente hasta 15 segundos para capturar las conexiones
+# Esperador inteligente: Consulta tanto la salida directa como la API HTTP de Pinggy (puerto 4300)
 for _ in range(30):
     if vnc_app_address and web_tunnel_wifi:
         break
+    # Intentar obtener la URL desde la API local del depurador de Pinggy
+    if not vnc_app_address:
+        try:
+            import urllib.request
+            req = urllib.request.Request("http://127.0.0.1:4300/urls", headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=0.8) as resp:
+                data = json.loads(resp.read().decode())
+                urls = data.get("urls", []) if isinstance(data, dict) else []
+                for u in urls:
+                    if ":" in u:
+                        cleaned = u.replace("tcp://", "").replace("https://", "").replace("http://", "").strip()
+                        if cleaned and cleaned not in vnc_app_address:
+                            vnc_app_address.clear()
+                            vnc_app_address.append(cleaned)
+                            break
+        except Exception:
+            pass
     time.sleep(0.5)
 
 print(f"  ⏱️ [Paso 5/5 Completado en {time.time() - t_step5:.1f}s]", flush=True)
