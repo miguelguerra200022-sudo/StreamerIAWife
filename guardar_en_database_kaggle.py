@@ -16,7 +16,8 @@ import subprocess
 from pathlib import Path
 
 BASE_DIR = Path("/kaggle/working/StreamerIAWife") if Path("/kaggle/working/StreamerIAWife").exists() else Path(__file__).resolve().parent
-PAYLOAD_DIR = Path("/kaggle/working/linuwaifu_dataset_update_payload")
+# Usar /tmp para no tocar ni consumir jamás la cuota de 20GB de /kaggle/working
+PAYLOAD_DIR = Path("/tmp/linuwaifu_dataset_update_payload")
 LOG_FILE = Path("/kaggle/working/linuwaifu_system.log")
 
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "09032000Mi.").strip()
