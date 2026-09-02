@@ -113,13 +113,12 @@ def update_dataset():
     except Exception:
         total_bytes = 0
 
+    if total_bytes <= 0:
+        total_bytes = 8 * 1024 * 1024 * 1024  # 8GB estimado si el cálculo fue omitido
+
     notify("⏳ Compilando sistema operativo (Progreso en tiempo real con % y tiempo estimado):")
-    if total_bytes > 0 and shutil.which("pv"):
-        # Tubo de alto rendimiento: tar crudo | pv (progreso/ETA) | pigz (multi-núcleo) -> archivo final
-        cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -pterb -s {total_bytes} | pigz -3 > '{rootfs_tar}'"
-    else:
-        cmd_tar = f"tar {excludes} --checkpoint=5000 --checkpoint-action=echo='⏳ Compilando... %u bloques' -I 'pigz -3' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt"
-    
+    # pv -f fuerza la barra de progreso en Kaggle / Jupyter Notebook y 2>&1 muestra la salida en vivo
+    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb -s {total_bytes} | pigz -3 > '{rootfs_tar}'"
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada
