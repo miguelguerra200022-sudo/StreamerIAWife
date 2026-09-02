@@ -1236,6 +1236,7 @@ subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true
 subprocess.run(f"cp {BASE_DIR}/ubuntu_store.py /usr/local/bin/ubuntu_store.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/liberar_vram.py /usr/local/bin/liberar_vram.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/salvar_y_salir.py /usr/local/bin/salvar_y_salir.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/test_velocidad_real.py /usr/local/bin/test_velocidad_real.py 2>/dev/null || true", shell=True)
 
 # Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
@@ -1286,6 +1287,18 @@ shortcuts = {
         "Icon=download\n"
         "Terminal=false\n"
         "Categories=Network;\n"
+    ),
+    "Test_Velocidad_Gigabit.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=🚀 Test de Velocidad Real Gigabit (1GB Test)\n"
+        "Comment=Mide la velocidad real en MB/s y Gbps descargando y borrando un archivo de prueba\n"
+        "Exec=xfce4-terminal --title='Test de Velocidad Real' -e 'bash -c \"python3 /usr/local/bin/test_velocidad_real.py 1gb; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\n"
+        "Path=/tmp\n"
+        "Icon=utilities-system-monitor\n"
+        "Terminal=false\n"
+        "Categories=Network;System;\n"
     ),
     "Mis_Archivos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
