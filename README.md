@@ -18,6 +18,7 @@ Copia y pega este comando en tu Celda de Kaggle y dale **Play (▶️)**:
 
 ## ✨ Características Principales
 * 📦 **Suite Oficial de Canonical Ubuntu (Gigabytes)**: `ubuntu-desktop` completo.
+* 🎮 **Modo Dios Activado**: Steam, Lutris, OBS Studio, Sunshine, H.264/HEVC y BBR instalados.
 * 🔒 **Seguridad con Contraseña Criptográfica**: Servidor VNC y web protegidos.
 * 🌐 **Enrutamiento Ultra-Rápido para Venezuela/LATAM**: Nodos directos de EE.UU. Este (Miami / Florida).
 * 📶 **Enlaces Especializados**: Modo WiFi (1080p Crystal) y Modo Datos Móviles (4G/LTE ligero).
@@ -27,6 +28,19 @@ Copia y pega este comando en tu Celda de Kaggle y dale **Play (▶️)**:
 * ☁️ **5TB Google Drive (`PC_Kaggle`)**: Sincronizado automáticamente como disco principal.
 * 🌸 **LinuWaifu 3D IA Studio**: Panel interactivo con voz y chat en vivo en pantalla.
 * 💾 **Auto-guardado continuo**: Tus partidas y cambios se respaldan en Google Drive cada 5 minutos.
+
+## 💾 Guardar Cambios en la Database Maestra de 100GB (Modo Dios)
+
+Si instalas nuevos programas, juegos o quieres guardar las nuevas herramientas del "Modo Dios" de forma permanente, tienes dos opciones:
+
+**Opción 1: Desde el Escritorio (Interfaz Gráfica)**
+Solo haz doble clic en el ícono del escritorio llamado **"📦 Guardar en Database Kaggle (100GB)"**.
+
+**Opción 2: Desde la Terminal (Comando Directo)**
+Abre una terminal y ejecuta este comando (por seguridad, te pedirá la contraseña de administrador):
+```bash
+python3 /kaggle/working/StreamerIAWife/guardar_en_database_kaggle.py
+```
 
 ## 📦 Cómo Crear el Dataset de 100GB en Kaggle (Arranque en 2 Segundos)
 

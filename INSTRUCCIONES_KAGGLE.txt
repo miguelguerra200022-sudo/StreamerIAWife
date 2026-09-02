@@ -41,9 +41,11 @@ B) SI QUIERES CREAR TU PROPIA BASE DE DATOS EN LA CUENTA NUEVA:
    3. Dale a "+ Add Input" -> "Your Datasets" -> Agrega tu dataset y dale a Run.
 
 ================================================================================
-💾 3. BOTONES EN EL ESCRITORIO DE TU CLOUD PC:
+💾 3. BOTONES EN EL ESCRITORIO DE TU CLOUD PC (Y COMANDOS DE TERMINAL):
 --------------------------------------------------------------------------------
-• 📦 'Guardar en Database Kaggle (100GB)': Guarda programas instalados con apt y juegos en tu Dataset.
+• 📦 'Guardar en Database Kaggle (100GB)': Guarda programas instalados y herramientas (Modo Dios) en tu Dataset.
+  - Alternativa por terminal: python3 /kaggle/working/StreamerIAWife/guardar_en_database_kaggle.py
+
 • 💾 'Guardar Estado de mi PC (Nube)': Guarda partidas, perfiles y descargas a Google Drive 5TB.
 • 🎮 'Mis Juegos 5TB Google Drive': Abre tu carpeta de 5TB con tus juegos y archivos.
 • 📊 'Monitor GPUs Tesla T4': Abre el monitor en vivo 'nvtop' de tus dos GPUs Tesla T4.
