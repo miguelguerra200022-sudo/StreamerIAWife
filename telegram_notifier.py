@@ -14,14 +14,17 @@ from pathlib import Path
 
 BOT_TOKEN = "8557490216:AAGAI2hTogiVswcdcoPlJ91DODaD_6BqZ2U"
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+DEFAULT_CHAT_ID = "1514766577"
 CHAT_ID_FILE = Path(__file__).resolve().parent / "telegram_chat_id.txt"
 
 def obtener_chat_id():
-    """Recupera el chat_id guardado o busca en getUpdates si el usuario envió /start."""
+    """Recupera el chat_id guardado o usa el default oficial."""
     if CHAT_ID_FILE.exists():
         c_id = CHAT_ID_FILE.read_text().strip()
         if c_id:
             return c_id
+    if DEFAULT_CHAT_ID:
+        return DEFAULT_CHAT_ID
             
     # Intentar obtener de getUpdates
     try:
