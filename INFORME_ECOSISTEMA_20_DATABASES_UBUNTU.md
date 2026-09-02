@@ -25,7 +25,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | **Programación & IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | **Seguridad & Redes** | **[⚙️ LISTO PARA COMPILAR]** |
 | **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | **Finanzas & Cripto** | **[⚙️ LISTO PARA COMPILAR]** |
-| **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | Educación & Ciencia | [⏳ Planificado] |
+| **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | **Educación & Ciencia** | **[⚙️ LISTO PARA COMPILAR]** |
 | **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | Entretenimiento | [⏳ Planificado] |
 | **20** | **Ubuntu - Herramientas de Rescate & Diagnóstico** | `ubuntu-sysadmin-rescue-tools` | Mantenimiento | [⏳ Planificado] |
 
@@ -601,14 +601,44 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ### 🎓 DATABASE 18: `Ubuntu - Universidad & Ciencia Hub`
 * **Slug:** `ubuntu-student-university-hub` | **Capacidad:** 100 GB
-* **Propósito:** Centro de herramientas académicas para estudiantes universitarios, científicos e investigadores.
-* **Contenido:**
-  - **Anki:** Software de repetición espaciada con tarjetas de memoria para medicina, leyes e idiomas.
-  - **GNU Octave:** Entorno de cálculo numérico y matrices (compatible con scripts de MATLAB).
-  - **GeoGebra:** Geometría dinámica, álgebra y cálculo visual.
-  - **Zotero:** Gestor de bibliografía y citas para tesis y artículos científicos.
-  - **TeXstudio & Kile:** Editores profesionales de documentos LaTeX.
-  - **Calibre:** Biblioteca y lector de libros electrónicos (EPUB, PDF, MOBI).
+* **Script Compilador:** `compilar_dataset18_universidad_ciencia.py` | **Estado:** `[⚙️ LISTO PARA COMPILAR]`
+* **Propósito:** Centro integral de herramientas académicas de élite para estudiantes universitarios, científicos, médicos, ingenieros e investigadores doctorales.
+* **Contenido de Alto Nivel:**
+  - **Matemáticas & Cálculo Numérico:**
+    - **GNU Octave Pro:** Entorno de cálculo numérico matricial 100% compatible con scripts de MATLAB, toolbox de álgebra lineal, procesamiento de señales y simulaciones.
+    - **GeoGebra Desktop:** Software líder en geometría dinámica, cálculo diferencial/integral y análisis visual 3D.
+    - **Maxima / wxMaxima:** Sistema de álgebra computacional (CAS) para cálculo simbólico, integración analítica y resolución de ecuaciones diferenciales.
+    - **Scientific Python:** `NumPy`, `SciPy`, `SymPy`, `Matplotlib`, `Seaborn` y `Pandas` pre-instalados.
+  - **Medicina, Anatomía, Biología & Química:**
+    - **Anki Pro:** Software de repetición espaciada número 1 para memorización médica, farmacología y leyes, con 11,000+ tarjetas pre-cargadas (Anatomía Gray 3D, Farmacología Clínica, Leyes, Inglés C1/C2).
+    - **Avogadro:** Modelador y editor molecular 3D para química orgánica, bioquímica y enlaces moleculares.
+    - **PyMOL:** Visualizador estructural de proteínas, macromoléculas y secuencias de ADN/ARN.
+  - **Astronomía & Ciencias Espaciales:**
+    - **Stellarium:** Planetario astronómico fotorrealista 3D con catálogo de 600,000+ estrellas, planetas y nebulosas en tiempo real.
+    - **QGIS:** Sistema de Información Geográfica profesional para análisis cartográfico y espacial.
+  - **Redacción Académica, LaTeX, Tesis & Gestión Bibliográfica:**
+    - **TeXstudio & TeX Live:** Entorno profesional de composición tipográfica LaTeX con plantillas pre-instaladas para tesis de grado, artículos IEEE, Elsevier y Springer Nature.
+    - **Zotero:** Gestor de referencias bibliográficas con generación automática de citas en formatos APA 7ma Ed., IEEE, Vancouver y Harvard.
+    - **Calibre Pro:** Gestor de biblioteca digital universitaria y lector/conversor de libros EPUB, PDF y MOBI.
+    - **Xournal++:** Cuaderno digital para toma de apuntes a mano alzada y anotación directa sobre PDFs de libros de texto.
+  - **🧠 AI Academic Researcher (`ai_academic_researcher.py`):**
+    - Agente inteligente de investigación conectado a la Database 11 (Ollama Dual-GPU 32GB).
+    - Modos: Explicador Socrático paso a paso, Revisor y Corrector de Tesis/Papers, Generador de Fórmulas LaTeX y Creador Automático de Tarjetas Anki a partir de cualquier texto o apunte.
+  - **☁️ Persistencia Total en Google Drive (5TB):**
+    - Enlace automático a `/root/gdrive/PC_Kaggle/Universidad_Ciencia/`: guarda de forma permanente `Tesis_y_Papers`, `Anki_Decks`, `Octave_Proyectos`, `Biblioteca_Libros` y `Zotero_Storage`.
+* **Accesos Directos en el Escritorio:**
+  - `📐 GNU Octave Pro (Alternativa MATLAB).desktop`
+  - `📊 GeoGebra (Geometría, Álgebra & Cálculo).desktop`
+  - `🧠 Anki Pro (Repetición Espaciada & Medicina).desktop`
+  - `📑 TeXstudio (Editor de Tesis & Papers LaTeX).desktop`
+  - `📚 Zotero (Gestor de Citas & Bibliografía).desktop`
+  - `🧪 Avogadro (Modelado Molecular & Bioquímica 3D).desktop`
+  - `🌌 Stellarium (Planetario Astronómico 3D).desktop`
+  - `📖 Calibre Pro (Biblioteca Digital & Libros PDF/EPUB).desktop`
+  - `✍️ Xournal++ (Cuaderno Digital & Anotador de PDFs).desktop`
+  - `🎓 AI Academic Researcher (Copiloto de Tesis & Anki).desktop`
+  - `📁 Bóveda de Recursos Universitarios & Decks Anki.desktop`
+  - `📁 Mis Trabajos de Investigación (5TB Google Drive).desktop`
 
 ---
 

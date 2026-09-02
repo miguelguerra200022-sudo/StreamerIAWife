@@ -1051,6 +1051,8 @@ sync_dirs = {
     "/root/Projects": "/root/gdrive/PC_Kaggle/Projects",
     "/root/Freqtrade_UserData": "/root/gdrive/PC_Kaggle/Freqtrade_UserData",
     "/root/Security_Reports": "/root/gdrive/PC_Kaggle/Security_Reports",
+    "/root/Universidad_Ciencia": "/root/gdrive/PC_Kaggle/Universidad_Ciencia",
+    "/root/Tesis_y_Papers": "/root/gdrive/PC_Kaggle/Universidad_Ciencia/Tesis_y_Papers",
 }
 
 if Path("/root/gdrive").exists():
