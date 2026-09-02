@@ -378,7 +378,8 @@ full_ubuntu_pkgs = [
     "file-roller", "mousepad", "htop", "nvtop", "mpv", "dbus-x11", "x11vnc", "xvfb",
     "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
     "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
-    "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip"
+    "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip",
+    "v4l2loopback-dkms", "v4l2loopback-utils", "ffmpeg", "sox", "libportaudio2"
 ]
 
 extra_pkgs = []

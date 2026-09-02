@@ -62,7 +62,9 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
     - **VLC Media Player:** Reproductor multimedia con códecs universales.
     - **FileZilla:** Cliente FTP/SFTP.
     - **Google Drive 5TB FUSE:** Montaje automático en `/root/gdrive/PC_Kaggle`.
-  - **Control, Móvil & Calidad de Vida:**
+  - **Control, Móvil, Cámara & Micrófono Virtual:**
+    - **Cámara Web Virtual (`v4l2loopback` / `/dev/video0`):** Permite conectar la cámara de tu teléfono móvil o cámara web física a través de la red/WebRTC para que apps como VSeeFace, OpenSeeFace, Discord y Google Meet la detecten como una cámara física USB.
+    - **Micrófono Virtual (PulseAudio / ALSA Loopback):** Transmisión de voz en tiempo real (<50ms) desde el micrófono de tu teléfono o auriculares hacia Ubuntu para transcripción en vivo (Whisper), modulación (RVC) o llamadas.
     - **Onboard:** Teclado virtual en pantalla para escribir desde móviles y tablets.
     - **AntiMicroX:** Calibrador y mapeador de mandos y controles Bluetooth/USB.
     - **Pavucontrol:** Mezclador de audio profesional para regular volúmenes independientes.

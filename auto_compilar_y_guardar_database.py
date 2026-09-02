@@ -54,9 +54,9 @@ subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-sel
 print("📦 [1/4] Verificando e instalando componentes base de escritorio y noVNC...", flush=True)
 subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq xfce4 xfce4-terminal xfce4-goodies dbus-x11 x11-xserver-utils x11-utils xterm tigervnc-standalone-server tigervnc-common websockify pigz pv wget curl git python3-pip", shell=True)
 
-# 4. Instalar Ecosistema Completo de Productividad, Redes, Media y Control
-print("⭐ [2/4] Instalando Ecosistema Integral de Ubuntu Core (Ofimática, Redes, Utilidades y Media)...", flush=True)
-subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libreoffice-writer libreoffice-calc libreoffice-impress vlc telegram-desktop plank papirus-icon-theme flameshot copyq evince p7zip-full unrar-free pavucontrol onboard redshift redshift-gtk qbittorrent antimicrox", shell=True)
+# 4. Instalar Ecosistema Completo de Productividad, Redes, Media, Control, Cámara y Micrófono Virtual
+print("⭐ [2/4] Instalando Ecosistema Integral de Ubuntu Core (Ofimática, Redes, Utilidades, Cámara y Micrófono)...", flush=True)
+subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libreoffice-writer libreoffice-calc libreoffice-impress vlc telegram-desktop plank papirus-icon-theme flameshot copyq evince p7zip-full unrar-free pavucontrol onboard redshift redshift-gtk qbittorrent antimicrox v4l2loopback-dkms v4l2loopback-utils pulseaudio pulseaudio-utils ffmpeg sox libportaudio2", shell=True)
 
 print("   -> Instalando Discord...", flush=True)
 subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && (apt-get install -y -qq /tmp/discord.deb || dpkg -i /tmp/discord.deb || apt-get install -f -y -qq) && rm -f /tmp/discord.deb", shell=True)
