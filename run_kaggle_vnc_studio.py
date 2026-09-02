@@ -1101,7 +1101,7 @@ if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOK
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Túnel Web Ngrok HTTP en pantalla completa con auto-escalado horizontal y vertical (Región US para mínima latencia a Venezuela)
+# 1. Túnel Web Ngrok HTTP en pantalla completa (Región US para mínima latencia a Venezuela)
 if ngrok_token:
     try:
         from pyngrok import ngrok, conf
@@ -1111,20 +1111,55 @@ if ngrok_token:
             pass
         ngrok.set_auth_token(ngrok_token)
         conf.get_default().region = "us"
-        http_tunnel = ngrok.connect(6080, "http")
-        base_ngrok = http_tunnel.public_url
-        web_tunnel_wifi = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-        web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+        try:
+            http_tunnel = ngrok.connect(6080, "http")
+            base_ngrok = http_tunnel.public_url
+            web_tunnel_wifi = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+            web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+        except Exception as e_ngrok:
+            log(f"Ngrok endpoint ocupado o aviso: {e_ngrok}", "WARNING")
+            # Intento de reconexión sin dominio estático o túnel TCP
+            try:
+                tcp_tun = ngrok.connect(5900, "tcp")
+                tcp_clean = tcp_tun.public_url.replace("tcp://", "")
+                if tcp_clean:
+                    vnc_app_address.append(tcp_clean)
+            except Exception:
+                pass
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
-# 2. Túnel TCP Pinggy con bucle de auto-reconexión continua
-vnc_app_address = []
+# 1.5 Fallback de Alta Velocidad: Cloudflare Tunnel (Anycast Global) si Ngrok no conectó
+if not web_tunnel_wifi:
+    try:
+        cf_bin = Path("/usr/local/bin/cloudflared")
+        if not cf_bin.exists():
+            subprocess.run("wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
+        if cf_bin.exists():
+            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://localhost:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for _ in range(25):
+                line = proc_cf.stdout.readline()
+                if "trycloudflare.com" in line:
+                    match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
+                    if match:
+                        base_cf = match.group(1).strip()
+                        web_tunnel_wifi = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                        web_tunnel_mobile = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                        break
+                time.sleep(0.4)
+    except Exception as e_cf:
+        log(f"Aviso Cloudflare: {e_cf}", "WARNING")
+
+# 2. Túnel TCP Pinggy con bucle de auto-reconexión continua (Multi-nodo: a.pinggy.io / t.pinggy.io)
 def run_pinggy_tunnel():
+    nodes = ["a.pinggy.io", "free.pinggy.io", "t.pinggy.io"]
+    idx = 0
     while True:
+        target_node = nodes[idx % len(nodes)]
+        idx += 1
         try:
             proc = subprocess.Popen(
-                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
+                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", f"tcp@{target_node}"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -1147,9 +1182,9 @@ def run_pinggy_tunnel():
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
-# Esperar activamente hasta 15 segundos para capturar la dirección exacta de Pinggy
+# Esperar activamente hasta 15 segundos para capturar la dirección exacta de Pinggy o Ngrok TCP
 for _ in range(30):
-    if vnc_app_address:
+    if vnc_app_address and web_tunnel_wifi:
         break
     time.sleep(0.5)
 
