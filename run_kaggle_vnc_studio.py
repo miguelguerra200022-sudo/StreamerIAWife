@@ -1554,6 +1554,17 @@ if not web_tunnel_wifi:
     except Exception as e_cf:
         log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
+# Guardar URL de sesión en Google Drive para acceso instantáneo remoto
+if web_tunnel_wifi:
+    try:
+        Path("/tmp/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        Path("/kaggle/working/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        if Path("/root/gdrive/PC_Kaggle/system_state").exists():
+            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+    except Exception:
+        pass
+
 # 2. Túnel TCP Pinggy / Localhost.run con bucle de auto-reconexión y API de depuración
 def run_pinggy_tunnel():
     nodes = ["a.pinggy.io", "free.pinggy.io", "t.pinggy.io"]
