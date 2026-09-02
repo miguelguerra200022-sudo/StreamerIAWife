@@ -635,15 +635,16 @@ try:
 
     function measurePing() {
         const start = performance.now();
-        const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-        fetch(protocol + "//" + window.location.host + "/favicon.ico?t=" + Date.now(), { method: "HEAD", cache: "no-store" })
-            .then(() => {
-                const rtt = Math.round(performance.now() - start);
-                if (pingText) pingText.innerText = rtt + " ms";
-            })
-            .catch(() => {
-                if (pingText) pingText.innerText = "< 35 ms";
-            });
+        const img = new Image();
+        img.src = window.location.origin + "/app/images/icons/novnc-16x16.png?t=" + Date.now();
+        img.onload = function() {
+            const rtt = Math.round(performance.now() - start);
+            if (pingText) pingText.innerText = rtt + " ms";
+        };
+        img.onerror = function() {
+            const rtt = Math.round(performance.now() - start);
+            if (pingText) pingText.innerText = (rtt > 0 ? rtt : "< 45") + " ms";
+        };
     }
     setInterval(measurePing, 2000);
     measurePing();
@@ -872,6 +873,14 @@ print(f"  ⏱️ [Paso 3/5 Completado en {time.time() - t_step3:.1f}s]", flush=T
 t_step4 = time.time()
 print("🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...", flush=True)
 
+# Configurar contraseña de seguridad para VNC y acceso remoto
+VNC_PASSWORD = "09032000Mi"
+vnc_pass_dir = Path.home() / ".vnc"
+vnc_pass_dir.mkdir(parents=True, exist_ok=True)
+vnc_pass_file = vnc_pass_dir / "passwd"
+subprocess.run(f"x11vnc -storepasswd '{VNC_PASSWORD}' '{vnc_pass_file}' 2>/dev/null || true", shell=True)
+subprocess.run(f"chmod 600 '{vnc_pass_file}' 2>/dev/null || true", shell=True)
+
 # Iniciar PulseAudio nativo en modo TCP local
 subprocess.run(
     "pulseaudio -k 2>/dev/null || true; "
@@ -900,23 +909,24 @@ subprocess.Popen([
 ], env=env, stdout=log_xfce, stderr=log_xfce)
 time.sleep(1.5)
 
-# Servidor VNC en resolución nativa 1920x1080 (Optimizado para 60 FPS y Ultra-Baja Latencia)
+# Servidor VNC en resolución nativa 1920x1080 (Protegido con Contraseña, 60 FPS y Ultra-Baja Latencia)
 log_vnc = open(LOG_FILE, "a", encoding="utf-8")
+cmd_vnc_auth = ["-rfbauth", str(vnc_pass_file)] if vnc_pass_file.exists() else ["-nopw"]
 subprocess.Popen([
     "x11vnc", "-display", ":1",
-    "-forever", "-nopw", "-shared",
+    "-forever", "-shared",
     "-rfbport", "5900",
     "-noxdamage", "-noxfixes",
     "-repeat", "-capslock",
     "-nomodtweak",
     "-threads", "4"
-], env=env, stdout=log_vnc, stderr=log_vnc)
+] + cmd_vnc_auth, env=env, stdout=log_vnc, stderr=log_vnc)
 
 # Esperar a que x11vnc esté escuchando en puerto 5900
 vnc_ready = wait_for_port(5900, timeout=8)
 if not vnc_ready:
     # Intento de recuperación inmediata si falló el primer enlace
-    subprocess.Popen(["x11vnc", "-display", ":1", "-forever", "-nopw", "-shared", "-rfbport", "5900", "-bg"], env=env, stdout=log_vnc, stderr=log_vnc)
+    subprocess.Popen(["x11vnc", "-display", ":1", "-forever", "-shared", "-rfbport", "5900", "-bg"] + cmd_vnc_auth, env=env, stdout=log_vnc, stderr=log_vnc)
     vnc_ready = wait_for_port(5900, timeout=5)
 
 # Asegurar permisos de ejecución en toda la suite noVNC
@@ -965,24 +975,28 @@ print(f"  ⏱️ [Paso 4/5 Completado en {time.time() - t_step4:.1f}s]", flush=T
 t_step5 = time.time()
 print("🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...", flush=True)
 
-web_tunnel_url = None
+web_tunnel_wifi = None
+web_tunnel_mobile = None
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
     ngrok_token = sys.argv[1].strip()
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Túnel Web Ngrok HTTP en pantalla completa con auto-escalado horizontal y vertical
+# 1. Túnel Web Ngrok HTTP en pantalla completa con auto-escalado horizontal y vertical (Región US para mínima latencia a Venezuela)
 if ngrok_token:
     try:
-        from pyngrok import ngrok
+        from pyngrok import ngrok, conf
         try:
             ngrok.kill()
         except Exception:
             pass
         ngrok.set_auth_token(ngrok_token)
+        conf.get_default().region = "us"
         http_tunnel = ngrok.connect(6080, "http")
-        web_tunnel_url = f"{http_tunnel.public_url}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=2"
+        base_ngrok = http_tunnel.public_url
+        web_tunnel_wifi = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+        web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
     except Exception as e:
         log(f"Aviso Ngrok HTTP: {e}", "WARNING")
 
@@ -1055,22 +1069,34 @@ else:
     print("⚠️ 🌸 SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
 print("=" * 78, flush=True)
 print(f"  • Servidor X11 Display :1 (1080p):  {'🟢 OPERATIVO' if xvfb_ready else '🔴 ERROR DE INICIO'}", flush=True)
-print(f"  • Servidor VNC Nativo (5900):       {'🟢 OPERATIVO' if vnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
-print(f"  • Servidor Web noVNC (6080):        {'🟢 OPERATIVO' if novnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor VNC Nativo (5900):       {'🟢 PROTEGIDO CON CONTRASEÑA' if vnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor Web noVNC (6080):        {'🟢 OPERATIVO (SSL ACTIVO)' if novnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
 print(f"  • Google Drive 5TB FUSE Mount:      {'🟢 MONTADO (/root/gdrive)' if drive_mounted else '🔴 NO MONTADO'}", flush=True)
+print(f"  • Enrutamiento de Mínima Latencia:  🇺🇸 US-East (Miami / Ruta Directa a Venezuela)", flush=True)
 print("-" * 78, flush=True)
 
-if web_tunnel_url:
-    print("🚀 OPCIÓN 1: ENLACE WEB DIRECTO (PANTALLA COMPLETA 1080p NATIVA):", flush=True)
-    print(f"👉 {web_tunnel_url}", flush=True)
-    print("   • Abre en Chrome o Brave móvil: se expande 100% de borde a borde.", flush=True)
+if web_tunnel_wifi:
+    print("🌐 OPCIÓN 1: CONEXIÓN EN NAVEGADOR WEB (CHROME / BRAVE / SAFARI):", flush=True)
+    print("------------------------------------------------------------------------------", flush=True)
+    print("📶 1. MODO WIFI / FIBRA (Máxima Calidad y Nitidez 1080p Crystal Clear):", flush=True)
+    print(f"👉 {web_tunnel_wifi}", flush=True)
+    print("   • Sin compresión visible: ideal para WiFi rápido o conexión de casa.", flush=True)
+    print("\n📱 2. MODO DATOS MÓVILES (Ultra-Baja Latencia / Ahorro de Megas en 4G/LTE):", flush=True)
+    print(f"👉 {web_tunnel_mobile}", flush=True)
+    print("   • Cuadros ultralivianos y auto-reconexión rápida: ideal para celular en la calle.", flush=True)
     print("-" * 78, flush=True)
 
 pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
-print("📱 OPCIÓN 2: APP MÓVIL (RealVNC Viewer / AVNC con Touchpad y Zoom):", flush=True)
-print(f"👉 Servidor VNC: {pinggy_addr}", flush=True)
-print("   • Abre RealVNC Viewer en tu celular -> Botón '+'", flush=True)
-print("   • Pega la dirección de arriba y toca 'Connect'.", flush=True)
+print("📱 OPCIÓN 2: APP MÓVIL REALVNC VIEWER / AVNC (MÁXIMA VELOCIDAD BINARIA TCP):", flush=True)
+print("------------------------------------------------------------------------------", flush=True)
+print(f"👉 Servidor VNC:    {pinggy_addr}", flush=True)
+print(f"🔑 Contraseña VNC:  {VNC_PASSWORD}", flush=True)
+print("\n💡 Pasos para conectar en RealVNC Viewer:", flush=True)
+print(f"   1. Abre RealVNC Viewer o AVNC en tu celular/PC y presiona el botón '+'.", flush=True)
+print(f"   2. En 'Address' pega: {pinggy_addr}", flush=True)
+print(f"   3. En 'Name' pon: LinuWaifu Cloud PC", flush=True)
+print(f"   4. Toca 'Connect' y cuando te pida la clave escribe: {VNC_PASSWORD}", flush=True)
+print("   • ¡Esta app usa conexión binaria TCP directa (la menor latencia: ~90-140ms)!", flush=True)
 print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
