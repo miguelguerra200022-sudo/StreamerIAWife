@@ -91,14 +91,18 @@ def update_dataset():
         for deb in archives_dir.glob("*.deb"):
             try:
                 shutil.copy2(deb, dataset_archives)
+                deb.unlink() # Liberar espacio de disco vital en Kaggle
                 new_debs += 1
             except Exception:
                 pass
     
     # 2.5 Generar imagen pre-compilada de Ubuntu para arranque en 3 segundos
-    notify("Generando imagen pre-compilada para arranque de 3 segundos...")
+    notify("Generando imagen pre-compilada para arranque de 3 segundos (Compresión Ultra-Rápida)...")
     rootfs_tar = PAYLOAD_DIR / "ubuntu_master_rootfs.tar.data"
-    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -czf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
+    
+    # Usar pigz para compresión paralela súper rápida y evitar que Kaggle mate el proceso
+    subprocess.run("apt-get install -y -qq pigz >/dev/null 2>&1", shell=True)
+    cmd_tar = f"tar --exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' --exclude='/dev' --exclude='/tmp' --exclude='/run' -I 'pigz -1' -cf '{rootfs_tar}' /usr /opt /etc /var/lib/dpkg /var/lib/apt >> {LOG_FILE} 2>&1"
     subprocess.run(cmd_tar, shell=True)
 
     # 2.6 Incluir suite noVNC pre-configurada

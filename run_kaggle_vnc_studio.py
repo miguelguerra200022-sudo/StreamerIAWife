@@ -766,13 +766,18 @@ try:
     setInterval(measurePing, 2000);
     measurePing();
 
-    // LinuWaifu Trackpad Mode: Auto-habilitar modo "Virtual Mouse" en móviles
-    setTimeout(function() {
+    // LinuWaifu Trackpad Mode: Forzar a nivel de LocalStorage para que noVNC inicie en Virtual Mouse nativo
+    try {
+        localStorage.setItem('noVNC_setting_drag', 'false');
+    } catch(e) {}
+    
+    // Auto-habilitar modo "Virtual Mouse" visualmente
+    setInterval(function() {
         const mouseBtn = document.getElementById("noVNC_mouse_button");
         if (mouseBtn && !mouseBtn.classList.contains("noVNC_selected")) {
             mouseBtn.click();
         }
-    }, 3000);
+    }, 2000);
 })();
 </script>
 """
