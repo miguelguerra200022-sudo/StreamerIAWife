@@ -23,7 +23,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | **Arte & Imagen IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | **Música & Audio** | **[⚙️ LISTO PARA COMPILAR]** |
 | **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | **Programación & IA** | **[⚙️ LISTO PARA COMPILAR]** |
-| **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | Seguridad & Redes | [⏳ Planificado] |
+| **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | **Seguridad & Redes** | **[⚙️ LISTO PARA COMPILAR]** |
 | **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | Finanzas & Cripto | [⏳ Planificado] |
 | **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | Educación & Ciencia | [⏳ Planificado] |
 | **19** | **Ubuntu - Anime Manga & Entretenimiento** | `ubuntu-anime-manga-media` | Entretenimiento | [⏳ Planificado] |
@@ -537,14 +537,30 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🛡️ DATABASE 16: `Ubuntu - Laboratorio Ciberseguridad Pentesting`
+### 🛡️ DATABASE 16: `Ubuntu - Laboratorio Ciberseguridad Pentesting` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-cybersecurity-lab` | **Capacidad:** 100 GB
-* **Propósito:** Laboratorio de auditoría de seguridad informática y hacking ético.
-* **Contenido:**
-  - **Análisis de Red:** Wireshark, Nmap, Zenmap, TCPdump.
-  - **Auditoría Web:** Burp Suite Community Edition, OWASP ZAP, Nikto.
-  - **Ingeniería Inversa:** Ghidra (Herramienta de la NSA para desensamblar binarios), Radare2, GDB.
-  - **Fuerza Bruta & Auditoría:** Metasploit Framework, John the Ripper, Hashcat con soporte CUDA.
+* **Propósito:** Laboratorio profesional de auditoría de seguridad informática, inspección profunda de redes, análisis estático de código (SAST) y **asistencia de Inteligencia Artificial conectada directamente con la Database 11** para detección de vulnerabilidades y generación de parches defensivos automáticos.
+* **Integración con Inteligencia Artificial (AI Security Copilot):**
+  - **AI Security Copilot (`ai_security_copilot.py`):** Asistente conectado al servidor local de IA de la Database 11 (`localhost:8080` / `localhost:11434`) que analiza archivos de código fuente, configuraciones de servidor o logs de red y genera explicaciones detalladas y código seguro corregido al instante con `DeepSeek Coder` o `Qwen 32B`.
+* **Análisis de Tráfico de Red & Protocolos:**
+  - **Wireshark & Tshark:** El analizador de protocolos de red estándar a nivel mundial para captura e inspección en vivo de paquetes.
+  - **Nmap & Zenmap:** Mapeador de redes, escaneo de puertos, detección de versiones de servicios y auditoría de topología.
+  - **TCPdump & Netcat:** Herramientas esenciales de línea de comandos para monitoreo de tráfico y pruebas de conectividad de sockets.
+* **Auditoría de Aplicaciones Web & APIs (DAST):**
+  - **OWASP ZAP (Zed Attack Proxy):** El escáner de seguridad de aplicaciones web de código abierto más utilizado en el mundo para encontrar fallos comunes (OWASP Top 10).
+  - **Nikto & Wapiti:** Escáneres automatizados para servidores HTTP que detectan configuraciones obsoletas y archivos peligrosos.
+* **Análisis Estático de Código & Hardening de Sistemas (SAST):**
+  - **Semgrep & Bandit:** Motores de análisis estático ultra-rápidos para auditar código en Python, JavaScript, Go, Rust y C++ en busca de fallos de seguridad.
+  - **Lynis:** Herramienta de auditoría integral y endurecimiento (*hardening*) de sistemas Linux.
+  - **YARA:** Motor de coincidencia de patrones para análisis forense de archivos.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `📡 Wireshark (Analizador de Tráfico de Red).desktop`
+    - `🔍 OWASP ZAP (Auditoría Web & APIs).desktop`
+    - `🤖 AI Security Copilot (Auditor de Código con IA).desktop`
+    - `🌐 Zenmap / Nmap (Escáner de Redes & Puertos).desktop`
+    - `📊 Lynis & Semgrep (Hardening & Análisis SAST).desktop`
+    - `📁 Bóveda de Herramientas de Ciberseguridad & Reglas.desktop`
 
 ---
 
