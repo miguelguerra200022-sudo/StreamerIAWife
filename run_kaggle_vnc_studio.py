@@ -1141,6 +1141,9 @@ install_helper.write_text(
 )
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/ubuntu_store.py /usr/local/bin/ubuntu_store.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/liberar_vram.py /usr/local/bin/liberar_vram.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/salvar_y_salir.py /usr/local/bin/salvar_y_salir.py 2>/dev/null || true", shell=True)
 
 # Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
@@ -1155,6 +1158,30 @@ shortcuts = {
         "Icon=system-software-install\n"
         "Terminal=false\n"
         "Categories=System;Utility;\n"
+    ),
+    "Gestor_de_Databases_Recursos.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=📊 Gestor de Databases & Recursos (20 Módulos)\n"
+        "Comment=Panel en vivo: conecta o desconecta databases, limpia el escritorio y monitorea RAM/GPU\n"
+        "Exec=python3 /usr/local/bin/ubuntu_store.py --gui\n"
+        "Path=/kaggle/working/StreamerIAWife\n"
+        "Icon=preferences-system-windows\n"
+        "Terminal=false\n"
+        "Categories=System;Utility;\n"
+    ),
+    "Liberar_VRAM_GPU_TeslaT4.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=⚡ Liberar VRAM GPU (Modo Gaming Pro)\n"
+        "Comment=Desaloja modelos de IA de la tarjeta gráfica y libera los 16GB de VRAM para juegos\n"
+        "Exec=python3 /usr/local/bin/liberar_vram.py\n"
+        "Path=/kaggle/working/StreamerIAWife\n"
+        "Icon=media-flash\n"
+        "Terminal=false\n"
+        "Categories=System;Game;\n"
     ),
     "Mis_Archivos_5TB_GoogleDrive.desktop": (
         "[Desktop Entry]\n"
