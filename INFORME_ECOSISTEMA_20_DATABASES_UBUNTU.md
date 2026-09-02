@@ -17,7 +17,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **7** | **Ubuntu - 3D Avatar & VTuber Studio** | `ubuntu-3d-avatar-studio` | **Creadores & 3D** | **[⚙️ LISTO PARA COMPILAR]** |
 | **8** | **Ubuntu - Suite Streamer OBS Pro** | `ubuntu-streamer-obs-pro` | **Streaming & Video** | **[⚙️ LISTO PARA COMPILAR]** |
 | **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | **Arte 2D** | **[⚙️ LISTO PARA COMPILAR]** |
-| **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | 3D & VFX | [⏳ Planificado] |
+| **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | **3D & VFX** | **[⚙️ LISTO PARA COMPILAR]** |
 | **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | Inteligencia Artificial | [⏳ Planificado] |
 | **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | Inteligencia Artificial | [⏳ Planificado] |
 | **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | Inteligencia Artificial | [⏳ Planificado] |
@@ -348,14 +348,33 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🏛️ DATABASE 10: `Ubuntu - Modelado 3D Blender & VFX`
+### 🏛️ DATABASE 10: `Ubuntu - Modelado 3D Blender & VFX` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-3d-blender-vfx` | **Capacidad:** 100 GB
-* **Propósito:** Estudio de renderizado 3D, animación, arquitectura y efectos visuales.
-* **Contenido:**
-  - **Blender 4.x:** Con aceleración OptiX y CUDA activadas en las GPUs NVIDIA Tesla T4.
-  - **FreeCAD:** Modelado paramétrico para ingeniería y diseño de piezas mecánicas.
-  - **MeshLab:** Procesamiento y limpieza de mallas 3D y escaneos.
-  - **Bóveda de Texturas PBR 4K & Materiales:** Madera, metal, piedra, piel y luces HDRI.
+* **Propósito:** El estudio de renderizado 3D, animación, escultura digital, efectos visuales (VFX), arquitectura e ingeniería CAD más potente de la nube, acelerado por trazado de rayos por hardware (OptiX y CUDA) en la GPU NVIDIA Tesla T4.
+* **Software de Modelado 3D & Ingeniería Industrial:**
+  - **Blender 4.2+ LTS Oficial (64-bit):** Configurado con el motor de render **Cycles por GPU (NVIDIA OptiX & CUDA)** y visor en tiempo real **Eevee Next**.
+  - **Addons Profesionales Preinstalados:**
+    - `VRM Addon & Cats Plugin`: Importación, optimización y reducción de polígonos de modelos de avatar 3D.
+    - `Rigify`: Generador automático de esqueletos con cinemática inversa (IK) para personajes y criaturas.
+    - `Node Wrangler`: Creación instantánea de materiales y texturas procedurales con atajos rápidos.
+    - `MMD Tools`: Soporte completo para escenarios, bailes y modelos de MikuMikuDance.
+  - **FreeCAD (Paramétrico):** Modelado 3D para ingeniería mecánica, robótica, piezas técnicas y exportación a impresión 3D (formatos STL, STEP, IGES).
+  - **MeshLab:** Limpieza, simplificación y procesamiento de mallas densas y escaneos 3D de alta densidad.
+  - **Blockbench:** Modelador voxel y low-poly especializado en crear modelos y animaciones estilo Minecraft y juegos retro.
+* **Bóveda de Texturas PBR 4K (Physically Based Rendering):**
+  - **500+ Materiales Completos** con mapas de Albedo, Normales, Roughness, Metallic y Desplazamiento.
+  - *Metales (oro, titanio, cobre oxidado), Maderas nobles (roble, caoba), Piedras (mármol, granito, asfalto), Telas (cuero, seda, mezclilla) y Paneles Sci-Fi mecánicos.*
+* **Colección de Mapas de Iluminación HDRI 8K / 4K:**
+  - Mapas de 360° para iluminación hiperrealista de escenas: *Estudios fotográficos, ciudades cyberpunk nocturnas con neón, atardeceres dorados y cielos despejados.*
+* **Basemeshes de Anatomía & Shaders Procedurales:**
+  - Modelos base anatómicos humanos (masculinos, femeninos y anime) listos para esculpir.
+  - Shaders de sombreado plano de anime (*Cel-Shading*), pintura de coche metalizada, cristales con dispersión física y hologramas de ciencia ficción.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🏛️ Blender 4.x (Cycles OptiX & CUDA).desktop`
+    - `📐 FreeCAD (Modelado Paramétrico & STL).desktop`
+    - `🧊 Blockbench (Modelador Voxel & Low-Poly).desktop`
+    - `📁 Bóveda de Texturas PBR 4K, HDRIs & Modelos 3D.desktop`
 
 ---
 
