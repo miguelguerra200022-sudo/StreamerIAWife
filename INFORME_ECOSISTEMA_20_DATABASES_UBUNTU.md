@@ -22,7 +22,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | **Audio & Voz IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | **Arte & Imagen IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | **Música & Audio** | **[⚙️ LISTO PARA COMPILAR]** |
-| **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | Programación | [⏳ Planificado] |
+| **15** | **Ubuntu - Suite Desarrollador & VSCode** | `ubuntu-developer-code-hub` | **Programación & IA** | **[⚙️ LISTO PARA COMPILAR]** |
 | **16** | **Ubuntu - Laboratorio Ciberseguridad Pentesting** | `ubuntu-cybersecurity-lab` | Seguridad & Redes | [⏳ Planificado] |
 | **17** | **Ubuntu - Trading Cripto & Finanzas** | `ubuntu-crypto-trading-desk` | Finanzas & Cripto | [⏳ Planificado] |
 | **18** | **Ubuntu - Universidad & Ciencia Hub** | `ubuntu-student-university-hub` | Educación & Ciencia | [⏳ Planificado] |
@@ -501,14 +501,39 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 💻 DATABASE 15: `Ubuntu - Suite Desarrollador & VSCode`
+### 💻 DATABASE 15: `Ubuntu - Suite Desarrollador & VSCode` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-developer-code-hub` | **Capacidad:** 100 GB
-* **Propósito:** Entorno integral para programadores de software, web, IA y aplicaciones móviles.
-* **Contenido:**
-  - **Visual Studio Code:** Pre-configurado con extensiones de Python, JavaScript, TypeScript, Go, Rust, C++ y Docker.
-  - **Runtimes:** Python 3.10/3.12, Node.js 20 LTS, Go, Rust (cargo), GCC/G++.
-  - **Herramientas de Datos:** DBeaver (Cliente gráfico para PostgreSQL, MySQL, SQLite, MongoDB), Postman (Pruebas de API REST).
-  - **GitKraken & Lazygit:** Control de versiones gráfico.
+* **Propósito:** El ecosistema de desarrollo de software, ingeniería de Inteligencia Artificial, programación web, sistemas y DevOps más completo de Linux. Incluye todos los IDEs profesionales, asistentes y CLIs de IA líderes (Google Antigravity, Claude, OpenAI, Copilot) y compiladores para cualquier lenguaje de programación.
+* **IDEs, Editores de Código & Herramientas de Terminal:**
+  - **Visual Studio Code Oficial (Microsoft x64):** Configurado con el pack de extensiones para Python, TypeScript, Go, Rust, C++, Docker, GitLens, Prettier y ESLint.
+  - **PyCharm Community / JetBrains:** El entorno de desarrollo especializado en Python, Django, FastAPI y Ciencia de Datos.
+  - **Sublime Text 4:** Editor de texto ultra-rápido para edición instantánea de scripts y archivos gigantes.
+  - **Neovim (AstroNvim SOTA):** IDE por terminal hiper-optimizado con autocompletado LSP, búsqueda difusa con Telescope y árbol de archivos.
+* **CLIs y Asistentes de Inteligencia Artificial Oficiales:**
+  - **Google Antigravity CLI (`agy`):** Suite completa para pair-programming agéntico, generación autónoma de código y flujos de trabajo inteligentes.
+  - **Claude Code CLI (Anthropic):** Herramienta oficial por terminal de Anthropic para refactorización, investigación de bases de código y comandos inteligentes.
+  - **OpenAI CLI & Python SDK:** Suite de herramientas para interactuar con GPT-4o, generar código, transcripciones y embeddings.
+  - **Aider (Programador Autónomo):** Ingeniero de software de IA que opera en terminal, analiza repositorios Git, modifica múltiples archivos y realiza commits automáticos.
+  - **GitHub Copilot CLI (`gh copilot`):** Asistente oficial de GitHub para explicar y componer comandos de terminal complejos.
+* **Runtimes, Compiladores & Toolchains Completos:**
+  - **Python 3.12+:** Equipado con `uv` (el gestor de paquetes más rápido del mundo en Rust), `poetry`, `virtualenv`, `ruff` y `black`.
+  - **JavaScript / TypeScript Ecosystem:** **NodeJS 22 LTS**, **Bun** (el runtime de ultra-velocidad), **Deno**, `pnpm`, `yarn` y `npm`.
+  - **Rust Toolchain:** Compilador `rustc`, gestor `cargo` y `rust-analyzer` para programación de sistemas a máxima velocidad.
+  - **Go Toolchain (Golang 1.22+):** Compilador oficial para microservicios, APIs concurrentes y herramientas de red.
+  - **C / C++:** `GCC`, `G++`, `Clang`, `CMake`, `Ninja-build` y `GDB` para compilación nativa de alta eficiencia.
+  - **Java:** `OpenJDK 21 / 17 LTS` para desarrollo empresarial y Android.
+* **Gestión de Bases de Datos, APIs & Control de Versiones:**
+  - **DBeaver Community:** Cliente universal con interfaz gráfica para bases de datos **PostgreSQL, MySQL, MariaDB, SQLite, Redis y MongoDB**.
+  - **Bruno (Alternativa Open-Source a Postman):** Cliente de pruebas de APIs REST, GraphQL y WebSockets sin requerir cuentas en la nube.
+  - **Lazygit:** Interfaz de usuario visual y dinámica para Git en terminal con atajos de teclado instantáneos.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `💻 Visual Studio Code (con Copilot & AI).desktop`
+    - `🧠 Claude Code & OpenAI CLI Studio.desktop`
+    - `🪐 Google Antigravity CLI (AGY Suite).desktop`
+    - `⚡ Bruno (Cliente de APIs & HTTP).desktop`
+    - `🌿 Lazygit (Interfaz Visual de Git en Terminal).desktop`
+    - `📁 Bóveda de Runtimes (Node, Bun, Rust, Go, Python).desktop`
 
 ---
 
