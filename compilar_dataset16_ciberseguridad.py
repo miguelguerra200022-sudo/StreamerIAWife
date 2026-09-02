@@ -166,8 +166,16 @@ copilot_dst = Path("/usr/local/bin/ai-security-copilot")
 if copilot_src.exists():
     try:
         subprocess.run(f"ln -sf '{copilot_src}' '{copilot_dst}' 2>/dev/null || true", shell=True)
-    except Exception:
-        pass
+# 1.1 Persistencia de Reportes y Auditorías en Google Drive (5TB)
+sec_dir = Path("/root/gdrive/PC_Kaggle/Security_Reports")
+if Path("/root/gdrive").exists():
+    sec_dir.mkdir(parents=True, exist_ok=True)
+    local_sec = Path.home() / "Security_Reports"
+    if not local_sec.exists():
+        try:
+            local_sec.symlink_to(sec_dir)
+        except Exception:
+            pass
 
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {

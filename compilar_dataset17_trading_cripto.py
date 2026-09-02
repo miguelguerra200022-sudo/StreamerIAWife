@@ -159,8 +159,22 @@ copilot_dst = Path("/usr/local/bin/ai-financial-copilot")
 if copilot_src.exists():
     try:
         subprocess.run(f"ln -sf '{copilot_src}' '{copilot_dst}' 2>/dev/null || true", shell=True)
-    except Exception:
-        pass
+# 1.1 Persistencia de Billeteras y Bots de Trading en Google Drive (5TB)
+if Path("/root/gdrive").exists():
+    for src_dir, dst_name in [
+        (Path.home() / ".electrum", "Master_Electrum"),
+        (Path.home() / ".sparrow", "Master_Sparrow"),
+        (Path.home() / ".bitmonero", "Master_Monero"),
+        (Path.home() / "freqtrade" / "user_data", "Freqtrade_UserData")
+    ]:
+        g_target = Path("/root/gdrive/PC_Kaggle") / dst_name
+        g_target.mkdir(parents=True, exist_ok=True)
+        if not src_dir.exists():
+            src_dir.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                src_dir.symlink_to(g_target)
+            except Exception:
+                pass
 
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {

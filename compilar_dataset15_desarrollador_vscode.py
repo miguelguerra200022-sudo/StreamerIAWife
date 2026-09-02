@@ -139,6 +139,17 @@ if bashrc.exists():
     if "node_bun_deno" not in content:
         bashrc.write_text(content + dev_paths, encoding="utf-8")
 
+# 2.1 Persistencia de Proyectos de Código en Google Drive (5TB)
+proj_dir = Path("/root/gdrive/PC_Kaggle/Projects")
+if Path("/root/gdrive").exists():
+    proj_dir.mkdir(parents=True, exist_ok=True)
+    local_proj = Path.home() / "Projects"
+    if not local_proj.exists():
+        try:
+            local_proj.symlink_to(proj_dir)
+        except Exception:
+            pass
+
 # 3. Crear Accesos Directos en el Escritorio
 shortcuts = {
     "VSCode_Oficial.desktop": (

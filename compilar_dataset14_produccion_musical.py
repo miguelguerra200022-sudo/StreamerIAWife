@@ -141,8 +141,17 @@ sf_link.parent.mkdir(parents=True, exist_ok=True)
 if not sf_link.exists():
     try:
         os.symlink(DATASET_DIR / "sample_packs_wav", sf_link)
-    except Exception:
-        pass
+# 1.1 Persistencia de Proyectos Musicales en Google Drive (5TB)
+if Path("/root/gdrive").exists():
+    gdrive_lmms = Path("/root/gdrive/PC_Kaggle/Master_LMMS")
+    gdrive_lmms.mkdir(parents=True, exist_ok=True)
+    local_lmms = Path.home() / ".lmmsrc.xml"
+    local_lmms_dir = Path.home() / "lmms"
+    if not local_lmms_dir.exists():
+        try:
+            local_lmms_dir.symlink_to(gdrive_lmms)
+        except Exception:
+            pass
 
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {

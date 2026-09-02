@@ -207,9 +207,16 @@ if not rvc_link.exists():
     try:
         os.symlink(DATASET_DIR / "voice_models_rvc", rvc_link)
     except Exception:
-        pass
-
-# 2. Crear Accesos Directos en el Escritorio
+# 1.1 Sincronización de Salidas de Audio y Modelos de Voz a Google Drive (5TB)
+if Path("/root/gdrive").exists():
+    gdrive_voice = Path("/root/gdrive/PC_Kaggle/Voice_Outputs")
+    gdrive_voice.mkdir(parents=True, exist_ok=True)
+    local_voice_out = Path.home() / "Voice_Outputs"
+    if not local_voice_out.exists():
+        try:
+            local_voice_out.symlink_to(gdrive_voice)
+        except Exception:
+            pass
 shortcuts = {
     "Kokoro_TTS_Studio.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"

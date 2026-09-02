@@ -192,13 +192,19 @@ if comfy_models.exists():
     # Enlaces simbolicos hacia la base de modelos
     pass
 
+# 1.1 Persistencia de Imagenes en Google Drive (5TB)
+out_dir = "/root/gdrive/PC_Kaggle/ComfyUI_Outputs"
+if Path("/root/gdrive").exists():
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    Path("/root/gdrive/PC_Kaggle/Fooocus_Outputs").mkdir(parents=True, exist_ok=True)
+
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {
     "ComfyUI_Studio_Pro.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=🎨 ComfyUI Pro (Nodos & SDXL / FLUX)\\n"
         "Comment=Estudio de generacion de imagenes basado en nodos de maxima velocidad\\n"
-        f"Exec=python3 {DATASET_DIR}/software/comfyui/main.py --listen 0.0.0.0 --port 8188\\n"
+        f"Exec=python3 {DATASET_DIR}/software/comfyui/main.py --listen 0.0.0.0 --port 8188 --output-directory {out_dir}\\n"
         "Icon=applications-graphics\\nTerminal=true\\nCategories=Graphics;Development;\\n"
     ),
     "Fooocus_Midjourney_Style.desktop": (

@@ -258,13 +258,33 @@ DATASET_DIR = Path(__file__).resolve().parent
 DESKTOP_DIR = Path.home() / "Desktop"
 DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
 
-# 1. Configurar variable OLLAMA_MODELS hacia la Database montada
-ollama_env_line = f'export OLLAMA_MODELS="{DATASET_DIR}/models"\\nexport CUDA_VISIBLE_DEVICES="0,1"\\n'
+# 1. Configurar variable OLLAMA_MODELS hacia la Database montada y persistencia en Google Drive
+ollama_env_line = f'export OLLAMA_MODELS="{DATASET_DIR}/models"\\nexport CUDA_VISIBLE_DEVICES="0,1"\\nexport DATA_DIR="/root/gdrive/PC_Kaggle/Master_OpenWebUI"\\n'
 bashrc = Path.home() / ".bashrc"
 if bashrc.exists():
     content = bashrc.read_text(encoding="utf-8")
     if "OLLAMA_MODELS" not in content:
         bashrc.write_text(content + "\\n" + ollama_env_line, encoding="utf-8")
+
+# 1.1 Sincronizacion directa de historial y bases de datos a Google Drive
+if Path("/root/gdrive").exists():
+    gdrive_ollama = Path("/root/gdrive/PC_Kaggle/Master_Ollama")
+    gdrive_ollama.mkdir(parents=True, exist_ok=True)
+    local_ollama = Path.home() / ".ollama"
+    if not local_ollama.exists():
+        try:
+            local_ollama.symlink_to(gdrive_ollama)
+        except Exception:
+            pass
+
+    gdrive_webui = Path("/root/gdrive/PC_Kaggle/Master_OpenWebUI")
+    gdrive_webui.mkdir(parents=True, exist_ok=True)
+    local_webui = Path.home() / ".open-webui"
+    if not local_webui.exists():
+        try:
+            local_webui.symlink_to(gdrive_webui)
+        except Exception:
+            pass
 
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {

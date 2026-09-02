@@ -1038,6 +1038,19 @@ sync_dirs = {
     "/root/Documentos": "/root/gdrive/PC_Kaggle/Documentos",
     "/root/Juegos": "/root/gdrive/PC_Kaggle/Juegos",
     "/root/Escritorio": "/root/gdrive/PC_Kaggle/Escritorio",
+    "/root/.ollama": "/root/gdrive/PC_Kaggle/Master_Ollama",
+    "/root/.openwebui": "/root/gdrive/PC_Kaggle/Master_OpenWebUI",
+    "/root/.lmms": "/root/gdrive/PC_Kaggle/Master_LMMS",
+    "/root/.electrum": "/root/gdrive/PC_Kaggle/Master_Electrum",
+    "/root/.sparrow": "/root/gdrive/PC_Kaggle/Master_Sparrow",
+    "/root/.bitmonero": "/root/gdrive/PC_Kaggle/Master_Monero",
+    "/root/ComfyUI_Outputs": "/root/gdrive/PC_Kaggle/ComfyUI_Outputs",
+    "/root/Fooocus_Outputs": "/root/gdrive/PC_Kaggle/Fooocus_Outputs",
+    "/root/Voice_Outputs": "/root/gdrive/PC_Kaggle/Voice_Outputs",
+    "/root/Blender_Projects": "/root/gdrive/PC_Kaggle/Blender_Projects",
+    "/root/Projects": "/root/gdrive/PC_Kaggle/Projects",
+    "/root/Freqtrade_UserData": "/root/gdrive/PC_Kaggle/Freqtrade_UserData",
+    "/root/Security_Reports": "/root/gdrive/PC_Kaggle/Security_Reports",
 }
 
 if Path("/root/gdrive").exists():
