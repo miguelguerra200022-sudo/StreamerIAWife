@@ -1122,14 +1122,14 @@ def run_pinggy_tunnel():
                 ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "tcp@free.pinggy.io"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                bufsize=1
             )
-            while True:
-                line = proc.stdout.readline()
+            for line in iter(proc.stdout.readline, ''):
                 if not line:
                     break
-                if "tcp://" in line or "pinggy" in line:
-                    match = re.search(r'(?:tcp://)?([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
+                if "pinggy" in line or "tcp://" in line or ".link" in line:
+                    match = re.search(r'([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', line)
                     if match:
                         addr = match.group(1).strip()
                         if addr not in vnc_app_address:
@@ -1138,12 +1138,12 @@ def run_pinggy_tunnel():
             proc.wait()
         except Exception:
             pass
-        time.sleep(3)
+        time.sleep(2)
 
 threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
 
-# Esperar hasta 6 segundos para capturar la dirección exacta de Pinggy
-for _ in range(12):
+# Esperar activamente hasta 15 segundos para capturar la dirección exacta de Pinggy
+for _ in range(30):
     if vnc_app_address:
         break
     time.sleep(0.5)
