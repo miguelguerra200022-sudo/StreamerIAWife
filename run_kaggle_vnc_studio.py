@@ -798,6 +798,28 @@ try:
 except Exception:
     pass
 
+# ==============================================================================
+# 2.5 INSTALACIÓN DEL ECOSISTEMA "MODO DIOS" (GAMING, CREADOR Y UX)
+# ==============================================================================
+if not shutil.which("steam") or not shutil.which("obs"):
+    print("  ⭐ [Modo Dios] Instalando expansiones de Latencia (BBR/Sunshine) y Ecosistema (Steam, OBS, etc)...", flush=True)
+    subprocess.run("sysctl -w net.core.default_qdisc=fq && sysctl -w net.ipv4.tcp_congestion_control=bbr", shell=True, stderr=subprocess.DEVNULL)
+    subprocess.run("dpkg --add-architecture i386 && apt-get update -qq", shell=True)
+    
+    print("     -> Descargando e Instalando Steam, Lutris, MangoHud, Gamemode...", flush=True)
+    subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq steam lutris mangohud gamemode wget curl software-properties-common", shell=True)
+    
+    print("     -> Descargando e Instalando OBS, Kdenlive, GIMP, Telegram, y UX...", flush=True)
+    subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq obs-studio kdenlive gimp filezilla telegram-desktop plank papirus-icon-theme xfce4-whiskermenu-plugin gnome-software v4l2loopback-dkms", shell=True)
+    
+    print("     -> Descargando Discord...", flush=True)
+    subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && dpkg -i /tmp/discord.deb || apt-get install -f -y -qq", shell=True)
+    
+    print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
+    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && dpkg -i /tmp/sunshine.deb || apt-get install -f -y -qq", shell=True)
+    
+    print("  ✅ [✓] Ecosistema 'Modo Dios' instalado exitosamente.", flush=True)
+
 print(f"  ⏱️ [Paso 2/5 Completado en {time.time() - t_step2:.1f}s]", flush=True)
 
 # ==============================================================================
@@ -977,6 +999,22 @@ for fname, content in shortcuts.items():
     s_path = desktop_dir / fname
     s_path.write_text(content, encoding="utf-8")
     s_path.chmod(0o755)
+
+# Copiar accesos directos del "Modo Dios" al Escritorio si están instalados
+god_mode_apps = [
+    "steam", "net.lutris.Lutris", "com.obsproject.Studio", 
+    "org.kde.kdenlive", "gimp", "telegramdesktop", "discord", "sunshine"
+]
+for app in god_mode_apps:
+    src_desktop = Path(f"/usr/share/applications/{app}.desktop")
+    if src_desktop.exists():
+        dst_desktop = desktop_dir / f"{app}.desktop"
+        try:
+            import shutil
+            shutil.copy2(src_desktop, dst_desktop)
+            dst_desktop.chmod(0o755)
+        except Exception:
+            pass
 
 # Configurar acceso global de Chrome en el menú de aplicaciones para modo normal completo
 subprocess.run("sed -i 's/Exec=\\/usr\\/bin\\/google-chrome-stable/Exec=\\/usr\\/bin\\/google-chrome-stable --no-sandbox --no-first-run --no-default-browser-check/g' /usr/share/applications/google-chrome.desktop 2>/dev/null || true", shell=True)
