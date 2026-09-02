@@ -4,18 +4,26 @@
 
 🚀 1. COMANDO MAESTRO DE ARRANQUE (COPIAR Y PEGAR EN CELDA DE KAGGLE):
 --------------------------------------------------------------------------------
-!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b"
+!rm -rf /kaggle/working/StreamerIAWife /kaggle/working/linuwaifu_system.log && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b" "09032000Mi."
+
+💡 Estructura de Parámetros del Comando:
+   python3 -u run_kaggle_vnc_studio.py "[TOKEN_NGROK]" "[CONTRASEÑA_VNC]"
+   • Parámetro 1: Tu Token de Ngrok.
+   • Parámetro 2: Tu Contraseña de Seguridad (por defecto: 09032000Mi. o la de tu cliente).
 
 ✨ Características del Sistema:
 • ⚡ Detección automática de Dataset de 100GB (Arranque en 2 segundos si está conectado).
+• 🔒 Seguridad Total con Contraseña Criptográfica para Web y RealVNC.
+• 🌐 Enrutamiento de Mínima Latencia optimizado para Venezuela (US-East / Miami).
+• 📶 Enlaces dedicados para Modo WiFi (1080p Crystal) y Datos Móviles (4G/LTE rápido).
 • 📦 Suite Oficial Completa de Ubuntu de Canonical (Desktop XFCE + LibreOffice + Chrome).
-• 📊 HUD Cyberpunk flotante en pantalla con FPS en vivo (60 FPS) y PING (ms) en tiempo real.
+• 📊 HUD Cyberpunk flotante en pantalla con FPS en vivo (60 FPS) y PING nativo en tiempo real.
 • 🖥️ Pantalla Completa 16:9 Full HD (1920x1080) nativa de borde a borde.
 • ☁️ Google Drive de 5TB (PC_Kaggle) sincronizado como disco principal persistente.
 • 🎮 2x GPUs NVIDIA Tesla T4 activas con monitoreo de VRAM y carga cada 5 minutos.
 • 🌸 LinuWaifu 3D IA Studio con voz, emociones y chat en pantalla.
 
-================================================================================
+===============================================================================
 📦 2. CÓMO ADJUNTAR O CREAR EL DATASET DE 100GB EN CUALQUIER CUENTA DE KAGGLE:
 --------------------------------------------------------------------------------
 💡 Puedes usar cualquier cuenta de Kaggle (Cuenta 1, Cuenta 2, etc.) con el mismo sistema y tus 5TB de Google Drive.
@@ -55,18 +63,17 @@ B) SI QUIERES CREAR TU PROPIA BASE DE DATOS EN LA CUENTA NUEVA:
 --------------------------------------------------------------------------------
 💡 Puedes ofrecer este servicio de Cloud PC a clientes cobrando una suscripción mensual ($5 - $15 USD).
 
-OPCIÓN A: MODO 100% GESTIONADO (RECOMENDADO — EL CLIENTE NO TOCA CÓDIGO NI KAGGLE):
-1. Tú abres la cuenta de Kaggle del cliente (o una de tus cuentas de rotación).
-2. Ejecutas la libreta con el Comando Maestro del Paso 1.
-3. Le envías al cliente por WhatsApp / Telegram su Enlace Web Directo (1080p) o los datos de conexión de RealVNC.
-4. El cliente entra con 1 clic desde su celular o PC y usa su supercomputadora con 2x GPUs Tesla T4 sin saber qué hay debajo.
+¿CÓMO SE EJECUTAN LAS CELDAS PARA CADA CLIENTE?
 
-OPCIÓN B: MODO CLIENTE INDEPENDIENTE (EL CLIENTE ENCIENDE SU PC):
-1. Le entregas su libreta de Kaggle ya guardada con el comando maestro listo.
-2. Le adjuntas el Dataset público 'miguelguerra26/linuwaifu-ubuntu-master-100gb'.
-3. El cliente solo tiene que entrar a Kaggle, darle a "Run" (▶️) y tocar su enlace.
+OPCIÓN A: TÚ ENCIENDES LA MÁQUINA POR ELLOS (RECOMENDADO — CLIENTE NO TOCA CÓDIGO):
+1. En tu sesión de Kaggle, abres la libreta asignada al cliente.
+2. En la celda ejecutas el comando asignándole su contraseña única:
+   !rm -rf /kaggle/working/StreamerIAWife && git clone https://github.com/miguelguerra200022-sudo/StreamerIAWife.git /kaggle/working/StreamerIAWife && cd /kaggle/working/StreamerIAWife && python3 -u run_kaggle_vnc_studio.py "34P4Gndh4EFxHQUFbbtO6lxsWBH_3HK2oZoxLj1D3qkSJn17b" "ClaveCliente123."
+3. Al terminar el arranque, copias el enlace generado (Modo WiFi o Móvil) y se lo envías al cliente por WhatsApp.
+4. El cliente entra con 1 clic directo a su escritorio.
 
-🔒 PERSISTENCIA Y AISLAMIENTO DE CLIENTES:
-• Cada cuenta tiene sus propias 30 horas semanales de GPU gratuitas.
-• Los datos de cada cliente se guardan de forma aislada en su propia carpeta de Google Drive o en su propio Dataset.
+OPCIÓN B: EL CLIENTE ENCIENDE SU PROPIA MÁQUINA CON 1 CLIC:
+1. Le creas una cuenta de Kaggle al cliente y dejas guardado un Notebook llamado "Mi PC en la Nube".
+2. En la celda dejas escrito el comando maestro listo y guardado.
+3. El cliente solo abre la libreta, presiona el botón "Play (▶️) / Run All", espera 15 segundos y toca el enlace azul que aparece abajo.
 ================================================================================
