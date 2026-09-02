@@ -16,7 +16,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | **PC Gaming** | **[⚙️ LISTO PARA COMPILAR]** |
 | **7** | **Ubuntu - 3D Avatar & VTuber Studio** | `ubuntu-3d-avatar-studio` | **Creadores & 3D** | **[⚙️ LISTO PARA COMPILAR]** |
 | **8** | **Ubuntu - Suite Streamer OBS Pro** | `ubuntu-streamer-obs-pro` | **Streaming & Video** | **[⚙️ LISTO PARA COMPILAR]** |
-| **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | Arte 2D | [⏳ Planificado] |
+| **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | **Arte 2D** | **[⚙️ LISTO PARA COMPILAR]** |
 | **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | 3D & VFX | [⏳ Planificado] |
 | **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | Inteligencia Artificial | [⏳ Planificado] |
 | **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | Inteligencia Artificial | [⏳ Planificado] |
@@ -321,14 +321,30 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🖌️ DATABASE 9: `Ubuntu - Diseño Gráfico & Ilustración`
+### 🖌️ DATABASE 9: `Ubuntu - Diseño Gráfico & Ilustración` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-graphic-design-art` | **Capacidad:** 100 GB
-* **Propósito:** Suite creativa de ilustración digital, diseño vectorial y retoque fotográfico.
-* **Contenido:**
-  - **GIMP Studio:** Con interfaz y atajos estilo Photoshop + 2,000 pinceles de pintura digital.
-  - **Krita Pro:** El estándar mundial de dibujo e ilustración digital y animación 2D cuadro por cuadro.
-  - **Inkscape:** Editor de gráficos vectoriales (alternativa a Adobe Illustrator).
-  - **Colección de 3,000+ Fuentes Tipográficas:** Tipografías para cartelería, logos y miniaturas.
+* **Propósito:** El estudio de arte 2D, pintura digital, diseño gráfico vectorial y retoque fotográfico más completo en Linux. Diseñado para ilustradores, portadistas de YouTube, diseñadores de logos y creadores de contenido.
+* **Software Creativo de Nivel Profesional:**
+  - **Krita Pro (v5.2+ 64-bit):** El estándar de oro en pintura digital, ilustración estilo anime y animación 2D tradicional cuadro por cuadro con aceleración OpenGL.
+  - **GIMP Studio (con PhotoGIMP UI):** Configuración visual que emula **Adobe Photoshop CC** con la misma barra de herramientas, filtros GMIC-Qt y atajos de teclado estándar (`Ctrl+J`, `Ctrl+T`, capas de ajuste).
+  - **Inkscape (v1.3+ Vectorial):** La alternativa open-source a Adobe Illustrator para diseño de logotipos, branding, tipografía vectorial y archivos SVG.
+  - **OpenToonz:** Software profesional de animación 2D utilizado por **Studio Ghibli** en películas de animación legendarias.
+* **Mega Colección de Más de 3,000 Fuentes Tipográficas Profesionales (TTF/OTF):**
+  - **Gaming & Esports:** Tipografías angulares y agresivas para carteles y miniaturas de torneos.
+  - **Anime & Japanese:** Estilos de caligrafía oriental y títulos de manga.
+  - **Cyberpunk & Sci-Fi:** Letras futuristas y tecnológicas.
+  - **Display Bold & Modern Sans:** Tipografías gruesas de alto impacto visual diseñadas para maximizar el CTR (clics) en miniaturas de YouTube.
+* **Bóveda de Más de 5,000 Pinceles Digitales (Brushes) & Texturas:**
+  - Pinceles de entintado anime, acuarela, óleo, tramas de puntos de manga (screentones) y efectos especiales (humo, fuego, follaje, destellos).
+* **Plantillas Editables (PSD / XCF / SVG):**
+  - Plantillas de miniaturas de YouTube (CTR Optimizer), banners de Twitch/Kick/YouTube y logotipos vectoriales.
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🖌️ Krita Pro (Pintura Digital & Anime).desktop`
+    - `🎨 GIMP Studio (Photoshop UI & Atajos).desktop`
+    - `📐 Inkscape (Diseño Vectorial & Logos).desktop`
+    - `🎬 OpenToonz (Animación 2D Studio Ghibli).desktop`
+    - `📁 Bóveda de 3,000+ Fuentes, Pinceles & Plantillas.desktop`
 
 ---
 
