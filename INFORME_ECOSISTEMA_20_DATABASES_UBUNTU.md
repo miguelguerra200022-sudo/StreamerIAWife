@@ -12,7 +12,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **2** | **Ubuntu - Emuladores PS2 & PS1** | `ubuntu-ps2-ps1-vault` | **Gaming Retro** | **[⚙️ EN COMPILACIÓN / LISTO]** |
 | **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | **Gaming Portátil** | **[⚙️ LISTO PARA COMPILAR]** |
 | **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | **Gaming Nintendo** | **[⚙️ LISTO PARA COMPILAR]** |
-| **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | Gaming Arcade | [⏳ Planificado] |
+| **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | **Gaming Arcade** | **[⚙️ LISTO PARA COMPILAR]** |
 | **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | PC Gaming | [⏳ Planificado] |
 | **7** | **Ubuntu - 3D Avatar & VTuber Studio** | `ubuntu-3d-avatar-studio` | Creadores & 3D | [⏳ Planificado] |
 | **8** | **Ubuntu - Suite Streamer OBS Pro** | `ubuntu-streamer-obs-pro` | Streaming & Video | [⏳ Planificado] |
@@ -202,12 +202,38 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 👾 DATABASE 5: `Ubuntu - Arcade Retro & Clásicos`
+### 👾 DATABASE 5: `Ubuntu - Arcade Retro & Clásicos` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-arcade-retro-classics` | **Capacidad:** 100 GB
-* **Propósito:** La sala arcade de los años 90 y 2000 en tu bolsillo con más de 1,500 juegos.
-* **Contenido:**
-  - **MAME & FinalBurn Neo (Arcade):** *The King of Fighters 98/2002, Metal Slug 1 al X, Street Fighter III 3rd Strike, Cadillacs and Dinosaurs, Marvel vs Capcom.*
-  - **RetroArch:** Núcleos de SNES (*Super Mario World, Chrono Trigger*), Sega Genesis (*Sonic 3*), NeoGeo y NES.
+* **Propósito:** La sala arcade definitiva y centro de consolas de 16/32 bits con más de 1,500 clásicos legendarios, emuladores profesionales (RetroArch, MAME, FBNeo), BIOS completas (NeoGeo, QSound, PGM), filtros CRT analógicos y latencia cero (Run-Ahead).
+* **Emuladores & Mejoras Visuales:**
+  - **RetroArch (Vulkan/Ozone 64-bit v1.17+):** Interfaz fluida multiconsola con soporte para Netplay (jugar online 2 jugadores gratis), rebobinado en tiempo real y reducción de latencia por frame (Run-Ahead).
+  - **MAME (Oficial Standalone):** El estándar de oro para recreativas clásicas con paquete de audio samples (`qsound.zip`, samples WAV).
+  - **FinalBurn Neo (FBNeo Standalone & Core):** Motor ultra-rápido especializado en juegos de lucha arcade y shoot'em ups a 60 FPS clavados.
+  - **Shaders CRT Profesionales:** `CRT-Royale` (simula un televisor Trinitron 4K de tubo), `CRT-Easymode` (scanlines limpias) y efectos de resplandor de fósforo arcade.
+  - **Pack de BIOS Arcade:** `neogeo.zip` (Universe BIOS v4.0), `qsound.zip` (Capcom CPS-2), `pgm.zip` (IGS) y `decocass.zip`.
+* **Catálogo de Juegos SNK Neo Geo & Arcade Fighting:**
+  - *Colección Completa The King of Fighters: KOF 94, 95, 96, 97, 98 (The Slugfest), 99, 2000, 2001, 2002 (Magic Plus II & Unlimited Match), 2003.*
+  - *Saga Completa Metal Slug: Metal Slug 1, 2, X, 3, 4, 5.*
+  - *Garou: Mark of the Wolves, Samurai Shodown (I al V Special), Fatal Fury Special & Real Bout 2.*
+  - *World Heroes Perfect, Aero Fighters 2 & 3, Shock Troopers 1 & 2, Windjammers, Sengoku 3.*
+* **Catálogo de Juegos Capcom CPS & Beat 'em Up Arcades:**
+  - *Street Fighter II (Champion Edition, Turbo, Super Turbo) & Street Fighter Alpha (1, 2, 3).*
+  - *Street Fighter III 3rd Strike - Fight for the Future.*
+  - *Marvel vs Capcom, X-Men vs Street Fighter, Marvel Super Heroes & Darkstalkers.*
+  - *Cadillacs and Dinosaurs, The Punisher, Captain Commando, Aliens vs Predator, Knights of the Round, Final Fight.*
+  - *Teenage Mutant Ninja Turtles & Turtles in Time, The Simpsons Arcade Game, Sunset Riders, X-Men 6 Players.*
+  - *Mortal Kombat (1, 2, 3, Ultimate Mortal Kombat 3), Killer Instinct 1 & 2, NBA Jam Tournament Edition.*
+  - *Dodonpachi, Ikaruga, 1941/1942/1943/1944, Raiden II, Strikers 1945 III, Snow Bros 1 & 2.*
+* **Catálogo de Juegos Super Nintendo (SNES) & Sega Genesis:**
+  - *Super Mario World (1 & 2 Yoshi's Island), Super Mario All-Stars, Super Mario Kart, Super Mario RPG.*
+  - *The Legend of Zelda: A Link to the Past, Super Metroid, Donkey Kong Country 1, 2, 3.*
+  - *Chrono Trigger, Final Fantasy III (VI), Secret of Mana, EarthBound, Mega Man X (1, 2, 3), Super Castlevania IV, Contra III.*
+  - *Sonic the Hedgehog (1, 2, 3 & Sonic & Knuckles), Streets of Rage 1, 2, 3, Golden Axe 1, 2, 3, Shinobi III, Comix Zone, Gunstar Heroes.*
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `👾 Sala Arcade Retro (RetroArch 4K CRT).desktop`
+    - `🕹️ MAME Arcade Master (Oficial).desktop`
+    - `📂 Carpeta de Juegos Arcade & Clasicos (1500+ ROMs).desktop`
 
 ---
 
