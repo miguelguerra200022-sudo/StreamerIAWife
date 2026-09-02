@@ -764,6 +764,14 @@ try:
     }
     setInterval(measurePing, 2000);
     measurePing();
+
+    // LinuWaifu Trackpad Mode: Auto-habilitar modo "Virtual Mouse" en móviles
+    setTimeout(function() {
+        const mouseBtn = document.getElementById("noVNC_mouse_button");
+        if (mouseBtn && !mouseBtn.classList.contains("noVNC_selected")) {
+            mouseBtn.click();
+        }
+    }, 3000);
 })();
 </script>
 """
@@ -813,10 +821,10 @@ if not shutil.which("steam") or not shutil.which("obs"):
     subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq obs-studio kdenlive gimp filezilla telegram-desktop plank papirus-icon-theme xfce4-whiskermenu-plugin gnome-software v4l2loopback-dkms", shell=True)
     
     print("     -> Descargando Discord...", flush=True)
-    subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && dpkg -i /tmp/discord.deb || apt-get install -f -y -qq", shell=True)
+    subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && apt-get install -y -qq /tmp/discord.deb", shell=True)
     
     print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
-    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && dpkg -i /tmp/sunshine.deb || apt-get install -f -y -qq", shell=True)
+    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb", shell=True)
     
     print("  ✅ [✓] Ecosistema 'Modo Dios' instalado exitosamente.", flush=True)
 
@@ -1018,6 +1026,11 @@ for app in god_mode_apps:
             import shutil
             shutil.copy2(src_desktop, dst_desktop)
             dst_desktop.chmod(0o755)
+            
+            # Arreglar Discord para que corra como root (--no-sandbox)
+            if app == "discord":
+                subprocess.run(f"sed -i 's/Exec=\\/usr\\/share\\/discord\\/Discord/Exec=\\/usr\\/share\\/discord\\/Discord --no-sandbox/g' {dst_desktop}", shell=True)
+                subprocess.run(f"sed -i 's/Exec=\\/usr\\/share\\/discord\\/Discord/Exec=\\/usr\\/share\\/discord\\/Discord --no-sandbox/g' {src_desktop}", shell=True)
         except Exception:
             pass
 
