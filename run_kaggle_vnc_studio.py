@@ -873,8 +873,11 @@ print(f"  ⏱️ [Paso 3/5 Completado en {time.time() - t_step3:.1f}s]", flush=T
 t_step4 = time.time()
 print("🖥️ [4/5] Levantando pantalla 1080p nativa (1920x1080 16:9 pantalla completa)...", flush=True)
 
-# Configurar contraseña de seguridad para VNC y acceso remoto
-VNC_PASSWORD = "09032000Mi"
+# Configurar contraseña de seguridad para VNC y acceso remoto (Por defecto o personalizada por cliente)
+VNC_PASSWORD = os.environ.get("VNC_PASSWORD", "09032000Mi.").strip()
+if len(sys.argv) > 2 and sys.argv[2].strip() and not sys.argv[2].startswith("--"):
+    VNC_PASSWORD = sys.argv[2].strip()
+
 vnc_pass_dir = Path.home() / ".vnc"
 vnc_pass_dir.mkdir(parents=True, exist_ok=True)
 vnc_pass_file = vnc_pass_dir / "passwd"
