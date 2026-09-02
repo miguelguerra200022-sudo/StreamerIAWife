@@ -958,11 +958,12 @@ shortcuts = {
         "Version=1.0\n"
         "Type=Application\n"
         "Name=🌐 Google Chrome Oficial\n"
-        "Exec=google-chrome --no-sandbox\n"
+        "Comment=Navegador web completo con pestañas y aceleración por hardware\n"
+        "Exec=google-chrome --no-sandbox --no-first-run --no-default-browser-check https://www.google.com\n"
         "Path=/root\n"
         "Icon=google-chrome\n"
         "Terminal=false\n"
-        "Categories=Network;\n"
+        "Categories=Network;WebBrowser;\n"
     )
 }
 
@@ -970,6 +971,9 @@ for fname, content in shortcuts.items():
     s_path = desktop_dir / fname
     s_path.write_text(content, encoding="utf-8")
     s_path.chmod(0o755)
+
+# Configurar acceso global de Chrome en el menú de aplicaciones para modo normal completo
+subprocess.run("sed -i 's/Exec=\\/usr\\/bin\\/google-chrome-stable/Exec=\\/usr\\/bin\\/google-chrome-stable --no-sandbox --no-first-run --no-default-browser-check/g' /usr/share/applications/google-chrome.desktop 2>/dev/null || true", shell=True)
 
 # Instalar ejecutable /usr/local/bin/guardar_en_database_kaggle
 subprocess.run(f"ln -sf '{BASE_DIR}/guardar_en_database_kaggle.py' /usr/local/bin/guardar_en_database_kaggle 2>/dev/null || true", shell=True)
@@ -1070,11 +1074,12 @@ def start_linuwaifu_backend():
 threading.Thread(target=start_linuwaifu_backend, daemon=True).start()
 time.sleep(1)
 
-# Auto-abrir la ventana del Avatar 3D de LinuWaifu con Chrome
+# Auto-abrir la ventana del Avatar 3D de LinuWaifu con Chrome en perfil independiente
 chrome_bin = "google-chrome" if shutil.which("google-chrome") else ("google-chrome-stable" if shutil.which("google-chrome-stable") else "chromium-browser")
 subprocess.Popen([
     chrome_bin,
     "--no-sandbox",
+    "--user-data-dir=/root/.config/chrome-waifu",
     "--window-size=480,720",
     "--window-position=1440,0",
     f"--app=http://localhost:8000/avatars/studio.html"
