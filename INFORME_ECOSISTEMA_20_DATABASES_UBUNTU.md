@@ -62,9 +62,12 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
     - **VLC Media Player:** Reproductor multimedia con códecs universales.
     - **FileZilla:** Cliente FTP/SFTP.
     - **Google Drive 5TB FUSE:** Montaje automático en `/root/gdrive/PC_Kaggle`.
-  - **Control, Móvil, Cámara & Micrófono Virtual:**
+  - **Conectividad Avanzada, Red Local, VPN Mesh & Móvil:**
+    - **Tailscale & WireGuard (Mesh VPN):** Conecta la máquina en la nube directamente a tu red local doméstica (LAN) para comunicarte con tus laptops, impresoras, PCs y servidores locales (`192.168.1.x`) como si estuvieran en la misma habitación.
+    - **KDE Connect & Sincronización Móvil:** Compartición instantánea de portapapeles (copiar en el teléfono y pegar en Ubuntu), transferencia inalámbrica de archivos, control multimedia y notificaciones del móvil en pantalla.
     - **Cámara Web Virtual (`v4l2loopback` / `/dev/video0`):** Permite conectar la cámara de tu teléfono móvil o cámara web física a través de la red/WebRTC para que apps como VSeeFace, OpenSeeFace, Discord y Google Meet la detecten como una cámara física USB.
     - **Micrófono Virtual (PulseAudio / ALSA Loopback):** Transmisión de voz en tiempo real (<50ms) desde el micrófono de tu teléfono o auriculares hacia Ubuntu para transcripción en vivo (Whisper), modulación (RVC) o llamadas.
+    - **Herramientas de Monitoreo de Red Gigabit:** `Nethogs`, `Iftop`, `Iperf3` y `Avahi` (ZeroConf/mDNS) para diagnosticar ancho de banda y dispositivos conectados.
     - **Onboard:** Teclado virtual en pantalla para escribir desde móviles y tablets.
     - **AntiMicroX:** Calibrador y mapeador de mandos y controles Bluetooth/USB.
     - **Pavucontrol:** Mezclador de audio profesional para regular volúmenes independientes.
