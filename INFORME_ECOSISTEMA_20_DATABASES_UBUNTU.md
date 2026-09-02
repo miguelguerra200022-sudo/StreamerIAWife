@@ -45,16 +45,28 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
   - **Servidor VNC & noVNC:** Puerto 5900 (TCP binario) y Puerto 6080 (Web) con **Motor de Trackpad Táctil de Laptop integrado** (deslizar dedo para mover el ratón).
   - **Servidor Sunshine (Moonlight):** Streaming H.264/HEVC acelerado por hardware GPU a 60/120 FPS.
   - **Redes Sociales & Comunicación:**
-    - **Discord:** Cliente de escritorio para llamadas y comunidades.
-    - **Telegram Desktop:** Mensajería y canales.
-    - **WhatsApp Web:** Acceso directo integrado en Chrome.
-    - **Spotify:** Música y podcasts en segundo plano.
-    - **Google Chrome Oficial:** Con aceleración GPU y pestañas ilimitadas.
-  - **Ofimática & Utilidades:**
+    - **Discord:** Cliente oficial para llamadas y comunidades.
+    - **Telegram Desktop:** Mensajería instantánea y canales.
+    - **WhatsApp Web (PWA):** Acceso directo como app nativa.
+    - **Spotify & YouTube Music (PWA):** Música en segundo plano.
+    - **Twitter / X & Instagram (PWA):** Redes sociales con ventana independiente.
+    - **Google Meet & Zoom:** Videollamadas y reuniones.
+    - **Google Chrome Oficial:** Navegador con aceleración GPU.
+  - **Productividad & Utilidades Diarias:**
+    - **Flameshot:** Capturas de pantalla profesionales con flechas, texto y pixelado.
+    - **CopyQ:** Historial avanzado de portapapeles.
     - **LibreOffice Suite:** Writer (Word), Calc (Excel), Impress (PowerPoint).
-    - **VLC Media Player:** Reproductor universal con todos los códecs de video y audio.
-    - **FileZilla:** Cliente FTP/SFTP para transferencias.
+    - **Evince / Xreader:** Visor ligero de PDFs y documentos.
+    - **PeaZip / 7-Zip / Unrar:** Gestor total de archivos comprimidos.
+    - **qBittorrent:** Descargas P2P ultrarrápidas a tus 5TB de Google Drive.
+    - **VLC Media Player:** Reproductor multimedia con códecs universales.
+    - **FileZilla:** Cliente FTP/SFTP.
     - **Google Drive 5TB FUSE:** Montaje automático en `/root/gdrive/PC_Kaggle`.
+  - **Control, Móvil & Calidad de Vida:**
+    - **Onboard:** Teclado virtual en pantalla para escribir desde móviles y tablets.
+    - **AntiMicroX:** Calibrador y mapeador de mandos y controles Bluetooth/USB.
+    - **Pavucontrol:** Mezclador de audio profesional para regular volúmenes independientes.
+    - **Redshift:** Filtro de luz azul y modo noche para cuidar la vista.
   - **Centro de Software 1-Clic:** Acceso directo en el escritorio para instalar cualquiera de los otros 19 módulos con 1 clic.
 
 ---

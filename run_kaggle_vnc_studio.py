@@ -1200,17 +1200,17 @@ for fname, content in shortcuts.items():
     s_path.write_text(content, encoding="utf-8")
     s_path.chmod(0o755)
 
-# Copiar accesos directos del "Modo Dios" al Escritorio si están instalados
-god_mode_apps = [
-    "steam", "net.lutris.Lutris", "com.obsproject.Studio", 
-    "org.kde.kdenlive", "gimp", "telegramdesktop", "discord", "sunshine"
+# Copiar accesos directos de Redes Sociales, Productividad y Media al Escritorio
+core_desktop_apps = [
+    "whatsapp-web", "spotify-web", "twitter-x", "instagram-web", "youtube-music",
+    "discord", "telegramdesktop", "flameshot", "copyq", "evince", "qbittorrent", 
+    "pavucontrol", "onboard", "antimicrox", "libreoffice-writer", "libreoffice-calc", "vlc"
 ]
-for app in god_mode_apps:
+for app in core_desktop_apps:
     src_desktop = Path(f"/usr/share/applications/{app}.desktop")
     if src_desktop.exists():
         dst_desktop = desktop_dir / f"{app}.desktop"
         try:
-            import shutil
             shutil.copy2(src_desktop, dst_desktop)
             dst_desktop.chmod(0o755)
             
