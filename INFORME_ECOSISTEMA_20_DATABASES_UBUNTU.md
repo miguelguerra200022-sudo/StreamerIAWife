@@ -10,8 +10,8 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | :-: | :--- | :--- | :--- | :---: |
 | **1** | **Ubuntu - Core Desktop & Social Hub** | `ubuntu-core-os-social` | **Sistema Base & Redes** | **[✅ HECHO / LISTO]** |
 | **2** | **Ubuntu - Emuladores PS2 & PS1** | `ubuntu-ps2-ps1-vault` | **Gaming Retro** | **[⚙️ EN COMPILACIÓN / LISTO]** |
-| **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | **Gaming Portátil** | **[⚙️ EN COMPILACIÓN / LISTO]** |
-| **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | Gaming Nintendo | [⏳ Planificado] |
+| **3** | **Ubuntu - Emuladores PSP & Nintendo DS/GBA** | `ubuntu-psp-ds-gba-vault` | **Gaming Portátil** | **[⚙️ LISTO PARA COMPILAR]** |
+| **4** | **Ubuntu - Emuladores Switch & Wii/GameCube** | `ubuntu-switch-wii-vault` | **Gaming Nintendo** | **[⚙️ LISTO PARA COMPILAR]** |
 | **5** | **Ubuntu - Arcade Retro & Clásicos** | `ubuntu-arcade-retro-classics` | Gaming Arcade | [⏳ Planificado] |
 | **6** | **Ubuntu - PC Gaming & Launchers** | `ubuntu-pc-gaming-launchers` | PC Gaming | [⏳ Planificado] |
 | **7** | **Ubuntu - 3D Avatar & VTuber Studio** | `ubuntu-3d-avatar-studio` | Creadores & 3D | [⏳ Planificado] |
@@ -157,13 +157,48 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🍄 DATABASE 4: `Ubuntu - Emuladores Switch & Wii/GameCube`
+### 🍄 DATABASE 4: `Ubuntu - Emuladores Switch & Wii/GameCube` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-switch-wii-vault` | **Capacidad:** 100 GB
-* **Propósito:** Emulación de consolas modernas y clásicas de Nintendo.
-* **Contenido:**
-  - **Dolphin Emulator (GameCube & Wii):** Soporte de mandos clásicos y Wiimote emulado.
-  - **Ryujinx (Nintendo Switch):** Con soporte para Vulkan en las GPUs NVIDIA Tesla T4.
-  - **Colección de Juegos:** *Super Smash Bros Melee, Mario Kart Wii, Zelda Twilight Princess, Super Mario Odyssey, Mario Party, Metroid Prime, Animal Crossing.*
+* **Propósito:** Bóveda de Nintendo moderna y clásica (Nintendo Switch, Wii, GameCube & Wii U) con emulación a 1080p/4K 60 FPS acelerada por GPU Tesla T4, keys/firmware oficiales y catálogo curado en formato ultra-comprimido (NSP, RVZ, WUA).
+* **Emuladores & Mejoras Gráficas:**
+  - **Ryujinx (64-bit Oficial para Linux):** Emulador insignia de Nintendo Switch con soporte completo de Vulkan, shaders SPIR-V, resolución Docked (1080p/2K/4K) y mods de desbloqueo de 60 FPS.
+  - **Dolphin Emulator (Oficial Master):** Emulador legendario de GameCube y Wii con reescalado 1080p/4K, parches de pantalla ancha 16:9, shaders de post-procesado y emulación de Wiimote con ratón o mando.
+  - **Cemu (Wii U Native Linux):** Emulador nativo de Wii U con Graphic Packs (FPS++, mejoras de texturas y resolución Ultra HD).
+  - **Pack de Keys y Firmware:** `prod.keys`, `title.keys` y Firmware de Switch pre-cargados para máxima compatibilidad de juegos.
+* **Catálogo de Juegos Nintendo Switch (Formato NSP / XCI):**
+  - *Super Mario Odyssey*
+  - *Mario Kart 8 Deluxe (con Booster Course Pass)*
+  - *Super Smash Bros. Ultimate*
+  - *The Legend of Zelda: Breath of the Wild & Tears of the Kingdom*
+  - *Pokémon Legends: Arceus & Pokémon Scarlet / Violet*
+  - *Super Mario Bros. Wonder & Metroid Dread*
+  - *Animal Crossing: New Horizons & Luigi's Mansion 3*
+  - *Kirby and the Forgotten Land & Donkey Kong Country: Tropical Freeze*
+  - *Hollow Knight (Switch Edition)*
+* **Catálogo de Juegos Nintendo GameCube (Formato RVZ 60 FPS):**
+  - *Super Smash Bros. Melee (Versión Torneo 60 FPS)*
+  - *Mario Kart: Double Dash!!*
+  - *The Legend of Zelda: The Wind Waker & Twilight Princess*
+  - *Super Mario Sunshine & Metroid Prime 1 & 2: Echoes*
+  - *Luigi's Mansion, Resident Evil (Remake) & Resident Evil Zero*
+  - *F-Zero GX (Carreras ultra-rápidas a 60 FPS)*
+  - *Paper Mario: The Thousand-Year Door & Pokémon Colosseum*
+  - *Soulcalibur II (con Link jugable)*
+* **Catálogo de Juegos Nintendo Wii & Wii U (Formato RVZ / WUA):**
+  - *Mario Kart Wii (60 FPS con mods de circuitos)*
+  - *Super Smash Bros. Brawl (Project+)*
+  - *Super Mario Galaxy 1 & 2*
+  - *The Legend of Zelda: Skyward Sword & Xenoblade Chronicles*
+  - *Donkey Kong Country Returns & New Super Mario Bros. Wii*
+  - *Metroid Prime Trilogy, Wii Sports & Wii Sports Resort*
+  - *The Legend of Zelda: Breath of the Wild (Wii U Edition 60 FPS)*
+  - *Super Mario 3D World (Wii U)*
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🍄 Nintendo Switch (Ryujinx 1080p/4K).desktop`
+    - `🐬 Nintendo GameCube & Wii (Dolphin HD).desktop`
+    - `🎮 Nintendo Wii U (Cemu 60 FPS).desktop`
+    - `📂 Carpeta de Juegos Nintendo (Switch, Wii, GC).desktop`
 
 ---
 
