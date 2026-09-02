@@ -18,7 +18,7 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 | **8** | **Ubuntu - Suite Streamer OBS Pro** | `ubuntu-streamer-obs-pro` | **Streaming & Video** | **[⚙️ LISTO PARA COMPILAR]** |
 | **9** | **Ubuntu - Diseño Gráfico & Ilustración** | `ubuntu-graphic-design-art` | **Arte 2D** | **[⚙️ LISTO PARA COMPILAR]** |
 | **10** | **Ubuntu - Modelado 3D Blender & VFX** | `ubuntu-3d-blender-vfx` | **3D & VFX** | **[⚙️ LISTO PARA COMPILAR]** |
-| **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | Inteligencia Artificial | [⏳ Planificado] |
+| **11** | **Ubuntu - Cerebro IA Ollama & Llama** | `ubuntu-ai-brains-ollama` | **Inteligencia Artificial** | **[⚙️ LISTO PARA COMPILAR]** |
 | **12** | **Ubuntu - Laboratorio de Voz & Audio IA** | `ubuntu-ai-voice-audio-lab` | Inteligencia Artificial | [⏳ Planificado] |
 | **13** | **Ubuntu - Generador de Arte ComfyUI SDXL** | `ubuntu-ai-image-comfyui` | Inteligencia Artificial | [⏳ Planificado] |
 | **14** | **Ubuntu - Producción Musical LMMS Studio** | `ubuntu-music-audio-studio` | Música & Audio | [⏳ Planificado] |
@@ -378,17 +378,35 @@ Este documento detalla la arquitectura modular oficial del ecosistema de **Ubunt
 
 ---
 
-### 🤖 DATABASE 11: `Ubuntu - Cerebro IA Ollama & Llama`
+### 🤖 DATABASE 11: `Ubuntu - Cerebro IA Ollama & Llama` **[⚙️ LISTO PARA COMPILAR]**
 * **Slug:** `ubuntu-ai-brains-ollama` | **Capacidad:** 100 GB
-* **Propósito:** Modelos de lenguaje masivo (LLMs) ejecutados de forma local sin conexión a internet y 100% gratuitos.
-* **Contenido:**
-  - **Ollama Engine:** Servidor de inferencia ultrarrápido para GPUs Tesla T4.
-  - **Modelos Cuantizados Incluidos:**
-    - `Gemma 2 9B` (El potente modelo de Google).
-    - `Llama 3.1 8B` (El modelo insignia de Meta).
-    - `Mistral Nemo 12B` (Especializado en razonamiento y conversación).
-    - `DeepSeek Coder 6.7B` (Asistente de programación y desarrollo de código).
-  - **Open-WebUI:** Interfaz web idéntica a ChatGPT para chatear con los modelos en privado.
+* **Propósito:** Superestación de Inteligencia Artificial Local y Gateway de API pública acelerada por **Doble GPU NVIDIA Tesla T4 (32GB VRAM Totales)** con soporte para modelos masivos (hasta 32B parámetros), servidor FastAPI compatible con OpenAI, búsqueda web en vivo y agentes autónomos.
+* **Motores de Inferencia & Servidor FastAPI OpenAI Gateway:**
+  - **Ollama Engine (v0.3+ con CUDA 12 Multi-GPU):** Distribución automática de capas y tensores entre GPU 0 (16GB) y GPU 1 (16GB) para procesar más de **80 palabras por segundo**.
+  - **FastAPI OpenAI Gateway (`fastapi_ai_gateway.py`):** Servidor API que replica al 100% los endpoints de OpenAI (`POST /v1/chat/completions` con Streaming SSE y `GET /v1/models`).
+  - **Túnel Cloudflare HTTPS & Código QR:** Genera una URL pública segura (`https://tu-api.trycloudflare.com`) y muestra un **código QR en pantalla** para emparejar tu teléfono celular en 1 segundo con aplicaciones como *Chatbox* o *TypingMind*.
+  - **Open WebUI (ChatGPT Clone Privado):** Interfaz web moderna con soporte para Markdown, renderizado matemático LaTeX, navegación web en tiempo real (DuckDuckGo/SearXNG) y subida de archivos para RAG.
+  - **Aider (Programador Autónomo):** Agente de IA por terminal que se conecta a `DeepSeek Coder` para escribir código, editar repositorios y hacer commits de Git de forma autónoma.
+  - **Base de Datos Vectorial ChromaDB:** Búsqueda semántica ultra-rápida para chatear con bibliotecas de más de 100,000 páginas de documentos PDF, Word o código.
+* **Catálogo de Modelos de Inteligencia Artificial Preinstalados (Formato GGUF):**
+  - **Qwen 2.5 (32B / 14B):** El titán de razonamiento lógico, matemáticas y seguimiento de instrucciones complejas de Alibaba (aprovecha los 32GB de VRAM duales).
+  - **DeepSeek Coder V2 (16B / 6.7B):** La Inteligencia Artificial especializada en programación más potente del planeta.
+  - **Google Gemma 2 (9B):** El cerebro insignia de Google con redacción y comprensión del idioma español impecables.
+  - **Meta Llama 3.1 (8B):** Modelo conversacional con memoria de contexto masiva de 128k tokens.
+  - **Mistral Nemo (12B):** Modelo ultra-rápido creado por NVIDIA y Mistral AI para síntesis y razonamiento.
+  - **LLaVA 1.6 Vision (13B / 7B):** IA multimodal capaz de **"ver" y analizar imágenes, fotos, gráficos y capturas de pantalla**.
+  - **Dolphin 2.9 (Llama 3.1 Uncensored):** Modelo sin restricciones ni censura para investigación médica, legal y ciberseguridad.
+  - **Microsoft Phi-3.5 Mini (3.8B):** Modelo ultra-liviano para respuestas instantáneas con bajo consumo de memoria.
+  - **Nomic Embed Text:** Modelo de incrustación vectorial para análisis de PDFs y documentos.
+* **Biblioteca de 100+ Personas y Prompts Maestros:**
+  - Perfiles listos para *Arquitecto de Software Senior, Analista Financiero Cripto, Consultor Legal, Copywriter de Alta Conversión, Pentester de Ciberseguridad y Cerebro de VTuber.*
+* **Activación 1-Clic (`setup.py`):**
+  - Al conectarse a Kaggle o descargarse desde el escritorio, crea automáticamente los accesos directos:
+    - `🧠 Open WebUI (Tu ChatGPT Privado en Español).desktop`
+    - `⚡ FastAPI OpenAI Gateway (API Pública Dual-GPU).desktop`
+    - `🤖 Aider (Programador Autónomo DeepSeek).desktop`
+    - `👁️ LLaVA Vision (IA con Ojos para Imágenes).desktop`
+    - `📁 Bóveda de Modelos de IA & Agentes RAG.desktop`
 
 ---
 
