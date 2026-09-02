@@ -616,6 +616,54 @@ try:
     50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #00ffc8; }
     100% { transform: scale(0.95); opacity: 0.8; }
 }
+/* Virtual Trackpad & Cursor */
+#linu-virtual-cursor {
+    position: fixed;
+    width: 26px;
+    height: 26px;
+    pointer-events: none;
+    z-index: 999999;
+    transform: translate(-1px, -1px);
+    display: none;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.85));
+}
+body.tp-active #linu-virtual-cursor {
+    display: block;
+}
+#linu-touchpad-bar {
+    position: fixed;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    gap: 8px;
+    z-index: 999998;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.tp-btn {
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 42, 133, 0.4);
+    color: #f8fafc;
+    padding: 7px 13px;
+    border-radius: 18px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    transition: all 0.15s ease;
+}
+.tp-btn:active, .tp-btn.pressed {
+    background: rgba(255, 42, 133, 0.85);
+    transform: scale(0.92);
+}
+.tp-toggle-btn.active {
+    border-color: #00ffc8;
+    color: #00ffc8;
+    box-shadow: 0 0 12px rgba(0, 255, 200, 0.45);
+}
 @media (max-width: 600px) {
     #linu-hud-overlay {
         top: 8px;
@@ -625,8 +673,12 @@ try:
         gap: 6px;
     }
     .hud-badge { display: none; }
+    .tp-btn { padding: 6px 10px; font-size: 11px; }
 }
 </style>
+<svg id="linu-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
+    <path d="M4 4l7 17 2.5-6.5L20 12 4 4z"/>
+</svg>
 <div id="linu-hud-overlay" title="Arrastra para mover | Toca para minimizar/expandir">
     <div class="hud-dot" id="hud-status-dot"></div>
     <div class="hud-stat-pill"><span class="hud-val" id="hud-fps-text">60 FPS</span></div>
@@ -636,6 +688,11 @@ try:
     <div class="hud-badge hud-hideable">2x Tesla T4 1080p</div>
     <div class="hud-toggle-btn" id="hud-toggle-btn" title="Minimizar / Expandir">−</div>
 </div>
+<div id="linu-touchpad-bar">
+    <button class="tp-btn tp-toggle-btn active" id="tp-mode-toggle" title="Alternar entre modo Trackpad y modo Táctil">🖱️ Trackpad</button>
+    <button class="tp-btn" id="tp-btn-left" title="Clic Izquierdo">🖱️ Clic Izq</button>
+    <button class="tp-btn" id="tp-btn-right" title="Clic Derecho">🖱️ Clic Der</button>
+</div>
 <script>
 (function() {
     const hud = document.getElementById("linu-hud-overlay");
@@ -644,7 +701,7 @@ try:
     const pingText = document.getElementById("hud-ping-text");
     const statusDot = document.getElementById("hud-status-dot");
 
-    // 1. Lógica de Minimizar / Esconder
+    // 1. Minimizar HUD
     let isMinimized = false;
     function toggleMinimize(e) {
         if (e) e.stopPropagation();
@@ -652,73 +709,52 @@ try:
         if (isMinimized) {
             hud.classList.add("minimized");
             if (toggleBtn) toggleBtn.innerText = "+";
-            hud.title = "Toca para expandir el monitor";
         } else {
             hud.classList.remove("minimized");
             if (toggleBtn) toggleBtn.innerText = "−";
-            hud.title = "Arrastra para mover | Toca para minimizar";
         }
     }
     if (toggleBtn) toggleBtn.addEventListener("click", toggleMinimize);
 
-    // 2. Lógica de Arrastre (Drag and Drop - Móvil y PC)
-    let isDragging = false;
-    let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
-    let hasMoved = false;
-
+    // 2. Arrastre HUD
+    let isDragging = false, startX = 0, startY = 0, initialLeft = 0, initialTop = 0, hasMoved = false;
     function onPointerDown(e) {
         if (e.target === toggleBtn) return;
         isDragging = true;
         hasMoved = false;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = clientX;
-        startY = clientY;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = cx; startY = cy;
         const rect = hud.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-        hud.style.left = initialLeft + "px";
-        hud.style.top = initialTop + "px";
-        hud.style.right = "auto";
-        hud.style.bottom = "auto";
+        initialLeft = rect.left; initialTop = rect.top;
+        hud.style.left = initialLeft + "px"; hud.style.top = initialTop + "px";
+        hud.style.right = "auto"; hud.style.bottom = "auto";
         document.addEventListener("mousemove", onPointerMove);
         document.addEventListener("mouseup", onPointerUp);
         document.addEventListener("touchmove", onPointerMove, { passive: false });
         document.addEventListener("touchend", onPointerUp);
     }
-
     function onPointerMove(e) {
         if (!isDragging) return;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        const dx = clientX - startX;
-        const dy = clientY - startY;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = cx - startX, dy = cy - startY;
         if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
             hasMoved = true;
             if (e.cancelable) e.preventDefault();
         }
-        let newLeft = initialLeft + dx;
-        let newTop = initialTop + dy;
-        const maxLeft = window.innerWidth - hud.offsetWidth - 5;
-        const maxTop = window.innerHeight - hud.offsetHeight - 5;
-        newLeft = Math.max(5, Math.min(newLeft, maxLeft));
-        newTop = Math.max(5, Math.min(newTop, maxTop));
-        hud.style.left = newLeft + "px";
-        hud.style.top = newTop + "px";
+        hud.style.left = Math.max(5, Math.min(initialLeft + dx, window.innerWidth - hud.offsetWidth - 5)) + "px";
+        hud.style.top = Math.max(5, Math.min(initialTop + dy, window.innerHeight - hud.offsetHeight - 5)) + "px";
     }
-
-    function onPointerUp(e) {
+    function onPointerUp() {
         if (!isDragging) return;
         isDragging = false;
         document.removeEventListener("mousemove", onPointerMove);
         document.removeEventListener("mouseup", onPointerUp);
         document.removeEventListener("touchmove", onPointerMove);
         document.removeEventListener("touchend", onPointerUp);
-        if (!hasMoved && isMinimized) {
-            toggleMinimize();
-        }
+        if (!hasMoved && isMinimized) toggleMinimize();
     }
-
     hud.addEventListener("mousedown", onPointerDown);
     hud.addEventListener("touchstart", onPointerDown, { passive: true });
 
@@ -732,16 +768,8 @@ try:
             currentFps = Math.round((frameCount * 1000) / delta);
             if (fpsText) fpsText.innerText = currentFps + " FPS";
             if (statusDot) {
-                if (currentFps >= 45) {
-                    statusDot.style.backgroundColor = "#00ffc8";
-                    statusDot.style.boxShadow = "0 0 8px #00ffc8";
-                } else if (currentFps >= 25) {
-                    statusDot.style.backgroundColor = "#facc15";
-                    statusDot.style.boxShadow = "0 0 8px #facc15";
-                } else {
-                    statusDot.style.backgroundColor = "#f43f5e";
-                    statusDot.style.boxShadow = "0 0 8px #f43f5e";
-                }
+                statusDot.style.backgroundColor = currentFps >= 45 ? "#00ffc8" : (currentFps >= 25 ? "#facc15" : "#f43f5e");
+                statusDot.style.boxShadow = "0 0 8px " + statusDot.style.backgroundColor;
             }
             frameCount = 0;
             lastTime = now;
@@ -754,11 +782,7 @@ try:
         const start = performance.now();
         const img = new Image();
         img.src = window.location.origin + "/app/images/icons/novnc-16x16.png?t=" + Date.now();
-        img.onload = function() {
-            const rtt = Math.round(performance.now() - start);
-            if (pingText) pingText.innerText = rtt + " ms";
-        };
-        img.onerror = function() {
+        img.onload = img.onerror = function() {
             const rtt = Math.round(performance.now() - start);
             if (pingText) pingText.innerText = (rtt > 0 ? rtt : "< 45") + " ms";
         };
@@ -766,18 +790,159 @@ try:
     setInterval(measurePing, 2000);
     measurePing();
 
-    // LinuWaifu Trackpad Mode: Forzar a nivel de LocalStorage para que noVNC inicie en Virtual Mouse nativo
-    try {
-        localStorage.setItem('noVNC_setting_drag', 'false');
-    } catch(e) {}
-    
-    // Auto-habilitar modo "Virtual Mouse" visualmente
-    setInterval(function() {
-        const mouseBtn = document.getElementById("noVNC_mouse_button");
-        if (mouseBtn && !mouseBtn.classList.contains("noVNC_selected")) {
-            mouseBtn.click();
+    // =========================================================================
+    // 4. MOTOR DE TRACKPAD VIRTUAL RELATIVO PARA DISPOSITIVOS MÓVILES
+    // =========================================================================
+    const cursor = document.getElementById("linu-virtual-cursor");
+    const modeToggle = document.getElementById("tp-mode-toggle");
+    const btnLeft = document.getElementById("tp-btn-left");
+    const btnRight = document.getElementById("tp-btn-right");
+
+    let isTrackpadEnabled = true;
+    let virtX = 960, virtY = 540; // Coordenadas remotas 1080p
+    const screenW = 1920, screenH = 1080;
+    const sensitivity = 1.45;
+
+    function getRFB() {
+        return (window.UI && window.UI.rfb) ? window.UI.rfb : null;
+    }
+
+    function updateCursorElement() {
+        if (!cursor) return;
+        const displayX = (virtX / screenW) * window.innerWidth;
+        const displayY = (virtY / screenH) * window.innerHeight;
+        cursor.style.left = displayX + "px";
+        cursor.style.top = displayY + "px";
+    }
+
+    function sendMouse(mask) {
+        const rfb = getRFB();
+        if (rfb && typeof rfb.sendMouse === "function") {
+            rfb.sendMouse(Math.round(virtX), Math.round(virtY), mask);
         }
-    }, 2000);
+    }
+
+    if (modeToggle) {
+        modeToggle.addEventListener("click", function(e) {
+            e.stopPropagation();
+            isTrackpadEnabled = !isTrackpadEnabled;
+            if (isTrackpadEnabled) {
+                document.body.classList.add("tp-active");
+                modeToggle.classList.add("active");
+                modeToggle.innerText = "🖱️ Trackpad: ON";
+            } else {
+                document.body.classList.remove("tp-active");
+                modeToggle.classList.remove("active");
+                modeToggle.innerText = "👆 Táctil: ON";
+            }
+        });
+    }
+
+    if (btnLeft) {
+        btnLeft.addEventListener("pointerdown", function(e) {
+            e.preventDefault(); e.stopPropagation();
+            btnLeft.classList.add("pressed");
+            sendMouse(1);
+        });
+        btnLeft.addEventListener("pointerup", function(e) {
+            e.preventDefault(); e.stopPropagation();
+            btnLeft.classList.remove("pressed");
+            sendMouse(0);
+        });
+    }
+
+    if (btnRight) {
+        btnRight.addEventListener("pointerdown", function(e) {
+            e.preventDefault(); e.stopPropagation();
+            btnRight.classList.add("pressed");
+            sendMouse(4);
+        });
+        btnRight.addEventListener("pointerup", function(e) {
+            e.preventDefault(); e.stopPropagation();
+            btnRight.classList.remove("pressed");
+            sendMouse(0);
+        });
+    }
+
+    // Intercepción de gestos táctiles tipo laptop
+    let lastTouchX = 0, lastTouchY = 0;
+    let isTouching = false, touchStartTime = 0, totalMoved = 0;
+
+    window.addEventListener("touchstart", function(e) {
+        if (!isTrackpadEnabled) return;
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
+            return;
+        }
+        if (e.touches.length === 1) {
+            isTouching = true;
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+            touchStartTime = performance.now();
+            totalMoved = 0;
+        } else if (e.touches.length === 2) {
+            lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            touchStartTime = performance.now();
+        }
+    }, { passive: false });
+
+    window.addEventListener("touchmove", function(e) {
+        if (!isTrackpadEnabled) return;
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
+            return;
+        }
+
+        if (isTouching && e.touches.length === 1) {
+            e.preventDefault();
+            const curX = e.touches[0].clientX;
+            const curY = e.touches[0].clientY;
+            const dx = (curX - lastTouchX) * sensitivity;
+            const dy = (curY - lastTouchY) * sensitivity;
+            lastTouchX = curX;
+            lastTouchY = curY;
+            totalMoved += Math.hypot(dx, dy);
+
+            const scaleX = screenW / window.innerWidth;
+            const scaleY = screenH / window.innerHeight;
+
+            virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
+            virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
+
+            updateCursorElement();
+            sendMouse(0);
+        } else if (e.touches.length === 2) {
+            e.preventDefault();
+            const curY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            const dy = curY - lastTouchY;
+            lastTouchY = curY;
+            if (dy > 12) {
+                sendMouse(16); // Rueda abajo
+                setTimeout(() => sendMouse(0), 30);
+            } else if (dy < -12) {
+                sendMouse(8);  // Rueda arriba
+                setTimeout(() => sendMouse(0), 30);
+            }
+        }
+    }, { passive: false });
+
+    window.addEventListener("touchend", function(e) {
+        if (!isTrackpadEnabled) return;
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
+            return;
+        }
+
+        const duration = performance.now() - touchStartTime;
+        if (isTouching && e.touches.length === 0) {
+            isTouching = false;
+            // Toque rápido sin arrastre (< 220ms y < 10px) = Clic Izquierdo en la posición actual del puntero
+            if (duration < 220 && totalMoved < 10) {
+                sendMouse(1);
+                setTimeout(() => sendMouse(0), 50);
+            }
+        }
+    }, { passive: false });
+
+    document.body.classList.add("tp-active");
+    updateCursorElement();
 })();
 </script>
 """
