@@ -102,8 +102,31 @@ subprocess.run(
     shell=True
 )
 
-print("🎮 [4/6] Instalando Suite Gamer Base (Steam i386, Lutris, MangoHud, Gamemode)...", flush=True)
-subprocess.run("apt-get install -y -qq steam lutris mangohud gamemode", shell=True)
+print("🎮 [4/6] Instalando Suite de Controladores Universales para Mandos, Teclados y Ratones (Cable y Bluetooth)...", flush=True)
+subprocess.run(
+    "apt-get install -y -qq steam lutris mangohud gamemode xboxdrv joystick jstest-gtk evtest "
+    "antimicrox bluez bluez-tools blueman xserver-xorg-input-all xserver-xorg-input-evdev "
+    "xdotool xautomation libevdev2 python3-evdev",
+    shell=True
+)
+
+# Configurar permisos de uinput y udev para mandos físicos y virtuales (Xbox, PlayStation, Switch)
+try:
+    Path("/etc/modules-load.d").mkdir(parents=True, exist_ok=True)
+    Path("/etc/modules-load.d/uinput.conf").write_text("uinput\n", encoding="utf-8")
+    Path("/etc/udev/rules.d").mkdir(parents=True, exist_ok=True)
+    Path("/etc/udev/rules.d/99-uinput.rules").write_text('KERNEL=="uinput", MODE="0666", OPTIONS+="static_node=uinput"\n', encoding="utf-8")
+    Path("/etc/udev/rules.d/70-gamepad.rules").write_text(
+        'KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*Controller*", MODE="0666"\n'
+        'KERNEL=="js*", MODE="0666"\n'
+        'SUBSYSTEM=="input", ATTRS{idVendor}=="054c", MODE="0666"\n' # Sony PlayStation
+        'SUBSYSTEM=="input", ATTRS{idVendor}=="045e", MODE="0666"\n' # Microsoft Xbox
+        'SUBSYSTEM=="input", ATTRS{idVendor}=="057e", MODE="0666"\n', # Nintendo Switch
+        encoding="utf-8"
+    )
+    subprocess.run("udevadm control --reload-rules 2>/dev/null || true; udevadm trigger 2>/dev/null || true", shell=True)
+except Exception:
+    pass
 
 print("⭐ [5/6] Instalando Multimedia, Productividad, Herramientas y Redes...", flush=True)
 subprocess.run(
@@ -344,7 +367,11 @@ shortcuts = {
     "Steam_Gamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Steam (Juegos PC)\\nExec=steam\\nIcon=steam\\nTerminal=false\\nCategories=Game;\\n",
     "Discord.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Discord\\nExec=discord\\nIcon=discord\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
     "Telegram.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Telegram Desktop\\nExec=telegram-desktop\\nIcon=telegram\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
-    "Sunshine_Streamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Sunshine 60 FPS Panel\\nExec=google-chrome --no-sandbox https://localhost:47990\\nIcon=input-gaming\\nTerminal=false\\nCategories=Settings;\\n"
+    "Sunshine_Streamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Sunshine 60 FPS Panel\\nExec=google-chrome --no-sandbox https://localhost:47990\\nIcon=input-gaming\\nTerminal=false\\nCategories=Settings;\\n",
+    "Calibrador_Mandos.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=🎮 Calibrador de Mandos (JSTest GTK)\\nExec=jstest-gtk\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Settings;\\n",
+    "Mapeador_AntiMicroX.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=🎮 Mapeador AntiMicroX (Mandos a Teclado/Mouse)\\nExec=antimicrox\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Utility;\\n",
+    "Bluetooth_Manager.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=📶 Gestor Bluetooth (Emparejar Mandos y Teclados)\\nExec=blueman-manager\\nIcon=preferences-system-bluetooth\\nTerminal=false\\nCategories=Settings;\\n",
+    "Teclado_Tactil.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=⌨️ Teclado en Pantalla (Onboard)\\nExec=onboard\\nIcon=input-keyboard\\nTerminal=false\\nCategories=Utility;\\n"
 }
 
 for name, cont in shortcuts.items():

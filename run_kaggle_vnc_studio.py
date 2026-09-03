@@ -1108,8 +1108,30 @@ if not shutil.which("steam") or not shutil.which("obs"):
     subprocess.run("sysctl -w net.core.default_qdisc=fq && sysctl -w net.ipv4.tcp_congestion_control=bbr", shell=True, stderr=subprocess.DEVNULL)
     subprocess.run("dpkg --add-architecture i386 && apt-get update -qq", shell=True)
     
-    print("     -> Descargando e Instalando Steam, Lutris, MangoHud, Gamemode...", flush=True)
-    subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq steam lutris mangohud gamemode wget curl software-properties-common", shell=True)
+    print("     -> Descargando e Instalando Steam, Lutris, MangoHud, Gamemode y Drivers de Mandos...", flush=True)
+    subprocess.run(
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq steam lutris mangohud gamemode "
+        "xboxdrv joystick jstest-gtk evtest antimicrox bluez bluez-tools blueman libevdev2 python3-evdev "
+        "wget curl software-properties-common",
+        shell=True
+    )
+    # Permisos Udev y Uinput para detección inmediata de mandos (Xbox, PlayStation, Switch)
+    try:
+        Path("/etc/modules-load.d").mkdir(parents=True, exist_ok=True)
+        Path("/etc/modules-load.d/uinput.conf").write_text("uinput\n", encoding="utf-8")
+        Path("/etc/udev/rules.d").mkdir(parents=True, exist_ok=True)
+        Path("/etc/udev/rules.d/99-uinput.rules").write_text('KERNEL=="uinput", MODE="0666", OPTIONS+="static_node=uinput"\n', encoding="utf-8")
+        Path("/etc/udev/rules.d/70-gamepad.rules").write_text(
+            'KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*Controller*", MODE="0666"\n'
+            'KERNEL=="js*", MODE="0666"\n'
+            'SUBSYSTEM=="input", ATTRS{idVendor}=="054c", MODE="0666"\n' # Sony PlayStation
+            'SUBSYSTEM=="input", ATTRS{idVendor}=="045e", MODE="0666"\n' # Microsoft Xbox
+            'SUBSYSTEM=="input", ATTRS{idVendor}=="057e", MODE="0666"\n', # Nintendo Switch
+            encoding="utf-8"
+        )
+        subprocess.run("udevadm control --reload-rules 2>/dev/null || true; udevadm trigger 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
     
     print("     -> Descargando e Instalando OBS, Kdenlive, GIMP, Telegram, y UX...", flush=True)
     subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq obs-studio kdenlive gimp filezilla telegram-desktop plank papirus-icon-theme xfce4-whiskermenu-plugin gnome-software v4l2loopback-dkms", shell=True)
