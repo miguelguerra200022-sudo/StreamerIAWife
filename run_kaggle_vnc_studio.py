@@ -1136,6 +1136,38 @@ if not shutil.which("steam") or not shutil.which("obs"):
     print("     -> Descargando e Instalando OBS, Kdenlive, GIMP, Telegram, y UX...", flush=True)
     subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq obs-studio kdenlive gimp filezilla telegram-desktop plank papirus-icon-theme xfce4-whiskermenu-plugin gnome-software v4l2loopback-dkms", shell=True)
     
+    # Runtimes gráficos y de audio de 32 bits (i386) para Steam y Proton (DXVK)
+    subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libgl1-mesa-dri:i386 libgl1:i386 libvulkan1:i386 mesa-vulkan-drivers:i386 libasound2-plugins:i386 python3-tk || true", shell=True)
+    
+    # Wrapper acelerado por hardware GPU para Google Chrome
+    chrome_wrapper = (
+        "#!/bin/bash\n"
+        "exec /usr/bin/google-chrome-stable "
+        "--no-sandbox --test-type --ignore-gpu-blocklist "
+        "--enable-gpu-rasterization --enable-zero-copy "
+        "--enable-features=VaapiVideoDecoder,CanvasOopRasterization "
+        "--disable-dev-shm-usage \"$@\"\n"
+    )
+    Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
+    subprocess.run("chmod +x /usr/local/bin/google-chrome 2>/dev/null || true", shell=True)
+    
+    # Configuración de Audio Headless Virtual (PulseAudio Dummy Sink a 48kHz para Sunshine y Discord)
+    try:
+        pulse_cfg = Path("/etc/pulse/default.pa")
+        if pulse_cfg.exists():
+            pulse_text = pulse_cfg.read_text(encoding="utf-8")
+            if "DummyOutput" not in pulse_text:
+                pulse_extra = (
+                    "\n# Audio Headless Virtual para Cloud Gaming & Sunshine\n"
+                    "load-module module-null-sink sink_name=DummyOutput sink_properties=device.description=\"Virtual_Cloud_Audio\"\n"
+                    "set-default-sink DummyOutput\n"
+                    "load-module module-virtual-source source_name=VirtualMic master=DummyOutput.monitor\n"
+                    "set-default-source VirtualMic\n"
+                )
+                pulse_cfg.write_text(pulse_text + pulse_extra, encoding="utf-8")
+    except Exception:
+        pass
+
     print("     -> Descargando Discord...", flush=True)
     subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && apt-get install -y -qq /tmp/discord.deb", shell=True)
     
@@ -1272,19 +1304,25 @@ install_helper.write_text(
 install_helper.chmod(0o755)
 subprocess.run(f"cp {install_helper} /usr/local/bin/instalar 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/ubuntu_store.py /usr/local/bin/ubuntu_store.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/tienda_software_1clic.py /usr/local/bin/tienda_software_1clic.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/gamepad_uinput_bridge.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
+subprocess.run("chmod +x /usr/local/bin/tienda_software_1clic.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/liberar_vram.py /usr/local/bin/liberar_vram.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/salvar_y_salir.py /usr/local/bin/salvar_y_salir.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/test_velocidad_real.py /usr/local/bin/test_velocidad_real.py 2>/dev/null || true", shell=True)
 
+# Iniciar Gamepad UInput Bridge en segundo plano para detección de mandos inmediata
+subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/linuwaifu_gamepad.log 2>&1", shell=True)
+
 # Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
-    "Centro_de_Software_Ubuntu_1Clic.desktop": (
+    "Tienda_de_Software_1Clic.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🛍️ Centro de Software Ubuntu (1-Clic)\n"
-        "Comment=Activa y descarga cualquiera de los 19 módulos adicionales en 1 clic\n"
-        f"Exec=python3 {BASE_DIR}/ubuntu_store.py\n"
+        "Name=🛍️ Tienda de Software y Juegos (20 Databases)\n"
+        "Comment=Explora e instala cualquiera de los 20 packs de 100GB en 1 clic\n"
+        "Exec=python3 /usr/local/bin/tienda_software_1clic.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=system-software-install\n"
         "Terminal=false\n"
