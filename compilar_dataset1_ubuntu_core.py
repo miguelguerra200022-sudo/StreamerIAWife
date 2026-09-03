@@ -2532,9 +2532,19 @@ x-scheme-handler/https=google-chrome.desktop;
     except Exception:
         pass
 
-# 9. Empaquetado Maestro RootFS en /dev/shm
-print("💾 [8/8] Empaquetando RootFS Maestro con Pigz (ubuntu_master_rootfs.tar.data)...", flush=True)
+# 8.6 Purga Quirúrgica de Micro-Inodos (Reduce 35,000 archivos sin afectar español/inglés)
+print("🧹 [8.6] Purgando micro-inodos y archivos redundantes (locale, pycache, man, docs)...", flush=True)
+subprocess.run("find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'es*' ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true", shell=True)
+subprocess.run("find /usr/share -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true", shell=True)
+subprocess.run("rm -rf /usr/share/man/* /usr/share/doc/* /var/cache/apt/archives/*.deb /var/lib/apt/lists/* 2>/dev/null || true", shell=True)
+
+# Instalar herramientas de compresión si faltan
+subprocess.run("which zstd >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq zstd squashfs-tools >/dev/null 2>&1) || true", shell=True)
+
+# 9. Empaquetado Maestro RootFS con Zstandard Multi-Núcleo (-T0 AVX)
 rootfs_tar = WORK_DIR / "ubuntu_master_rootfs.tar.data"
+rootfs_zst = WORK_DIR / "ubuntu_master_rootfs.tar.zst"
+rootfs_sq = WORK_DIR / "ubuntu_master_rootfs.squashfs"
 
 excludes = (
     "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' "
@@ -2544,8 +2554,28 @@ excludes = (
     "--exclude='/var/log' --exclude='/var/tmp' --exclude='/root/.cache' --exclude='/root/.npm'"
 )
 
-cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb | pigz -4 > '{rootfs_tar}'"
+has_zstd = shutil.which("zstd") is not None
+if has_zstd:
+    print("⚡ [8/8] Empaquetando RootFS Maestro con Zstandard Multi-Núcleo (ubuntu_master_rootfs.tar.data)...", flush=True)
+    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb | zstd -T0 -3 -q > '{rootfs_tar}'"
+else:
+    print("💾 [8/8] Empaquetando RootFS Maestro con Pigz (ubuntu_master_rootfs.tar.data)...", flush=True)
+    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb | pigz -4 > '{rootfs_tar}'"
+
 subprocess.run(cmd_tar, shell=True)
+
+# Enlace a .tar.zst para reconocimiento explícito
+if rootfs_tar.exists() and has_zstd:
+    try:
+        if not rootfs_zst.exists():
+            os.link(rootfs_tar, rootfs_zst)
+    except Exception:
+        pass
+
+# Generar SquashFS complementario si squashfs-tools está disponible (Zero-Extract Mount)
+if shutil.which("mksquashfs"):
+    print("📦 [8.8] Generando imagen SquashFS Zstandard (Zero-Extract Instant Mount)...", flush=True)
+    subprocess.run(f"mksquashfs /usr /opt /etc /var/lib/dpkg /var/lib/apt '{rootfs_sq}' -comp zstd -Xcompression-level 12 -b 1M -noappend >/dev/null 2>&1 || true", shell=True)
 
 # 10. Generar Script de Activación en 1 Segundo (setup.py)
 setup_script = WORK_DIR / "setup.py"
