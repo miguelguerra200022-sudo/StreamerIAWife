@@ -16,8 +16,8 @@ from pathlib import Path
 import telegram_notifier
 
 auth = ('miguelguerra22', 'b4031084ad25f34042347dfd7b6af451')
-status_url = "https://www.kaggle.com/api/v1/kernels/status?userName=miguelguerra22&kernelSlug=aether-cloudpc"
-output_url = "https://www.kaggle.com/api/v1/kernels/output?userName=miguelguerra22&kernelSlug=aether-cloudpc"
+status_url = "https://www.kaggle.com/api/v1/kernels/status?userName=miguelguerra22&kernelSlug=aether-cloud-pc"
+output_url = "https://www.kaggle.com/api/v1/kernels/output?userName=miguelguerra22&kernelSlug=aether-cloud-pc"
 
 t_start = time.time()
 print("=" * 78, flush=True)
