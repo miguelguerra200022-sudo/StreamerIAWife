@@ -686,95 +686,113 @@ try:
         if "cloud-hud-overlay" not in content:
             hud_code = """
 <style>
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --aether-cyan: #00ffc8;
+    --aether-blue: #38bdf8;
+    --aether-pink: #ff2a85;
+}
+
 /* ========================================================================== */
-/* 1. CLOUD PC PERFORMANCE BADGE (BOTTOM-LEFT, ULTRA-COMPACT, NON-INTRUSIVE)  */
+/* 1. CLOUD PC PERFORMANCE BADGE (DISCRETO, ADAPTATIVO Y ULTRA-CRISTALINO)    */
 /* ========================================================================== */
 #cloud-perf-badge {
     position: fixed;
-    bottom: 8px;
-    left: 8px;
-    background: rgba(10, 15, 26, 0.72);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    bottom: calc(8px + var(--safe-bottom));
+    left: calc(10px + var(--safe-left));
+    background: rgba(10, 15, 26, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 3px 8px;
     display: flex;
     align-items: center;
     gap: 6px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: #f8fafc;
     z-index: 999980;
-    pointer-events: none; /* No intercepta toques, no bloquea juegos */
+    pointer-events: none;
     user-select: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     line-height: 1;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 #cloud-perf-badge .perf-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #00ffc8;
-    box-shadow: 0 0 6px #00ffc8;
+    background: var(--aether-cyan);
+    box-shadow: 0 0 6px var(--aether-cyan);
     transition: background-color 0.3s;
 }
-#cloud-perf-badge .fps-val { color: #00ffc8; }
-#cloud-perf-badge .ping-val { color: #38bdf8; }
+#cloud-perf-badge .fps-val { color: var(--aether-cyan); }
+#cloud-perf-badge .ping-val { color: var(--aether-blue); }
+
+/* Auto-reubicación inteligente: si los mandos están activos, sube para no estorbar el joystick */
+body.tp-gamepad-active #cloud-perf-badge {
+    bottom: auto;
+    top: calc(8px + var(--safe-top));
+    left: calc(125px + var(--safe-left));
+}
 
 /* ========================================================================== */
-/* 2. PESTAÑA LATERAL AETHER (EDGE DRAWER TAB ERGONÓMICA CON HITBOX 60PX)     */
+/* 2. PESTAÑA LATERAL AETHER (ERGONOMÍA NATURAL DEL PULGAR A 42% DE ALTURA)   */
 /* ========================================================================== */
 #aether-edge-tab {
     position: fixed;
     right: 0;
-    top: 45%;
-    width: 32px;
-    height: 64px;
-    background: rgba(13, 18, 30, 0.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1.5px solid rgba(0, 255, 200, 0.45);
+    top: 42%;
+    width: 28px;
+    height: 56px;
+    background: rgba(13, 18, 30, 0.50);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(0, 255, 200, 0.35);
     border-right: none;
-    border-radius: 18px 0 0 18px;
+    border-radius: 16px 0 0 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #00ffc8;
-    font-size: 20px;
+    color: var(--aether-cyan);
+    font-size: 18px;
     font-weight: 700;
     z-index: 999990;
     cursor: pointer;
     touch-action: none;
     user-select: none;
-    opacity: 0.45; /* Semi-transparente en reposo pero fácil de ver */
-    transition: opacity 0.3s ease, background 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: -4px 0 16px rgba(0, 255, 200, 0.25);
+    opacity: 0.32; /* Discreto en reposo estilo Apple HIG / Xbox TAK */
+    transition: opacity 0.25s ease, background 0.2s ease, width 0.2s ease, box-shadow 0.25s ease;
+    box-shadow: -3px 0 14px rgba(0, 255, 200, 0.2);
 }
-/* Hitbox expandido invisible de 60px para dedos en móviles */
+/* Hitbox expandido invisible de 60px para el pulgar */
 #aether-edge-tab::before {
     content: "";
     position: absolute;
     right: 0;
     top: -15px;
     width: 60px;
-    height: 94px;
+    height: 86px;
 }
 #aether-edge-tab:hover, #aether-edge-tab:active, #aether-edge-tab.active {
-    opacity: 1 !important;
-    background: rgba(13, 18, 30, 0.95);
-    width: 38px;
-    box-shadow: -4px 0 24px rgba(0, 255, 200, 0.5);
+    opacity: 0.95 !important;
+    background: rgba(13, 18, 30, 0.92);
+    width: 36px;
+    box-shadow: -4px 0 22px rgba(0, 255, 200, 0.5);
 }
 
-/* Backdrop / Scrim oscurecido para cerrar tocando fuera */
+/* Scrim translúcido con desenfoque de fondo */
 #aether-scrim {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 999995;
     opacity: 0;
     pointer-events: none;
@@ -786,24 +804,24 @@ try:
     pointer-events: auto;
 }
 
-/* Cajón Lateral Desplegable (Side Drawer) */
+/* Cajón Lateral Desplegable (Side Drawer - Cristal Líquido / Glassmorphism) */
 #aether-drawer {
     position: fixed;
     right: 0;
     top: 0;
-    width: 260px;
+    width: min(270px, 82vw);
     height: 100vh;
-    background: rgba(10, 15, 26, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-left: 1px solid rgba(0, 255, 200, 0.3);
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
+    background: rgba(10, 15, 26, 0.86);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border-left: 1px solid rgba(0, 255, 200, 0.25);
+    box-shadow: -10px 0 45px rgba(0, 0, 0, 0.85);
     z-index: 999998;
     transform: translate3d(100%, 0, 0);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) 14px;
     box-sizing: border-box;
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -818,13 +836,13 @@ try:
     align-items: center;
     justify-content: space-between;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 12px;
 }
 .drawer-title {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
-    color: #00ffc8;
+    color: var(--aether-cyan);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -832,8 +850,8 @@ try:
     text-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
 }
 .drawer-close {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: #e2e8f0;
     border-radius: 50%;
     width: 28px;
@@ -844,6 +862,10 @@ try:
     font-size: 16px;
     cursor: pointer;
     touch-action: manipulation;
+    transition: background 0.15s ease;
+}
+.drawer-close:active {
+    background: rgba(255, 255, 255, 0.2);
 }
 .drawer-items {
     display: flex;
@@ -855,8 +877,8 @@ try:
     touch-action: pan-y;
 }
 .drawer-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 10px 12px;
     display: flex;
@@ -870,14 +892,14 @@ try:
     transition: all 0.2s ease;
 }
 .drawer-btn:hover, .drawer-btn:active {
-    background: rgba(0, 255, 200, 0.2);
-    border-color: #00ffc8;
-    color: #00ffc8;
+    background: rgba(0, 255, 200, 0.18);
+    border-color: var(--aether-cyan);
+    color: var(--aether-cyan);
 }
 .drawer-btn.active-glow {
-    background: rgba(0, 255, 200, 0.22);
-    border-color: #00ffc8;
-    color: #00ffc8;
+    background: rgba(0, 255, 200, 0.20);
+    border-color: var(--aether-cyan);
+    color: var(--aether-cyan);
     box-shadow: 0 0 14px rgba(0, 255, 200, 0.35);
 }
 .drawer-btn .d-icon {
@@ -893,30 +915,30 @@ try:
     gap: 8px;
 }
 .drawer-exit-btn {
-    background: rgba(255, 42, 133, 0.18);
-    border: 1px solid rgba(255, 42, 133, 0.4);
+    background: rgba(255, 42, 133, 0.16);
+    border: 1px solid rgba(255, 42, 133, 0.35);
     border-radius: 10px;
     padding: 8px 12px;
-    color: #ff2a85;
+    color: var(--aether-pink);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     text-align: center;
     transition: background 0.2s;
 }
-.drawer-exit-btn:hover {
-    background: rgba(255, 42, 133, 0.35);
+.drawer-exit-btn:hover, .drawer-exit-btn:active {
+    background: rgba(255, 42, 133, 0.32);
 }
 
-/* Soporte para Smartphones en Modo Horizontal (Landscape) */
+/* Soporte ergonómico para smartphones en horizontal (Landscape) */
 @media (max-height: 520px) {
     #aether-drawer {
-        width: 230px;
-        padding: 10px;
+        width: min(240px, 75vw);
+        padding: calc(8px + var(--safe-top)) calc(10px + var(--safe-right)) calc(8px + var(--safe-bottom)) 10px;
     }
     .drawer-header {
-        margin-bottom: 8px;
-        padding-bottom: 8px;
+        margin-bottom: 6px;
+        padding-bottom: 6px;
     }
     .drawer-items {
         gap: 5px;
@@ -928,7 +950,7 @@ try:
 }
 
 /* ========================================================================== */
-/* 3. CAPA DE MANDOS VIRTUALES TÁCTILES: FUSIÓN XBOX CLASSIC + NEON FROSTED   */
+/* 3. CAPA DE MANDOS VIRTUALES TÁCTILES: XBOX TAK FUSION + CRISTAL LÍQUIDO    */
 /* ========================================================================== */
 #virtual-gamepad-overlay {
     position: fixed;
@@ -943,11 +965,11 @@ try:
     display: block;
 }
 
-/* Joystick Analógico Izquierdo */
+/* Joystick Analógico Izquierdo con Deadzone y Resorte Elástico */
 .gp-stick-zone {
     position: absolute;
-    bottom: 24px;
-    left: 24px;
+    bottom: calc(18px + var(--safe-bottom));
+    left: calc(18px + var(--safe-left));
     width: 140px;
     height: 140px;
     pointer-events: auto;
@@ -958,146 +980,149 @@ try:
     width: 130px;
     height: 130px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 2px solid rgba(0, 255, 200, 0.45);
-    box-shadow: 0 0 15px rgba(0, 255, 200, 0.2), inset 0 0 10px rgba(0,0,0,0.5);
+    background: rgba(15, 23, 42, 0.38);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(0, 255, 200, 0.35);
+    box-shadow: 0 0 16px rgba(0, 255, 200, 0.15), inset 0 0 10px rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 .gp-stick-thumb {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-    border: 2px solid #00ffc8;
-    box-shadow: 0 0 12px #00ffc8;
+    border: 2px solid var(--aether-cyan);
+    box-shadow: 0 0 12px var(--aether-cyan);
     transform: translate3d(0, 0, 0);
     will-change: transform;
     pointer-events: none;
 }
 
-/* D-Pad / Cruceta (Cruceta táctil) */
+/* D-Pad / Cruceta Táctil */
 .gp-dpad-container {
     position: absolute;
-    bottom: 180px;
-    left: 45px;
-    width: 100px;
-    height: 100px;
+    bottom: calc(166px + var(--safe-bottom));
+    left: calc(36px + var(--safe-left));
+    width: 104px;
+    height: 104px;
     pointer-events: auto;
 }
 .gp-dpad-btn {
     position: absolute;
-    width: 32px;
-    height: 32px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(56, 189, 248, 0.4);
-    border-radius: 8px;
-    color: #38bdf8;
-    font-size: 12px;
+    width: 34px;
+    height: 34px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 9px;
+    color: var(--aether-blue);
+    font-size: 13px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     touch-action: none;
+    transition: transform 0.08s ease, background 0.1s ease;
 }
 .gp-dpad-btn:active, .gp-dpad-btn.pressed {
-    background: rgba(56, 189, 248, 0.35);
-    border-color: #38bdf8;
-    box-shadow: 0 0 8px #38bdf8;
+    background: rgba(56, 189, 248, 0.45);
+    border-color: var(--aether-blue);
+    box-shadow: 0 0 12px var(--aether-blue);
+    transform: scale(0.92);
 }
-.gp-dpad-up { top: 0; left: 34px; }
-.gp-dpad-down { bottom: 0; left: 34px; }
-.gp-dpad-left { top: 34px; left: 0; }
-.gp-dpad-right { top: 34px; right: 0; }
+.gp-dpad-up { top: 0; left: 35px; }
+.gp-dpad-down { bottom: 0; left: 35px; }
+.gp-dpad-left { top: 35px; left: 0; }
+.gp-dpad-right { top: 35px; right: 0; }
 
-/* Botones de Acción ABXY (Fusión Xbox Classic + Neón Translúcido) */
+/* Botones de Acción ABXY (Diamante Anatómico Xbox Classic + Neón) */
 .gp-abxy-container {
     position: absolute;
-    bottom: 30px;
-    right: 28px;
-    width: 140px;
-    height: 140px;
+    bottom: calc(22px + var(--safe-bottom));
+    right: calc(22px + var(--safe-right));
+    width: 144px;
+    height: 144px;
     pointer-events: auto;
 }
 .gp-action-btn {
     position: absolute;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
     cursor: pointer;
     touch-action: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.08s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease;
 }
 .gp-action-btn:active, .gp-action-btn.pressed {
     transform: scale(0.92);
 }
 /* Botón A (Verde Neón Xbox) */
 .btn-xbox-a {
-    bottom: 0; left: 48px;
-    border: 2px solid #10b981;
+    bottom: 0; left: 49px;
+    border: 2px solid rgba(16, 185, 129, 0.6);
     color: #10b981;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 .btn-xbox-a.pressed, .btn-xbox-a:active {
-    background: rgba(16, 185, 129, 0.45);
-    box-shadow: 0 0 18px #10b981;
+    background: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 20px #10b981;
+    color: #ffffff;
 }
 /* Botón B (Rojo Neón Xbox) */
 .btn-xbox-b {
-    top: 48px; right: 0;
-    border: 2px solid #ef4444;
+    top: 49px; right: 0;
+    border: 2px solid rgba(239, 68, 68, 0.6);
     color: #ef4444;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 .btn-xbox-b.pressed, .btn-xbox-b:active {
-    background: rgba(239, 68, 68, 0.45);
-    box-shadow: 0 0 18px #ef4444;
+    background: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 20px #ef4444;
+    color: #ffffff;
 }
 /* Botón X (Azul Eléctrico Xbox) */
 .btn-xbox-x {
-    top: 48px; left: 0;
-    border: 2px solid #3b82f6;
+    top: 49px; left: 0;
+    border: 2px solid rgba(59, 130, 246, 0.6);
     color: #3b82f6;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 .btn-xbox-x.pressed, .btn-xbox-x:active {
-    background: rgba(59, 130, 246, 0.45);
-    box-shadow: 0 0 18px #3b82f6;
+    background: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 20px #3b82f6;
+    color: #ffffff;
 }
 /* Botón Y (Amarillo Oro Xbox) */
 .btn-xbox-y {
-    top: 0; left: 48px;
-    border: 2px solid #f59e0b;
+    top: 0; left: 49px;
+    border: 2px solid rgba(245, 158, 11, 0.6);
     color: #f59e0b;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
 .btn-xbox-y.pressed, .btn-xbox-y:active {
-    background: rgba(245, 158, 11, 0.45);
-    box-shadow: 0 0 18px #f59e0b;
+    background: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 20px #f59e0b;
+    color: #ffffff;
 }
 
-/* Gatillos y Bumpers (LB, RB, LT, RT) */
+/* Gatillos y Bumpers (LB, RB, LT, RT) con Safe Areas */
 .gp-shoulders-container {
     position: absolute;
-    top: 12px;
+    top: calc(8px + var(--safe-top));
     width: 100vw;
     display: flex;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 calc(14px + var(--safe-right)) 0 calc(14px + var(--safe-left));
     box-sizing: border-box;
     pointer-events: auto;
 }
@@ -1106,26 +1131,29 @@ try:
     gap: 8px;
 }
 .gp-shoulder-btn {
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(0, 255, 200, 0.4);
-    border-radius: 8px;
-    padding: 6px 14px;
-    color: #00ffc8;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 255, 200, 0.35);
+    border-radius: 9px;
+    padding: 7px 16px;
+    color: var(--aether-cyan);
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     touch-action: none;
+    transition: transform 0.08s ease, background 0.1s ease;
 }
 .gp-shoulder-btn.pressed, .gp-shoulder-btn:active {
-    background: rgba(0, 255, 200, 0.35);
-    box-shadow: 0 0 12px #00ffc8;
+    background: rgba(0, 255, 200, 0.45);
+    box-shadow: 0 0 14px var(--aether-cyan);
+    transform: scale(0.94);
 }
 
 /* Botones Centrales (Select / Start) */
 .gp-center-container {
     position: absolute;
-    top: 12px;
+    top: calc(8px + var(--safe-top));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -1133,20 +1161,23 @@ try:
     pointer-events: auto;
 }
 .gp-center-btn {
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    padding: 4px 10px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 7px;
+    padding: 5px 12px;
     color: #94a3b8;
     font-size: 10px;
     font-weight: 700;
     cursor: pointer;
     touch-action: none;
+    transition: transform 0.08s ease, background 0.1s ease;
 }
 .gp-center-btn.pressed, .gp-center-btn:active {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.35);
     color: #ffffff;
+    transform: scale(0.94);
 }
 
 /* ========================================================================== */
@@ -1184,9 +1215,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 }
 
 #cloud-toast {
-    position: fixed; top: 16px; left: 50%;
+    position: fixed; top: calc(16px + var(--safe-top)); left: 50%;
     transform: translateX(-50%) translateY(-20px);
-    background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(0, 255, 200, 0.4);
+    background: rgba(15, 23, 42, 0.90);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0, 255, 200, 0.35);
     color: #f8fafc; padding: 6px 16px; border-radius: 20px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 12px; font-weight: 600; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
@@ -1558,7 +1592,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // A. Control del Joystick Analógico Izquierdo Multi-Touch
     let stickTouchId = null, stickCenterX = 0, stickCenterY = 0;
-    const maxStickRadius = 45;
+    const maxStickRadius = 42;
 
     if (leftStickZone) {
         leftStickZone.addEventListener("touchstart", function(e) {
@@ -1566,6 +1600,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const t = e.changedTouches[i];
                 if (stickTouchId === null) {
                     stickTouchId = t.identifier;
+                    leftStickThumb.style.transition = "none";
                     const rect = leftStickZone.getBoundingClientRect();
                     stickCenterX = rect.left + rect.width / 2;
                     stickCenterY = rect.top + rect.height / 2;
@@ -1592,7 +1627,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === stickTouchId) {
                     stickTouchId = null;
+                    // Retorno elástico natural estilo resorte de mando físico
+                    leftStickThumb.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
                     leftStickThumb.style.transform = "translate3d(0, 0, 0)";
+                    setTimeout(() => { leftStickThumb.style.transition = "none"; }, 150);
                     gpAxesState[0] = 0;
                     gpAxesState[1] = 0;
                     emitGamepadState();
@@ -1615,10 +1653,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         const thumbY = Math.sin(angle) * clampedDist;
         leftStickThumb.style.transform = `translate3d(${thumbX}px, ${thumbY}px, 0)`;
 
-        // Normalización para el kernel de Linux (-1.0 a 1.0)
+        // Normalización para el kernel de Linux con zona muerta continua (Xbox TAK 12%)
         let normX = thumbX / maxStickRadius;
         let normY = thumbY / maxStickRadius;
-        if (Math.hypot(normX, normY) < 0.08) { normX = 0; normY = 0; } // Zona muerta
+        const mag = Math.hypot(normX, normY);
+        const deadzone = 0.12;
+        if (mag < deadzone) {
+            normX = 0;
+            normY = 0;
+        } else {
+            const scaledMag = (mag - deadzone) / (1.0 - deadzone);
+            normX = (normX / mag) * scaledMag;
+            normY = (normY / mag) * scaledMag;
+        }
         gpAxesState[0] = normX;
         gpAxesState[1] = normY;
         emitGamepadState();
@@ -1941,28 +1988,32 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
     if (btnZoom) attachButtonTap(btnZoom, function() { resetZoom(); });
 
-    // Alternar Aspect Ratio (16:9 con bandas o 20:9 Pantalla Completa Estirada)
+    // Alternar Aspect Ratio (16:9 con bandas o 20:9 Pantalla Completa Estirada) con persistencia
+    function applyAspect(stretched) {
+        isStretchedAspect = stretched;
+        localStorage.setItem("cloudpc_aspect", stretched ? "stretched" : "fit");
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        if (canvas) {
+            if (isStretchedAspect) {
+                canvas.style.objectFit = "fill";
+                canvas.style.width = "100vw";
+                canvas.style.height = "100vh";
+                if (labelAspect) labelAspect.innerText = "Pantalla: Estirada (20:9)";
+                if (btnAspect) btnAspect.classList.add("active-glow");
+            } else {
+                canvas.style.objectFit = "contain";
+                canvas.style.width = "100%";
+                canvas.style.height = "100%";
+                if (labelAspect) labelAspect.innerText = "Pantalla: Ajuste 16:9";
+                if (btnAspect) btnAspect.classList.remove("active-glow");
+            }
+        }
+    }
+
     if (btnAspect) {
         attachButtonTap(btnAspect, function() {
-            const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
-            isStretchedAspect = !isStretchedAspect;
-            if (canvas) {
-                if (isStretchedAspect) {
-                    canvas.style.objectFit = "fill";
-                    canvas.style.width = "100vw";
-                    canvas.style.height = "100vh";
-                    labelAspect.innerText = "Pantalla: Estirada (20:9)";
-                    btnAspect.classList.add("active-glow");
-                    showToast("Pantalla Completa Inmersiva (20:9)");
-                } else {
-                    canvas.style.objectFit = "contain";
-                    canvas.style.width = "100%";
-                    canvas.style.height = "100%";
-                    labelAspect.innerText = "Pantalla: Ajuste 16:9";
-                    btnAspect.classList.remove("active-glow");
-                    showToast("Relación Original 16:9");
-                }
-            }
+            applyAspect(!isStretchedAspect);
+            showToast(isStretchedAspect ? "Pantalla Completa Inmersiva (20:9)" : "Relación Original 16:9");
             hapticFeedback(20);
         });
     }
@@ -2060,6 +2111,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Inicializar estados guardados
     setInputMode(currentMode);
     if (isGamepadVisible) setGamepadVisibility(true);
+    const savedAspect = localStorage.getItem("cloudpc_aspect") === "stretched";
+    if (savedAspect) applyAspect(true);
 })();
 </script>
 """
