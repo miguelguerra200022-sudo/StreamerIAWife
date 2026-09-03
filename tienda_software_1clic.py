@@ -167,10 +167,14 @@ class TiendaApp:
         if not db_info:
             return
 
-        # 1. Caso A: Montado directamente en /kaggle/input (Arranque instantáneo en 0s)
-        input_dir = Path(f"/kaggle/input/{db_info['slug']}")
-        alt_input = Path(f"/kaggle/input/{db_info['slug'].replace('-', '_')}")
-        target_dir = input_dir if input_dir.exists() else (alt_input if alt_input.exists() else None)
+        # 1. Caso A: Montado directamente en /media/Cloud_Storage o /kaggle/input (Arranque instantáneo en 0s)
+        candidates = [
+            Path(f"/media/Cloud_Storage/{db_info['slug']}"),
+            Path(f"/media/Cloud_Storage/{db_info['slug'].replace('-', '_')}"),
+            Path(f"/kaggle/input/{db_info['slug']}"),
+            Path(f"/kaggle/input/{db_info['slug'].replace('-', '_')}")
+        ]
+        target_dir = next((c for c in candidates if c.exists()), None)
 
         if target_dir and (target_dir / "setup.py").exists():
             subprocess.Popen(f"python3 '{target_dir}/setup.py' &", shell=True)
@@ -196,7 +200,7 @@ class TiendaApp:
                 f"⚡ Activando acceso directo para: {db_info['name']}.\n\n"
                 f"• Categoría: {db_info['cat']}\n"
                 f"• Slug: {db_info['slug']}\n"
-                f"• Estado: Listo para conectar en Kaggle sin configuración del usuario."
+                f"• Estado: Listo para conectar en la nube sin configuración del usuario."
             )
 
     def desconectar_seleccionado(self):
@@ -205,8 +209,28 @@ class TiendaApp:
             messagebox.showwarning("Atención", "Selecciona un elemento para desconectar.")
             return
         item_vals = self.tree.item(sel[0])["values"]
+        db_id = int(str(item_vals[0]).replace("[", "").replace("]", ""))
+        db_info = next((d for d in self.catalog if d["id"] == db_id), None)
         name = item_vals[1]
-        messagebox.showinfo("Desconexión", f"🧹 '{name}' ha sido desconectado limpiamente del escritorio.")
+
+        # 1. Ejecutar script de desconexión si existe
+        disc_candidates = [
+            Path(f"/usr/local/bin/desconectar_database{db_id}.py"),
+            Path(f"/media/Cloud_Storage/{db_info['slug']}/desconectar_database{db_id}.py") if db_info else None,
+            Path(f"/kaggle/input/{db_info['slug']}/desconectar_database{db_id}.py") if db_info else None
+        ]
+        for dc in disc_candidates:
+            if dc and dc.exists():
+                subprocess.run(f"python3 '{dc}' 2>/dev/null || true", shell=True)
+                break
+
+        # 2. Limpiar carpeta correspondiente del Escritorio
+        desktop = Path.home() / "Desktop"
+        if desktop.exists():
+            for folder in desktop.glob(f"📁 [{db_id:02d}]*"):
+                shutil.rmtree(folder, ignore_errors=True)
+
+        messagebox.showinfo("Desconexión Exitosa", f"🧹 '{name}' ha sido desconectado limpiamente del escritorio.")
 
 def main():
     root = tk.Tk()

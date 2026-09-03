@@ -18,8 +18,15 @@ folder = DESKTOP_DIR / "📁 [01] Ubuntu Core & Redes Sociales"
 
 print("🧹 Desconectando Database 1 (Ubuntu Core & Suite Gamer)...", flush=True)
 
+# 1. Eliminar accesos directos
 if folder.exists():
-    shutil.rmtree(folder)
+    shutil.rmtree(folder, ignore_errors=True)
     print("  [✓] Accesos directos de Database 1 eliminados del Escritorio.", flush=True)
+
+# 2. Detener procesos en segundo plano de Database 1
+os.system("pkill -f gamepad_uinput_bridge.py 2>/dev/null || true")
+
+# 3. Refrescar escritorio XFCE
+os.system("xfdesktop --reload 2>/dev/null || true")
 
 print("🎉 [✓] Database 1 desconectada limpiamente.")

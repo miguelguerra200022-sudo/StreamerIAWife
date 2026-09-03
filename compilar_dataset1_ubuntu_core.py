@@ -84,6 +84,8 @@ os.environ["XDG_CACHE_HOME"] = "/tmp/.cache"
 
 print("⚡ [1/8] Activando DPKG Turbo (force-unsafe-io), Multi-Arch i386 y APT Pipelines...", flush=True)
 subprocess.run("dpkg --add-architecture i386", shell=True)
+subprocess.run("add-apt-repository -y universe >/dev/null 2>&1 || true", shell=True)
+subprocess.run("add-apt-repository -y multiverse >/dev/null 2>&1 || true", shell=True)
 subprocess.run("mkdir -p /etc/dpkg/dpkg.cfg.d && echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/02apt-speedup 2>/dev/null || true", shell=True)
 
 apt_turbo = (
@@ -128,13 +130,27 @@ chrome_wrapper = (
 Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
 subprocess.run("chmod +x /usr/local/bin/google-chrome", shell=True)
 
+# Wrapper Optimizado para Steam en Entornos Cloud/VNC (Evita cuelgues headless)
+steam_wrapper = (
+    "#!/bin/bash\n"
+    "export STEAM_RUNTIME_PREFER_HOST_LIBRARIES=0\n"
+    "export SDL_VIDEO_X11_DGAMOUSE=0\n"
+    "export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json:/etc/vulkan/icd.d/nvidia_icd.json\n"
+    "REAL_STEAM=\"/usr/games/steam\"\n"
+    "[ -x \"$REAL_STEAM\" ] || REAL_STEAM=\"/usr/bin/steam\"\n"
+    "exec \"$REAL_STEAM\" \"$@\"\n"
+)
+Path("/usr/local/bin/steam").write_text(steam_wrapper, encoding="utf-8")
+subprocess.run("chmod +x /usr/local/bin/steam 2>/dev/null || true", shell=True)
+
 # 5. Suite Gamer & Multi-Arch 32-bit (Steam, Proton, Lutris, Mandos)
 print("🎮 [4/8] Instalando Suite Gamer (Steam, Lutris, MangoHud, Gamemode, Runtimes 32-bit i386)...", flush=True)
 subprocess.run(
     "apt-get install -y -qq steam lutris mangohud gamemode xboxdrv joystick jstest-gtk evtest "
     "antimicrox bluez bluez-tools blueman xserver-xorg-input-all xserver-xorg-input-evdev "
     "xdotool xautomation libevdev2 python3-evdev python3-tk "
-    "libgl1-mesa-dri:i386 libgl1:i386 libvulkan1:i386 mesa-vulkan-drivers:i386 libasound2-plugins:i386",
+    "libgl1-mesa-dri:i386 libgl1:i386 libvulkan1:i386 mesa-vulkan-drivers:i386 libasound2-plugins:i386 || "
+    "(apt-get --fix-broken install -y -qq && apt-get install -y -qq steam mangohud gamemode antimicrox libgl1:i386 libvulkan1:i386)",
     shell=True
 )
 
@@ -159,9 +175,31 @@ try:
 except Exception:
     pass
 
-# 6. Audio Virtual Headless a 48kHz (PulseAudio Dummy Sink)
+# Configuración de Aceleración Gráfica Vulkan por Hardware (Nvidia Tesla T4 / DXVK / Proton)
+try:
+    Path("/etc/vulkan/icd.d").mkdir(parents=True, exist_ok=True)
+    nvidia_icd = {
+        "file_format_version": "1.0.0",
+        "ICD": {
+            "library_path": "libGLX_nvidia.so.0",
+            "api_version": "1.3.0"
+        }
+    }
+    Path("/etc/vulkan/icd.d/nvidia_icd.json").write_text(json.dumps(nvidia_icd, indent=2), encoding="utf-8")
+except Exception:
+    pass
+
+# 6. Audio Virtual Headless a 48kHz (PulseAudio Dummy Sink + Latencia Cero)
 print("🔊 [5/8] Configurando dispositivo de Audio Virtual Headless (PulseAudio 48kHz)...", flush=True)
 try:
+    # Optimización de buffer de audio a 48kHz (Elimina chasquidos en Discord y Sunshine)
+    pulse_daemon = Path("/etc/pulse/daemon.conf")
+    if pulse_daemon.exists():
+        p_d_txt = pulse_daemon.read_text(encoding="utf-8")
+        if "default-sample-rate = 48000" not in p_d_txt:
+            p_d_txt += "\ndefault-sample-rate = 48000\ndefault-sample-channels = 2\ndefault-fragments = 2\ndefault-fragment-size-msec = 10\nresample-method = speex-float-1\n"
+            pulse_daemon.write_text(p_d_txt, encoding="utf-8")
+
     pulse_cfg = Path("/etc/pulse/default.pa")
     if pulse_cfg.exists():
         pulse_text = pulse_cfg.read_text(encoding="utf-8")
@@ -172,6 +210,7 @@ try:
                 "set-default-sink DummyOutput\n"
                 "load-module module-virtual-source source_name=VirtualMic master=DummyOutput.monitor\n"
                 "set-default-source VirtualMic\n"
+                "load-module module-native-protocol-tcp auth-anonymous=1\n"
             )
             pulse_cfg.write_text(pulse_text + pulse_extra, encoding="utf-8")
 except Exception:
@@ -200,6 +239,22 @@ subprocess.run(
     "(apt-get install -y -qq /tmp/sunshine.deb || dpkg -i /tmp/sunshine.deb || apt-get install -f -y -qq) && rm -f /tmp/sunshine.deb || true",
     shell=True
 )
+
+# Pre-configuración de Sunshine para NVENC 60 FPS sin configuración manual
+try:
+    sunshine_dir = Path("/etc/sunshine")
+    sunshine_dir.mkdir(parents=True, exist_ok=True)
+    sunshine_cfg = (
+        "origin_pin_allowed = pc\n"
+        "encoder = nvenc\n"
+        "channels = 2\n"
+        "audio_sink = DummyOutput\n"
+        "min_log_level = info\n"
+        "fec_percentage = 20\n"
+    )
+    (sunshine_dir / "sunshine.conf").write_text(sunshine_cfg, encoding="utf-8")
+except Exception:
+    pass
 
 subprocess.run("curl -fsSL https://tailscale.com/install.sh | sh 2>/dev/null || true", shell=True)
 
@@ -274,20 +329,20 @@ if vnc_html_file.exists():
     vnc_html_content = vnc_html_file.read_text(encoding="utf-8", errors="ignore")
     dual_engine_snippet = """
 <style>
-#linu-virtual-cursor {
+#cloud-virtual-cursor {
     position: fixed; width: 24px; height: 24px; pointer-events: none;
     z-index: 999999; transform: translate3d(0, 0, 0); display: none;
     filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85)); will-change: transform;
 }
-body.tp-active #linu-virtual-cursor { display: block; }
+body.tp-active #cloud-virtual-cursor { display: block; }
 </style>
-<svg id="linu-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
+<svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
     <path d="M4 4l7 17 2.5-6.5L20 12 4 4z"/>
 </svg>
 <script>
 (function() {
     // 1. Motor de Trackpad Balístico Chrome Remote Desktop
-    const cursor = document.getElementById("linu-virtual-cursor");
+    const cursor = document.getElementById("cloud-virtual-cursor");
     let isTrackpadEnabled = true;
     let virtX = 960, virtY = 540;
     const screenW = 1920, screenH = 1080;
@@ -455,7 +510,12 @@ DATASET_DIR = Path(__file__).resolve().parent
 DESKTOP_DIR = Path.home() / "Desktop"
 DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
 
-# 1. Accesos Directos Principales en el Escritorio
+# 1. Asegurar Permisos de Periféricos y Audio Virtual
+os.system("chmod 666 /dev/uinput 2>/dev/null || true")
+os.system("pactl set-default-sink DummyOutput 2>/dev/null || true")
+os.system("pgrep -f gamepad_uinput_bridge.py >/dev/null || (python3 /usr/local/bin/gamepad_uinput_bridge.py >/dev/null 2>&1 &)")
+
+# 2. Accesos Directos Principales en el Escritorio
 main_shortcuts = {
     "Tienda_Software_1Clic.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
@@ -478,7 +538,7 @@ for name, cont in main_shortcuts.items():
     s.write_text(cont, encoding="utf-8")
     s.chmod(0o755)
 
-# 2. Carpeta Organizada de Suite Core y Redes
+# 3. Carpeta Organizada de Suite Core y Redes
 folder = DESKTOP_DIR / "📁 [01] Ubuntu Core & Redes Sociales"
 folder.mkdir(parents=True, exist_ok=True)
 
@@ -498,6 +558,11 @@ for name, cont in core_shortcuts.items():
     s = folder / name
     s.write_text(cont, encoding="utf-8")
     s.chmod(0o755)
+
+# Marcar lanzadores como confiables en XFCE
+os.system("chmod +x ~/Desktop/*.desktop ~/Desktop/*/*.desktop 2>/dev/null || true")
+os.system("gio set ~/Desktop/*.desktop metadata::trusted true 2>/dev/null || true")
+os.system("gio set ~/Desktop/*/*.desktop metadata::trusted true 2>/dev/null || true")
 
 print("🎉 [✓] ¡Database 1 (Ubuntu Core & Suite Gamer) 100% activa en 1 segundo!")
 """
