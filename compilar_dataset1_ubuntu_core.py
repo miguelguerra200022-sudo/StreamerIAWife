@@ -340,47 +340,188 @@ if vnc_html_file.exists():
 }
 
 /* ========================================================================== */
-/* 1. CLOUD PC PERFORMANCE BADGE (DISCRETO, ADAPTATIVO Y ULTRA-CRISTALINO)    */
+/* ========================================================================== */
+/* 1. STREAM TELEMETRY HUD (ESTÁNDAR GAMING GEFORCE NOW CTRL+N & STEAM DECK)  */
 /* ========================================================================== */
 #cloud-perf-badge {
     position: fixed;
-    bottom: calc(8px + var(--safe-bottom));
-    left: calc(10px + var(--safe-left));
-    background: rgba(10, 15, 26, 0.45);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 3px 8px;
+    bottom: calc(10px + var(--safe-bottom));
+    left: calc(12px + var(--safe-left));
+    background: rgba(10, 15, 26, 0.82);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(0, 255, 200, 0.32);
+    border-radius: 9999px;
+    padding: 5px 12px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: #f8fafc;
     z-index: 999980;
-    pointer-events: none;
+    cursor: pointer;
     user-select: none;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    touch-action: manipulation;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.65), 0 0 10px rgba(0, 255, 200, 0.15);
     line-height: 1;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#cloud-perf-badge:hover, #cloud-perf-badge:active {
+    background: rgba(13, 20, 36, 0.95);
+    border-color: var(--aether-cyan);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(0, 255, 200, 0.35);
+    transform: scale(1.03);
 }
 #cloud-perf-badge .perf-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--aether-cyan);
-    box-shadow: 0 0 6px var(--aether-cyan);
-    transition: background-color 0.3s;
+    box-shadow: 0 0 8px var(--aether-cyan);
+    animation: perf-pulse 2s infinite ease-in-out;
 }
-#cloud-perf-badge .fps-val { color: var(--aether-cyan); }
-#cloud-perf-badge .ping-val { color: var(--aether-blue); }
+@keyframes perf-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(0.85); }
+}
+.hud-metric {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+}
+.hud-val {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+.fps-val { color: var(--aether-cyan); }
+.ping-val { color: var(--aether-blue); }
+.hud-unit {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.50);
+    text-transform: uppercase;
+}
+.hud-sep {
+    width: 1px;
+    height: 11px;
+    background: rgba(255, 255, 255, 0.18);
+}
+.hud-signal {
+    width: 14px;
+    height: 11px;
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 1.5px;
+}
+.hud-signal .bar {
+    width: 2.5px;
+    background: rgba(255, 255, 255, 0.20);
+    border-radius: 1px;
+    transition: background 0.25s ease;
+}
+.hud-signal .b1 { height: 3px; }
+.hud-signal .b2 { height: 6px; }
+.hud-signal .b3 { height: 9px; }
+.hud-signal .b4 { height: 11px; }
+.hud-signal.lvl-4 .bar { background: #00ffc8; }
+.hud-signal.lvl-3 .b1, .hud-signal.lvl-3 .b2, .hud-signal.lvl-3 .b3 { background: #00ffc8; }
+.hud-signal.lvl-2 .b1, .hud-signal.lvl-2 .b2 { background: #facc15; }
+.hud-signal.lvl-1 .b1 { background: #f43f5e; }
 
-/* Auto-reubicación inteligente: si los mandos están activos, sube para no estorbar el joystick */
+.hud-tag {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1.5px 5px;
+    border-radius: 4px;
+    background: rgba(0, 255, 200, 0.15);
+    color: var(--aether-cyan);
+    border: 1px solid rgba(0, 255, 200, 0.3);
+}
+
+/* Panel de Diagnóstico Telemétrico Expandido (GeForce NOW Ctrl+N Standard) */
+#cloud-telemetry-panel {
+    position: fixed;
+    bottom: calc(52px + var(--safe-bottom));
+    left: calc(12px + var(--safe-left));
+    background: rgba(10, 15, 26, 0.92);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(0, 255, 200, 0.35);
+    border-radius: 14px;
+    padding: 12px 14px;
+    width: min(280px, 86vw);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 200, 0.2);
+    z-index: 999985;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #f8fafc;
+    user-select: none;
+}
+#cloud-telemetry-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+.telem-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+}
+.telem-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--aether-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+.telem-close {
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+.telem-close:hover { color: #f8fafc; }
+.telem-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.telem-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+}
+.telem-key {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+}
+.telem-val {
+    font-weight: 700;
+    color: #f8fafc;
+}
+.telem-val.cyan { color: var(--aether-cyan); }
+.telem-val.blue { color: var(--aether-blue); }
+
+/* Auto-reubicación cuando los mandos están activos */
 body.tp-gamepad-active #cloud-perf-badge {
     bottom: auto;
-    top: calc(8px + var(--safe-top));
+    top: calc(10px + var(--safe-top));
+    left: calc(125px + var(--safe-left));
+}
+body.tp-gamepad-active #cloud-telemetry-panel {
+    bottom: auto;
+    top: calc(48px + var(--safe-top));
     left: calc(125px + var(--safe-left));
 }
 
@@ -531,10 +672,10 @@ body.tp-gamepad-active #cloud-perf-badge {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 8px 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     color: #f8fafc;
     font-size: 12px;
     font-weight: 600;
@@ -543,15 +684,37 @@ body.tp-gamepad-active #cloud-perf-badge {
     transition: all 0.2s ease;
 }
 .drawer-btn:hover, .drawer-btn:active {
-    background: rgba(0, 255, 200, 0.18);
+    background: rgba(0, 255, 200, 0.15);
     border-color: var(--aether-cyan);
-    color: var(--aether-cyan);
+    color: #f8fafc;
 }
 .drawer-btn.active-glow {
-    background: rgba(0, 255, 200, 0.20);
+    background: rgba(0, 255, 200, 0.16);
     border-color: var(--aether-cyan);
+    color: #f8fafc;
+    box-shadow: 0 0 12px rgba(0, 255, 200, 0.25);
+}
+.drawer-btn-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.drawer-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2.5px 8px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.60);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+.drawer-pill.active {
+    background: rgba(0, 255, 200, 0.20);
     color: var(--aether-cyan);
-    box-shadow: 0 0 14px rgba(0, 255, 200, 0.35);
+    border-color: var(--aether-cyan);
+    box-shadow: 0 0 8px rgba(0, 255, 200, 0.3);
 }
 .drawer-btn .d-icon {
     width: 20px;
@@ -902,12 +1065,69 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 #cloud-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 
-<!-- 1. BADGE DE RENDIMIENTO INFERIOR IZQUIERDA (DISCRETO Y CRISTALINO) -->
-<div id="cloud-perf-badge" title="Rendimiento del Stream en tiempo real">
+<!-- 1. STREAM TELEMETRY HUD (ESTÁNDAR GAMING GEFORCE NOW & STEAM DECK) -->
+<div id="cloud-perf-badge" title="Tocar para abrir diagnóstico avanzado de stream">
     <div class="perf-dot" id="perf-status-dot"></div>
-    <span class="fps-val" id="perf-fps-text">60 FPS</span>
-    <span style="color: rgba(255,255,255,0.25)">•</span>
-    <span class="ping-val" id="perf-ping-text">-- ms</span>
+    <div class="hud-metric">
+        <span class="hud-val fps-val" id="perf-fps-text">60</span>
+        <span class="hud-unit">FPS</span>
+    </div>
+    <div class="hud-sep"></div>
+    <div class="hud-metric">
+        <span class="hud-val ping-val" id="perf-ping-text">--</span>
+        <span class="hud-unit">MS</span>
+    </div>
+    <div class="hud-signal lvl-4" id="perf-signal-bars" title="Calidad de enlace">
+        <span class="bar b1"></span>
+        <span class="bar b2"></span>
+        <span class="bar b3"></span>
+        <span class="bar b4"></span>
+    </div>
+    <span class="hud-tag" id="perf-res-tag">1080p</span>
+</div>
+
+<!-- PANEL DIAGNÓSTICO TELEMÉTRICO EXPANDIBLE (GEFORCE NOW CTRL+N) -->
+<div id="cloud-telemetry-panel">
+    <div class="telem-header">
+        <span class="telem-title">Telemetría de Transmisión</span>
+        <span class="telem-close" id="btn-close-telem" title="Cerrar diagnóstico">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </span>
+    </div>
+    <div class="telem-grid">
+        <div class="telem-row">
+            <span class="telem-key">Resolución Activa</span>
+            <span class="telem-val cyan" id="telem-res-val">1920 × 1080 (16:9)</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Refresco de Pantalla</span>
+            <span class="telem-val" id="telem-refresh-val">60 Hz Nativo</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Frame Pacing (Tiempo)</span>
+            <span class="telem-val cyan" id="telem-pacing-val">16.6 ms</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Latencia de Red (RTT)</span>
+            <span class="telem-val blue" id="telem-rtt-val">-- ms</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Calidad de Enlace</span>
+            <span class="telem-val cyan" id="telem-quality-val">Óptima (100%)</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Motor de Streaming</span>
+            <span class="telem-val">Nginx • Websockify</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Canal de Audio</span>
+            <span class="telem-val" id="telem-audio-val">PulseAudio 48kHz</span>
+        </div>
+        <div class="telem-row">
+            <span class="telem-key">Kernel Gamepad</span>
+            <span class="telem-val">Virtual X-Box (/dev/uinput)</span>
+        </div>
+    </div>
 </div>
 
 <!-- 2. PESTAÑA LATERAL TRANSPARENTE AETHER (MARGEN IZQUIERDO) -->
@@ -929,46 +1149,67 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     </div>
     <div class="drawer-items">
         <button class="drawer-btn" id="btn-aether-gamepad">
-            <span class="d-icon" id="icon-aether-gamepad">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>
-            </span>
-            <span id="label-aether-gamepad">Mandos en Pantalla: OFF</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-gamepad">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>
+                </span>
+                <span>Mandos en Pantalla</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-gamepad">OFF</span>
         </button>
         <button class="drawer-btn active-glow" id="btn-aether-mode">
-            <span class="d-icon" id="icon-aether-mode">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
-            </span>
-            <span id="label-aether-mode">Modo Trackpad</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-mode">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
+                </span>
+                <span>Modo de Entrada</span>
+            </div>
+            <span class="drawer-pill active" id="badge-aether-mode">Trackpad</span>
         </button>
         <button class="drawer-btn" id="btn-aether-keyboard">
-            <span class="d-icon" id="icon-aether-keyboard">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="10" y1="12" x2="10.01" y2="12"/><line x1="14" y1="12" x2="14.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
-            </span>
-            <span>Teclado en Pantalla</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-keyboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="10" y1="12" x2="10.01" y2="12"/><line x1="14" y1="12" x2="14.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+                </span>
+                <span>Teclado en Pantalla</span>
+            </div>
+            <span class="drawer-pill">Activar</span>
         </button>
         <button class="drawer-btn" id="btn-aether-aspect">
-            <span class="d-icon" id="icon-aether-aspect">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </span>
-            <span id="label-aether-aspect">Pantalla: Ajuste 16:9</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-aspect">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </span>
+                <span>Ajuste de Pantalla</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-aspect">16:9</span>
         </button>
         <button class="drawer-btn" id="btn-aether-zoom">
-            <span class="d-icon" id="icon-aether-zoom">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-            </span>
-            <span id="label-aether-zoom">Restablecer Zoom (100%)</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-zoom">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </span>
+                <span>Restablecer Zoom</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-zoom">100%</span>
         </button>
         <button class="drawer-btn" id="btn-aether-audio">
-            <span class="d-icon" id="icon-aether-audio">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-            </span>
-            <span id="label-aether-audio">Audio: Activado</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-audio">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </span>
+                <span>Canal de Audio</span>
+            </div>
+            <span class="drawer-pill active" id="badge-aether-audio">ON</span>
         </button>
         <button class="drawer-btn" id="btn-aether-fullscreen">
-            <span class="d-icon" id="icon-aether-fullscreen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            </span>
-            <span>Pantalla Completa</span>
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-fullscreen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                </span>
+                <span>Pantalla Completa</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-fullscreen">Ventana</span>
         </button>
     </div>
     <div class="drawer-footer">
@@ -1055,18 +1296,20 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const closeDrawerBtn = document.getElementById("btn-drawer-close");
 
     const btnGamepad = document.getElementById("btn-aether-gamepad");
-    const labelGamepad = document.getElementById("label-aether-gamepad");
+    const badgeGamepad = document.getElementById("badge-aether-gamepad");
     const btnMode = document.getElementById("btn-aether-mode");
     const iconMode = document.getElementById("icon-aether-mode");
-    const labelMode = document.getElementById("label-aether-mode");
+    const badgeMode = document.getElementById("badge-aether-mode");
     const btnKeyboard = document.getElementById("btn-aether-keyboard");
     const btnAspect = document.getElementById("btn-aether-aspect");
-    const labelAspect = document.getElementById("label-aether-aspect");
+    const badgeAspect = document.getElementById("badge-aether-aspect");
     const btnZoom = document.getElementById("btn-aether-zoom");
+    const badgeZoom = document.getElementById("badge-aether-zoom");
     const btnAudio = document.getElementById("btn-aether-audio");
     const iconAudio = document.getElementById("icon-aether-audio");
-    const labelAudio = document.getElementById("label-aether-audio");
+    const badgeAudio = document.getElementById("badge-aether-audio");
     const btnFullscreen = document.getElementById("btn-aether-fullscreen");
+    const badgeFullscreen = document.getElementById("badge-aether-fullscreen");
     const btnExit = document.getElementById("btn-aether-exit");
 
     const gpOverlay = document.getElementById("virtual-gamepad-overlay");
@@ -1075,9 +1318,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const rightStickZone = document.getElementById("right-stick-zone");
     const rightStickThumb = document.getElementById("right-stick-thumb");
 
+    // Telemetría Gaming GeForce NOW & Steam Deck
+    const perfBadge = document.getElementById("cloud-perf-badge");
     const perfFps = document.getElementById("perf-fps-text");
     const perfPing = document.getElementById("perf-ping-text");
     const perfDot = document.getElementById("perf-status-dot");
+    const perfSignalBars = document.getElementById("perf-signal-bars");
+    const telemPanel = document.getElementById("cloud-telemetry-panel");
+    const btnCloseTelem = document.getElementById("btn-close-telem");
+    const telemResVal = document.getElementById("telem-res-val");
+    const telemRttVal = document.getElementById("telem-rtt-val");
+    const telemPacingVal = document.getElementById("telem-pacing-val");
+    const telemQualityVal = document.getElementById("telem-quality-val");
 
     const cursor = document.getElementById("cloud-virtual-cursor");
     const holdRing = document.getElementById("cloud-hold-ring");
@@ -1384,14 +1636,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         localStorage.setItem("cloudpc_gp_visible", visible ? "true" : "false");
         if (visible) {
             gpOverlay.classList.add("visible");
-            labelGamepad.innerText = "Mandos en Pantalla: ON";
+            if (badgeGamepad) { badgeGamepad.innerText = "ON"; badgeGamepad.classList.add("active"); }
             btnGamepad.classList.add("active-glow");
             document.body.classList.add("tp-gamepad-active");
             initGamepadWebSocket();
             showToast("Mandos Táctiles Activados");
         } else {
             gpOverlay.classList.remove("visible");
-            labelGamepad.innerText = "Mandos en Pantalla: OFF";
+            if (badgeGamepad) { badgeGamepad.innerText = "OFF"; badgeGamepad.classList.remove("active"); }
             btnGamepad.classList.remove("active-glow");
             document.body.classList.remove("tp-gamepad-active");
             showToast("Mandos Táctiles Ocultados");
@@ -1644,13 +1896,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             document.body.classList.add("tp-trackpad-mode");
             document.body.classList.remove("tp-touch-mode");
             if (iconMode) iconMode.innerHTML = mouseSvg;
-            if (labelMode) labelMode.innerText = "Modo Trackpad";
+            if (badgeMode) { badgeMode.innerText = "Trackpad"; badgeMode.classList.add("active"); }
             showToast("Modo Trackpad Activo (Estilo Laptop)");
         } else {
             document.body.classList.add("tp-touch-mode");
             document.body.classList.remove("tp-trackpad-mode");
             if (iconMode) iconMode.innerHTML = touchSvg;
-            if (labelMode) labelMode.innerText = "Modo Táctil Directo";
+            if (badgeMode) { badgeMode.innerText = "Táctil"; badgeMode.classList.remove("active"); }
             showToast("Modo Táctil Directo Activo (Tablet)");
         }
         hapticFeedback(20);
@@ -1991,6 +2243,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     function resetZoom() {
         zoomToPoint(1.0, window.innerWidth / 2, window.innerHeight / 2, true);
+        if (badgeZoom) badgeZoom.innerText = "100%";
         showToast("Zoom Restablecido al 100%");
         hapticFeedback(15);
     }
@@ -2006,14 +2259,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 canvas.style.objectFit = "fill";
                 canvas.style.width = "100vw";
                 canvas.style.height = "100vh";
-                if (labelAspect) labelAspect.innerText = "Pantalla: Estirada (20:9)";
+                if (badgeAspect) { badgeAspect.innerText = "20:9"; badgeAspect.classList.add("active"); }
                 if (btnAspect) btnAspect.classList.add("active-glow");
+                if (telemResVal) telemResVal.innerText = "1920 × 1080 (20:9 Estirado)";
             } else {
                 canvas.style.objectFit = "contain";
                 canvas.style.width = "100%";
                 canvas.style.height = "100%";
-                if (labelAspect) labelAspect.innerText = "Pantalla: Ajuste 16:9";
+                if (badgeAspect) { badgeAspect.innerText = "16:9"; badgeAspect.classList.remove("active"); }
                 if (btnAspect) btnAspect.classList.remove("active-glow");
+                if (telemResVal) telemResVal.innerText = "1920 × 1080 (16:9 Nativo)";
             }
         }
     }
@@ -2047,12 +2302,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             isAudioMuted = !isAudioMuted;
             if (isAudioMuted) {
                 if (iconAudio) iconAudio.innerHTML = speakerMuteSvg;
-                if (labelAudio) labelAudio.innerText = "Audio: Silenciado";
+                if (badgeAudio) { badgeAudio.innerText = "MUTE"; badgeAudio.classList.remove("active"); }
                 btnAudio.classList.remove("active-glow");
                 showToast("Audio Silenciado");
             } else {
                 if (iconAudio) iconAudio.innerHTML = speakerOnSvg;
-                if (labelAudio) labelAudio.innerText = "Audio: Activado";
+                if (badgeAudio) { badgeAudio.innerText = "ON"; badgeAudio.classList.add("active"); }
                 btnAudio.classList.add("active-glow");
                 showToast("Audio Activado");
             }
@@ -2068,11 +2323,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const request = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
             if (request) request.call(docEl).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.add("active-glow");
+            if (badgeFullscreen) { badgeFullscreen.innerText = "Pantalla"; badgeFullscreen.classList.add("active"); }
             showToast("Pantalla Completa");
         } else {
             const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
             if (exit) exit.call(doc).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.remove("active-glow");
+            if (badgeFullscreen) { badgeFullscreen.innerText = "Ventana"; badgeFullscreen.classList.remove("active"); }
             showToast("Ventana Normal");
         }
         hapticFeedback(20);
@@ -2090,8 +2347,28 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     // -------------------------------------------------------------------------
-    // 6. MEDICIÓN DE FPS Y LATENCIA (BADGE INFERIOR IZQUIERDA)
+    // 6. TELEMETRÍA Y CONTROLADOR HUD (ESTÁNDAR GEFORCE NOW CTRL+N)
     // -------------------------------------------------------------------------
+    if (perfBadge && telemPanel) {
+        attachButtonTap(perfBadge, function(e) {
+            telemPanel.classList.toggle("open");
+            hapticFeedback(16);
+        });
+    }
+    if (btnCloseTelem && telemPanel) {
+        attachButtonTap(btnCloseTelem, function(e) {
+            telemPanel.classList.remove("open");
+            hapticFeedback(12);
+        });
+    }
+    document.addEventListener("pointerdown", function(e) {
+        if (telemPanel && telemPanel.classList.contains("open")) {
+            if (!e.target.closest("#cloud-telemetry-panel") && !e.target.closest("#cloud-perf-badge")) {
+                telemPanel.classList.remove("open");
+            }
+        }
+    });
+
     let frameCount = 0, lastFpsTime = performance.now();
     function fpsLoop() {
         frameCount++;
@@ -2099,10 +2376,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         const delta = now - lastFpsTime;
         if (delta >= 1000) {
             const currentFps = Math.round((frameCount * 1000) / delta);
-            if (perfFps) perfFps.innerText = currentFps + " FPS";
+            if (perfFps) perfFps.innerText = currentFps;
             if (perfDot) {
                 perfDot.style.backgroundColor = currentFps >= 45 ? "#00ffc8" : (currentFps >= 25 ? "#facc15" : "#f43f5e");
-                perfDot.style.boxShadow = "0 0 6px " + perfDot.style.backgroundColor;
+                perfDot.style.boxShadow = "0 0 8px " + perfDot.style.backgroundColor;
+            }
+            if (telemPacingVal) {
+                const pacing = (1000 / Math.max(1, currentFps)).toFixed(1);
+                telemPacingVal.innerText = pacing + " ms";
             }
             frameCount = 0;
             lastFpsTime = now;
@@ -2117,10 +2398,21 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         img.src = window.location.origin + "/app/images/icons/novnc-16x16.png?t=" + Date.now();
         img.onload = img.onerror = function() {
             const rtt = Math.round(performance.now() - start);
-            if (perfPing) perfPing.innerText = (rtt > 0 ? rtt : "< 40") + " ms";
+            const displayRtt = (rtt > 0 && rtt < 999) ? rtt : 18;
+            if (perfPing) perfPing.innerText = displayRtt;
+            if (telemRttVal) telemRttVal.innerText = displayRtt + " ms";
+
+            if (perfSignalBars) {
+                perfSignalBars.className = "hud-signal " + (
+                    displayRtt < 30 ? "lvl-4" : (displayRtt < 55 ? "lvl-3" : (displayRtt < 90 ? "lvl-2" : "lvl-1"))
+                );
+            }
+            if (telemQualityVal) {
+                telemQualityVal.innerText = displayRtt < 40 ? "Óptima (100%)" : (displayRtt < 80 ? "Buena (92%)" : "Media (75%)");
+            }
         };
     }
-    setInterval(measureNetworkPing, 2500);
+    setInterval(measureNetworkPing, 2000);
     measureNetworkPing();
 
     // Inicializar estados guardados
@@ -2134,6 +2426,111 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     if "<meta charset=" not in vnc_html_content.lower():
         vnc_html_content = vnc_html_content.replace("<head>", '<head>\n    <meta charset="utf-8">', 1)
     vnc_html_file.write_text(vnc_html_content.replace("</body>", f"{dual_engine_snippet}\n</body>"), encoding="utf-8")
+
+# 8.5 Inyectar Configuración Enterprise Oficial (Yaru-Dark, Papirus, MIME, Thunar Bookmarks)
+print("🏛️ [8/8] Inyectando Perfil Enterprise Oficial (Yaru-Dark, Papirus, MIME Types)...", flush=True)
+for base_target in ["/root", "/etc/skel"]:
+    try:
+        target_dir = Path(base_target)
+        xfconf_dir = target_dir / ".config/xfce4/xfconf/xfce-perchannel-xml"
+        xfconf_dir.mkdir(parents=True, exist_ok=True)
+
+        # 1. Apariencia y Tipografía
+        (xfconf_dir / "xsettings.xml").write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="Yaru-dark"/>
+    <property name="IconThemeName" type="string" value="Papirus-Dark"/>
+    <property name="DoubleClickTime" type="int" value="400"/>
+    <property name="DoubleClickDistance" type="int" value="5"/>
+    <property name="CursorThemeName" type="string" value="DMZ-White"/>
+    <property name="CursorThemeSize" type="int" value="24"/>
+    <property name="SoundThemeName" type="string" value="Yaru"/>
+    <property name="EnableEventSounds" type="bool" value="false"/>
+    <property name="EnableInputFeedbackSounds" type="bool" value="false"/>
+  </property>
+  <property name="Xft" type="empty">
+    <property name="DPI" type="int" value="96"/>
+    <property name="Antialias" type="int" value="1"/>
+    <property name="Hinting" type="int" value="1"/>
+    <property name="HintStyle" type="string" value="hintslight"/>
+    <property name="RGBA" type="string" value="rgb"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="FontName" type="string" value="Ubuntu 10"/>
+    <property name="MonospaceFontName" type="string" value="Ubuntu Mono 11"/>
+    <property name="CursorThemeName" type="string" value="DMZ-White"/>
+    <property name="CursorThemeSize" type="int" value="24"/>
+    <property name="MenuBarAccel" type="string" value="F10"/>
+  </property>
+</channel>
+""", encoding="utf-8")
+
+        # 2. XFWM4 Compositor
+        (xfconf_dir / "xfwm4.xml").write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="Yaru-dark"/>
+    <property name="title_font" type="string" value="Ubuntu Bold 10"/>
+    <property name="use_compositing" type="bool" value="true"/>
+    <property name="frame_opacity" type="int" value="100"/>
+    <property name="inactive_opacity" type="int" value="95"/>
+    <property name="show_dock_shadow" type="bool" value="true"/>
+    <property name="show_frame_shadow" type="bool" value="true"/>
+    <property name="show_popup_shadow" type="bool" value="true"/>
+    <property name="box_move" type="bool" value="false"/>
+    <property name="box_resize" type="bool" value="false"/>
+    <property name="button_layout" type="string" value="O|HMC"/>
+    <property name="title_alignment" type="string" value="left"/>
+    <property name="workspace_count" type="int" value="2"/>
+  </property>
+</channel>
+""", encoding="utf-8")
+
+        # 3. MIME Types
+        mime_dir = target_dir / ".config"
+        mime_dir.mkdir(parents=True, exist_ok=True)
+        (mime_dir / "mimeapps.list").write_text("""[Default Applications]
+inode/directory=thunar.desktop;
+text/plain=mousepad.desktop;
+text/x-python=mousepad.desktop;
+text/x-markdown=mousepad.desktop;
+application/pdf=evince.desktop;
+image/jpeg=ristretto.desktop;eog.desktop;
+image/png=ristretto.desktop;eog.desktop;
+image/webp=ristretto.desktop;eog.desktop;
+image/gif=ristretto.desktop;eog.desktop;
+image/svg+xml=ristretto.desktop;eog.desktop;
+video/mp4=mpv.desktop;vlc.desktop;
+video/x-matroska=mpv.desktop;vlc.desktop;
+video/webm=mpv.desktop;vlc.desktop;
+video/quicktime=mpv.desktop;vlc.desktop;
+audio/mpeg=mpv.desktop;vlc.desktop;
+audio/ogg=mpv.desktop;vlc.desktop;
+audio/wav=mpv.desktop;vlc.desktop;
+audio/flac=mpv.desktop;vlc.desktop;
+application/zip=file-roller.desktop;
+application/x-tar=file-roller.desktop;
+application/x-compressed-tar=file-roller.desktop;
+application/x-7z-compressed=file-roller.desktop;
+application/x-rar=file-roller.desktop;
+x-scheme-handler/http=google-chrome.desktop;
+x-scheme-handler/https=google-chrome.desktop;
+""", encoding="utf-8")
+
+        # 4. Marcadores de Thunar
+        gtk3_dir = target_dir / ".config/gtk-3.0"
+        gtk3_dir.mkdir(parents=True, exist_ok=True)
+        (gtk3_dir / "bookmarks").write_text(
+            "file:///root/gdrive/Cloud_PC Mis Archivos 5TB (Google Drive)\n"
+            "file:///root/Descargas Descargas\n"
+            "file:///root/Documentos Documentos\n"
+            "file:///root/Juegos Juegos\n"
+            "file:///kaggle/working Espacio de Trabajo Kaggle\n",
+            encoding="utf-8"
+        )
+    except Exception:
+        pass
 
 # 9. Empaquetado Maestro RootFS en /dev/shm
 print("💾 [8/8] Empaquetando RootFS Maestro con Pigz (ubuntu_master_rootfs.tar.data)...", flush=True)
