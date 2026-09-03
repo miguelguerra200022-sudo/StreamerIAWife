@@ -2027,10 +2027,10 @@ if not shutil.which("steam") or not shutil.which("obs"):
         pass
 
     print("     -> Descargando Discord...", flush=True)
-    subprocess.run("wget -q 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && apt-get install -y -qq /tmp/discord.deb", shell=True)
+    subprocess.run("wget -q --timeout=15 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/discord.deb 2>/dev/null || true", shell=True)
     
     print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
-    subprocess.run("wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb || (wget -q 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && apt-get install -y -qq /tmp/sunshine.deb) || true", shell=True)
+    subprocess.run("wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null || (wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null) || true", shell=True)
     
     print("  ✅ [✓] Ecosistema 'Modo Dios' instalado exitosamente.", flush=True)
 
@@ -2419,18 +2419,14 @@ char *getenv(const char *name) {
         pass
 
     # --------------------------------------------------------------------------
-    # 7. BLACKHOLE DE RED: Bloquear Servidor de Metadatos de Google Cloud y DNS
+    # 7. SANITIZACIÓN DE HOSTS (Seguro para DNS)
     # --------------------------------------------------------------------------
     try:
-        subprocess.run("iptables -I OUTPUT -d 169.254.169.254 -j DROP 2>/dev/null || true", shell=True)
-        subprocess.run("ip route add blackhole 169.254.169.254 2>/dev/null || true", shell=True)
         hosts_file = Path("/etc/hosts")
         if hosts_file.exists():
             h_text = hosts_file.read_text(encoding="utf-8", errors="ignore")
             if "metadata.google.internal" not in h_text:
-                hosts_file.write_text(h_text + "\n127.0.0.1 metadata.google.internal metadata\n", encoding="utf-8")
-        resolv_file = Path("/etc/resolv.conf")
-        resolv_file.write_text("nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions edns0 trust-ad\n", encoding="utf-8")
+                hosts_file.write_text(h_text + "\n127.0.0.1 metadata.google.internal\n", encoding="utf-8")
     except Exception:
         pass
 
