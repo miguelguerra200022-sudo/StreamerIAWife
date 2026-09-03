@@ -52,7 +52,7 @@ FALLBACK_CATALOG = [
 def cargar_catalogo_remoto():
     """Descarga el catálogo más reciente en tiempo real (Google Play Store Model)"""
     try:
-        req = urllib.request.Request(CATALOG_URL, headers={"User-Agent": "Mozilla/5.0 LinuWaifuStore/1.0"})
+        req = urllib.request.Request(CATALOG_URL, headers={"User-Agent": "Mozilla/5.0 CloudPCStore/1.0"})
         with urllib.request.urlopen(req, timeout=3) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode("utf-8"))

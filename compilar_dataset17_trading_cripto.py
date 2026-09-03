@@ -167,7 +167,7 @@ if Path("/root/gdrive").exists():
         (Path.home() / ".bitmonero", "Master_Monero"),
         (Path.home() / "freqtrade" / "user_data", "Freqtrade_UserData")
     ]:
-        g_target = Path("/root/gdrive/PC_Kaggle") / dst_name
+        g_target = Path("/root/gdrive/Cloud_PC") / dst_name
         g_target.mkdir(parents=True, exist_ok=True)
         if not src_dir.exists():
             src_dir.parent.mkdir(parents=True, exist_ok=True)

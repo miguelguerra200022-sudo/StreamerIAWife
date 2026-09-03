@@ -176,7 +176,7 @@ shortcuts = {
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=📁 Biblioteca de Juegos PC (Google Drive 5TB)\\n"
         "Comment=Instala tus juegos de Steam y Epic directo en tus 5TB en la nube\\n"
-        "Exec=thunar /root/gdrive/PC_Kaggle/Juegos\\n"
+        "Exec=thunar /root/gdrive/Cloud_PC/Juegos\\n"
         "Icon=folder-games\\nTerminal=false\\nCategories=Game;\\n"
     )
 }

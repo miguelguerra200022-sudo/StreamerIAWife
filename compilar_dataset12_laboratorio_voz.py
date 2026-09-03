@@ -209,7 +209,7 @@ if not rvc_link.exists():
     except Exception:
 # 1.1 Sincronización de Salidas de Audio y Modelos de Voz a Google Drive (5TB)
 if Path("/root/gdrive").exists():
-    gdrive_voice = Path("/root/gdrive/PC_Kaggle/Voice_Outputs")
+    gdrive_voice = Path("/root/gdrive/Cloud_PC/Voice_Outputs")
     gdrive_voice.mkdir(parents=True, exist_ok=True)
     local_voice_out = Path.home() / "Voice_Outputs"
     if not local_voice_out.exists():

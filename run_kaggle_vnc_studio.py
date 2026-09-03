@@ -4,7 +4,7 @@
 ================================================================================
 🐧 UBUNTU CLOUD PC: DESKTOP EDITION (CORE & SOCIAL HUB)
 ================================================================================
-1. [PASO 1]: Conecta y monta Google Drive (5TB - Carpeta PC_Kaggle) inmediatamente.
+1. [PASO 1]: Conecta y monta Google Drive (5TB - Carpeta Cloud_PC) inmediatamente.
 2. [PASO 2]: Instala la Suite Oficial Completa de Ubuntu:
    - Escritorio XFCE 4.18 con tema Yaru-Dark.
    - Suite ofimática LibreOffice completa (Writer, Calc, Impress).
@@ -210,7 +210,7 @@ def orquestar_dual_gpu():
 # ==============================================================================
 def instalar_acelerador_descargas():
     """Configura Aria2c multi-hilo con 16 conexiones paralelas para saturar conexiones Gigabit de Google."""
-    subprocess.run("which aria2c >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq aria2 >> /kaggle/working/linuwaifu_system.log 2>&1 || true)", shell=True)
+    subprocess.run("which aria2c >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq aria2 >> /kaggle/working/cloudpc_system.log 2>&1 || true)", shell=True)
     turbo_script = """#!/bin/bash
 URL="$1"
 DEST="${2:-/root/Descargas}"
@@ -257,7 +257,7 @@ def acelerar_instalaciones_y_desempaquetado():
         pass
 
     # 3. Reemplazar gzip con pigz paralelo si está disponible para usar todos los núcleos en .tar.gz y .deb
-    subprocess.run("which pigz >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq pigz >> /kaggle/working/linuwaifu_system.log 2>&1 || true)", shell=True)
+    subprocess.run("which pigz >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq pigz >> /kaggle/working/cloudpc_system.log 2>&1 || true)", shell=True)
     if Path("/usr/bin/pigz").exists():
         try:
             subprocess.run("ln -sf /usr/bin/pigz /usr/local/bin/gzip 2>/dev/null || true", shell=True)
@@ -306,7 +306,7 @@ subprocess.run("git config --global user.email 'miguelguerra200022@gmail.com' &&
 def auto_save_user_state():
     try:
         # 1. Guardar copia de credenciales y lista de paquetes directamente en Google Drive
-        target_gdrive_dir = Path("/root/gdrive/PC_Kaggle/system_state")
+        target_gdrive_dir = Path("/root/gdrive/Cloud_PC/system_state")
         if target_gdrive_dir.exists():
             if GDRIVE_CONF_FILE.exists():
                 try:
@@ -343,15 +343,15 @@ def auto_save_user_state():
                     log("Auto-guardado del sistema a Google Drive (FUSE Directo) completado.", "SUCCESS")
                 except Exception:
                     subprocess.run(
-                        f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                        f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
                         shell=True
                     )
             else:
                 subprocess.run(
-                    f"rclone copy {save_tar} gdrive:PC_Kaggle/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                    f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
                     shell=True
                 )
-                log("Auto-guardado del sistema a Google Drive (PC_Kaggle) completado.", "SUCCESS")
+                log("Auto-guardado del sistema a Google Drive (Cloud_PC) completado.", "SUCCESS")
     except Exception as e:
         log(f"Error en auto-guardado: {e}", "ERROR")
 
@@ -377,10 +377,10 @@ subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=Tru
 subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
 
 # ==============================================================================
-# 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (PC_Kaggle)
+# 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (Cloud_PC)
 # ==============================================================================
 t_step1 = time.time()
-print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta PC_Kaggle) y Kaggle API...", flush=True)
+print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta Cloud_PC) y Kaggle API...", flush=True)
 log("Iniciando conexión de Google Drive...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -405,18 +405,18 @@ if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
         pass
 
 # Instalar rclone y fuse3 rápido desde Dataset o apt si no están presentes
-subprocess.run("which rclone >/dev/null 2>&1 || (dpkg -i /kaggle/input/*/apt_archives/rclone*.deb /kaggle/input/*/apt_archives/fuse3*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/linuwaifu_system.log 2>&1))", shell=True)
+subprocess.run("which rclone >/dev/null 2>&1 || (dpkg -i /kaggle/input/*/apt_archives/rclone*.deb /kaggle/input/*/apt_archives/fuse3*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq rclone fuse3 >> /kaggle/working/cloudpc_system.log 2>&1))", shell=True)
 
 # Variables de entorno para redirigir prefijos pesados de Wine, Steam y Proton a 5TB de Google Drive
-os.environ["WINEPREFIX"] = "/root/gdrive/PC_Kaggle/wineprefix"
-os.environ["STEAM_EXTRA_COMPAT_TOOLS_PATHS"] = "/root/gdrive/PC_Kaggle/compatibilitytools.d"
+os.environ["WINEPREFIX"] = "/root/gdrive/Cloud_PC/wineprefix"
+os.environ["STEAM_EXTRA_COMPAT_TOOLS_PATHS"] = "/root/gdrive/Cloud_PC/compatibilitytools.d"
 os.environ["PROTON_LOG_DIR"] = "/tmp"
 os.environ["NPM_CONFIG_CACHE"] = "/tmp/.npm"
 
 # Iniciar Rclone Mount (FUSE) con reintentos automáticos y protección contra rate-limits de Google Drive
 def mount_gdrive_resilient():
     os.makedirs("/root/gdrive", exist_ok=True)
-    os.makedirs("/root/gdrive/PC_Kaggle", exist_ok=True)
+    os.makedirs("/root/gdrive/Cloud_PC", exist_ok=True)
     os.makedirs("/tmp/rclone_cache", exist_ok=True)
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     for attempt in range(1, 4):
@@ -625,7 +625,7 @@ else:
 
     # Descargar o reutilizar Google Chrome Oficial desde caché de Drive
     chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
-    gdrive_cache_deb = Path("/root/gdrive/PC_Kaggle/Cache/google-chrome-stable_current_amd64.deb")
+    gdrive_cache_deb = Path("/root/gdrive/Cloud_PC/Cache/google-chrome-stable_current_amd64.deb")
 
     if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
         print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
@@ -641,7 +641,7 @@ else:
         )
         if chrome_deb.exists() and chrome_deb.stat().st_size > 50_000_000 and os.path.exists("/root/gdrive"):
             try:
-                os.makedirs("/root/gdrive/PC_Kaggle/Cache", exist_ok=True)
+                os.makedirs("/root/gdrive/Cloud_PC/Cache", exist_ok=True)
                 shutil.copy2(chrome_deb, gdrive_cache_deb)
             except Exception:
                 pass
@@ -672,7 +672,7 @@ try:
         content = vnc_html.read_text(encoding="utf-8")
         if "linu-hud-overlay" not in content:
             hud_code = """
-<!-- LINUWAIFU PERFORMANCE HUD OVERLAY (DRAGGABLE & COLLAPSIBLE 60 FPS / PING MONITOR) -->
+<!-- CLOUD PC PERFORMANCE HUD OVERLAY (DRAGGABLE & COLLAPSIBLE 60 FPS / PING MONITOR) -->
 <style>
 #linu-hud-overlay {
     position: fixed;
@@ -1079,12 +1079,12 @@ print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", f
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
     backup_tar = STATE_DIR / "ubuntu_user_state.tar.gz"
-    direct_backup = Path("/root/gdrive/PC_Kaggle/system_state/ubuntu_user_state.tar.gz")
+    direct_backup = Path("/root/gdrive/Cloud_PC/system_state/ubuntu_user_state.tar.gz")
     if direct_backup.exists() and direct_backup.stat().st_size > 1000:
         shutil.copy2(direct_backup, backup_tar)
     else:
         subprocess.run(
-            f"rclone copy gdrive:PC_Kaggle/system_state/ubuntu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
+            f"rclone copy gdrive:Cloud_PC/system_state/ubuntu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
             shell=True
         )
     if backup_tar.exists() and backup_tar.stat().st_size > 1000:
@@ -1184,37 +1184,37 @@ print(f"  ⏱️ [Paso 2/5 Completado en {time.time() - t_step2:.1f}s]", flush=T
 t_step3 = time.time()
 print("🎨 [3/5] Estableciendo persistencia con Google Drive y apariencia Yaru-Dark...", flush=True)
 
-# 1. Sincronización Simbólica Inteligente (Master Folders en PC_Kaggle)
+# 1. Sincronización Simbólica Inteligente (Master Folders en Cloud_PC)
 sync_dirs = {
-    "/root/.config": "/root/gdrive/PC_Kaggle/Master_Config",
-    "/root/.local/share": "/root/gdrive/PC_Kaggle/Master_LocalData",
-    "/root/.local/state": "/root/gdrive/PC_Kaggle/Master_State",
-    "/root/.mozilla": "/root/gdrive/PC_Kaggle/Master_Mozilla",
-    "/root/.ssh": "/root/gdrive/PC_Kaggle/Master_SSH",
-    "/root/.pki": "/root/gdrive/PC_Kaggle/Master_PKI",
-    "/root/Descargas": "/root/gdrive/PC_Kaggle/Descargas",
-    "/root/Documentos": "/root/gdrive/PC_Kaggle/Documentos",
-    "/root/Juegos": "/root/gdrive/PC_Kaggle/Juegos",
-    "/root/Escritorio": "/root/gdrive/PC_Kaggle/Escritorio",
-    "/root/.ollama": "/root/gdrive/PC_Kaggle/Master_Ollama",
-    "/root/.openwebui": "/root/gdrive/PC_Kaggle/Master_OpenWebUI",
-    "/root/.lmms": "/root/gdrive/PC_Kaggle/Master_LMMS",
-    "/root/.electrum": "/root/gdrive/PC_Kaggle/Master_Electrum",
-    "/root/.sparrow": "/root/gdrive/PC_Kaggle/Master_Sparrow",
-    "/root/.bitmonero": "/root/gdrive/PC_Kaggle/Master_Monero",
-    "/root/ComfyUI_Outputs": "/root/gdrive/PC_Kaggle/ComfyUI_Outputs",
-    "/root/Fooocus_Outputs": "/root/gdrive/PC_Kaggle/Fooocus_Outputs",
-    "/root/Voice_Outputs": "/root/gdrive/PC_Kaggle/Voice_Outputs",
-    "/root/Blender_Projects": "/root/gdrive/PC_Kaggle/Blender_Projects",
-    "/root/Projects": "/root/gdrive/PC_Kaggle/Projects",
-    "/root/Freqtrade_UserData": "/root/gdrive/PC_Kaggle/Freqtrade_UserData",
-    "/root/Security_Reports": "/root/gdrive/PC_Kaggle/Security_Reports",
-    "/root/Universidad_Ciencia": "/root/gdrive/PC_Kaggle/Universidad_Ciencia",
-    "/root/Tesis_y_Papers": "/root/gdrive/PC_Kaggle/Universidad_Ciencia/Tesis_y_Papers",
-    "/root/Anime_Manga_Media": "/root/gdrive/PC_Kaggle/Anime_Manga_Media",
-    "/root/Manga_Descargas": "/root/gdrive/PC_Kaggle/Anime_Manga_Media/Manga_Descargas",
-    "/root/Android_Cloud_Phone": "/root/gdrive/PC_Kaggle/Android_Cloud_Phone",
-    "/root/Android_APKs": "/root/gdrive/PC_Kaggle/Android_Cloud_Phone/APKs_Instalados",
+    "/root/.config": "/root/gdrive/Cloud_PC/Master_Config",
+    "/root/.local/share": "/root/gdrive/Cloud_PC/Master_LocalData",
+    "/root/.local/state": "/root/gdrive/Cloud_PC/Master_State",
+    "/root/.mozilla": "/root/gdrive/Cloud_PC/Master_Mozilla",
+    "/root/.ssh": "/root/gdrive/Cloud_PC/Master_SSH",
+    "/root/.pki": "/root/gdrive/Cloud_PC/Master_PKI",
+    "/root/Descargas": "/root/gdrive/Cloud_PC/Descargas",
+    "/root/Documentos": "/root/gdrive/Cloud_PC/Documentos",
+    "/root/Juegos": "/root/gdrive/Cloud_PC/Juegos",
+    "/root/Escritorio": "/root/gdrive/Cloud_PC/Escritorio",
+    "/root/.ollama": "/root/gdrive/Cloud_PC/Master_Ollama",
+    "/root/.openwebui": "/root/gdrive/Cloud_PC/Master_OpenWebUI",
+    "/root/.lmms": "/root/gdrive/Cloud_PC/Master_LMMS",
+    "/root/.electrum": "/root/gdrive/Cloud_PC/Master_Electrum",
+    "/root/.sparrow": "/root/gdrive/Cloud_PC/Master_Sparrow",
+    "/root/.bitmonero": "/root/gdrive/Cloud_PC/Master_Monero",
+    "/root/ComfyUI_Outputs": "/root/gdrive/Cloud_PC/ComfyUI_Outputs",
+    "/root/Fooocus_Outputs": "/root/gdrive/Cloud_PC/Fooocus_Outputs",
+    "/root/Voice_Outputs": "/root/gdrive/Cloud_PC/Voice_Outputs",
+    "/root/Blender_Projects": "/root/gdrive/Cloud_PC/Blender_Projects",
+    "/root/Projects": "/root/gdrive/Cloud_PC/Projects",
+    "/root/Freqtrade_UserData": "/root/gdrive/Cloud_PC/Freqtrade_UserData",
+    "/root/Security_Reports": "/root/gdrive/Cloud_PC/Security_Reports",
+    "/root/Universidad_Ciencia": "/root/gdrive/Cloud_PC/Universidad_Ciencia",
+    "/root/Tesis_y_Papers": "/root/gdrive/Cloud_PC/Universidad_Ciencia/Tesis_y_Papers",
+    "/root/Anime_Manga_Media": "/root/gdrive/Cloud_PC/Anime_Manga_Media",
+    "/root/Manga_Descargas": "/root/gdrive/Cloud_PC/Anime_Manga_Media/Manga_Descargas",
+    "/root/Android_Cloud_Phone": "/root/gdrive/Cloud_PC/Android_Cloud_Phone",
+    "/root/Android_APKs": "/root/gdrive/Cloud_PC/Android_Cloud_Phone/APKs_Instalados",
 }
 
 if Path("/root/gdrive").exists():
@@ -1283,6 +1283,48 @@ try:
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-home -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-filesystem -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
+
+    # --------------------------------------------------------------------------
+    # Personalización Profesional de la Terminal (Cero mención de Kaggle)
+    # --------------------------------------------------------------------------
+    subprocess.run("hostname cloud-workstation 2>/dev/null || true; echo 'cloud-workstation' > /etc/hostname 2>/dev/null || true", shell=True)
+    
+    bash_custom = (
+        "\n# Configuración de Terminal Profesional Cloud PC\n"
+        "export PS1='\\[\\033[01;32m\\]gamer@cloud-workstation\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n"
+        "if [ \"$PWD\" = \"/kaggle/working\" ] || [ \"$PWD\" = \"/kaggle\" ]; then\n"
+        "    cd /root/Escritorio 2>/dev/null || cd /root\n"
+        "fi\n"
+        "alias ll='ls -la --color=auto'\n"
+        "alias la='ls -A --color=auto'\n"
+        "alias l='ls -CF --color=auto'\n"
+    )
+    for b_path in ["/root/.bashrc", "/etc/bash.bashrc", "/etc/skel/.bashrc"]:
+        try:
+            bp = Path(b_path)
+            if bp.exists():
+                txt = bp.read_text(encoding="utf-8", errors="ignore")
+                if "gamer@cloud-workstation" not in txt:
+                    bp.write_text(txt + bash_custom, encoding="utf-8")
+            else:
+                bp.write_text(bash_custom, encoding="utf-8")
+        except Exception:
+            pass
+
+    # Banner Oficial de Bienvenida en la Terminal (MOTD)
+    motd_text = (
+        "================================================================================\n"
+        "🚀 Bienvenido a tu Cloud PC Workstation (Ubuntu 22.04 LTS Pro)\n"
+        "🎮 GPU: Nvidia Tesla T4 Dual (16GB VRAM) | RAM: 32GB High-Speed | NVMe SSD\n"
+        "💾 Persistencia en la Nube: Activa en tu carpeta 'Cloud_PC' de Google Drive\n"
+        "⚡ Streaming de Latencia Cero: WebRTC / Sunshine 60 FPS Activo\n"
+        "================================================================================\n\n"
+    )
+    try:
+        Path("/etc/motd").write_text(motd_text, encoding="utf-8")
+        Path("/etc/issue").write_text("Ubuntu 22.04 LTS Pro - Cloud Workstation \\n \\l\n\n", encoding="utf-8")
+    except Exception:
+        pass
 except Exception:
     pass
 
@@ -1312,7 +1354,7 @@ subprocess.run(f"cp {BASE_DIR}/salvar_y_salir.py /usr/local/bin/salvar_y_salir.p
 subprocess.run(f"cp {BASE_DIR}/test_velocidad_real.py /usr/local/bin/test_velocidad_real.py 2>/dev/null || true", shell=True)
 
 # Iniciar Gamepad UInput Bridge en segundo plano para detección de mandos inmediata
-subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/linuwaifu_gamepad.log 2>&1", shell=True)
+subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
 
 # Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
 shortcuts = {
@@ -1382,7 +1424,7 @@ shortcuts = {
         "Type=Application\n"
         "Name=📁 Mis Archivos 5TB (Google Drive)\n"
         "Comment=Carpeta persistente en la nube con 5TB para juegos y archivos\n"
-        "Exec=thunar /root/gdrive/PC_Kaggle\n"
+        "Exec=thunar /root/gdrive/Cloud_PC\n"
         "Path=/root\n"
         "Icon=folder-remote\n"
         "Terminal=false\n"
@@ -1635,9 +1677,9 @@ if web_tunnel_wifi:
     try:
         Path("/tmp/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
         Path("/kaggle/working/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
-        if Path("/root/gdrive/PC_Kaggle/system_state").exists():
-            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
-        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+        if Path("/root/gdrive/Cloud_PC/system_state").exists():
+            Path("/root/gdrive/Cloud_PC/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:Cloud_PC/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
         
         # Enviar notificación automática a tu celular por Telegram
         try:
@@ -1783,7 +1825,7 @@ print(f"🔑 Usuario Web: admin         Contraseña: {VNC_PASSWORD}")
 print("=" * 78, flush=True)
 
 print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
-print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en /root/gdrive.", flush=True)
+print("   • 🎮 Tus 5TB de Google Drive (Cloud_PC) montados en /root/gdrive.", flush=True)
 print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
 print("   • 💬 Redes Sociales & Comunicación: Discord, Telegram, Spotify, Chrome listos.", flush=True)
 print("   • 🛍️ Tienda de Software y Juegos 1-Clic en el Escritorio.", flush=True)

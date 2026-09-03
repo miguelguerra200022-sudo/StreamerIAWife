@@ -143,7 +143,7 @@ if not sf_link.exists():
         os.symlink(DATASET_DIR / "sample_packs_wav", sf_link)
 # 1.1 Persistencia de Proyectos Musicales en Google Drive (5TB)
 if Path("/root/gdrive").exists():
-    gdrive_lmms = Path("/root/gdrive/PC_Kaggle/Master_LMMS")
+    gdrive_lmms = Path("/root/gdrive/Cloud_PC/Master_LMMS")
     gdrive_lmms.mkdir(parents=True, exist_ok=True)
     local_lmms = Path.home() / ".lmmsrc.xml"
     local_lmms_dir = Path.home() / "lmms"

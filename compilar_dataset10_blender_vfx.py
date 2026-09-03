@@ -138,7 +138,7 @@ for v in ["4.2", "4.1", "4.0", "3.6"]:
             shutil.copy2(addon_zip, scripts_dir / addon_zip.name)
         except Exception:
 # 1.1 Persistencia de Proyectos 3D y Renders en Google Drive (5TB)
-blender_p = Path("/root/gdrive/PC_Kaggle/Blender_Projects")
+blender_p = Path("/root/gdrive/Cloud_PC/Blender_Projects")
 if Path("/root/gdrive").exists():
     blender_p.mkdir(parents=True, exist_ok=True)
     local_bp = Path.home() / "Blender_Projects"

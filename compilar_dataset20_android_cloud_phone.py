@@ -18,7 +18,7 @@ Prepara, descarga, configura y deja lista para compilar:
 6. AI Android & Gamer Copilot (`ai_android_gamer_copilot.py`): Asistente inteligente conectado a la Database 11
    (Ollama Dual-GPU) para configuración de sensibilidad gamer, creador de macros de farmeo, auditor de APKs
    y soporte para desarrollo en Kotlin/Flutter.
-7. Persistencia Total en Google Drive (5TB - Carpeta PC_Kaggle/Android_Cloud_Phone).
+7. Persistencia Total en Google Drive (5TB - Carpeta Cloud_PC/Android_Cloud_Phone).
 8. Script de activación en 1 segundo (setup.py) para 'miguelguerra26/ubuntu-android-cloud-phone'.
 ================================================================================
 """
@@ -258,9 +258,9 @@ if copilot_src.exists():
     except Exception:
         pass
 
-# 1.1 Persistencia Total en Google Drive (5TB - PC_Kaggle/Android_Cloud_Phone)
+# 1.1 Persistencia Total en Google Drive (5TB - Cloud_PC/Android_Cloud_Phone)
 if Path("/root/gdrive").exists():
-    gdrive_android = Path("/root/gdrive/PC_Kaggle/Android_Cloud_Phone")
+    gdrive_android = Path("/root/gdrive/Cloud_PC/Android_Cloud_Phone")
     gdrive_android.mkdir(parents=True, exist_ok=True)
     
     subdirs = [
@@ -356,7 +356,7 @@ shortcuts = {
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=📁 Mis Archivos Android (5TB Google Drive)\\n"
         "Comment=Acceso directo a tus APKs descargados, datos de juegos OBB y backups de WhatsApp en tu nube\\n"
-        "Exec=thunar /root/gdrive/PC_Kaggle/Android_Cloud_Phone || thunar /root/gdrive\\n"
+        "Exec=thunar /root/gdrive/Cloud_PC/Android_Cloud_Phone || thunar /root/gdrive\\n"
         "Icon=drive-harddisk\\nTerminal=false\\nCategories=System;Office;\\n"
     )
 }
@@ -404,6 +404,6 @@ print("   • Tienda Oficial Privada Aurora Store (Google Play) + F-Droid + Apto
 print("   • Perfiles de Juego Competitivo: Free Fire, Roblox, CODM, Brawl Stars")
 print("   • JADX GUI + APKTool + Bytecode Viewer (Ingeniería Inversa & Modding)")
 print("   • AI Android Gamer Copilot integrado con Database 11 (Sensibilidad & Macros)")
-print("   • Persistencia total en 5TB de Google Drive (PC_Kaggle/Android_Cloud_Phone)")
+print("   • Persistencia total en 5TB de Google Drive (Cloud_PC/Android_Cloud_Phone)")
 print("   • Script de activación en 1 segundo (setup.py) con 11 accesos directos")
 print("=" * 78, flush=True)

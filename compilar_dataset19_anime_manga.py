@@ -16,7 +16,7 @@ Prepara, descarga, configura y deja lista para compilar:
 6. AI Otaku & Media Copilot (`ai_otaku_copilot.py`): Asistente inteligente conectado a la Database 11
    (Ollama Dual-GPU) para recomendación por tropos, resumen de arcos argumentales, explicación de lore
    y traducción de modismos japoneses en manga.
-7. Persistencia Total en Google Drive (5TB - Carpeta PC_Kaggle/Anime_Manga_Media).
+7. Persistencia Total en Google Drive (5TB - Carpeta Cloud_PC/Anime_Manga_Media).
 8. Script de activación en 1 segundo (setup.py) para 'miguelguerra26/ubuntu-anime-manga-media'.
 ================================================================================
 """
@@ -222,9 +222,9 @@ if copilot_src.exists():
     except Exception:
         pass
 
-# 1.1 Persistencia Total en Google Drive (5TB - PC_Kaggle/Anime_Manga_Media)
+# 1.1 Persistencia Total en Google Drive (5TB - Cloud_PC/Anime_Manga_Media)
 if Path("/root/gdrive").exists():
-    gdrive_media = Path("/root/gdrive/PC_Kaggle/Anime_Manga_Media")
+    gdrive_media = Path("/root/gdrive/Cloud_PC/Anime_Manga_Media")
     gdrive_media.mkdir(parents=True, exist_ok=True)
     
     subdirs = [
@@ -320,7 +320,7 @@ shortcuts = {
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=📁 Mis Descargas de Anime & Manga (5TB Google Drive)\\n"
         "Comment=Acceso directo a tus mangas descargados, capitulos offline y OSTs guardados permanentemente\\n"
-        "Exec=thunar /root/gdrive/PC_Kaggle/Anime_Manga_Media || thunar /root/gdrive\\n"
+        "Exec=thunar /root/gdrive/Cloud_PC/Anime_Manga_Media || thunar /root/gdrive\\n"
         "Icon=drive-harddisk\\nTerminal=false\\nCategories=AudioVideo;Graphics;\\n"
     )
 }
@@ -368,6 +368,6 @@ print("   • Kodi Media Center (Centro multimedia completo para cine en casa)")
 print("   • YACReader (Lector profesional de historietas CBR, CBZ y PDF)")
 print("   • Miru Anime Tracker (Streaming sincronizado con AniList y MyAnimeList)")
 print("   • AI Otaku Copilot integrado con Database 11 (Recomendaciones, Lore y Traductor)")
-print("   • Persistencia total en 5TB de Google Drive (PC_Kaggle/Anime_Manga_Media)")
+print("   • Persistencia total en 5TB de Google Drive (Cloud_PC/Anime_Manga_Media)")
 print("   • Script de activación en 1 segundo (setup.py) con 11 accesos directos")
 print("=" * 78, flush=True)

@@ -15,7 +15,7 @@ Prepara, descarga, configura y deja lista para compilar:
 5. AI Academic Researcher (`ai_academic_researcher.py`): Asistente de investigación académica
    conectado a la Database 11 (Ollama Dual-GPU) para explicación socrática, revisión de papers,
    traducción a fórmulas LaTeX y generación automática de tarjetas Anki.
-6. Persistencia Total en Google Drive (5TB - Carpeta PC_Kaggle/Universidad_Ciencia).
+6. Persistencia Total en Google Drive (5TB - Carpeta Cloud_PC/Universidad_Ciencia).
 7. Script de activación en 1 segundo (setup.py) para 'miguelguerra26/ubuntu-student-university-hub'.
 ================================================================================
 """
@@ -261,9 +261,9 @@ if researcher_src.exists():
     except Exception:
         pass
 
-# 1.1 Persistencia Total en Google Drive (5TB - PC_Kaggle/Universidad_Ciencia)
+# 1.1 Persistencia Total en Google Drive (5TB - Cloud_PC/Universidad_Ciencia)
 if Path("/root/gdrive").exists():
-    gdrive_academic = Path("/root/gdrive/PC_Kaggle/Universidad_Ciencia")
+    gdrive_academic = Path("/root/gdrive/Cloud_PC/Universidad_Ciencia")
     gdrive_academic.mkdir(parents=True, exist_ok=True)
     
     subdirs = [
@@ -367,7 +367,7 @@ shortcuts = {
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=📁 Mis Trabajos de Investigación (5TB Google Drive)\\n"
         "Comment=Acceso directo a tus tesis, articulos, notas y apuntes guardados permanentemente\\n"
-        "Exec=thunar /root/gdrive/PC_Kaggle/Universidad_Ciencia || thunar /root/gdrive\\n"
+        "Exec=thunar /root/gdrive/Cloud_PC/Universidad_Ciencia || thunar /root/gdrive\\n"
         "Icon=drive-harddisk\\nTerminal=false\\nCategories=Education;Office;\\n"
     )
 }
@@ -415,6 +415,6 @@ print("   • Zotero (Gestor Bibliográfico) + Calibre Pro (Biblioteca Digital P
 print("   • Avogadro (Modelado Molecular 3D) + PyMOL + Stellarium 3D (Planetario)")
 print("   • Xournal++ (Toma de apuntes y anotador de PDFs)")
 print("   • AI Academic Researcher integrado con Database 11 (Ollama Dual-GPU)")
-print("   • Persistencia total en 5TB de Google Drive (PC_Kaggle/Universidad_Ciencia)")
+print("   • Persistencia total en 5TB de Google Drive (Cloud_PC/Universidad_Ciencia)")
 print("   • Script de activación en 1 segundo (setup.py) con 12 accesos directos")
 print("=" * 78, flush=True)

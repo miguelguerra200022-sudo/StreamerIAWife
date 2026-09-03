@@ -167,7 +167,7 @@ if copilot_src.exists():
     try:
         subprocess.run(f"ln -sf '{copilot_src}' '{copilot_dst}' 2>/dev/null || true", shell=True)
 # 1.1 Persistencia de Reportes y Auditorías en Google Drive (5TB)
-sec_dir = Path("/root/gdrive/PC_Kaggle/Security_Reports")
+sec_dir = Path("/root/gdrive/Cloud_PC/Security_Reports")
 if Path("/root/gdrive").exists():
     sec_dir.mkdir(parents=True, exist_ok=True)
     local_sec = Path.home() / "Security_Reports"

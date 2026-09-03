@@ -140,7 +140,7 @@ if bashrc.exists():
         bashrc.write_text(content + dev_paths, encoding="utf-8")
 
 # 2.1 Persistencia de Proyectos de Código en Google Drive (5TB)
-proj_dir = Path("/root/gdrive/PC_Kaggle/Projects")
+proj_dir = Path("/root/gdrive/Cloud_PC/Projects")
 if Path("/root/gdrive").exists():
     proj_dir.mkdir(parents=True, exist_ok=True)
     local_proj = Path.home() / "Projects"

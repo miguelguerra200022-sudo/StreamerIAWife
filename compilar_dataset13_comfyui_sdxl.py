@@ -193,10 +193,10 @@ if comfy_models.exists():
     pass
 
 # 1.1 Persistencia de Imagenes en Google Drive (5TB)
-out_dir = "/root/gdrive/PC_Kaggle/ComfyUI_Outputs"
+out_dir = "/root/gdrive/Cloud_PC/ComfyUI_Outputs"
 if Path("/root/gdrive").exists():
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    Path("/root/gdrive/PC_Kaggle/Fooocus_Outputs").mkdir(parents=True, exist_ok=True)
+    Path("/root/gdrive/Cloud_PC/Fooocus_Outputs").mkdir(parents=True, exist_ok=True)
 
 # 2. Crear Accesos Directos en el Escritorio
 shortcuts = {
