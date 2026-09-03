@@ -1404,10 +1404,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     function initGamepadWebSocket() {
         if (gpSocket && gpSocket.readyState === WebSocket.OPEN) return;
         const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = proto + "//" + window.location.hostname + ":6081";
+        const host = window.location.host;
+        const wsPath = (window.location.port === "6081") ? (proto + "//" + window.location.hostname + ":6081") : (proto + "//" + host + "/gamepad");
         try {
-            gpSocket = new WebSocket(wsUrl);
-            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado."); };
+            gpSocket = new WebSocket(wsPath);
+            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado:", wsPath); };
+            gpSocket.onerror = function() {
+                if (!wsPath.includes(":6081")) {
+                    try {
+                        const fallbackUrl = proto + "//" + window.location.hostname + ":6081";
+                        gpSocket = new WebSocket(fallbackUrl);
+                    } catch(e) {}
+                }
+            };
         } catch(e) {}
     }
 
@@ -2743,15 +2752,66 @@ if not novnc_proxy_bin.exists():
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1 || true", shell=True)
 subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
 
-# Servidor Web noVNC con WebSocket en puerto 6080
-subprocess.Popen([
-    "/kaggle/working/noVNC/utils/novnc_proxy",
-    "--vnc", "localhost:5900",
-    "--listen", "6080",
-    "--web", "/kaggle/working/noVNC"
-], env=env, stdout=log_vnc, stderr=log_vnc)
+# Servidor Web noVNC y Gateway Unificado (Puerto 6080)
+# Permite servir noVNC en '/' y Gamepad WebSocket en '/gamepad' a través de un solo túnel
+has_nginx = (subprocess.run("which nginx >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq nginx >/dev/null 2>&1)", shell=True).returncode == 0)
 
-# Esperar a que noVNC esté escuchando en puerto 6080
+if has_nginx:
+    try:
+        # Iniciar noVNC en puerto interno 6082
+        subprocess.Popen([
+            "/kaggle/working/noVNC/utils/novnc_proxy",
+            "--vnc", "localhost:5900",
+            "--listen", "6082",
+            "--web", "/kaggle/working/noVNC"
+        ], env=env, stdout=log_vnc, stderr=log_vnc)
+        wait_for_port(6082, timeout=8)
+
+        # Configurar Nginx para rutear /gamepad -> 6081 y / -> 6082
+        nginx_conf = (
+            "user root;\nworker_processes auto;\npid /run/nginx.pid;\nevents { worker_connections 1024; }\n"
+            "http {\n"
+            "  include /etc/nginx/mime.types;\ndefault_type application/octet-stream;\nsendfile on;\naccess_log off;\n"
+            "  server {\n"
+            "    listen 6080;\n"
+            "    location /gamepad {\n"
+            "      proxy_pass http://127.0.0.1:6081;\n"
+            "      proxy_http_version 1.1;\n"
+            "      proxy_set_header Upgrade $http_upgrade;\n"
+            "      proxy_set_header Connection \"upgrade\";\n"
+            "      proxy_read_timeout 86400s;\n"
+            "    }\n"
+            "    location / {\n"
+            "      proxy_pass http://127.0.0.1:6082;\n"
+            "      proxy_http_version 1.1;\n"
+            "      proxy_set_header Upgrade $http_upgrade;\n"
+            "      proxy_set_header Connection \"upgrade\";\n"
+            "      proxy_read_timeout 86400s;\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+        Path("/etc/nginx/nginx.conf").write_text(nginx_conf, encoding="utf-8")
+        subprocess.run("nginx -s stop 2>/dev/null || true; nginx 2>/dev/null || true", shell=True)
+        log("Gateway Nginx activo: noVNC + Gamepad unificados en puerto 6080")
+    except Exception as e_ng:
+        log(f"Fallback noVNC directo: {e_ng}", "WARNING")
+        subprocess.Popen([
+            "/kaggle/working/noVNC/utils/novnc_proxy",
+            "--vnc", "localhost:5900",
+            "--listen", "6080",
+            "--web", "/kaggle/working/noVNC"
+        ], env=env, stdout=log_vnc, stderr=log_vnc)
+else:
+    # Fallback directo si nginx no estuviera disponible
+    subprocess.Popen([
+        "/kaggle/working/noVNC/utils/novnc_proxy",
+        "--vnc", "localhost:5900",
+        "--listen", "6080",
+        "--web", "/kaggle/working/noVNC"
+    ], env=env, stdout=log_vnc, stderr=log_vnc)
+
+# Esperar a que el puerto 6080 esté listo
 novnc_ready = wait_for_port(6080, timeout=10)
 
 # Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)

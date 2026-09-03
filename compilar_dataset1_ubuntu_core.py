@@ -109,7 +109,7 @@ if Path("/usr/bin/pigz").exists():
 
 # 3. Instalación de Suite de Escritorio XFCE 4.18 y VNC
 print("📦 [2/8] Instalando Suite de Escritorio XFCE 4.18, Servidores Gráficos y Utilidades...", flush=True)
-subprocess.run("apt-get install -y -qq xfce4 xfce4-terminal xfce4-goodies dbus-x11 x11-xserver-utils x11-utils xterm tigervnc-standalone-server tigervnc-common websockify", shell=True)
+subprocess.run("apt-get install -y -qq xfce4 xfce4-terminal xfce4-goodies dbus-x11 x11-xserver-utils x11-utils xterm tigervnc-standalone-server tigervnc-common websockify nginx", shell=True)
 
 # 4. Instalación de Google Chrome Oficial x64 con Wrapper GPU
 print("🌐 [3/8] Instalando Google Chrome Oficial con aceleración por hardware GPU (Vulkan/VA-API)...", flush=True)
@@ -1060,10 +1060,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     function initGamepadWebSocket() {
         if (gpSocket && gpSocket.readyState === WebSocket.OPEN) return;
         const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = proto + "//" + window.location.hostname + ":6081";
+        const host = window.location.host;
+        const wsPath = (window.location.port === "6081") ? (proto + "//" + window.location.hostname + ":6081") : (proto + "//" + host + "/gamepad");
         try {
-            gpSocket = new WebSocket(wsUrl);
-            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado."); };
+            gpSocket = new WebSocket(wsPath);
+            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado:", wsPath); };
+            gpSocket.onerror = function() {
+                if (!wsPath.includes(":6081")) {
+                    try {
+                        const fallbackUrl = proto + "//" + window.location.hostname + ":6081";
+                        gpSocket = new WebSocket(fallbackUrl);
+                    } catch(e) {}
+                }
+            };
         } catch(e) {}
     }
 
