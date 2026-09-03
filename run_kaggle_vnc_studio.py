@@ -2516,8 +2516,9 @@ subprocess.run(f"cp {BASE_DIR}/tienda_software_1clic.py /usr/local/bin/tienda_so
 subprocess.run(f"cp {BASE_DIR}/gamepad_uinput_bridge.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
 subprocess.run("chmod +x /usr/local/bin/tienda_software_1clic.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/liberar_vram.py /usr/local/bin/liberar_vram.py 2>/dev/null || true", shell=True)
-subprocess.run(f"cp {BASE_DIR}/salvar_y_salir.py /usr/local/bin/salvar_y_salir.py 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/test_velocidad_real.py /usr/local/bin/test_velocidad_real.py 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/escaner_redes_y_conexiones.py /usr/local/bin/escaner_redes_y_conexiones.py 2>/dev/null || true", shell=True)
+subprocess.run("chmod +x /usr/local/bin/escaner_redes_y_conexiones.py 2>/dev/null || true", shell=True)
 
 # Iniciar Gamepad UInput Bridge en segundo plano para detección de mandos inmediata
 subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
@@ -2581,6 +2582,18 @@ shortcuts = {
         "Exec=xfce4-terminal --title='Test de Velocidad Real' -e 'bash -c \"python3 /usr/local/bin/test_velocidad_real.py 1gb; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\n"
         "Path=/tmp\n"
         "Icon=utilities-system-monitor\n"
+        "Terminal=false\n"
+        "Categories=Network;System;\n"
+    ),
+    "Escaner_Redes_Conexiones.desktop": (
+        "[Desktop Entry]\n"
+        "Version=1.0\n"
+        "Type=Application\n"
+        "Name=🔍 Escáner de Redes, WiFi y Conexiones\n"
+        "Comment=Auditoría de adaptadores de red, puertos de servicio y conexiones de afuera\n"
+        "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\n"
+        "Path=/root\n"
+        "Icon=network-wired\n"
         "Terminal=false\n"
         "Categories=Network;System;\n"
     ),

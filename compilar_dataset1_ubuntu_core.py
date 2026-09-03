@@ -309,7 +309,7 @@ autostart_dir.mkdir(parents=True, exist_ok=True)
 )
 
 # Copiar scripts maestros a /usr/local/bin
-for sc in ["gamepad_uinput_bridge.py", "tienda_software_1clic.py", "test_velocidad_real.py", "telegram_notifier.py"]:
+for sc in ["gamepad_uinput_bridge.py", "tienda_software_1clic.py", "test_velocidad_real.py", "telegram_notifier.py", "escaner_redes_y_conexiones.py"]:
     src = BASE_DIR / sc
     if src.exists():
         shutil.copy2(src, f"/usr/local/bin/{sc}")
@@ -1631,6 +1631,13 @@ main_shortcuts = {
         "Comment=Prueba de ancho de banda Gigabit real con Aria2 16x y auto-borrado\\n"
         "Exec=python3 /usr/local/bin/test_velocidad_real.py\\n"
         "Icon=network-transmit-receive\\nTerminal=true\\nCategories=Network;\\n"
+    ),
+    "Escaner_Redes_Conexiones.desktop": (
+        "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
+        "Name=🔍 Escáner de Redes, WiFi y Conexiones\\n"
+        "Comment=Auditoría de adaptadores de red, puertos de servicio y conexiones de afuera\\n"
+        "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\\n"
+        "Icon=network-wired\\nTerminal=false\\nCategories=Network;System;\\n"
     )
 }
 
