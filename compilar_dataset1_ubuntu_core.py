@@ -831,6 +831,11 @@ body.tp-gamepad-active #cloud-perf-badge {
     z-index: 999999; transform: translate3d(0, 0, 0); display: none;
     filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85)); will-change: transform;
 }
+#cloud-virtual-cursor.cursor-dragging path {
+    fill: var(--aether-cyan) !important;
+    stroke: #0a0f1a !important;
+    filter: drop-shadow(0 0 8px var(--aether-cyan));
+}
 body.tp-trackpad-mode #cloud-virtual-cursor { display: block; }
 body.tp-touch-mode #cloud-virtual-cursor { display: none; }
 body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
@@ -1036,6 +1041,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let scrollVelocityY = 0, lastScrollY = 0, lastScrollX = 0, lastScrollTime = 0, momentumAnimFrame = null;
     let isPinching = false, initialPinchDist = 0, initialPinchZoom = 1.0, initialPinchMidX = 0, initialPinchMidY = 0;
     let initialPinchWorldX = 0, initialPinchWorldY = 0, lastTapStartX = 0, lastTapStartY = 0;
+    let lastMoveTime = 0;
 
     function clampPanX(x, zoom) {
         if (zoom <= 1.01) return 0;
@@ -1454,9 +1460,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             isTouching = true;
             startX = lastX = e.touches[0].clientX;
             startY = lastY = e.touches[0].clientY;
+            lastMoveTime = touchStartTime;
 
             const timeSinceLastTap = touchStartTime - lastTapEndTime;
-            isTapAndHalfCandidate = (timeSinceLastTap < 260);
+            isTapAndHalfCandidate = (currentMode === "TRACKPAD" && timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35);
 
             if (currentMode === "TRACKPAD") {
                 if (holdRing) {
@@ -1471,6 +1478,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     if (isTouching && totalMoved < 14 && e.touches.length === 1) {
                         isDragging = true;
                         if (holdRing) holdRing.classList.add("active");
+                        if (cursor) cursor.classList.add("cursor-dragging");
                         hapticFeedback(30);
                         sendMouse(1);
                         showToast("Arrastre Bloqueado (Drag & Drop)");
@@ -1497,7 +1505,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         } else if (e.touches.length === 2) {
             clearTimeout(dragHoldTimer);
             if (holdRing) holdRing.classList.remove("active");
-            if (isDragging) { isDragging = false; sendMouse(0); }
+            if (isDragging) {
+                isDragging = false;
+                if (cursor) cursor.classList.remove("cursor-dragging");
+                sendMouse(0);
+            }
 
             const p1 = e.touches[0], p2 = e.touches[1];
             initialPinchDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
@@ -1526,21 +1538,42 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const dist = Math.hypot(dx, dy);
             totalMoved += dist;
 
-            if (totalMoved > 10 && !isDragging) {
-                clearTimeout(dragHoldTimer);
-                if (holdRing) holdRing.classList.remove("active");
-            }
-            if (isTapAndHalfCandidate && totalMoved > 8 && !isDragging) {
-                isDragging = true;
-                hapticFeedback(25);
-                sendMouse(1);
-            }
-
             if (currentMode === "TRACKPAD") {
-                const speed = Math.max(1, dist);
-                const accel = Math.min(3.2, Math.max(0.92, Math.pow(speed, 0.24)));
-                const scaleX = (screenW / (window.innerWidth * currentZoom)) * 1.35 * accel;
-                const scaleY = (screenH / (window.innerHeight * currentZoom)) * 1.35 * accel;
+                const now = performance.now();
+                const dt = Math.max(8, now - lastMoveTime);
+                lastMoveTime = now;
+
+                if (totalMoved > 10 && !isDragging) {
+                    clearTimeout(dragHoldTimer);
+                    if (holdRing) holdRing.classList.remove("active");
+                }
+                if (isTapAndHalfCandidate && totalMoved > 6 && !isDragging) {
+                    isDragging = true;
+                    if (cursor) cursor.classList.add("cursor-dragging");
+                    hapticFeedback(25);
+                    sendMouse(1);
+                    showToast("Arrastre Bloqueado (Tap & Drag)");
+                }
+
+                // Filtro deadband anti-jitter para micro-temblores en reposo
+                if (dist < 0.65 && !isDragging) {
+                    return;
+                }
+
+                // Velocidad física normalizada en px/ms
+                const v = dist / dt;
+                let accel = 1.0;
+                if (v < 0.25) {
+                    accel = 0.78; // Micro-precisión para apuntar píxel por píxel
+                } else if (v < 1.2) {
+                    accel = 0.78 + (v - 0.25) * 0.95; // Transición lineal cómoda
+                } else {
+                    accel = Math.min(3.4, 1.68 + Math.pow(v - 1.2, 1.25)); // Aceleración suave para cruzar la pantalla 1080p
+                }
+
+                const scaleFactor = 1.35 * accel;
+                const scaleX = (screenW / (window.innerWidth * currentZoom)) * scaleFactor;
+                const scaleY = (screenH / (window.innerHeight * currentZoom)) * scaleFactor;
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
 
@@ -1559,6 +1592,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 }
                 sendMouse(isDragging ? 1 : 0);
             } else {
+                if (totalMoved > 10 && !isDragging) {
+                    clearTimeout(dragHoldTimer);
+                    if (holdRing) holdRing.classList.remove("active");
+                }
                 const realX = (curX - panX) / currentZoom;
                 const realY = (curY - panY) / currentZoom;
                 virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
@@ -1622,6 +1659,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
         if (isDragging) {
             isDragging = false;
+            if (cursor) cursor.classList.remove("cursor-dragging");
             sendMouse(0);
             hapticFeedback(12);
             lastTapEndTime = performance.now();
@@ -1647,34 +1685,59 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 hapticFeedback(12);
                 const timeSinceLastTap = touchStartTime - lastTapEndTime;
 
-                // Detección de Smart Double-Tap Zoom (Estilo Apple Safari / Google Chrome)
-                if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
-                    lastTapEndTime = 0;
-                    if (currentZoom > 1.05) {
-                        resetZoom();
-                    } else {
-                        zoomToPoint(2.2, startX, startY, true);
-                        showToast("Zoom Inteligente (220%)");
-                        hapticFeedback(20);
+                if (currentMode === "TRACKPAD") {
+                    // MODO TRACKPAD: Doble tap en reposo = Doble Clic real para abrir carpetas / apps
+                    if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
+                        lastTapEndTime = 0;
+                        hapticFeedback([15, 35, 15]);
+                        sendMouse(1);
+                        setTimeout(() => {
+                            sendMouse(0);
+                            setTimeout(() => {
+                                sendMouse(1);
+                                setTimeout(() => sendMouse(0), 45);
+                            }, 40);
+                        }, 45);
+                        showToast("Doble Clic (Abrir)");
+                        return;
                     }
-                    return;
-                }
-                lastTapStartX = startX;
-                lastTapStartY = startY;
+                    lastTapStartX = startX;
+                    lastTapStartY = startY;
 
-                // Corrección CRÍTICA: Proyección matemática exacta de coordenadas bajo zoom
-                if (currentMode === "TOUCH") {
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    createRipple(cx, cy, "left-click");
+                    sendMouse(1);
+                    setTimeout(() => sendMouse(0), 45);
+                    lastTapEndTime = performance.now();
+                } else {
+                    // MODO TÁCTIL DIRECTO (TABLET): Doble tap = Smart Zoom 2.2x / 1.0x
+                    if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
+                        lastTapEndTime = 0;
+                        if (currentZoom > 1.05) {
+                            resetZoom();
+                        } else {
+                            zoomToPoint(2.2, startX, startY, true);
+                            showToast("Zoom Inteligente (220%)");
+                            hapticFeedback(20);
+                        }
+                        return;
+                    }
+                    lastTapStartX = startX;
+                    lastTapStartY = startY;
+
+                    // Proyección matemática exacta de coordenadas bajo zoom
                     const realX = (startX - panX) / currentZoom;
                     const realY = (startY - panY) / currentZoom;
                     virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
                     virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    createRipple(cx, cy, "left-click");
+                    sendMouse(1);
+                    setTimeout(() => sendMouse(0), 45);
+                    lastTapEndTime = performance.now();
                 }
-                const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-                createRipple(cx, cy, "left-click");
-                sendMouse(1);
-                setTimeout(() => sendMouse(0), 45);
-                lastTapEndTime = performance.now();
             } else if (initialTouchCount === 2 && !isPinching && duration < 380) {
                 hapticFeedback([10, 30, 10]);
                 const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
