@@ -767,50 +767,20 @@ try:
 /* Virtual Trackpad & Cursor */
 #linu-virtual-cursor {
     position: fixed;
-    width: 26px;
-    height: 26px;
+}
+#linu-virtual-cursor {
+    position: fixed;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
     z-index: 999999;
-    transform: translate(-1px, -1px);
+    transform: translate3d(0, 0, 0);
     display: none;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.85));
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
+    will-change: transform;
 }
 body.tp-active #linu-virtual-cursor {
     display: block;
-}
-#linu-touchpad-bar {
-    position: fixed;
-    bottom: 14px;
-    right: 14px;
-    display: flex;
-    gap: 8px;
-    z-index: 999998;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-.tp-btn {
-    background: rgba(15, 23, 42, 0.88);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 42, 133, 0.4);
-    color: #f8fafc;
-    padding: 7px 13px;
-    border-radius: 18px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    transition: all 0.15s ease;
-}
-.tp-btn:active, .tp-btn.pressed {
-    background: rgba(255, 42, 133, 0.85);
-    transform: scale(0.92);
-}
-.tp-toggle-btn.active {
-    border-color: #00ffc8;
-    color: #00ffc8;
-    box-shadow: 0 0 12px rgba(0, 255, 200, 0.45);
 }
 @media (max-width: 600px) {
     #linu-hud-overlay {
@@ -821,7 +791,6 @@ body.tp-active #linu-virtual-cursor {
         gap: 6px;
     }
     .hud-badge { display: none; }
-    .tp-btn { padding: 6px 10px; font-size: 11px; }
 }
 </style>
 <svg id="linu-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
@@ -833,13 +802,8 @@ body.tp-active #linu-virtual-cursor {
     <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
     <div class="hud-stat-pill hud-hideable">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
     <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
-    <div class="hud-badge hud-hideable">2x Tesla T4 1080p</div>
+    <div class="hud-badge hud-hideable">NVIDIA T4 1080p</div>
     <div class="hud-toggle-btn" id="hud-toggle-btn" title="Minimizar / Expandir">−</div>
-</div>
-<div id="linu-touchpad-bar">
-    <button class="tp-btn tp-toggle-btn active" id="tp-mode-toggle" title="Alternar entre modo Trackpad y modo Táctil">🖱️ Trackpad</button>
-    <button class="tp-btn" id="tp-btn-left" title="Clic Izquierdo">🖱️ Clic Izq</button>
-    <button class="tp-btn" id="tp-btn-right" title="Clic Derecho">🖱️ Clic Der</button>
 </div>
 <script>
 (function() {
@@ -939,17 +903,12 @@ body.tp-active #linu-virtual-cursor {
     measurePing();
 
     // =========================================================================
-    // 4. MOTOR DE TRACKPAD VIRTUAL RELATIVO PARA DISPOSITIVOS MÓVILES
+    // 4. MOTOR DE TRACKPAD PROFESIONAL (ESTÁNDAR CHROME REMOTE DESKTOP / MACBOOK)
     // =========================================================================
     const cursor = document.getElementById("linu-virtual-cursor");
-    const modeToggle = document.getElementById("tp-mode-toggle");
-    const btnLeft = document.getElementById("tp-btn-left");
-    const btnRight = document.getElementById("tp-btn-right");
-
     let isTrackpadEnabled = true;
-    let virtX = 960, virtY = 540; // Coordenadas remotas 1080p
+    let virtX = 960, virtY = 540; // Coordenadas 1080p
     const screenW = 1920, screenH = 1080;
-    const sensitivity = 1.45;
 
     function getRFB() {
         return (window.UI && window.UI.rfb) ? window.UI.rfb : null;
@@ -959,8 +918,7 @@ body.tp-active #linu-virtual-cursor {
         if (!cursor) return;
         const displayX = (virtX / screenW) * window.innerWidth;
         const displayY = (virtY / screenH) * window.innerHeight;
-        cursor.style.left = displayX + "px";
-        cursor.style.top = displayY + "px";
+        cursor.style.transform = `translate3d(${displayX}px, ${displayY}px, 0)`;
     }
 
     function sendMouse(mask) {
@@ -970,103 +928,94 @@ body.tp-active #linu-virtual-cursor {
         }
     }
 
-    if (modeToggle) {
-        modeToggle.addEventListener("click", function(e) {
-            e.stopPropagation();
-            isTrackpadEnabled = !isTrackpadEnabled;
-            if (isTrackpadEnabled) {
-                document.body.classList.add("tp-active");
-                modeToggle.classList.add("active");
-                modeToggle.innerText = "🖱️ Trackpad: ON";
-            } else {
-                document.body.classList.remove("tp-active");
-                modeToggle.classList.remove("active");
-                modeToggle.innerText = "👆 Táctil: ON";
-            }
-        });
+    function hapticFeedback(pattern) {
+        if (navigator.vibrate) {
+            try { navigator.vibrate(pattern); } catch(e) {}
+        }
     }
 
-    if (btnLeft) {
-        btnLeft.addEventListener("pointerdown", function(e) {
-            e.preventDefault(); e.stopPropagation();
-            btnLeft.classList.add("pressed");
-            sendMouse(1);
-        });
-        btnLeft.addEventListener("pointerup", function(e) {
-            e.preventDefault(); e.stopPropagation();
-            btnLeft.classList.remove("pressed");
-            sendMouse(0);
-        });
-    }
-
-    if (btnRight) {
-        btnRight.addEventListener("pointerdown", function(e) {
-            e.preventDefault(); e.stopPropagation();
-            btnRight.classList.add("pressed");
-            sendMouse(4);
-        });
-        btnRight.addEventListener("pointerup", function(e) {
-            e.preventDefault(); e.stopPropagation();
-            btnRight.classList.remove("pressed");
-            sendMouse(0);
-        });
-    }
-
-    // Intercepción de gestos táctiles tipo laptop
-    let lastTouchX = 0, lastTouchY = 0;
-    let isTouching = false, touchStartTime = 0, totalMoved = 0;
+    let startX = 0, startY = 0, lastX = 0, lastY = 0;
+    let touchStartTime = 0;
+    let isTouching = false;
+    let totalMoved = 0;
+    let isDragging = false;
+    let dragHoldTimer = null;
+    let initialTouchCount = 0;
 
     window.addEventListener("touchstart", function(e) {
         if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
-            return;
-        }
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
+
+        initialTouchCount = e.touches.length;
+        touchStartTime = performance.now();
+        totalMoved = 0;
+
         if (e.touches.length === 1) {
             isTouching = true;
-            lastTouchX = e.touches[0].clientX;
-            lastTouchY = e.touches[0].clientY;
-            touchStartTime = performance.now();
-            totalMoved = 0;
+            isDragging = false;
+            startX = lastX = e.touches[0].clientX;
+            startY = lastY = e.touches[0].clientY;
+
+            // Timer de pulsación larga: Tap & Hold para Drag & Drop (Chrome Remote Desktop standard)
+            clearTimeout(dragHoldTimer);
+            dragHoldTimer = setTimeout(function() {
+                if (isTouching && totalMoved < 15 && e.touches.length === 1) {
+                    isDragging = true;
+                    hapticFeedback(25); // Pulso físico de enganche
+                    sendMouse(1);       // Bloquea clic izquierdo presionado
+                }
+            }, 250);
+
         } else if (e.touches.length === 2) {
-            lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            touchStartTime = performance.now();
+            clearTimeout(dragHoldTimer);
+            isDragging = false;
+            lastY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        } else {
+            clearTimeout(dragHoldTimer);
         }
     }, { passive: false });
 
     window.addEventListener("touchmove", function(e) {
         if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
-            return;
-        }
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
 
         if (isTouching && e.touches.length === 1) {
             e.preventDefault();
             const curX = e.touches[0].clientX;
             const curY = e.touches[0].clientY;
-            const dx = (curX - lastTouchX) * sensitivity;
-            const dy = (curY - lastTouchY) * sensitivity;
-            lastTouchX = curX;
-            lastTouchY = curY;
-            totalMoved += Math.hypot(dx, dy);
+            const dx = curX - lastX;
+            const dy = curY - lastY;
+            lastX = curX;
+            lastY = curY;
+            const dist = Math.hypot(dx, dy);
+            totalMoved += dist;
 
-            const scaleX = screenW / window.innerWidth;
-            const scaleY = screenH / window.innerHeight;
+            if (totalMoved > 10 && !isDragging) {
+                clearTimeout(dragHoldTimer);
+            }
+
+            // Curva de aceleración balística no lineal
+            const speed = Math.max(1, dist);
+            const accel = Math.min(2.8, Math.max(0.9, Math.pow(speed, 0.22)));
+            const scaleX = (screenW / window.innerWidth) * 1.35 * accel;
+            const scaleY = (screenH / window.innerHeight) * 1.35 * accel;
 
             virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
             virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
 
             updateCursorElement();
-            sendMouse(0);
+            sendMouse(isDragging ? 1 : 0);
+
         } else if (e.touches.length === 2) {
             e.preventDefault();
             const curY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            const dy = curY - lastTouchY;
-            lastTouchY = curY;
-            if (dy > 12) {
-                sendMouse(16); // Rueda abajo
+            const dy = curY - lastY;
+            lastY = curY;
+            if (dy > 10) {
+                sendMouse(16); // Scroll abajo
                 setTimeout(() => sendMouse(0), 30);
-            } else if (dy < -12) {
-                sendMouse(8);  // Rueda arriba
+            } else if (dy < -10) {
+                sendMouse(8);  // Scroll arriba
                 setTimeout(() => sendMouse(0), 30);
             }
         }
@@ -1074,18 +1023,44 @@ body.tp-active #linu-virtual-cursor {
 
     window.addEventListener("touchend", function(e) {
         if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#linu-touchpad-bar") || e.target.closest("#noVNC_control_bar")) {
+        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
+
+        clearTimeout(dragHoldTimer);
+        const duration = performance.now() - touchStartTime;
+
+        if (isDragging) {
+            isDragging = false;
+            sendMouse(0); // Libera el clic izquierdo
+            hapticFeedback(12);
             return;
         }
 
-        const duration = performance.now() - touchStartTime;
-        if (isTouching && e.touches.length === 0) {
+        if (e.touches.length === 0) {
             isTouching = false;
-            // Toque rápido sin arrastre (< 220ms y < 10px) = Clic Izquierdo en la posición actual del puntero
-            if (duration < 220 && totalMoved < 10) {
-                sendMouse(1);
-                setTimeout(() => sendMouse(0), 50);
+
+            if (initialTouchCount === 1) {
+                // Toque rápido con 1 dedo (< 220ms y < 10px) = Clic Izquierdo
+                if (duration < 220 && totalMoved < 10) {
+                    hapticFeedback(12);
+                    sendMouse(1);
+                    setTimeout(() => sendMouse(0), 40);
+                }
+            } else if (initialTouchCount === 2) {
+                // Toque rápido con 2 dedos = Clic Derecho (Menú contextual)
+                if (duration < 260) {
+                    hapticFeedback([12, 35, 12]);
+                    sendMouse(4);
+                    setTimeout(() => sendMouse(0), 40);
+                }
+            } else if (initialTouchCount === 3) {
+                // Toque rápido con 3 dedos = Clic Central / Rueda
+                if (duration < 280) {
+                    hapticFeedback(20);
+                    sendMouse(2);
+                    setTimeout(() => sendMouse(0), 40);
+                }
             }
+            initialTouchCount = 0;
         }
     }, { passive: false });
 
@@ -1236,7 +1211,11 @@ try:
     subprocess.run("xfconf-query -c xsettings -p /Gtk/FontName -s 'Ubuntu 11' --create -t string 2>/dev/null || true", shell=True, env=env)
     subprocess.run("xfconf-query -c xsettings -p /Gtk/MonospaceFontName -s 'Ubuntu Mono 12' --create -t string 2>/dev/null || true", shell=True, env=env)
     
-    # Auto-start Plank
+    # Eliminar completamente el Panel 2 feo/por defecto de XFCE para que SOLO quede Plank (Dock Estético)
+    subprocess.run("xfconf-query -c xfce4-panel -p /panels -s 1 --create -t int 2>/dev/null || true", shell=True, env=env)
+    subprocess.run("xfconf-query -c xfce4-panel -p /panels/panel-2 -r -R 2>/dev/null || true", shell=True, env=env)
+    
+    # Auto-start Plank (Dock moderno y estético estilo macOS)
     autostart_dir = Path.home() / ".config" / "autostart"
     autostart_dir.mkdir(parents=True, exist_ok=True)
     (autostart_dir / "plank.desktop").write_text("[Desktop Entry]\nType=Application\nExec=plank\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\nName=Plank\n")
