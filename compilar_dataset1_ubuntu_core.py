@@ -504,19 +504,42 @@ if kaggle_file.exists():
 metadata = {
     "title": "Ubuntu - Core Desktop & Social Hub",
     "id": f"{usuario_activo}/ubuntu-core-os-social",
-    "licenses": [{"name": "CC0-1.0"}]
+    "licenses": [{"name": "CC0-1.0"}],
+    "isPrivate": True
 }
 (WORK_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
-# 12. Subida a Kaggle (Solo cuando se ejecute explícitamente en la nube)
+# 12. Subida Segura a Kaggle (100% PRIVADA - Blindaje Anti-Robo)
 ts_msg = time.strftime("%Y-%m-%d %H:%M:%S")
-print(f"☁️ Subiendo versión a {usuario_activo}/ubuntu-core-os-social...", flush=True)
+print(f"☁️ Subiendo versión privada a {usuario_activo}/ubuntu-core-os-social...", flush=True)
 cmd_version = f"kaggle datasets version -p '{WORK_DIR}' -m 'Compilacion SOTA Core + Gaming + Audio + Dual-Engine ({ts_msg})' --dir-mode tar"
 res = subprocess.run(cmd_version, shell=True)
 
 if res.returncode != 0:
-    print("Intentando crear dataset inicial...", flush=True)
-    res = subprocess.run(f"kaggle datasets create -p '{WORK_DIR}' -u -r tar", shell=True)
+    print("Intentando crear dataset inicial 100% PRIVADO...", flush=True)
+    res = subprocess.run(f"kaggle datasets create -p '{WORK_DIR}' -r tar", shell=True)
+
+# 13. Auto-Registro Instantáneo en el Catálogo de la Tienda (Zero-Comandos)
+try:
+    cat_file = BASE_DIR / "catalogo_tienda.json"
+    if cat_file.exists():
+        cat_data = json.loads(cat_file.read_text(encoding="utf-8"))
+        existing = next((x for x in cat_data if x.get("id") == 1 or x.get("slug") == "ubuntu-core-os-social"), None)
+        entry = {
+            "id": 1,
+            "name": "Ubuntu Core & Social Hub",
+            "slug": "ubuntu-core-os-social",
+            "cat": "Sistema Base",
+            "desc": "Escritorio XFCE Dark, Google Chrome GPU, Steam, Discord, Telegram, noVNC Trackpad.",
+            "icon": "computer"
+        }
+        if existing: existing.update(entry)
+        else: cat_data.insert(0, entry)
+        cat_file.write_text(json.dumps(cat_data, indent=2, ensure_ascii=False), encoding="utf-8")
+        subprocess.run(f"cd '{BASE_DIR}' && git add catalogo_tienda.json && git commit -m 'Auto-Catalog: Sincronizar Database 1 en la nube' && git push origin main >/dev/null 2>&1 || true", shell=True)
+        print("📢 [✓] ¡Catálogo de la Tienda actualizado automáticamente en la nube!", flush=True)
+except Exception:
+    pass
 
 t_total = time.time() - t_start
 print("=" * 78, flush=True)

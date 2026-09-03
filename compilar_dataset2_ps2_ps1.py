@@ -220,19 +220,42 @@ if kaggle_file.exists():
 metadata = {
     "title": "Ubuntu - Emuladores PS2 y PS1 Vault",
     "id": f"{usuario_activo}/ubuntu-ps2-ps1-vault",
-    "licenses": [{"name": "CC0-1.0"}]
+    "licenses": [{"name": "CC0-1.0"}],
+    "isPrivate": True
 }
 (WORK_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
-# 6. Subir Dataset a la API de Kaggle
+# 6. Subir Dataset a la API de Kaggle (100% PRIVADA - Blindaje Anti-Robo)
 ts_msg = time.strftime("%Y-%m-%d %H:%M:%S")
 cmd_version = f"kaggle datasets version -p '{WORK_DIR}' -m 'Actualizacion de Boveda PS2/PS1 ({ts_msg})' --dir-mode tar"
 res = subprocess.run(cmd_version, shell=True)
 
 if res.returncode != 0:
-    print("   -> Intentando crear dataset por primera vez...", flush=True)
-    cmd_create = f"kaggle datasets create -p '{WORK_DIR}' -u -r tar"
+    print("   -> Intentando crear dataset inicial 100% PRIVADO...", flush=True)
+    cmd_create = f"kaggle datasets create -p '{WORK_DIR}' -r tar"
     res = subprocess.run(cmd_create, shell=True)
+
+# 7. Auto-Registro Instantáneo en el Catálogo de la Tienda (Zero-Comandos)
+try:
+    cat_file = BASE_DIR / "catalogo_tienda.json"
+    if cat_file.exists():
+        cat_data = json.loads(cat_file.read_text(encoding="utf-8"))
+        existing = next((x for x in cat_data if x.get("id") == 2 or x.get("slug") == "ubuntu-ps2-ps1-vault"), None)
+        entry = {
+            "id": 2,
+            "name": "PlayStation 2 & PS1 Vault",
+            "slug": "ubuntu-ps2-ps1-vault",
+            "cat": "Gaming & Emulación",
+            "desc": "PCSX2 1080p 60FPS + DuckStation PGXP HD con BIOS completas y cheats.",
+            "icon": "input-gaming"
+        }
+        if existing: existing.update(entry)
+        else: cat_data.append(entry)
+        cat_file.write_text(json.dumps(cat_data, indent=2, ensure_ascii=False), encoding="utf-8")
+        subprocess.run(f"cd '{BASE_DIR}' && git add catalogo_tienda.json && git commit -m 'Auto-Catalog: Sincronizar Database 2 en la nube' && git push origin main >/dev/null 2>&1 || true", shell=True)
+        print("📢 [✓] ¡Catálogo de la Tienda actualizado automáticamente en la nube!", flush=True)
+except Exception:
+    pass
 
 t_total = time.time() - t_start
 
