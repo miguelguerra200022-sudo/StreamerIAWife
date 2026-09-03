@@ -442,7 +442,7 @@ main_shortcuts = {
     "Tienda_Software_1Clic.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=🛍️ Tienda de Software & Juegos 1-Clic\\n"
-        "Comment=Explora e instala cualquiera de los 20 packs de 100GB en 1 clic\\n"
+        "Comment=Explora e instala juegos, emuladores y herramientas en 1 clic\\n"
         "Exec=python3 /usr/local/bin/tienda_software_1clic.py\\n"
         "Icon=system-software-install\\nTerminal=false\\nCategories=System;\\n"
     ),

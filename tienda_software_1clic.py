@@ -210,10 +210,10 @@ class TiendaApp:
         header = tk.Frame(root, bg="#0f172a", padx=16, pady=12)
         header.pack(fill="x")
 
-        title = tk.Label(header, text="🛍️ Tienda de Software & Juegos (Ecosistema 20 Databases)", font=("Ubuntu Bold", 14), fg="#00ffc8", bg="#0f172a")
+        title = tk.Label(header, text="🛍️ Tienda de Software & Juegos 1-Clic", font=("Ubuntu Bold", 14), fg="#00ffc8", bg="#0f172a")
         title.pack(side="left")
 
-        subtitle = tk.Label(header, text="Capacidad Total: 2,000 GB | Activación Instantánea en 1-Clic", font=("Ubuntu", 9), fg="#94a3b8", bg="#0f172a")
+        subtitle = tk.Label(header, text="Ecosistema Modular Ilimitado | Activación Instantánea", font=("Ubuntu", 9), fg="#94a3b8", bg="#0f172a")
         subtitle.pack(side="right")
 
         # Treeview de Databases

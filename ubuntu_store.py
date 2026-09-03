@@ -313,7 +313,7 @@ Categories=System;
 def show_gui():
     if not (os.environ.get("DISPLAY") and shutil.which("zenity")):
         print("\n" + "=" * 78)
-        print("📊 GESTOR DE DATABASES UBUNTU CLOUD (20 MÓDULOS)")
+        print("📊 GESTOR DE DATABASES UBUNTU CLOUD")
         print("=" * 78)
         for k, v in DATABASES_CATALOG.items():
             status = "🟢 [CONECTADA]" if is_database_connected(v) else "⚪ [DISPONIBLE]"
@@ -329,7 +329,7 @@ def show_gui():
         list_items.extend([k, status_text, v['name'], v['desc']])
 
     cmd = [
-        "zenity", "--list", "--title=📊 Gestor Maestro de Databases & Recursos (20 Módulos)",
+        "zenity", "--list", "--title=📊 Gestor Maestro de Databases & Recursos",
         "--column=Clave", "--column=Estado", "--column=Nombre de la Database", "--column=Descripción",
         "--width=980", "--height=600", "--hide-column=1"
     ] + list_items

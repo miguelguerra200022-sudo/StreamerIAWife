@@ -1320,8 +1320,8 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🛍️ Tienda de Software y Juegos (20 Databases)\n"
-        "Comment=Explora e instala cualquiera de los 20 packs de 100GB en 1 clic\n"
+        "Name=🛍️ Tienda de Software y Juegos 1-Clic\n"
+        "Comment=Explora e instala juegos, emuladores y herramientas en 1 clic\n"
         "Exec=python3 /usr/local/bin/tienda_software_1clic.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
         "Icon=system-software-install\n"
@@ -1332,7 +1332,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📊 Gestor de Databases & Recursos (20 Módulos)\n"
+        "Name=📊 Gestor de Databases & Recursos\n"
         "Comment=Panel en vivo: conecta o desconecta databases, limpia el escritorio y monitorea RAM/GPU\n"
         "Exec=python3 /usr/local/bin/ubuntu_store.py --gui\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -1786,7 +1786,7 @@ print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
 print("   • 🎮 Tus 5TB de Google Drive (PC_Kaggle) montados en /root/gdrive.", flush=True)
 print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
 print("   • 💬 Redes Sociales & Comunicación: Discord, Telegram, Spotify, Chrome listos.", flush=True)
-print("   • 🛍️ Centro de Software 1-Clic en el Escritorio (20 Databases Disponibles).", flush=True)
+print("   • 🛍️ Tienda de Software y Juegos 1-Clic en el Escritorio.", flush=True)
 print("   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
