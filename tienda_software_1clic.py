@@ -177,14 +177,15 @@ class TiendaApp:
             messagebox.showinfo("¡Éxito!", f"🎉 ¡{db_info['name']} activado exitosamente en tu Escritorio!")
             return
 
-        # 2. Caso B: Descarga automática Gigabit de alta velocidad sin pedir tokens
+        # 2. Caso B: Descarga opcional en disco efímero de la nube (NUNCA en el Google Drive del cliente)
         download_url = db_info.get("download_url")
         if download_url:
             messagebox.showinfo(
-                "Descarga Gigabit",
-                f"🚀 Descargando e instalando {db_info['name']} a velocidad Gigabit (~150 MB/s)..."
+                "Instalación en la Nube",
+                f"🚀 Cargando {db_info['name']} en el disco de alta velocidad de la PC...\n\n"
+                "🛡️ (Tus 15GB de Google Drive están protegidos: solo se guardan tus partidas y configuraciones)."
             )
-            dest_dir = Path(f"/root/gdrive/PC_Kaggle/Juegos/{db_info['slug']}")
+            dest_dir = Path(f"/opt/juegos_cloud/{db_info['slug']}")
             dest_dir.mkdir(parents=True, exist_ok=True)
             cmd = f"aria2c -x 16 -s 16 -d '{dest_dir}' '{download_url}' && echo 'Completado' > '{dest_dir}/status.ok'"
             subprocess.Popen(cmd, shell=True)
