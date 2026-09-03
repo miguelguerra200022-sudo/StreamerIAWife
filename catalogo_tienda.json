@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "name": "Ubuntu Core & Social Hub",
+    "slug": "ubuntu-core-os-social",
+    "cat": "Sistema Base",
+    "desc": "Escritorio XFCE Dark, Google Chrome GPU, Steam, Discord, Telegram, noVNC Trackpad.",
+    "icon": "computer",
+    "installed": true
+  },
+  {
+    "id": 2,
+    "name": "PlayStation 2 & PS1 Vault",
+    "slug": "ubuntu-ps2-ps1-vault",
+    "cat": "Gaming & Emulación",
+    "desc": "PCSX2 1080p 60FPS + DuckStation PGXP HD con BIOS completas y cheats.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 3,
+    "name": "PSP, Nintendo DS & GBA Vault",
+    "slug": "ubuntu-psp-ds-gba-vault",
+    "cat": "Gaming & Emulación",
+    "desc": "PPSSPP 4K, MelonDS pantalla táctil y mGBA con shaders retro.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 4,
+    "name": "Nintendo Switch & Wii Vault",
+    "slug": "ubuntu-switch-wii-vault",
+    "cat": "Gaming & Emulación",
+    "desc": "Ryujinx / Dolphin 1080p con soporte de mandos Joy-Con y Pro Controller.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 5,
+    "name": "Arcade Classics, Neo-Geo & MAME",
+    "slug": "ubuntu-arcade-classics",
+    "cat": "Gaming & Emulación",
+    "desc": "FBNeo y MAME con catálogo de las mejores recreativas de la historia.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 6,
+    "name": "Retro PC Gaming & MS-DOS Box",
+    "slug": "ubuntu-retro-pc-dosbox",
+    "cat": "Gaming & Emulación",
+    "desc": "DOSBox-Staging y ScummVM optimizados para clásicos de PC.",
+    "icon": "applications-games",
+    "installed": false
+  },
+  {
+    "id": 7,
+    "name": "Avatar 3D & VTuber Studio Pro",
+    "slug": "ubuntu-avatar-3d-vtuber",
+    "cat": "Streaming & Contenido",
+    "desc": "OpenSeeFace IA, VSeeFace y modelos VRM para streaming profesional.",
+    "icon": "camera-video",
+    "installed": false
+  },
+  {
+    "id": 8,
+    "name": "Estudio de Producción Musical & Audio",
+    "slug": "ubuntu-daw-musica-audio",
+    "cat": "Multimedia & Arte",
+    "desc": "LMMS, Audacity, complementos VST y soundfonts de consolas retro.",
+    "icon": "audio-x-generic",
+    "installed": false
+  },
+  {
+    "id": 9,
+    "name": "Edición de Video Cine & Efectos VFX",
+    "slug": "ubuntu-video-vfx-cine",
+    "cat": "Multimedia & Arte",
+    "desc": "Kdenlive 60FPS con aceleración NVENC y efectos cinematográficos.",
+    "icon": "video-display",
+    "installed": false
+  },
+  {
+    "id": 10,
+    "name": "Diseño 3D, Modelado & Render Blender",
+    "slug": "ubuntu-3d-modelado-blender",
+    "cat": "Multimedia & Arte",
+    "desc": "Blender 4.2 LTS acelerado por núcleos OptiX / CUDA de Nvidia T4.",
+    "icon": "applications-graphics",
+    "installed": false
+  },
+  {
+    "id": 11,
+    "name": "Servidor de IA Local (LLMs & RAG)",
+    "slug": "ubuntu-ia-llm-rag-studio",
+    "cat": "Inteligencia Artificial",
+    "desc": "Ollama con DeepSeek, Llama 3 y Qwen en GPU con Open-WebUI.",
+    "icon": "system-run",
+    "installed": false
+  },
+  {
+    "id": 12,
+    "name": "Clonación de Voz & Síntesis TTS",
+    "slug": "ubuntu-voice-clone-tts",
+    "cat": "Inteligencia Artificial",
+    "desc": "Kokoro-TTS y XTTS-v2 para clonar voces ultra-realistas en segundos.",
+    "icon": "audio-volume-high",
+    "installed": false
+  },
+  {
+    "id": 13,
+    "name": "Generación de Imágenes ComfyUI & SDXL",
+    "slug": "ubuntu-comfyui-sdxl-flux",
+    "cat": "Inteligencia Artificial",
+    "desc": "ComfyUI, Stable Diffusion XL y ControlNet para arte ultra HD.",
+    "icon": "image-x-generic",
+    "installed": false
+  },
+  {
+    "id": 14,
+    "name": "Desarrollo de Videojuegos Godot Engine",
+    "slug": "ubuntu-game-dev-godot",
+    "cat": "Programación & Dev",
+    "desc": "Godot 4.3 .NET con plantillas 2D/3D y exportador a Web y Android.",
+    "icon": "applications-development",
+    "installed": false
+  },
+  {
+    "id": 15,
+    "name": "Programación FullStack & Copiloto IA",
+    "slug": "ubuntu-dev-fullstack-ai",
+    "cat": "Programación & Dev",
+    "desc": "VS Code, Node 22, Python 3.12, Bun, Rust, Docker y Claude Code CLI.",
+    "icon": "text-x-generic",
+    "installed": false
+  },
+  {
+    "id": 16,
+    "name": "Ciberseguridad & Laboratorio de Pentesting",
+    "slug": "ubuntu-cybersecurity-pentest",
+    "cat": "Ciberseguridad",
+    "desc": "Wireshark, Nmap, ZAP Proxy, Semgrep y AI Security Copilot.",
+    "icon": "security-high",
+    "installed": false
+  },
+  {
+    "id": 17,
+    "name": "Trading Cuantitativo & Billeteras Cripto",
+    "slug": "ubuntu-trading-crypto-bots",
+    "cat": "Finanzas & Trading",
+    "desc": "Freqtrade, Pandas-TA, Electrum, Monero y base de datos CryptoDB 109GB.",
+    "icon": "utilities-system-monitor",
+    "installed": false
+  },
+  {
+    "id": 18,
+    "name": "Juegos AAA PC Gamer - Volumen 1",
+    "slug": "ubuntu-juegos-aaa-vol1",
+    "cat": "Gaming AAA",
+    "desc": "Colección de títulos de acción, aventura y RPG a 1080p 60 FPS.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 19,
+    "name": "Juegos AAA PC Gamer - Volumen 2",
+    "slug": "ubuntu-juegos-aaa-vol2",
+    "cat": "Gaming AAA",
+    "desc": "Títulos de conducción, simulación y mundo abierto en GPU Tesla T4.",
+    "icon": "input-gaming",
+    "installed": false
+  },
+  {
+    "id": 20,
+    "name": "Android Cloud Phone & Mobile Gaming",
+    "slug": "ubuntu-android-cloud-phone",
+    "cat": "Android Cloud",
+    "desc": "Teléfono Android virtual ROG Phone con Scrcpy, Aurora Store y Keymapper.",
+    "icon": "phone",
+    "installed": false
+  }
+]
