@@ -537,7 +537,7 @@ if input_dir.exists():
             
     # 2. Búsqueda por candidatos de nombres
     if not master_archives_dir:
-        for candidate_name in ["linuwaifu-ubuntu-master-100gb", "linuwaifu-ubuntu-master", "linuwaifu_ubuntu_master_100gb"]:
+        for candidate_name in ["ubuntu-core-os-social", "ubuntu_core_os_social", "ubuntu-master-100gb", "ubuntu_master_100gb"]:
             cand_p = input_dir / candidate_name
             if cand_p.exists():
                 master_dataset_path = cand_p
@@ -670,50 +670,137 @@ try:
     vnc_html = novnc_dir / "vnc.html"
     if vnc_html.exists():
         content = vnc_html.read_text(encoding="utf-8")
-        if "linu-hud-overlay" not in content:
+        if "cloud-hud-overlay" not in content:
             hud_code = """
-<!-- CLOUD PC PERFORMANCE HUD OVERLAY (DRAGGABLE & COLLAPSIBLE 60 FPS / PING MONITOR) -->
 <style>
-#linu-hud-overlay {
+/* ========================================================================== */
+/* CLOUD PC ENTERPRISE TOUCH & TRACKPAD ENGINE (CHROME REMOTE DESKTOP SOTA)   */
+/* ========================================================================== */
+
+/* High-DPI Virtual Cursor */
+#cloud-virtual-cursor {
+    position: fixed;
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+    z-index: 999999;
+    transform: translate3d(0, 0, 0);
+    display: none;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
+    will-change: transform;
+    transition: opacity 0.15s ease;
+}
+body.tp-trackpad-mode #cloud-virtual-cursor {
+    display: block;
+}
+body.tp-touch-mode #cloud-virtual-cursor {
+    display: none;
+}
+body.tp-dragging #cloud-virtual-cursor {
+    filter: drop-shadow(0 0 8px #00ffc8) drop-shadow(0 2px 5px rgba(0,0,0,0.85));
+}
+
+/* Chrome Remote Desktop Expanding Hold Ring */
+#cloud-hold-ring {
+    position: fixed;
+    width: 44px;
+    height: 44px;
+    pointer-events: none;
+    z-index: 999998;
+    transform: translate3d(-50%, -50%, 0) scale(0.6);
+    opacity: 0;
+    transition: opacity 0.1s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#cloud-hold-ring.active {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0) scale(1);
+}
+#cloud-hold-ring circle.progress {
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+    transition: stroke-dashoffset 0.25s linear;
+}
+#cloud-hold-ring.active circle.progress {
+    stroke-dashoffset: 0;
+}
+
+/* Touch Visual Ripple */
+.cloud-touch-ripple {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999997;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple-pop 0.35s ease-out forwards;
+}
+.cloud-touch-ripple.left-click {
+    border: 2px solid rgba(0, 255, 200, 0.85);
+    background: rgba(0, 255, 200, 0.2);
+}
+.cloud-touch-ripple.right-click {
+    border: 2px solid rgba(255, 42, 133, 0.85);
+    background: rgba(255, 42, 133, 0.25);
+}
+.cloud-touch-ripple.middle-click {
+    border: 2px solid rgba(56, 189, 248, 0.85);
+    background: rgba(56, 189, 248, 0.25);
+}
+@keyframes ripple-pop {
+    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; width: 20px; height: 20px; }
+    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; width: 44px; height: 44px; }
+}
+
+/* Floating Status Toast */
+#cloud-toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(0, 255, 200, 0.4);
+    color: #f8fafc;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    z-index: 1000000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#cloud-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Sleek Floating Glassmorphic HUD */
+#cloud-hud-overlay {
     position: fixed;
     top: 12px;
     right: 12px;
-    z-index: 999999;
-    background: rgba(13, 18, 31, 0.88);
+    background: rgba(15, 23, 42, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 255, 200, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 24px;
-    padding: 6px 14px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-    font-size: 13px;
-    font-weight: 600;
-    color: #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 255, 200, 0.3), 0 0 10px rgba(0,0,0,0.5);
+    padding: 5px 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    cursor: grab;
-    touch-action: none;
+    gap: 8px;
+    color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12px;
+    z-index: 999990;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     user-select: none;
-    transition: box-shadow 0.2s, border-color 0.2s, opacity 0.2s;
+    touch-action: none;
+    transition: width 0.2s ease, padding 0.2s ease;
 }
-#linu-hud-overlay:active {
-    cursor: grabbing;
-}
-#linu-hud-overlay.minimized {
-    padding: 5px 10px;
-    gap: 6px;
-    opacity: 0.8;
-    border-color: rgba(0, 255, 200, 0.3);
-}
-#linu-hud-overlay.minimized .hud-hideable {
+#cloud-hud-overlay.minimized .hud-hideable {
     display: none !important;
-}
-.hud-stat-pill {
-    display: flex;
-    align-items: center;
-    gap: 5px;
 }
 .hud-dot {
     width: 8px;
@@ -721,23 +808,39 @@ try:
     border-radius: 50%;
     background-color: #00ffc8;
     box-shadow: 0 0 8px #00ffc8;
-    animation: hud-pulse 2s infinite;
+    transition: background-color 0.3s;
 }
-.hud-val {
-    color: #00ffc8;
-    font-weight: 700;
+.hud-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
-.hud-ping-val {
-    color: #38bdf8;
-    font-weight: 700;
-}
-.hud-badge {
-    background: rgba(255, 42, 133, 0.2);
-    color: #ff2a85;
-    border: 1px solid rgba(255, 42, 133, 0.4);
-    border-radius: 12px;
-    padding: 2px 8px;
+.hud-val { color: #00ffc8; font-weight: 700; }
+.hud-ping-val { color: #38bdf8; font-weight: 700; }
+
+.hud-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 3px 8px;
     font-size: 11px;
+    font-weight: 600;
+    color: #e2e8f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+.hud-btn:hover, .hud-btn:active {
+    background: rgba(0, 255, 200, 0.25);
+    border-color: #00ffc8;
+    color: #00ffc8;
+}
+.hud-btn.active-mode {
+    background: rgba(0, 255, 200, 0.2);
+    border-color: #00ffc8;
+    color: #00ffc8;
 }
 .hud-toggle-btn {
     background: rgba(255, 255, 255, 0.12);
@@ -749,175 +852,143 @@ try:
     align-items: center;
     justify-content: center;
     font-size: 11px;
-    line-height: 1;
     color: #e2e8f0;
     cursor: pointer;
-    margin-left: 2px;
-    transition: background 0.2s, transform 0.2s;
 }
-.hud-toggle-btn:hover {
-    background: rgba(255, 42, 133, 0.6);
-    transform: scale(1.15);
-}
-@keyframes hud-pulse {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #00ffc8; }
-    100% { transform: scale(0.95); opacity: 0.8; }
-}
-/* Virtual Trackpad & Cursor */
-#linu-virtual-cursor {
-    position: fixed;
-}
-#linu-virtual-cursor {
-    position: fixed;
-    width: 24px;
-    height: 24px;
-    pointer-events: none;
-    z-index: 999999;
-    transform: translate3d(0, 0, 0);
-    display: none;
-    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
-    will-change: transform;
-}
-body.tp-active #linu-virtual-cursor {
-    display: block;
-}
+
 @media (max-width: 600px) {
-    #linu-hud-overlay {
-        top: 8px;
-        right: 8px;
-        font-size: 11px;
-        padding: 4px 10px;
-        gap: 6px;
+    #cloud-hud-overlay {
+        top: 8px; right: 8px; padding: 4px 8px; gap: 6px; font-size: 11px;
     }
-    .hud-badge { display: none; }
+    .hud-stat-extra { display: none; }
 }
 </style>
-<svg id="linu-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
+
+<!-- SVG Virtual Mouse Pointer -->
+<svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
     <path d="M4 4l7 17 2.5-6.5L20 12 4 4z"/>
 </svg>
-<div id="linu-hud-overlay" title="Arrastra para mover | Toca para minimizar/expandir">
+
+<!-- SVG Animated Hold Ring Indicator -->
+<svg id="cloud-hold-ring" viewBox="0 0 44 44">
+    <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
+    <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
+</svg>
+
+<!-- Notification Toast -->
+<div id="cloud-toast">Modo Trackpad Activo</div>
+
+<!-- Enterprise Floating HUD -->
+<div id="cloud-hud-overlay" title="Arrastra para mover | Toca − para minimizar">
     <div class="hud-dot" id="hud-status-dot"></div>
     <div class="hud-stat-pill"><span class="hud-val" id="hud-fps-text">60 FPS</span></div>
     <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
-    <div class="hud-stat-pill hud-hideable">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
+    <div class="hud-stat-pill hud-hideable hud-stat-extra">⚡ <span class="hud-ping-val" id="hud-ping-text">-- ms</span></div>
     <span class="hud-hideable" style="color: rgba(255,255,255,0.2)">|</span>
-    <div class="hud-badge hud-hideable">NVIDIA T4 1080p</div>
+
+    <!-- Mode Switcher (Trackpad vs Direct Touch) -->
+    <button class="hud-btn hud-hideable active-mode" id="btn-mode-toggle" title="Cambiar entre modo Touchpad relativo y Táctil directo">
+        <span id="btn-mode-icon">🖱️</span> <span id="btn-mode-label">Trackpad</span>
+    </button>
+
+    <!-- Zoom Reset Button (Visible when zoomed) -->
+    <button class="hud-btn hud-hideable" id="btn-zoom-reset" style="display:none;" title="Restablecer Zoom a 100%">
+        🔍 <span id="zoom-level-text">100%</span>
+    </button>
+
+    <!-- On-Screen Keyboard Toggle -->
+    <button class="hud-btn hud-hideable" id="btn-keyboard-toggle" title="Abrir / Cerrar Teclado">
+        ⌨️
+    </button>
+
+    <!-- Fullscreen Toggle -->
+    <button class="hud-btn hud-hideable" id="btn-fullscreen-toggle" title="Pantalla Completa">
+        ⛶
+    </button>
+
     <div class="hud-toggle-btn" id="hud-toggle-btn" title="Minimizar / Expandir">−</div>
 </div>
+
 <script>
 (function() {
-    const hud = document.getElementById("linu-hud-overlay");
+    "use strict";
+
+    // -------------------------------------------------------------------------
+    // 1. GESTIÓN DE ELEMENTOS Y ESTADO DEL SISTEMA
+    // -------------------------------------------------------------------------
+    const cursor = document.getElementById("cloud-virtual-cursor");
+    const holdRing = document.getElementById("cloud-hold-ring");
+    const toast = document.getElementById("cloud-toast");
+    const hud = document.getElementById("cloud-hud-overlay");
     const toggleBtn = document.getElementById("hud-toggle-btn");
+    const modeBtn = document.getElementById("btn-mode-toggle");
+    const modeIcon = document.getElementById("btn-mode-icon");
+    const modeLabel = document.getElementById("btn-mode-label");
+    const zoomBtn = document.getElementById("btn-zoom-reset");
+    const zoomText = document.getElementById("zoom-level-text");
+    const kbBtn = document.getElementById("btn-keyboard-toggle");
+    const fsBtn = document.getElementById("btn-fullscreen-toggle");
     const fpsText = document.getElementById("hud-fps-text");
     const pingText = document.getElementById("hud-ping-text");
     const statusDot = document.getElementById("hud-status-dot");
 
-    // 1. Minimizar HUD
-    let isMinimized = false;
-    function toggleMinimize(e) {
-        if (e) e.stopPropagation();
-        isMinimized = !isMinimized;
-        if (isMinimized) {
-            hud.classList.add("minimized");
-            if (toggleBtn) toggleBtn.innerText = "+";
-        } else {
-            hud.classList.remove("minimized");
-            if (toggleBtn) toggleBtn.innerText = "−";
-        }
-    }
-    if (toggleBtn) toggleBtn.addEventListener("click", toggleMinimize);
-
-    // 2. Arrastre HUD
-    let isDragging = false, startX = 0, startY = 0, initialLeft = 0, initialTop = 0, hasMoved = false;
-    function onPointerDown(e) {
-        if (e.target === toggleBtn) return;
-        isDragging = true;
-        hasMoved = false;
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = cx; startY = cy;
-        const rect = hud.getBoundingClientRect();
-        initialLeft = rect.left; initialTop = rect.top;
-        hud.style.left = initialLeft + "px"; hud.style.top = initialTop + "px";
-        hud.style.right = "auto"; hud.style.bottom = "auto";
-        document.addEventListener("mousemove", onPointerMove);
-        document.addEventListener("mouseup", onPointerUp);
-        document.addEventListener("touchmove", onPointerMove, { passive: false });
-        document.addEventListener("touchend", onPointerUp);
-    }
-    function onPointerMove(e) {
-        if (!isDragging) return;
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        const dx = cx - startX, dy = cy - startY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-            hasMoved = true;
-            if (e.cancelable) e.preventDefault();
-        }
-        hud.style.left = Math.max(5, Math.min(initialLeft + dx, window.innerWidth - hud.offsetWidth - 5)) + "px";
-        hud.style.top = Math.max(5, Math.min(initialTop + dy, window.innerHeight - hud.offsetHeight - 5)) + "px";
-    }
-    function onPointerUp() {
-        if (!isDragging) return;
-        isDragging = false;
-        document.removeEventListener("mousemove", onPointerMove);
-        document.removeEventListener("mouseup", onPointerUp);
-        document.removeEventListener("touchmove", onPointerMove);
-        document.removeEventListener("touchend", onPointerUp);
-        if (!hasMoved && isMinimized) toggleMinimize();
-    }
-    hud.addEventListener("mousedown", onPointerDown);
-    hud.addEventListener("touchstart", onPointerDown, { passive: true });
-
-    // 3. Medición de FPS y Ping
-    let frameCount = 0, lastTime = performance.now(), currentFps = 60;
-    function measureFps() {
-        frameCount++;
-        const now = performance.now();
-        const delta = now - lastTime;
-        if (delta >= 1000) {
-            currentFps = Math.round((frameCount * 1000) / delta);
-            if (fpsText) fpsText.innerText = currentFps + " FPS";
-            if (statusDot) {
-                statusDot.style.backgroundColor = currentFps >= 45 ? "#00ffc8" : (currentFps >= 25 ? "#facc15" : "#f43f5e");
-                statusDot.style.boxShadow = "0 0 8px " + statusDot.style.backgroundColor;
-            }
-            frameCount = 0;
-            lastTime = now;
-        }
-        requestAnimationFrame(measureFps);
-    }
-    requestAnimationFrame(measureFps);
-
-    function measurePing() {
-        const start = performance.now();
-        const img = new Image();
-        img.src = window.location.origin + "/app/images/icons/novnc-16x16.png?t=" + Date.now();
-        img.onload = img.onerror = function() {
-            const rtt = Math.round(performance.now() - start);
-            if (pingText) pingText.innerText = (rtt > 0 ? rtt : "< 45") + " ms";
-        };
-    }
-    setInterval(measurePing, 2000);
-    measurePing();
-
-    // =========================================================================
-    // 4. MOTOR DE TRACKPAD PROFESIONAL (ESTÁNDAR CHROME REMOTE DESKTOP / MACBOOK)
-    // =========================================================================
-    const cursor = document.getElementById("linu-virtual-cursor");
-    let isTrackpadEnabled = true;
-    let virtX = 960, virtY = 540; // Coordenadas 1080p
     const screenW = 1920, screenH = 1080;
+    let virtX = 960, virtY = 540;
+    let currentMode = localStorage.getItem("cloudpc_input_mode") || "TRACKPAD"; // "TRACKPAD" o "TOUCH"
+
+    let currentZoom = 1.0;
+    let panX = 0, panY = 0;
+    let isDragging = false;
+    let isTouching = false;
+    let touchStartTime = 0;
+    let lastTapEndTime = 0;
+    let initialTouchCount = 0;
+    let startX = 0, startY = 0, lastX = 0, lastY = 0;
+    let totalMoved = 0;
+    let dragHoldTimer = null;
+    let isTapAndHalfCandidate = false;
+
+    // Métricas de desplazamiento inercial con dos dedos (Momentum Scrolling)
+    let scrollVelocityY = 0, lastScrollY = 0, lastScrollTime = 0, momentumAnimFrame = null;
+
+    // Métricas de pellizco con dos dedos (Pinch-to-Zoom)
+    let isPinching = false, initialPinchDist = 0, initialPinchZoom = 1.0;
+    let initialPinchMidX = 0, initialPinchMidY = 0;
 
     function getRFB() {
         return (window.UI && window.UI.rfb) ? window.UI.rfb : null;
     }
 
+    function showToast(msg) {
+        if (!toast) return;
+        toast.innerText = msg;
+        toast.classList.add("show");
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function hapticFeedback(pattern) {
+        if (navigator.vibrate) {
+            try { navigator.vibrate(pattern); } catch(e) {}
+        }
+    }
+
+    function createRipple(clientX, clientY, type) {
+        const r = document.createElement("div");
+        r.className = `cloud-touch-ripple ${type}`;
+        r.style.left = clientX + "px";
+        r.style.top = clientY + "px";
+        document.body.appendChild(r);
+        setTimeout(() => r.remove(), 400);
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. SISTEMA DE COORDENADAS Y CURSOR BALÍSTICO SOTA
+    // -------------------------------------------------------------------------
     function updateCursorElement() {
         if (!cursor) return;
-        const displayX = (virtX / screenW) * window.innerWidth;
-        const displayY = (virtY / screenH) * window.innerHeight;
+        const displayX = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+        const displayY = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
         cursor.style.transform = `translate3d(${displayX}px, ${displayY}px, 0)`;
     }
 
@@ -928,57 +999,167 @@ body.tp-active #linu-virtual-cursor {
         }
     }
 
-    function hapticFeedback(pattern) {
-        if (navigator.vibrate) {
-            try { navigator.vibrate(pattern); } catch(e) {}
+    function sendKey(keysym) {
+        const rfb = getRFB();
+        if (rfb && typeof rfb.sendKey === "function") {
+            rfb.sendKey(keysym, 1);
+            setTimeout(() => rfb.sendKey(keysym, 0), 60);
         }
     }
 
-    let startX = 0, startY = 0, lastX = 0, lastY = 0;
-    let touchStartTime = 0;
-    let isTouching = false;
-    let totalMoved = 0;
-    let isDragging = false;
-    let dragHoldTimer = null;
-    let initialTouchCount = 0;
+    function updateCanvasTransform(animate) {
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        if (!canvas) return;
+        canvas.style.transition = animate ? "transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)" : "none";
+        canvas.style.transformOrigin = "0 0";
+        canvas.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
 
+        if (zoomBtn && zoomText) {
+            if (currentZoom > 1.05) {
+                zoomBtn.style.display = "flex";
+                zoomText.innerText = Math.round(currentZoom * 100) + "%";
+            } else {
+                zoomBtn.style.display = "none";
+            }
+        }
+        updateCursorElement();
+    }
+
+    function resetZoom(animate = true) {
+        currentZoom = 1.0;
+        panX = 0;
+        panY = 0;
+        updateCanvasTransform(animate);
+        showToast("Zoom: 100% (Ajuste Óptimo)");
+        hapticFeedback(15);
+    }
+
+    function setInputMode(mode) {
+        currentMode = mode;
+        localStorage.setItem("cloudpc_input_mode", mode);
+        if (mode === "TRACKPAD") {
+            document.body.classList.add("tp-trackpad-mode");
+            document.body.classList.remove("tp-touch-mode");
+            if (modeIcon) modeIcon.innerText = "🖱️";
+            if (modeLabel) modeLabel.innerText = "Trackpad";
+            if (modeBtn) modeBtn.classList.add("active-mode");
+            showToast("Modo Trackpad Activo (Estilo Laptop)");
+        } else {
+            document.body.classList.add("tp-touch-mode");
+            document.body.classList.remove("tp-trackpad-mode");
+            if (modeIcon) modeIcon.innerText = "👆";
+            if (modeLabel) modeLabel.innerText = "Táctil";
+            if (modeBtn) modeBtn.classList.remove("active-mode");
+            showToast("Modo Táctil Directo Activo (Tablet)");
+        }
+        hapticFeedback(20);
+        updateCursorElement();
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. EVENTOS DE ENTRADA MULTITÁCTIL (MOTOR COMPLETO CHROME REMOTE DESKTOP)
+    // -------------------------------------------------------------------------
     window.addEventListener("touchstart", function(e) {
-        if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
+        if (e.target.closest("#cloud-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
 
         initialTouchCount = e.touches.length;
         touchStartTime = performance.now();
         totalMoved = 0;
+        cancelAnimationFrame(momentumAnimFrame);
 
+        // A. Gestos con 1 Dedo (Movimiento, Toque, Doble Toque y Arrastre)
         if (e.touches.length === 1) {
             isTouching = true;
-            isDragging = false;
             startX = lastX = e.touches[0].clientX;
             startY = lastY = e.touches[0].clientY;
 
-            // Timer de pulsación larga: Tap & Hold para Drag & Drop (Chrome Remote Desktop standard)
-            clearTimeout(dragHoldTimer);
-            dragHoldTimer = setTimeout(function() {
-                if (isTouching && totalMoved < 15 && e.touches.length === 1) {
-                    isDragging = true;
-                    hapticFeedback(25); // Pulso físico de enganche
-                    sendMouse(1);       // Bloquea clic izquierdo presionado
-                }
-            }, 250);
+            // Detección de Doble Toque y Arrastre (Tap-and-Half Drag / Mac & CRD Standard)
+            const timeSinceLastTap = touchStartTime - lastTapEndTime;
+            if (timeSinceLastTap < 260) {
+                isTapAndHalfCandidate = true;
+            } else {
+                isTapAndHalfCandidate = false;
+            }
 
+            if (currentMode === "TRACKPAD") {
+                // En modo Trackpad: posicionar anillo de bloqueo
+                if (holdRing) {
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    holdRing.style.left = cx + "px";
+                    holdRing.style.top = cy + "px";
+                }
+
+                // Iniciar temporizador de pulsación larga (Tap & Hold to Drag)
+                clearTimeout(dragHoldTimer);
+                if (holdRing) holdRing.classList.remove("active");
+                dragHoldTimer = setTimeout(function() {
+                    if (isTouching && totalMoved < 14 && e.touches.length === 1) {
+                        isDragging = true;
+                        document.body.classList.add("tp-dragging");
+                        if (holdRing) holdRing.classList.add("active");
+                        hapticFeedback(30);
+                        sendMouse(1); // Clic izquierdo presionado (Bloqueado)
+                        showToast("Arrastre Bloqueado (Drag & Drop)");
+                    }
+                }, 240);
+
+            } else {
+                // Modo Táctil Directo: Coordenadas calculadas en el punto de contacto
+                const clientX = e.touches[0].clientX;
+                const clientY = e.touches[0].clientY;
+                const realX = (clientX - panX) / currentZoom;
+                const realY = (clientY - panY) / currentZoom;
+                virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
+                virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
+                sendMouse(0);
+
+                // Temporizador de clic derecho en modo táctil directo
+                clearTimeout(dragHoldTimer);
+                if (holdRing) {
+                    holdRing.style.left = clientX + "px";
+                    holdRing.style.top = clientY + "px";
+                }
+                dragHoldTimer = setTimeout(function() {
+                    if (isTouching && totalMoved < 12 && e.touches.length === 1) {
+                        if (holdRing) holdRing.classList.add("active");
+                        hapticFeedback([15, 35, 15]);
+                        sendMouse(4); // Clic Derecho
+                        createRipple(clientX, clientY, "right-click");
+                        setTimeout(() => sendMouse(0), 40);
+                    }
+                }, 380);
+            }
+
+        // B. Gestos con 2 Dedos (Scroll y Pellizco para Zoom)
         } else if (e.touches.length === 2) {
             clearTimeout(dragHoldTimer);
-            isDragging = false;
-            lastY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            if (holdRing) holdRing.classList.remove("active");
+            if (isDragging) { isDragging = false; sendMouse(0); }
+
+            const p1 = e.touches[0], p2 = e.touches[1];
+            initialPinchDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
+            initialPinchZoom = currentZoom;
+            initialPinchMidX = (p1.clientX + p2.clientX) / 2;
+            initialPinchMidY = (p1.clientY + p2.clientY) / 2;
+            isPinching = false;
+
+            lastY = initialPinchMidY;
+            lastScrollY = initialPinchMidY;
+            lastScrollTime = performance.now();
+            scrollVelocityY = 0;
+
+        // C. Gestos con 3 Dedos o 4 Dedos
         } else {
             clearTimeout(dragHoldTimer);
+            if (holdRing) holdRing.classList.remove("active");
         }
     }, { passive: false });
 
     window.addEventListener("touchmove", function(e) {
-        if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
+        if (e.target.closest("#cloud-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
 
+        // 1 Dedo en Movimiento
         if (isTouching && e.touches.length === 1) {
             e.preventDefault();
             const curX = e.touches[0].clientX;
@@ -990,82 +1171,365 @@ body.tp-active #linu-virtual-cursor {
             const dist = Math.hypot(dx, dy);
             totalMoved += dist;
 
+            // Cancelar anillo si se mueve antes de tiempo (salvo tap-and-half)
             if (totalMoved > 10 && !isDragging) {
                 clearTimeout(dragHoldTimer);
+                if (holdRing) holdRing.classList.remove("active");
             }
 
-            // Curva de aceleración balística no lineal
-            const speed = Math.max(1, dist);
-            const accel = Math.min(2.8, Math.max(0.9, Math.pow(speed, 0.22)));
-            const scaleX = (screenW / window.innerWidth) * 1.35 * accel;
-            const scaleY = (screenH / window.innerHeight) * 1.35 * accel;
+            // Detección instantánea de Tap-and-Half Drag
+            if (isTapAndHalfCandidate && totalMoved > 8 && !isDragging) {
+                isDragging = true;
+                document.body.classList.add("tp-dragging");
+                hapticFeedback(25);
+                sendMouse(1);
+            }
 
-            virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
-            virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
+            if (currentMode === "TRACKPAD") {
+                // Curva balística no lineal de precisión milimétrica
+                const speed = Math.max(1, dist);
+                const accel = Math.min(3.2, Math.max(0.92, Math.pow(speed, 0.24)));
+                const scaleX = (screenW / (window.innerWidth * currentZoom)) * 1.35 * accel;
+                const scaleY = (screenH / (window.innerHeight * currentZoom)) * 1.35 * accel;
 
-            updateCursorElement();
-            sendMouse(isDragging ? 1 : 0);
+                virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
+                virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
 
+                updateCursorElement();
+                sendMouse(isDragging ? 1 : 0);
+            } else {
+                // Modo Táctil Directo
+                const realX = (curX - panX) / currentZoom;
+                const realY = (curY - panY) / currentZoom;
+                virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
+                virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
+                sendMouse(1); // Mantiene arrastre
+            }
+
+        // 2 Dedos en Movimiento (Pellizco de Zoom o Scroll Suave)
         } else if (e.touches.length === 2) {
             e.preventDefault();
-            const curY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            const dy = curY - lastY;
-            lastY = curY;
-            if (dy > 10) {
-                sendMouse(16); // Scroll abajo
-                setTimeout(() => sendMouse(0), 30);
-            } else if (dy < -10) {
-                sendMouse(8);  // Scroll arriba
-                setTimeout(() => sendMouse(0), 30);
+            const p1 = e.touches[0], p2 = e.touches[1];
+            const currentDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
+            const distDiff = Math.abs(currentDist - initialPinchDist);
+
+            // Si los dedos se separan o juntan > 25px -> Activamos modo Zoom
+            if (distDiff > 25 || isPinching) {
+                isPinching = true;
+                const zoomFactor = currentDist / initialPinchDist;
+                const newZoom = Math.min(3.5, Math.max(1.0, initialPinchZoom * zoomFactor));
+
+                // Ajustar paneo centrado en el pellizco
+                const midX = (p1.clientX + p2.clientX) / 2;
+                const midY = (p1.clientY + p2.clientY) / 2;
+                panX += (midX - initialPinchMidX) * 0.7;
+                panY += (midY - initialPinchMidY) * 0.7;
+                initialPinchMidX = midX;
+                initialPinchMidY = midY;
+
+                currentZoom = newZoom;
+                if (currentZoom <= 1.05) { panX = 0; panY = 0; }
+                updateCanvasTransform(false);
+
+            } else {
+                // Modo Desplazamiento (Scroll Vertical u Horizontal)
+                const curY = (p1.clientY + p2.clientY) / 2;
+                const dy = curY - lastY;
+                lastY = curY;
+
+                const now = performance.now();
+                const dt = now - lastScrollTime;
+                if (dt > 0) {
+                    scrollVelocityY = dy / dt;
+                }
+                lastScrollTime = now;
+
+                if (dy > 10) {
+                    sendMouse(16); // Scroll hacia abajo
+                    setTimeout(() => sendMouse(0), 25);
+                } else if (dy < -10) {
+                    sendMouse(8);  // Scroll hacia arriba
+                    setTimeout(() => sendMouse(0), 25);
+                }
             }
         }
     }, { passive: false });
 
     window.addEventListener("touchend", function(e) {
-        if (!isTrackpadEnabled) return;
-        if (e.target.closest("#linu-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
+        if (e.target.closest("#cloud-hud-overlay") || e.target.closest("#noVNC_control_bar")) return;
 
         clearTimeout(dragHoldTimer);
+        if (holdRing) holdRing.classList.remove("active");
         const duration = performance.now() - touchStartTime;
 
+        // Liberar estado de arrastre si estaba activo
         if (isDragging) {
             isDragging = false;
-            sendMouse(0); // Libera el clic izquierdo
+            document.body.classList.remove("tp-dragging");
+            sendMouse(0);
             hapticFeedback(12);
+            lastTapEndTime = performance.now();
             return;
         }
 
+        // Si todos los dedos se han levantado
         if (e.touches.length === 0) {
             isTouching = false;
 
+            // Iniciar inercia de scroll si había velocidad suficiente al soltar los dos dedos
+            if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35) {
+                let v = scrollVelocityY * 18;
+                let decay = () => {
+                    if (Math.abs(v) > 0.8) {
+                        sendMouse(v > 0 ? 16 : 8);
+                        setTimeout(() => sendMouse(0), 20);
+                        v *= 0.88; // Fricción suave
+                        momentumAnimFrame = requestAnimationFrame(decay);
+                    }
+                };
+                decay();
+            }
+
+            // 1 DEDO: CLIC IZQUIERDO RÁPIDO (< 220ms y < 10px movimiento)
             if (initialTouchCount === 1) {
-                // Toque rápido con 1 dedo (< 220ms y < 10px) = Clic Izquierdo
                 if (duration < 220 && totalMoved < 10) {
                     hapticFeedback(12);
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    createRipple(cx, cy, "left-click");
+
                     sendMouse(1);
-                    setTimeout(() => sendMouse(0), 40);
+                    setTimeout(() => sendMouse(0), 35);
+                    lastTapEndTime = performance.now();
                 }
-            } else if (initialTouchCount === 2) {
-                // Toque rápido con 2 dedos = Clic Derecho (Menú contextual)
-                if (duration < 260) {
-                    hapticFeedback([12, 35, 12]);
+
+            // 2 DEDOS: CLIC DERECHO RÁPIDO (< 260ms)
+            } else if (initialTouchCount === 2 && !isPinching) {
+                if (duration < 260 && totalMoved < 15) {
+                    hapticFeedback([10, 30, 10]);
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    createRipple(cx, cy, "right-click");
+
                     sendMouse(4);
                     setTimeout(() => sendMouse(0), 40);
                 }
+
+            // 3 DEDOS: CLIC CENTRAL (< 280ms) O GESTOS VERTICALES
             } else if (initialTouchCount === 3) {
-                // Toque rápido con 3 dedos = Clic Central / Rueda
                 if (duration < 280) {
-                    hapticFeedback(20);
+                    hapticFeedback(22);
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    createRipple(cx, cy, "middle-click");
+
                     sendMouse(2);
                     setTimeout(() => sendMouse(0), 40);
+                } else if (lastY - startY > 60) {
+                    // Deslizar 3 dedos hacia abajo: Alternar Teclado Virtual
+                    toggleVirtualKeyboard();
+                } else if (startY - lastY > 60) {
+                    // Deslizar 3 dedos hacia arriba: Menú de Aplicaciones (Tecla Super / Windows)
+                    sendKey(0xffeb);
+                    showToast("Vista de Aplicaciones (Super)");
+                    hapticFeedback(25);
                 }
+
+            // 4 DEDOS: ALTERNAR PANTALLA COMPLETA
+            } else if (initialTouchCount === 4 && duration < 320) {
+                toggleFullScreen();
             }
+
             initialTouchCount = 0;
         }
     }, { passive: false });
 
-    document.body.classList.add("tp-active");
-    updateCursorElement();
+    // -------------------------------------------------------------------------
+    // 4. ACCIONES DE CONTROL, BOTONES DEL HUD Y UTILIDADES
+    // -------------------------------------------------------------------------
+    function toggleVirtualKeyboard() {
+        const rfb = getRFB();
+        const inputElem = document.querySelector("#noVNC_keyboardinput") || document.querySelector("input[type=text]");
+        if (inputElem) {
+            inputElem.focus();
+            showToast("Teclado en Pantalla Activado");
+            hapticFeedback(18);
+        } else {
+            showToast("Teclado Solicitado");
+        }
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+            showToast("Pantalla Completa Activada");
+        } else {
+            document.exitFullscreen().catch(() => {});
+            showToast("Pantalla Completa Desactivada");
+        }
+        hapticFeedback(25);
+    }
+
+    // Botón de alternar modo Touchpad / Táctil
+    if (modeBtn) {
+        modeBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            setInputMode(currentMode === "TRACKPAD" ? "TOUCH" : "TRACKPAD");
+        });
+    }
+
+    // Botón de restablecer Zoom
+    if (zoomBtn) {
+        zoomBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            resetZoom(true);
+        });
+    }
+
+    // Botón de Teclado
+    if (kbBtn) {
+        kbBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            toggleVirtualKeyboard();
+        });
+    }
+
+    // Botón de Pantalla Completa
+    if (fsBtn) {
+        fsBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            toggleFullScreen();
+        });
+    }
+
+    // Minimizar / Expandir HUD
+    let isHudMinimized = false;
+    function toggleHudMinimize(e) {
+        if (e) e.stopPropagation();
+        isHudMinimized = !isHudMinimized;
+        if (isHudMinimized) {
+            hud.classList.add("minimized");
+            if (toggleBtn) toggleBtn.innerText = "+";
+        } else {
+            hud.classList.remove("minimized");
+            if (toggleBtn) toggleBtn.innerText = "−";
+        }
+    }
+    if (toggleBtn) toggleBtn.addEventListener("click", toggleHudMinimize);
+
+    // Arrastre suave del HUD flotante
+    let isHudDragging = false, hudStartX = 0, hudStartY = 0, hudInitLeft = 0, hudInitTop = 0, hudMoved = false;
+    hud.addEventListener("pointerdown", function(e) {
+        if (e.target.closest(".hud-btn") || e.target === toggleBtn) return;
+        isHudDragging = true;
+        hudMoved = false;
+        hudStartX = e.clientX;
+        hudStartY = e.clientY;
+        const rect = hud.getBoundingClientRect();
+        hudInitLeft = rect.left;
+        hudInitTop = rect.top;
+        hud.style.left = hudInitLeft + "px";
+        hud.style.top = hudInitTop + "px";
+        hud.style.right = "auto";
+        hud.setPointerCapture(e.pointerId);
+    });
+    hud.addEventListener("pointermove", function(e) {
+        if (!isHudDragging) return;
+        const dx = e.clientX - hudStartX;
+        const dy = e.clientY - hudStartY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hudMoved = true;
+        hud.style.left = Math.max(6, Math.min(hudInitLeft + dx, window.innerWidth - hud.offsetWidth - 6)) + "px";
+        hud.style.top = Math.max(6, Math.min(hudInitTop + dy, window.innerHeight - hud.offsetHeight - 6)) + "px";
+    });
+    hud.addEventListener("pointerup", function(e) {
+        if (!isHudDragging) return;
+        isHudDragging = false;
+        hud.releasePointerCapture(e.pointerId);
+        if (!hudMoved && isHudMinimized) toggleHudMinimize();
+    });
+
+    // -------------------------------------------------------------------------
+    // 5. MEDIDOR DE FPS Y LATENCIA EN TIEMPO REAL
+    // -------------------------------------------------------------------------
+    let frameCount = 0, lastFpsTime = performance.now();
+    function fpsLoop() {
+        frameCount++;
+        const now = performance.now();
+        const delta = now - lastFpsTime;
+        if (delta >= 1000) {
+            const currentFps = Math.round((frameCount * 1000) / delta);
+            if (fpsText) fpsText.innerText = currentFps + " FPS";
+            if (statusDot) {
+                statusDot.style.backgroundColor = currentFps >= 45 ? "#00ffc8" : (currentFps >= 25 ? "#facc15" : "#f43f5e");
+                statusDot.style.boxShadow = "0 0 8px " + statusDot.style.backgroundColor;
+            }
+            frameCount = 0;
+            lastFpsTime = now;
+        }
+        requestAnimationFrame(fpsLoop);
+    }
+    requestAnimationFrame(fpsLoop);
+
+    function measureNetworkPing() {
+        const start = performance.now();
+        const img = new Image();
+        img.src = window.location.origin + "/app/images/icons/novnc-16x16.png?t=" + Date.now();
+        img.onload = img.onerror = function() {
+            const rtt = Math.round(performance.now() - start);
+            if (pingText) pingText.innerText = (rtt > 0 ? rtt : "< 40") + " ms";
+        };
+    }
+    setInterval(measureNetworkPing, 2500);
+    measureNetworkPing();
+
+    // -------------------------------------------------------------------------
+    // 6. DETECTOR PLUG & PLAY DE MANDOS (HTML5 GAMEPAD API -> WS:6081)
+    // -------------------------------------------------------------------------
+    let gpSocket = null, connectedGpIndex = -1;
+    function initGamepadSocket() {
+        if (gpSocket && gpSocket.readyState === WebSocket.OPEN) return;
+        const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = proto + "//" + window.location.hostname + ":6081";
+        try {
+            gpSocket = new WebSocket(wsUrl);
+            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado."); };
+        } catch(e) {}
+    }
+
+    function checkGamepadLoop() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        for (let i = 0; i < gamepads.length; i++) {
+            const gp = gamepads[i];
+            if (gp && gp.connected) {
+                if (connectedGpIndex === -1) {
+                    connectedGpIndex = gp.index;
+                    initGamepadSocket();
+                    if (gp.vibrationActuator && typeof gp.vibrationActuator.playEffect === "function") {
+                        gp.vibrationActuator.playEffect("dual-rumble", { startDelay: 0, duration: 150, weakMagnitude: 0.5, strongMagnitude: 0.5 });
+                    }
+                    showToast(`🎮 Mando Conectado: ${gp.id.substring(0, 20)}...`);
+                }
+                if (gpSocket && gpSocket.readyState === WebSocket.OPEN) {
+                    const buttons = gp.buttons.map(b => b.pressed ? 1 : 0);
+                    const axes = [
+                        Math.abs(gp.axes[0]) > 0.08 ? gp.axes[0] : 0,
+                        Math.abs(gp.axes[1]) > 0.08 ? gp.axes[1] : 0,
+                        Math.abs(gp.axes[2]) > 0.08 ? gp.axes[2] : 0,
+                        Math.abs(gp.axes[3]) > 0.08 ? gp.axes[3] : 0
+                    ];
+                    gpSocket.send(JSON.stringify({ axes: axes, buttons: buttons }));
+                }
+                requestAnimationFrame(checkGamepadLoop);
+                return;
+            }
+        }
+        connectedGpIndex = -1;
+        requestAnimationFrame(checkGamepadLoop);
+    }
+    requestAnimationFrame(checkGamepadLoop);
+
+    // Inicializar estado guardado
+    setInputMode(currentMode);
 })();
 </script>
 """
