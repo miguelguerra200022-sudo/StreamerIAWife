@@ -1285,19 +1285,39 @@ try:
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
 
     # --------------------------------------------------------------------------
-    # Personalización Profesional de la Terminal (Cero mención de Kaggle)
+    # Personalización Profesional de la Terminal (Blindaje Total - Cero Mención de Kaggle)
     # --------------------------------------------------------------------------
     subprocess.run("hostname cloud-workstation 2>/dev/null || true; echo 'cloud-workstation' > /etc/hostname 2>/dev/null || true", shell=True)
     
+    # 1. Montaje limpio de Bases de Datos en /media/Cloud_Storage (VFS Enterprise)
+    subprocess.run("mkdir -p /media/Cloud_Storage && mount --bind /kaggle/input /media/Cloud_Storage 2>/dev/null || true", shell=True)
+    
+    # 2. Configuración de Shell y Bashrc Inmaculada
     bash_custom = (
-        "\n# Configuración de Terminal Profesional Cloud PC\n"
+        "\n# Configuración de Terminal Profesional Cloud PC Workstation\n"
+        "# 1. Prompt corporativo elegante\n"
         "export PS1='\\[\\033[01;32m\\]gamer@cloud-workstation\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n"
+        "\n# 2. Sanitización de Variables de Entorno en vivo\n"
+        "for _kvar in $(env 2>/dev/null | grep -i kaggle | cut -d= -f1); do\n"
+        "    unset $_kvar 2>/dev/null\n"
+        "done\n"
+        "\n# 3. Directorio de aterrizaje seguro (Home personal)\n"
         "if [ \"$PWD\" = \"/kaggle/working\" ] || [ \"$PWD\" = \"/kaggle\" ]; then\n"
         "    cd /root/Escritorio 2>/dev/null || cd /root\n"
         "fi\n"
-        "alias ll='ls -la --color=auto'\n"
-        "alias la='ls -A --color=auto'\n"
-        "alias l='ls -CF --color=auto'\n"
+        "\n# 4. Alias estándar e invisibilidad de carpetas de infraestructura\n"
+        "alias ls='ls --color=auto --hide=kaggle'\n"
+        "alias ll='ls -la --color=auto --hide=kaggle'\n"
+        "alias la='ls -A --color=auto --hide=kaggle'\n"
+        "alias l='ls -CF --color=auto --hide=kaggle'\n"
+        "\n# 5. Interceptor de navegación para rutas internas\n"
+        "cd() {\n"
+        "    if [ \"$1\" = \"/kaggle\" ] || [[ \"$1\" == \"/kaggle/\"* ]]; then\n"
+        "        echo \"bash: cd: $1: No such file or directory\" >&2\n"
+        "        return 1\n"
+        "    fi\n"
+        "    builtin cd \"$@\"\n"
+        "}\n"
     )
     for b_path in ["/root/.bashrc", "/etc/bash.bashrc", "/etc/skel/.bashrc"]:
         try:
@@ -1311,7 +1331,45 @@ try:
         except Exception:
             pass
 
-    # Banner Oficial de Bienvenida en la Terminal (MOTD)
+    # 3. Sanitización de /etc/environment y /etc/profile
+    for env_file in [Path("/etc/environment"), Path("/etc/profile")]:
+        try:
+            if env_file.exists():
+                clean_lines = [l for l in env_file.read_text(encoding="utf-8", errors="ignore").splitlines() if "kaggle" not in l.lower()]
+                env_file.write_text("\n".join(clean_lines) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+
+    # 4. Wrappers Transparentes para df y mount (Ocultan rutas internas sin limitar funcionalidades)
+    df_wrapper = (
+        "#!/bin/bash\n"
+        "REAL_DF=\"/bin/df\"\n"
+        "[ -x \"$REAL_DF\" ] || REAL_DF=\"/usr/bin/df\"\n"
+        "\"$REAL_DF\" \"$@\" | sed 's|/kaggle/input|/media/Cloud_Storage|g' | sed 's|/kaggle/working|/root/Workspace|g' | grep -v 'kaggle_internal'\n"
+    )
+    try:
+        Path("/usr/local/bin/df").write_text(df_wrapper, encoding="utf-8")
+        subprocess.run("chmod +x /usr/local/bin/df 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
+
+    mount_wrapper = (
+        "#!/bin/bash\n"
+        "REAL_MOUNT=\"/bin/mount\"\n"
+        "[ -x \"$REAL_MOUNT\" ] || REAL_MOUNT=\"/usr/bin/mount\"\n"
+        "if [ $# -eq 0 ]; then\n"
+        "    \"$REAL_MOUNT\" | sed 's|/kaggle/input|/media/Cloud_Storage|g' | sed 's|/kaggle/working|/root/Workspace|g' | grep -v 'kaggle'\n"
+        "else\n"
+        "    \"$REAL_MOUNT\" \"$@\"\n"
+        "fi\n"
+    )
+    try:
+        Path("/usr/local/bin/mount").write_text(mount_wrapper, encoding="utf-8")
+        subprocess.run("chmod +x /usr/local/bin/mount 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
+
+    # 5. Banner Oficial de Bienvenida en la Terminal (MOTD)
     motd_text = (
         "================================================================================\n"
         "🚀 Bienvenido a tu Cloud PC Workstation (Ubuntu 22.04 LTS Pro)\n"
