@@ -975,6 +975,12 @@ body.tp-gamepad-active #cloud-perf-badge {
     pointer-events: auto;
     touch-action: none;
 }
+/* Joystick Analógico Derecho (Cámara 3D y Apuntar) */
+.gp-right-stick-zone {
+    left: auto !important;
+    right: calc(180px + var(--safe-right));
+    bottom: calc(22px + var(--safe-bottom));
+}
 .gp-stick-base {
     position: absolute;
     width: 130px;
@@ -1299,6 +1305,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         </div>
     </div>
 
+    <!-- Joystick Derecho (Cámara 3D y Apuntar) -->
+    <div class="gp-stick-zone gp-right-stick-zone" id="right-stick-zone">
+        <div class="gp-stick-base">
+            <div class="gp-stick-thumb" id="right-stick-thumb"></div>
+        </div>
+    </div>
+
     <!-- Cruceta D-Pad -->
     <div class="gp-dpad-container">
         <button class="gp-dpad-btn gp-dpad-up" data-btn="12">▲</button>
@@ -1374,6 +1387,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const gpOverlay = document.getElementById("virtual-gamepad-overlay");
     const leftStickZone = document.getElementById("left-stick-zone");
     const leftStickThumb = document.getElementById("left-stick-thumb");
+    const rightStickZone = document.getElementById("right-stick-zone");
+    const rightStickThumb = document.getElementById("right-stick-thumb");
 
     const perfFps = document.getElementById("perf-fps-text");
     const perfPing = document.getElementById("perf-ping-text");
@@ -1569,18 +1584,42 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // 3. CAPA DE MANDOS EN PANTALLA (XBOX FUSION) Y WEBSOCKET A /dev/uinput
     // -------------------------------------------------------------------------
     let gpSocket = null;
+    let gpReconnectTimer = null;
+    let gpPingInterval = null;
+    let physicalGamepadCount = 0;
+    let physicalPollingFrame = null;
     const gpButtonsState = new Array(17).fill(0);
     let gpAxesState = [0, 0, 0, 0];
 
     function initGamepadWebSocket() {
-        if (gpSocket && gpSocket.readyState === WebSocket.OPEN) return;
+        if (gpSocket && (gpSocket.readyState === WebSocket.OPEN || gpSocket.readyState === WebSocket.CONNECTING)) return;
         const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
         const host = window.location.host;
+        // Enrutamiento unificado vía Nginx en puerto 6080 (/gamepad) con fallback a 6081
         const wsPath = (window.location.port === "6081") ? (proto + "//" + window.location.hostname + ":6081") : (proto + "//" + host + "/gamepad");
         try {
             gpSocket = new WebSocket(wsPath);
-            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado:", wsPath); };
+            gpSocket.onopen = function() {
+                console.log("🎮 Gamepad UInput bridge conectado con éxito:", wsPath);
+                showToast("🎮 Mando Conectado al Kernel");
+                clearTimeout(gpReconnectTimer);
+                clearInterval(gpPingInterval);
+                // Heartbeat cada 25s para mantener el túnel Cloudflare permanentemente abierto
+                gpPingInterval = setInterval(() => {
+                    if (gpSocket && gpSocket.readyState === WebSocket.OPEN) {
+                        gpSocket.send(JSON.stringify({ type: "ping" }));
+                    }
+                }, 25000);
+            };
+            gpSocket.onclose = function() {
+                clearInterval(gpPingInterval);
+                if (isGamepadVisible || physicalGamepadCount > 0) {
+                    clearTimeout(gpReconnectTimer);
+                    gpReconnectTimer = setTimeout(initGamepadWebSocket, 2500);
+                }
+            };
             gpSocket.onerror = function() {
+                clearInterval(gpPingInterval);
                 if (!wsPath.includes(":6081")) {
                     try {
                         const fallbackUrl = proto + "//" + window.location.hostname + ":6081";
@@ -1595,6 +1634,64 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         if (gpSocket && gpSocket.readyState === WebSocket.OPEN) {
             gpSocket.send(JSON.stringify({ axes: gpAxesState, buttons: gpButtonsState }));
         }
+    }
+
+    // Detección Plug & Play de mandos físicos (Xbox, PlayStation, Switch, 8BitDo)
+    window.addEventListener("gamepadconnected", function(e) {
+        physicalGamepadCount++;
+        console.log("🎮 Mando físico conectado:", e.gamepad.id);
+        const name = e.gamepad.id.length > 20 ? e.gamepad.id.substring(0, 20) + "..." : e.gamepad.id;
+        showToast("🎮 Mando: " + name);
+        hapticFeedback([20, 50, 20]);
+        initGamepadWebSocket();
+        startPhysicalGamepadLoop();
+    });
+
+    window.addEventListener("gamepaddisconnected", function(e) {
+        physicalGamepadCount = Math.max(0, physicalGamepadCount - 1);
+        showToast("Mando físico desconectado");
+    });
+
+    function startPhysicalGamepadLoop() {
+        if (physicalPollingFrame) return;
+        function poll() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let active = false;
+            for (let i = 0; i < gamepads.length; i++) {
+                const gp = gamepads[i];
+                if (gp && gp.connected) {
+                    active = true;
+                    // 1. Mapeo estándar de botones (0 a 16)
+                    for (let b = 0; b < gp.buttons.length && b < 17; b++) {
+                        const isPress = gp.buttons[b].pressed ? 1 : 0;
+                        if (isPress) gpButtonsState[b] = 1;
+                    }
+                    // 2. Sticks analógicos físicos con Deadzone continua
+                    if (gp.axes.length >= 2) {
+                        const ax0 = gp.axes[0], ax1 = gp.axes[1];
+                        if (Math.hypot(ax0, ax1) > 0.12) {
+                            gpAxesState[0] = ax0;
+                            gpAxesState[1] = ax1;
+                        }
+                    }
+                    if (gp.axes.length >= 4) {
+                        const ax2 = gp.axes[2], ax3 = gp.axes[3];
+                        if (Math.hypot(ax2, ax3) > 0.12) {
+                            gpAxesState[2] = ax2;
+                            gpAxesState[3] = ax3;
+                        }
+                    }
+                    emitGamepadState();
+                    break;
+                }
+            }
+            if (active || physicalGamepadCount > 0) {
+                physicalPollingFrame = requestAnimationFrame(poll);
+            } else {
+                physicalPollingFrame = null;
+            }
+        }
+        physicalPollingFrame = requestAnimationFrame(poll);
     }
 
     function setGamepadVisibility(visible) {
@@ -1623,7 +1720,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // A. Control del Joystick Analógico Izquierdo Multi-Touch
+    // A. Control del Joystick Analógico Izquierdo (Movimiento)
     let stickTouchId = null, stickCenterX = 0, stickCenterY = 0;
     const maxStickRadius = 42;
 
@@ -1660,7 +1757,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === stickTouchId) {
                     stickTouchId = null;
-                    // Retorno elástico natural estilo resorte de mando físico
                     leftStickThumb.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
                     leftStickThumb.style.transform = "translate3d(0, 0, 0)";
                     setTimeout(() => { leftStickThumb.style.transition = "none"; }, 150);
@@ -1686,14 +1782,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         const thumbY = Math.sin(angle) * clampedDist;
         leftStickThumb.style.transform = `translate3d(${thumbX}px, ${thumbY}px, 0)`;
 
-        // Normalización para el kernel de Linux con zona muerta continua (Xbox TAK 12%)
         let normX = thumbX / maxStickRadius;
         let normY = thumbY / maxStickRadius;
         const mag = Math.hypot(normX, normY);
         const deadzone = 0.12;
         if (mag < deadzone) {
-            normX = 0;
-            normY = 0;
+            normX = 0; normY = 0;
         } else {
             const scaledMag = (mag - deadzone) / (1.0 - deadzone);
             normX = (normX / mag) * scaledMag;
@@ -1701,6 +1795,85 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
         gpAxesState[0] = normX;
         gpAxesState[1] = normY;
+        emitGamepadState();
+    }
+
+    // B. Control del Joystick Analógico Derecho (Cámara 3D y Apuntar)
+    let rightStickTouchId = null, rightStickCenterX = 0, rightStickCenterY = 0;
+
+    if (rightStickZone) {
+        rightStickZone.addEventListener("touchstart", function(e) {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (rightStickTouchId === null) {
+                    rightStickTouchId = t.identifier;
+                    if (rightStickThumb) rightStickThumb.style.transition = "none";
+                    const rect = rightStickZone.getBoundingClientRect();
+                    rightStickCenterX = rect.left + rect.width / 2;
+                    rightStickCenterY = rect.top + rect.height / 2;
+                    handleRightStickMove(t.clientX, t.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchmove", function(e) {
+            if (rightStickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === rightStickTouchId) {
+                    e.preventDefault();
+                    handleRightStickMove(t.clientX, t.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        const endRightStick = function(e) {
+            if (rightStickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === rightStickTouchId) {
+                    rightStickTouchId = null;
+                    if (rightStickThumb) {
+                        rightStickThumb.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                        rightStickThumb.style.transform = "translate3d(0, 0, 0)";
+                        setTimeout(() => { if (rightStickThumb) rightStickThumb.style.transition = "none"; }, 150);
+                    }
+                    gpAxesState[2] = 0;
+                    gpAxesState[3] = 0;
+                    emitGamepadState();
+                    break;
+                }
+            }
+        };
+        window.addEventListener("touchend", endRightStick);
+        window.addEventListener("touchcancel", endRightStick);
+    }
+
+    function handleRightStickMove(clientX, clientY) {
+        const dx = clientX - rightStickCenterX;
+        const dy = clientY - rightStickCenterY;
+        const dist = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+        const clampedDist = Math.min(dist, maxStickRadius);
+
+        const thumbX = Math.cos(angle) * clampedDist;
+        const thumbY = Math.sin(angle) * clampedDist;
+        if (rightStickThumb) rightStickThumb.style.transform = `translate3d(${thumbX}px, ${thumbY}px, 0)`;
+
+        let normX = thumbX / maxStickRadius;
+        let normY = thumbY / maxStickRadius;
+        const mag = Math.hypot(normX, normY);
+        const deadzone = 0.12;
+        if (mag < deadzone) {
+            normX = 0; normY = 0;
+        } else {
+            const scaledMag = (mag - deadzone) / (1.0 - deadzone);
+            normX = (normX / mag) * scaledMag;
+            normY = (normY / mag) * scaledMag;
+        }
+        gpAxesState[2] = normX;
+        gpAxesState[3] = normY;
         emitGamepadState();
     }
 
@@ -1805,7 +1978,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Gestos de Pantalla cuando los mandos en pantalla no están interactuando
     window.addEventListener("touchstart", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         initialTouchCount = e.touches.length;
         touchStartTime = performance.now();
@@ -1885,7 +2059,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     window.addEventListener("touchmove", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         if (isTouching && e.touches.length === 1) {
             e.preventDefault();
@@ -2008,7 +2183,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     window.addEventListener("touchend", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         clearTimeout(dragHoldTimer);
         if (holdRing) holdRing.classList.remove("active");
@@ -3123,30 +3299,112 @@ try:
 except Exception:
     pass
 
-# Servidor Web noVNC (Puerto 6080 Directo — Resiliente y sin intermediarios)
-log("Iniciando noVNC directo en puerto 6080...")
+# Iniciar Gamepad UInput Daemon en puerto 6081
+log("Iniciando Gamepad UInput Bridge en puerto 6081...")
+subprocess.run("chmod 0666 /dev/uinput 2>/dev/null || true", shell=True)
+subprocess.run(f"cp {BASE_DIR}/gamepad_uinput_bridge.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
+subprocess.run("chmod +x /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
+subprocess.run("pkill -9 -f 'gamepad_uinput_bridge' 2>/dev/null || true", shell=True)
+subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
+
+# Servidor VNC interno Websockify en puerto 6082
+log("Iniciando Websockify VNC interno en puerto 6082...")
 subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
 time.sleep(0.5)
 
 subprocess.Popen([
     "/opt/noVNC/utils/novnc_proxy",
     "--vnc", "127.0.0.1:5900",
-    "--listen", "6080",
+    "--listen", "6082",
     "--web", "/opt/noVNC"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
 
-novnc_ready = wait_for_port(6080, timeout=12)
-if not novnc_ready:
-    log("Reintentando arranque de noVNC en 6080...", "WARNING")
+# Configurar y levantar Nginx en puerto 6080 (Enrutador inverso unificado: VNC + Gamepad + Web)
+nginx_ready = False
+nginx_bin = shutil.which("nginx")
+if nginx_bin:
+    try:
+        nginx_conf = """
+worker_processes 2;
+pid /tmp/nginx_aether.pid;
+error_log /tmp/nginx_error.log warn;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+
+    server {
+        listen 6080 default_server;
+        server_name _;
+
+        # 1. Archivos estáticos de noVNC y Web UI
+        location / {
+            root /opt/noVNC;
+            index vnc.html;
+            try_files $uri $uri/ /vnc.html;
+        }
+
+        # 2. VNC Stream WebSocket
+        location /websockify {
+            proxy_pass http://127.0.0.1:6082/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+
+        # 3. Gamepad UInput WebSocket Bridge
+        location /gamepad {
+            proxy_pass http://127.0.0.1:6081/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+    }
+}
+"""
+        Path("/tmp/nginx_aether.conf").write_text(nginx_conf, encoding="utf-8")
+        subprocess.run("nginx -s stop 2>/dev/null || pkill -9 nginx 2>/dev/null || true", shell=True)
+        time.sleep(0.5)
+        subprocess.run("nginx -c /tmp/nginx_aether.conf", shell=True)
+        if wait_for_port(6080, timeout=5):
+            nginx_ready = True
+            log("Enrutador unificado Nginx activo en puerto 6080 (VNC + Gamepad + Web)", "SUCCESS")
+    except Exception as e_nx:
+        log(f"Aviso arranque Nginx: {e_nx}", "WARNING")
+
+if not nginx_ready:
+    log("Usando modo directo noVNC en 6080 (Compatibilidad)", "WARNING")
     subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
-    time.sleep(1)
+    time.sleep(0.5)
     subprocess.Popen([
         "/opt/noVNC/utils/novnc_proxy",
         "--vnc", "127.0.0.1:5900",
         "--listen", "6080",
         "--web", "/opt/noVNC"
     ], env=env, stdout=log_vnc, stderr=log_vnc)
-    novnc_ready = wait_for_port(6080, timeout=10)
+
+novnc_ready = wait_for_port(6080, timeout=8)
 
 # Verificación HTTP Real de respuesta local 200 en puerto 6080
 port6080_http_ok = False
@@ -3162,21 +3420,27 @@ if novnc_ready:
         except Exception:
             time.sleep(0.5)
 
-# Watchdog en segundo plano: Si el puerto 6080 cae, revivirlo automáticamente
+# Watchdog en segundo plano: Supervisar puerto 6080 y Gamepad 6081
 def watchdog_novnc_loop():
     while True:
         time.sleep(25)
         if not wait_for_port(6080, timeout=2):
-            log("WATCHDOG: Puerto 6080 caído. Reiniciando noVNC automáticamente...", "WARNING")
-            subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
-            time.sleep(0.5)
-            subprocess.Popen([
-                "/opt/noVNC/utils/novnc_proxy",
-                "--vnc", "127.0.0.1:5900",
-                "--listen", "6080",
-                "--web", "/opt/noVNC"
-            ], env=env, stdout=log_vnc, stderr=log_vnc)
-            wait_for_port(6080, timeout=8)
+            log("WATCHDOG: Puerto 6080 caído. Reiniciando servicios...", "WARNING")
+            if nginx_bin and Path("/tmp/nginx_aether.conf").exists():
+                subprocess.run("nginx -s stop 2>/dev/null || pkill -9 nginx 2>/dev/null || true", shell=True)
+                time.sleep(0.5)
+                subprocess.run("nginx -c /tmp/nginx_aether.conf 2>/dev/null || true", shell=True)
+            if not wait_for_port(6080, timeout=3):
+                subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
+                time.sleep(0.5)
+                subprocess.Popen([
+                    "/opt/noVNC/utils/novnc_proxy",
+                    "--vnc", "127.0.0.1:5900",
+                    "--listen", "6080",
+                    "--web", "/opt/noVNC"
+                ], env=env, stdout=log_vnc, stderr=log_vnc)
+        if not wait_for_port(6081, timeout=1):
+            subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
 
 import threading
 threading.Thread(target=watchdog_novnc_loop, daemon=True).start()
@@ -3238,8 +3502,8 @@ try:
                             time.sleep(1)
                     
                     if cf_ok:
-                        web_tunnel_wifi = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-                        web_tunnel_mobile = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                        web_tunnel_wifi = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                        web_tunnel_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
                     else:
                         log("Cloudflare no respondió HTTP 200 en tiempo. Intentando fallback.", "WARNING")
                     break
@@ -3264,8 +3528,8 @@ if not web_tunnel_wifi:
             conf.get_default().region = "us"
             http_tunnel = ngrok.connect(6080, "http")
             base_ngrok = http_tunnel.public_url
-            web_tunnel_wifi = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-            web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+            web_tunnel_wifi = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+            web_tunnel_mobile = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
             log(f"Túnel Ngrok activo: {base_ngrok}", "SUCCESS")
         except Exception as e_ngrok:
             log(f"Aviso Ngrok: {e_ngrok}", "WARNING")

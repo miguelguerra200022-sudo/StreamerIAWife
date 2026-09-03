@@ -618,6 +618,12 @@ body.tp-gamepad-active #cloud-perf-badge {
     pointer-events: auto;
     touch-action: none;
 }
+/* Joystick Analógico Derecho (Cámara 3D y Apuntar) */
+.gp-right-stick-zone {
+    left: auto !important;
+    right: calc(180px + var(--safe-right));
+    bottom: calc(22px + var(--safe-bottom));
+}
 .gp-stick-base {
     position: absolute;
     width: 130px;
@@ -942,6 +948,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         </div>
     </div>
 
+    <!-- Joystick Derecho (Cámara 3D y Apuntar) -->
+    <div class="gp-stick-zone gp-right-stick-zone" id="right-stick-zone">
+        <div class="gp-stick-base">
+            <div class="gp-stick-thumb" id="right-stick-thumb"></div>
+        </div>
+    </div>
+
     <!-- Cruceta D-Pad -->
     <div class="gp-dpad-container">
         <button class="gp-dpad-btn gp-dpad-up" data-btn="12">▲</button>
@@ -1017,6 +1030,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const gpOverlay = document.getElementById("virtual-gamepad-overlay");
     const leftStickZone = document.getElementById("left-stick-zone");
     const leftStickThumb = document.getElementById("left-stick-thumb");
+    const rightStickZone = document.getElementById("right-stick-zone");
+    const rightStickThumb = document.getElementById("right-stick-thumb");
 
     const perfFps = document.getElementById("perf-fps-text");
     const perfPing = document.getElementById("perf-ping-text");
@@ -1212,18 +1227,42 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // 3. CAPA DE MANDOS EN PANTALLA (XBOX FUSION) Y WEBSOCKET A /dev/uinput
     // -------------------------------------------------------------------------
     let gpSocket = null;
+    let gpReconnectTimer = null;
+    let gpPingInterval = null;
+    let physicalGamepadCount = 0;
+    let physicalPollingFrame = null;
     const gpButtonsState = new Array(17).fill(0);
     let gpAxesState = [0, 0, 0, 0];
 
     function initGamepadWebSocket() {
-        if (gpSocket && gpSocket.readyState === WebSocket.OPEN) return;
+        if (gpSocket && (gpSocket.readyState === WebSocket.OPEN || gpSocket.readyState === WebSocket.CONNECTING)) return;
         const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
         const host = window.location.host;
+        // Enrutamiento unificado vía Nginx en puerto 6080 (/gamepad) con fallback a 6081
         const wsPath = (window.location.port === "6081") ? (proto + "//" + window.location.hostname + ":6081") : (proto + "//" + host + "/gamepad");
         try {
             gpSocket = new WebSocket(wsPath);
-            gpSocket.onopen = function() { console.log("🎮 Gamepad UInput bridge conectado:", wsPath); };
+            gpSocket.onopen = function() {
+                console.log("🎮 Gamepad UInput bridge conectado con éxito:", wsPath);
+                showToast("🎮 Mando Conectado al Kernel");
+                clearTimeout(gpReconnectTimer);
+                clearInterval(gpPingInterval);
+                // Heartbeat cada 25s para mantener el túnel Cloudflare permanentemente abierto
+                gpPingInterval = setInterval(() => {
+                    if (gpSocket && gpSocket.readyState === WebSocket.OPEN) {
+                        gpSocket.send(JSON.stringify({ type: "ping" }));
+                    }
+                }, 25000);
+            };
+            gpSocket.onclose = function() {
+                clearInterval(gpPingInterval);
+                if (isGamepadVisible || physicalGamepadCount > 0) {
+                    clearTimeout(gpReconnectTimer);
+                    gpReconnectTimer = setTimeout(initGamepadWebSocket, 2500);
+                }
+            };
             gpSocket.onerror = function() {
+                clearInterval(gpPingInterval);
                 if (!wsPath.includes(":6081")) {
                     try {
                         const fallbackUrl = proto + "//" + window.location.hostname + ":6081";
@@ -1238,6 +1277,64 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         if (gpSocket && gpSocket.readyState === WebSocket.OPEN) {
             gpSocket.send(JSON.stringify({ axes: gpAxesState, buttons: gpButtonsState }));
         }
+    }
+
+    // Detección Plug & Play de mandos físicos (Xbox, PlayStation, Switch, 8BitDo)
+    window.addEventListener("gamepadconnected", function(e) {
+        physicalGamepadCount++;
+        console.log("🎮 Mando físico conectado:", e.gamepad.id);
+        const name = e.gamepad.id.length > 20 ? e.gamepad.id.substring(0, 20) + "..." : e.gamepad.id;
+        showToast("🎮 Mando: " + name);
+        hapticFeedback([20, 50, 20]);
+        initGamepadWebSocket();
+        startPhysicalGamepadLoop();
+    });
+
+    window.addEventListener("gamepaddisconnected", function(e) {
+        physicalGamepadCount = Math.max(0, physicalGamepadCount - 1);
+        showToast("Mando físico desconectado");
+    });
+
+    function startPhysicalGamepadLoop() {
+        if (physicalPollingFrame) return;
+        function poll() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            let active = false;
+            for (let i = 0; i < gamepads.length; i++) {
+                const gp = gamepads[i];
+                if (gp && gp.connected) {
+                    active = true;
+                    // 1. Mapeo estándar de botones (0 a 16)
+                    for (let b = 0; b < gp.buttons.length && b < 17; b++) {
+                        const isPress = gp.buttons[b].pressed ? 1 : 0;
+                        if (isPress) gpButtonsState[b] = 1;
+                    }
+                    // 2. Sticks analógicos físicos con Deadzone continua
+                    if (gp.axes.length >= 2) {
+                        const ax0 = gp.axes[0], ax1 = gp.axes[1];
+                        if (Math.hypot(ax0, ax1) > 0.12) {
+                            gpAxesState[0] = ax0;
+                            gpAxesState[1] = ax1;
+                        }
+                    }
+                    if (gp.axes.length >= 4) {
+                        const ax2 = gp.axes[2], ax3 = gp.axes[3];
+                        if (Math.hypot(ax2, ax3) > 0.12) {
+                            gpAxesState[2] = ax2;
+                            gpAxesState[3] = ax3;
+                        }
+                    }
+                    emitGamepadState();
+                    break;
+                }
+            }
+            if (active || physicalGamepadCount > 0) {
+                physicalPollingFrame = requestAnimationFrame(poll);
+            } else {
+                physicalPollingFrame = null;
+            }
+        }
+        physicalPollingFrame = requestAnimationFrame(poll);
     }
 
     function setGamepadVisibility(visible) {
@@ -1266,7 +1363,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // A. Control del Joystick Analógico Izquierdo Multi-Touch
+    // A. Control del Joystick Analógico Izquierdo (Movimiento)
     let stickTouchId = null, stickCenterX = 0, stickCenterY = 0;
     const maxStickRadius = 42;
 
@@ -1303,7 +1400,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === stickTouchId) {
                     stickTouchId = null;
-                    // Retorno elástico natural estilo resorte de mando físico
                     leftStickThumb.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
                     leftStickThumb.style.transform = "translate3d(0, 0, 0)";
                     setTimeout(() => { leftStickThumb.style.transition = "none"; }, 150);
@@ -1329,14 +1425,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         const thumbY = Math.sin(angle) * clampedDist;
         leftStickThumb.style.transform = `translate3d(${thumbX}px, ${thumbY}px, 0)`;
 
-        // Normalización para el kernel de Linux con zona muerta continua (Xbox TAK 12%)
         let normX = thumbX / maxStickRadius;
         let normY = thumbY / maxStickRadius;
         const mag = Math.hypot(normX, normY);
         const deadzone = 0.12;
         if (mag < deadzone) {
-            normX = 0;
-            normY = 0;
+            normX = 0; normY = 0;
         } else {
             const scaledMag = (mag - deadzone) / (1.0 - deadzone);
             normX = (normX / mag) * scaledMag;
@@ -1344,6 +1438,85 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
         gpAxesState[0] = normX;
         gpAxesState[1] = normY;
+        emitGamepadState();
+    }
+
+    // B. Control del Joystick Analógico Derecho (Cámara 3D y Apuntar)
+    let rightStickTouchId = null, rightStickCenterX = 0, rightStickCenterY = 0;
+
+    if (rightStickZone) {
+        rightStickZone.addEventListener("touchstart", function(e) {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (rightStickTouchId === null) {
+                    rightStickTouchId = t.identifier;
+                    if (rightStickThumb) rightStickThumb.style.transition = "none";
+                    const rect = rightStickZone.getBoundingClientRect();
+                    rightStickCenterX = rect.left + rect.width / 2;
+                    rightStickCenterY = rect.top + rect.height / 2;
+                    handleRightStickMove(t.clientX, t.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchmove", function(e) {
+            if (rightStickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                if (t.identifier === rightStickTouchId) {
+                    e.preventDefault();
+                    handleRightStickMove(t.clientX, t.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        const endRightStick = function(e) {
+            if (rightStickTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === rightStickTouchId) {
+                    rightStickTouchId = null;
+                    if (rightStickThumb) {
+                        rightStickThumb.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                        rightStickThumb.style.transform = "translate3d(0, 0, 0)";
+                        setTimeout(() => { if (rightStickThumb) rightStickThumb.style.transition = "none"; }, 150);
+                    }
+                    gpAxesState[2] = 0;
+                    gpAxesState[3] = 0;
+                    emitGamepadState();
+                    break;
+                }
+            }
+        };
+        window.addEventListener("touchend", endRightStick);
+        window.addEventListener("touchcancel", endRightStick);
+    }
+
+    function handleRightStickMove(clientX, clientY) {
+        const dx = clientX - rightStickCenterX;
+        const dy = clientY - rightStickCenterY;
+        const dist = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+        const clampedDist = Math.min(dist, maxStickRadius);
+
+        const thumbX = Math.cos(angle) * clampedDist;
+        const thumbY = Math.sin(angle) * clampedDist;
+        if (rightStickThumb) rightStickThumb.style.transform = `translate3d(${thumbX}px, ${thumbY}px, 0)`;
+
+        let normX = thumbX / maxStickRadius;
+        let normY = thumbY / maxStickRadius;
+        const mag = Math.hypot(normX, normY);
+        const deadzone = 0.12;
+        if (mag < deadzone) {
+            normX = 0; normY = 0;
+        } else {
+            const scaledMag = (mag - deadzone) / (1.0 - deadzone);
+            normX = (normX / mag) * scaledMag;
+            normY = (normY / mag) * scaledMag;
+        }
+        gpAxesState[2] = normX;
+        gpAxesState[3] = normY;
         emitGamepadState();
     }
 
@@ -1448,7 +1621,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Gestos de Pantalla cuando los mandos en pantalla no están interactuando
     window.addEventListener("touchstart", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         initialTouchCount = e.touches.length;
         touchStartTime = performance.now();
@@ -1528,7 +1702,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     window.addEventListener("touchmove", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         if (isTouching && e.touches.length === 1) {
             e.preventDefault();
@@ -1651,7 +1826,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     window.addEventListener("touchend", function(e) {
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
+            e.target.closest("#right-stick-zone")) return;
 
         clearTimeout(dragHoldTimer);
         if (holdRing) holdRing.classList.remove("active");

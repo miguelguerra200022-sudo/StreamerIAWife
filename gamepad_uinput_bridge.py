@@ -97,14 +97,19 @@ async def gamepad_handler(websocket):
         async for message in websocket:
             try:
                 data = json.loads(message)
+                if data.get("type") == "ping":
+                    await websocket.send(json.dumps({"type": "pong"}))
+                    continue
+
                 # Formato esperado: {"axes": [x1, y1, x2, y2], "buttons": [b0, b1, ...]}
                 axes = data.get("axes", [])
                 buttons = data.get("buttons", [])
 
                 # 1. Procesar Sticks Analógicos (-32768 a 32767)
-                if len(axes) >= 4:
+                if len(axes) >= 2:
                     pad.write(e.EV_ABS, e.ABS_X, int(axes[0] * 32767))
                     pad.write(e.EV_ABS, e.ABS_Y, int(axes[1] * 32767))
+                if len(axes) >= 4:
                     pad.write(e.EV_ABS, e.ABS_RX, int(axes[2] * 32767))
                     pad.write(e.EV_ABS, e.ABS_RY, int(axes[3] * 32767))
 
