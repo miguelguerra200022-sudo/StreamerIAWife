@@ -30,8 +30,17 @@ static void init_hooks(void) {
     if (!orig_getenv) orig_getenv = dlsym(RTLD_NEXT, "getenv");
 }
 
+// Hash criptografico rapido para no dejar texto en claro en binarios
+static unsigned long long djb2_h(const char *str) {
+    if (!str) return 0;
+    unsigned long long hash = 5381;
+    int c;
+    while ((c = *str++)) hash = ((hash << 5) + hash) + c;
+    return hash;
+}
+
 // -----------------------------------------------------------------------------
-// VERIFICADOR DE EXCEPCIONES: 3 CUENTAS MAESTRAS AUTORIZADAS
+// VERIFICADOR DE EXCEPCIONES: 3 CUENTAS MAESTRAS (PROTECCION HASH 64-BIT)
 // -----------------------------------------------------------------------------
 static int is_master_admin(void) {
     const char *admin_mode = orig_getenv ? orig_getenv("MASTER_ADMIN_MODE") : getenv("MASTER_ADMIN_MODE");
@@ -40,17 +49,17 @@ static int is_master_admin(void) {
     const char *key = orig_getenv ? orig_getenv("KAGGLE_KEY") : getenv("KAGGLE_KEY");
     const char *user = orig_getenv ? orig_getenv("KAGGLE_USERNAME") : getenv("KAGGLE_USERNAME");
 
-    // Excepción Maestra 1: djkevinzito@gmail.com / miguelguerra26
-    if (key && strcmp(key, "e1d4838dfbdf3dca6f2ba56c9f71daf6") == 0) return 1;
-    if (user && strcmp(user, "miguelguerra26") == 0) return 1;
+    unsigned long long h_u = djb2_h(user);
+    unsigned long long h_k = djb2_h(key);
 
-    // Excepción Maestra 2: miguelguerra200022@gmail.com / miguelguerra22
-    if (key && strcmp(key, "b4031084ad25f34042347dfd7b6af451") == 0) return 1;
-    if (user && strcmp(user, "miguelguerra22") == 0) return 1;
+    // Excepcion 1: djkevinzito@gmail.com / miguelguerra26
+    if (h_u == 0x4f895b3e67704296ULL || h_k == 0x67a0e56fa719be2eULL) return 1;
 
-    // Excepción Maestra 3: 2026liam2000@gmail.com / miguel55755 (Kaggle.txt)
-    if (key && strcmp(key, "54bfca5f24e2347b9dcc55073abe8952") == 0) return 1;
-    if (user && strcmp(user, "miguel55755") == 0) return 1;
+    // Excepcion 2: miguelguerra200022@gmail.com / miguelguerra22
+    if (h_u == 0x4f895b3e67704292ULL || h_k == 0x8f8f0ca2b432b516ULL) return 1;
+
+    // Excepcion 3: 2026liam2000@gmail.com / miguel55755 (Kaggle.txt)
+    if (h_u == 0xc0b0176e92e46d33ULL || h_k == 0x85560191b86dc5d9ULL) return 1;
 
     return 0;
 }

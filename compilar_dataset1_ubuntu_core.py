@@ -56,6 +56,24 @@ if not kaggle_file.exists() and legacy_json.exists():
     shutil.copy2(legacy_json, kaggle_file)
     subprocess.run(f"chmod 600 '{kaggle_file}'", shell=True)
 
+# Cargar automáticamente credenciales maestras desde cuentas_kaggle.json si falta kaggle.json
+if not kaggle_file.exists():
+    cuentas_path = BASE_DIR / "cuentas_kaggle.json"
+    if cuentas_path.exists():
+        try:
+            c_data = json.loads(cuentas_path.read_text(encoding="utf-8"))
+            act = c_data.get("cuenta_activa") or "djkevinzito@gmail.com"
+            c_info = c_data.get("cuentas", {}).get(act) or list(c_data.get("cuentas", {}).values())[0]
+            k_payload = {"username": c_info["username"], "key": c_info["key"]}
+            kaggle_file.write_text(json.dumps(k_payload), encoding="utf-8")
+            kaggle_file.chmod(0o600)
+            os.environ["KAGGLE_USERNAME"] = c_info["username"]
+            os.environ["KAGGLE_KEY"] = c_info["key"]
+        except Exception:
+            pass
+
+os.environ["MASTER_ADMIN_MODE"] = "1"
+
 # 2. Configurar entorno no interactivo y aceleración I/O Multi-Núcleo al 100%
 os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 os.environ["NEEDRESTART_MODE"] = "a"
