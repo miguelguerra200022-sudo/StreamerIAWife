@@ -367,9 +367,9 @@ if vnc_html_file.exists():
 #cloud-perf-badge .ping-val { color: #38bdf8; }
 
 /* ========================================================================== */
-/* 2. PESTAÑA LATERAL STARPARKS (EDGE DRAWER TAB CON FLECHA INTERACTIVA <)   */
+/* 2. PESTAÑA LATERAL AETHER (EDGE DRAWER TAB CON FLECHA INTERACTIVA <)   */
 /* ========================================================================== */
-#starparks-edge-tab {
+#aether-edge-tab {
     position: fixed;
     right: 0;
     top: 45%;
@@ -395,14 +395,14 @@ if vnc_html_file.exists():
     transition: opacity 0.3s ease, background 0.2s ease, width 0.2s ease;
     box-shadow: -2px 0 12px rgba(0, 0, 0, 0.5);
 }
-#starparks-edge-tab:hover, #starparks-edge-tab:active, #starparks-edge-tab.active {
+#aether-edge-tab:hover, #aether-edge-tab:active, #aether-edge-tab.active {
     opacity: 1 !important;
     background: rgba(15, 23, 42, 0.92);
     width: 28px;
 }
 
 /* Backdrop / Scrim oscurecido para cerrar tocando fuera */
-#starparks-scrim {
+#aether-scrim {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.45);
@@ -413,13 +413,13 @@ if vnc_html_file.exists():
     pointer-events: none;
     transition: opacity 0.25s ease;
 }
-#starparks-scrim.open {
+#aether-scrim.open {
     opacity: 1;
     pointer-events: auto;
 }
 
 /* Cajón Lateral Desplegable (Side Drawer) */
-#starparks-drawer {
+#aether-drawer {
     position: fixed;
     right: 0;
     top: 0;
@@ -441,7 +441,7 @@ if vnc_html_file.exists():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     user-select: none;
 }
-#starparks-drawer.open {
+#aether-drawer.open {
     transform: translate3d(0, 0, 0);
 }
 .drawer-header {
@@ -811,14 +811,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <span class="ping-val" id="perf-ping-text">-- ms</span>
 </div>
 
-<!-- 2. PESTAÑA LATERAL TRANSPARENTE STARPARKS -->
-<div id="starparks-edge-tab" title="Deslizar o tocar para abrir controles">
+<!-- 2. PESTAÑA LATERAL TRANSPARENTE AETHER -->
+<div id="aether-edge-tab" title="Deslizar o tocar para abrir controles">
     ‹
 </div>
-<div id="starparks-scrim"></div>
+<div id="aether-scrim"></div>
 
-<!-- 3. CAJÓN LATERAL DE HERRAMIENTAS (STARPARKS SIDE DRAWER) -->
-<div id="starparks-drawer">
+<!-- 3. CAJÓN LATERAL DE HERRAMIENTAS (AETHER SIDE DRAWER) -->
+<div id="aether-drawer">
     <div class="drawer-header">
         <div class="drawer-title">⚡ Cloud PC Control</div>
         <button class="drawer-close" id="btn-drawer-close">›</button>
@@ -919,9 +919,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // -------------------------------------------------------------------------
     // 1. ELEMENTOS DEL DOM
     // -------------------------------------------------------------------------
-    const edgeTab = document.getElementById("starparks-edge-tab");
-    const scrim = document.getElementById("starparks-scrim");
-    const drawer = document.getElementById("starparks-drawer");
+    const edgeTab = document.getElementById("aether-edge-tab");
+    const scrim = document.getElementById("aether-scrim");
+    const drawer = document.getElementById("aether-drawer");
     const closeDrawerBtn = document.getElementById("btn-drawer-close");
 
     const btnGamepad = document.getElementById("btn-sp-gamepad");
@@ -990,7 +990,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     // -------------------------------------------------------------------------
-    // 2. CONTROL DEL CAJÓN STARPARKS Y AUTO-FADE
+    // 2. CONTROL DEL CAJÓN AETHER Y AUTO-FADE
     // -------------------------------------------------------------------------
     let edgeIdleTimer = null;
     function resetEdgeIdleTimer() {
@@ -1252,7 +1252,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // Gestos de Pantalla cuando los mandos en pantalla no están interactuando
     window.addEventListener("touchstart", function(e) {
-        if (e.target.closest("#starparks-drawer") || e.target.closest("#starparks-edge-tab") ||
+        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
 
         initialTouchCount = e.touches.length;
@@ -1323,7 +1323,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }, { passive: false });
 
     window.addEventListener("touchmove", function(e) {
-        if (e.target.closest("#starparks-drawer") || e.target.closest("#starparks-edge-tab") ||
+        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
 
         if (isTouching && e.touches.length === 1) {
@@ -1389,7 +1389,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }, { passive: false });
 
     window.addEventListener("touchend", function(e) {
-        if (e.target.closest("#starparks-drawer") || e.target.closest("#starparks-edge-tab") ||
+        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone")) return;
 
         clearTimeout(dragHoldTimer);
@@ -1446,7 +1446,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }, { passive: false });
 
     // -------------------------------------------------------------------------
-    // 5. ACCIONES DEL MENÚ STARPARKS (ASPECT RATIO, TECLADO, AUDIO, FULLSCREEN)
+    // 5. ACCIONES DEL MENÚ AETHER (ASPECT RATIO, TECLADO, AUDIO, FULLSCREEN)
     // -------------------------------------------------------------------------
     function updateCanvasTransform(animate) {
         const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");

@@ -23,7 +23,7 @@ t_start = time.time()
 print("=" * 78, flush=True)
 print("⏳ MONITOR ACTIVO: AETHER CLOUD PC (GPU TESLA T4 + DATABASE 1)", flush=True)
 print("   Cuenta: miguelguerra200022@gmail.com (miguelguerra22)", flush=True)
-print("   Notebook: aether-cloudpc (StarParks Gaming Edition)", flush=True)
+print("   Notebook: aether-cloudpc (Aether Gaming Edition)", flush=True)
 print("=" * 78, flush=True)
 
 found_url = None
@@ -101,7 +101,7 @@ for iteration in range(7200):
                                 f"⏱️ <b>Tiempo de arranque:</b> {t_elapsed:.1f}s\n\n"
                                 f"👉 <a href='{found_url}'>Entrar a tu Ubuntu en Navegador</a>\n\n"
                                 f"🔑 <b>Contraseña:</b> <code>09032000Mi.</code>\n"
-                                f"📱 <i>Menú lateral Starparks y mandos táctiles activos.</i>"
+                                f"📱 <i>Menú lateral Aether y mandos táctiles activos.</i>"
                             )
                             telegram_notified = True
                         except Exception as e_tg:
