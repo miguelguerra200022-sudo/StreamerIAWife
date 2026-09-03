@@ -724,50 +724,61 @@ try:
 #cloud-perf-badge .ping-val { color: #38bdf8; }
 
 /* ========================================================================== */
-/* 2. PESTAÑA LATERAL STARPARKS (EDGE DRAWER TAB CON FLECHA INTERACTIVA <)   */
+/* 2. PESTAÑA LATERAL AETHER (EDGE DRAWER TAB ERGONÓMICA CON HITBOX 60PX)     */
 /* ========================================================================== */
 #starparks-edge-tab {
     position: fixed;
     right: 0;
     top: 45%;
-    width: 24px;
-    height: 58px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 255, 200, 0.4);
+    width: 32px;
+    height: 64px;
+    background: rgba(13, 18, 30, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(0, 255, 200, 0.45);
     border-right: none;
-    border-radius: 14px 0 0 14px;
+    border-radius: 18px 0 0 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #00ffc8;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     z-index: 999990;
     cursor: pointer;
     touch-action: none;
     user-select: none;
-    opacity: 0.25; /* Transparente en reposo */
-    transition: opacity 0.3s ease, background 0.2s ease, width 0.2s ease;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.5);
+    opacity: 0.45; /* Semi-transparente en reposo pero fácil de ver */
+    transition: opacity 0.3s ease, background 0.2s ease, width 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: -4px 0 16px rgba(0, 255, 200, 0.25);
+}
+/* Hitbox expandido invisible de 60px para dedos en móviles */
+#starparks-edge-tab::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: -15px;
+    width: 60px;
+    height: 94px;
 }
 #starparks-edge-tab:hover, #starparks-edge-tab:active, #starparks-edge-tab.active {
     opacity: 1 !important;
-    background: rgba(15, 23, 42, 0.92);
-    width: 28px;
+    background: rgba(13, 18, 30, 0.95);
+    width: 38px;
+    box-shadow: -4px 0 24px rgba(0, 255, 200, 0.5);
 }
 
 /* Backdrop / Scrim oscurecido para cerrar tocando fuera */
 #starparks-scrim {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 999995;
     opacity: 0;
     pointer-events: none;
+    touch-action: none;
     transition: opacity 0.25s ease;
 }
 #starparks-scrim.open {
@@ -780,13 +791,13 @@ try:
     position: fixed;
     right: 0;
     top: 0;
-    width: 250px;
+    width: 260px;
     height: 100vh;
-    background: rgba(13, 18, 30, 0.94);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(0, 255, 200, 0.25);
-    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.7);
+    background: rgba(10, 15, 26, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(0, 255, 200, 0.3);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
     z-index: 999998;
     transform: translate3d(100%, 0, 0);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -797,6 +808,7 @@ try:
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     user-select: none;
+    touch-action: none;
 }
 #starparks-drawer.open {
     transform: translate3d(0, 0, 0);
@@ -806,8 +818,8 @@ try:
     align-items: center;
     justify-content: space-between;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 12px;
 }
 .drawer-title {
     font-size: 14px;
@@ -816,20 +828,22 @@ try:
     display: flex;
     align-items: center;
     gap: 6px;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
 }
 .drawer-close {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #e2e8f0;
     border-radius: 50%;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
+    touch-action: manipulation;
 }
 .drawer-items {
     display: flex;
@@ -837,6 +851,8 @@ try:
     gap: 8px;
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 .drawer-btn {
     background: rgba(255, 255, 255, 0.06);
@@ -850,6 +866,7 @@ try:
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    touch-action: manipulation;
     transition: all 0.2s ease;
 }
 .drawer-btn:hover, .drawer-btn:active {
@@ -858,10 +875,10 @@ try:
     color: #00ffc8;
 }
 .drawer-btn.active-glow {
-    background: rgba(0, 255, 200, 0.2);
+    background: rgba(0, 255, 200, 0.22);
     border-color: #00ffc8;
     color: #00ffc8;
-    box-shadow: 0 0 12px rgba(0, 255, 200, 0.25);
+    box-shadow: 0 0 14px rgba(0, 255, 200, 0.35);
 }
 .drawer-btn .d-icon {
     font-size: 16px;
@@ -889,6 +906,25 @@ try:
 }
 .drawer-exit-btn:hover {
     background: rgba(255, 42, 133, 0.35);
+}
+
+/* Soporte para Smartphones en Modo Horizontal (Landscape) */
+@media (max-height: 520px) {
+    #starparks-drawer {
+        width: 230px;
+        padding: 10px;
+    }
+    .drawer-header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+    }
+    .drawer-items {
+        gap: 5px;
+    }
+    .drawer-btn {
+        padding: 7px 10px;
+        font-size: 11px;
+    }
 }
 
 /* ========================================================================== */
@@ -1177,7 +1213,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 <!-- 3. CAJÓN LATERAL DE HERRAMIENTAS (STARPARKS SIDE DRAWER) -->
 <div id="starparks-drawer">
     <div class="drawer-header">
-        <div class="drawer-title">⚡ Cloud PC Control</div>
+        <div class="drawer-title">⚡ Aether Control Panel</div>
         <button class="drawer-close" id="btn-drawer-close">›</button>
     </div>
     <div class="drawer-items">
@@ -1375,13 +1411,29 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         resetEdgeIdleTimer();
     }
 
+    // Blindaje de Eventos: Impedir que toques o clics en el menú afecten al juego de fondo
+    if (drawer) {
+        ["touchstart", "touchmove", "touchend", "pointerdown", "pointermove", "pointerup", "mousedown", "mouseup"].forEach(function(evt) {
+            drawer.addEventListener(evt, function(e) {
+                e.stopPropagation();
+            }, { passive: false });
+        });
+    }
+    if (scrim) {
+        ["touchstart", "touchmove", "touchend", "pointerdown", "pointermove", "pointerup", "mousedown", "mouseup"].forEach(function(evt) {
+            scrim.addEventListener(evt, function(e) {
+                e.stopPropagation();
+            }, { passive: false });
+        });
+    }
+
     if (edgeTab) {
-        edgeTab.addEventListener("click", openDrawer);
         resetEdgeIdleTimer();
 
-        // Permitir arrastre vertical de la pestaña para reposicionarla en el borde derecho
+        // Control ergonómico táctil de la pestaña lateral
         let isTabDragging = false, tabStartY = 0, tabInitTop = 0, tabMoved = false;
         edgeTab.addEventListener("pointerdown", function(e) {
+            e.stopPropagation();
             isTabDragging = true;
             tabMoved = false;
             tabStartY = e.clientY;
@@ -1391,21 +1443,29 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
         edgeTab.addEventListener("pointermove", function(e) {
             if (!isTabDragging) return;
+            e.stopPropagation();
             const dy = e.clientY - tabStartY;
-            if (Math.abs(dy) > 4) tabMoved = true;
+            if (Math.abs(dy) > 5) tabMoved = true;
             const newTop = Math.max(10, Math.min(window.innerHeight - 70, tabInitTop + dy));
             edgeTab.style.top = newTop + "px";
         });
         edgeTab.addEventListener("pointerup", function(e) {
             if (!isTabDragging) return;
+            e.stopPropagation();
             isTabDragging = false;
-            edgeTab.releasePointerCapture(e.pointerId);
-            if (!tabMoved) openDrawer();
+            try { edgeTab.releasePointerCapture(e.pointerId); } catch(ex) {}
+            if (!tabMoved) {
+                if (drawer.classList.contains("open")) {
+                    closeDrawer();
+                } else {
+                    openDrawer();
+                }
+            }
         });
     }
 
-    if (closeDrawerBtn) closeDrawerBtn.addEventListener("click", closeDrawer);
-    if (scrim) scrim.addEventListener("click", closeDrawer);
+    if (closeDrawerBtn) closeDrawerBtn.addEventListener("click", function(e) { e.stopPropagation(); closeDrawer(); });
+    if (scrim) scrim.addEventListener("click", function(e) { e.stopPropagation(); closeDrawer(); });
 
     // -------------------------------------------------------------------------
     // 3. CAPA DE MANDOS EN PANTALLA (XBOX FUSION) Y WEBSOCKET A /dev/uinput
@@ -1460,9 +1520,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     if (btnGamepad) {
-        btnGamepad.addEventListener("click", function() {
+        btnGamepad.addEventListener("click", function(e) {
+            e.stopPropagation();
             setGamepadVisibility(!isGamepadVisible);
-            closeDrawer();
         });
     }
 
@@ -1601,9 +1661,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     if (btnMode) {
-        btnMode.addEventListener("click", function() {
+        btnMode.addEventListener("click", function(e) {
+            e.stopPropagation();
             setInputMode(currentMode === "TRACKPAD" ? "TOUCH" : "TRACKPAD");
-            closeDrawer();
         });
     }
 
@@ -1820,11 +1880,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         showToast("Zoom Restablecido al 100%");
         hapticFeedback(15);
     }
-    if (btnZoom) btnZoom.addEventListener("click", () => { resetZoom(); closeDrawer(); });
+    if (btnZoom) btnZoom.addEventListener("click", function(e) { e.stopPropagation(); resetZoom(); });
 
     // Alternar Aspect Ratio (16:9 con bandas o 20:9 Pantalla Completa Estirada)
     if (btnAspect) {
-        btnAspect.addEventListener("click", function() {
+        btnAspect.addEventListener("click", function(e) {
+            e.stopPropagation();
             const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
             isStretchedAspect = !isStretchedAspect;
             if (canvas) {
@@ -1833,23 +1894,25 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     canvas.style.width = "100vw";
                     canvas.style.height = "100vh";
                     labelAspect.innerText = "Pantalla: Estirada (20:9)";
+                    btnAspect.classList.add("active-glow");
                     showToast("Pantalla Completa Inmersiva (20:9)");
                 } else {
                     canvas.style.objectFit = "contain";
                     canvas.style.width = "100%";
                     canvas.style.height = "100%";
                     labelAspect.innerText = "Pantalla: Ajuste 16:9";
+                    btnAspect.classList.remove("active-glow");
                     showToast("Relación Original 16:9");
                 }
             }
             hapticFeedback(20);
-            closeDrawer();
         });
     }
 
     // Teclado en pantalla
     if (btnKeyboard) {
-        btnKeyboard.addEventListener("click", function() {
+        btnKeyboard.addEventListener("click", function(e) {
+            e.stopPropagation();
             const inputElem = document.querySelector("#noVNC_keyboardinput") || document.querySelector("input[type=text]");
             if (inputElem) {
                 inputElem.focus();
@@ -1861,37 +1924,42 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // Alternar Audio / Mute
     if (btnAudio) {
-        btnAudio.addEventListener("click", function() {
+        btnAudio.addEventListener("click", function(e) {
+            e.stopPropagation();
             isAudioMuted = !isAudioMuted;
             const rfb = getRFB();
             if (isAudioMuted) {
                 iconAudio.innerText = "🔇";
                 labelAudio.innerText = "Audio: Silenciado";
+                btnAudio.classList.remove("active-glow");
                 showToast("Audio Silenciado");
             } else {
                 iconAudio.innerText = "🔊";
                 labelAudio.innerText = "Audio: Activado";
+                btnAudio.classList.add("active-glow");
                 showToast("Audio Activado");
             }
             hapticFeedback(18);
-            closeDrawer();
         });
     }
 
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(() => {});
+            if (btnFullscreen) btnFullscreen.classList.add("active-glow");
             showToast("Pantalla Completa");
         } else {
             document.exitFullscreen().catch(() => {});
+            if (btnFullscreen) btnFullscreen.classList.remove("active-glow");
             showToast("Ventana Normal");
         }
         hapticFeedback(20);
     }
-    if (btnFullscreen) btnFullscreen.addEventListener("click", () => { toggleFullScreen(); closeDrawer(); });
+    if (btnFullscreen) btnFullscreen.addEventListener("click", function(e) { e.stopPropagation(); toggleFullScreen(); });
 
     if (btnExit) {
-        btnExit.addEventListener("click", function() {
+        btnExit.addEventListener("click", function(e) {
+            e.stopPropagation();
             if (confirm("¿Deseas cerrar la sesión del Cloud PC?")) {
                 window.close();
                 showToast("Sesión Finalizada");
@@ -2156,32 +2224,55 @@ try:
     subprocess.run("xfconf-query -c xfce4-desktop -p /desktop-icons/file-icons/show-trash -s true --create -t bool 2>/dev/null || true", shell=True, env=env)
 
     # --------------------------------------------------------------------------
-    # Personalización Profesional de la Terminal (Blindaje Total - Cero Mención de Kaggle)
+    # Personalización Profesional de la Terminal: Aether Cloud PC Workstation
     # --------------------------------------------------------------------------
-    subprocess.run("hostname cloud-workstation 2>/dev/null || true; echo 'cloud-workstation' > /etc/hostname 2>/dev/null || true", shell=True)
+    subprocess.run("hostname aether-pc 2>/dev/null || true; echo 'aether-pc' > /etc/hostname 2>/dev/null || true", shell=True)
     
     # 1. Montaje limpio de Bases de Datos en /media/Cloud_Storage (VFS Enterprise)
     subprocess.run("mkdir -p /media/Cloud_Storage && mount --bind /kaggle/input /media/Cloud_Storage 2>/dev/null || true", shell=True)
     
-    # 2. Configuración de Shell y Bashrc Inmaculada
+    # 2. Configuración de Shell y Bashrc Inmaculada (Aether Cloud PC)
     bash_custom = (
-        "\n# Configuración de Terminal Profesional Cloud PC Workstation\n"
-        "# 1. Prompt corporativo elegante\n"
-        "export PS1='\\[\\033[01;32m\\]gamer@cloud-workstation\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n"
+        "\n# ==============================================================================\n"
+        "# 🚀 AETHER CLOUD PC WORKSTATION ENVIRONMENT\n"
+        "# ==============================================================================\n"
+        "# 1. Directorio de aterrizaje seguro: Aterrizar siempre en el Escritorio del usuario\n"
+        "case \"$PWD\" in\n"
+        "    /kaggle*|/opt*|/tmp*|\"/\")\n"
+        "        cd /root/Escritorio 2>/dev/null || cd /root\n"
+        "        ;;\n"
+        "esac\n"
         "\n# 2. Sanitización de Variables de Entorno en vivo\n"
         "for _kvar in $(env 2>/dev/null | grep -i kaggle | cut -d= -f1); do\n"
         "    unset $_kvar 2>/dev/null\n"
         "done\n"
-        "\n# 3. Directorio de aterrizaje seguro (Home personal)\n"
-        "if [ \"$PWD\" = \"/kaggle/working\" ] || [ \"$PWD\" = \"/kaggle\" ]; then\n"
-        "    cd /root/Escritorio 2>/dev/null || cd /root\n"
-        "fi\n"
-        "\n# 4. Alias estándar e invisibilidad de carpetas de infraestructura\n"
+        "\n# 3. Función inteligente de formateo de ruta para el Prompt\n"
+        "_aether_pwd() {\n"
+        "    local cur=\"$PWD\"\n"
+        "    if [ \"$cur\" = \"/root/Escritorio\" ]; then\n"
+        "        echo \"~/Escritorio\"\n"
+        "    elif [ \"$cur\" = \"/root\" ]; then\n"
+        "        echo \"~\"\n"
+        "    elif [[ \"$cur\" == \"/kaggle/working\"* ]]; then\n"
+        "        echo \"~/Workspace${cur#/kaggle/working}\"\n"
+        "    elif [[ \"$cur\" == \"/kaggle/input\"* ]]; then\n"
+        "        echo \"/media/Cloud_Storage${cur#/kaggle/input}\"\n"
+        "    elif [[ \"$cur\" == \"/opt/AetherCloudPC\"* ]]; then\n"
+        "        echo \"~/Workspace${cur#/opt/AetherCloudPC}\"\n"
+        "    elif [[ \"$cur\" == \"/kaggle\"* ]]; then\n"
+        "        echo \"~\"\n"
+        "    else\n"
+        "        echo \"$cur\"\n"
+        "    fi\n"
+        "}\n"
+        "\n# 4. Prompt corporativo de alta tecnología Aether (Con símbolo de usuario estándar $)\n"
+        "export PS1='\\[\\033[01;36m\\]gamer@aether-pc\\[\\033[00m\\]:\\[\\033[01;34m\\]$(_aether_pwd)\\[\\033[00m\\]\\$ '\n"
+        "\n# 5. Alias estándar e invisibilidad de carpetas de infraestructura\n"
         "alias ls='ls --color=auto --hide=kaggle'\n"
         "alias ll='ls -la --color=auto --hide=kaggle'\n"
         "alias la='ls -A --color=auto --hide=kaggle'\n"
         "alias l='ls -CF --color=auto --hide=kaggle'\n"
-        "\n# 5. Interceptor de navegación para rutas internas\n"
+        "\n# 6. Interceptor de navegación para rutas internas\n"
         "cd() {\n"
         "    if [ \"$1\" = \"/kaggle\" ] || [[ \"$1\" == \"/kaggle/\"* ]]; then\n"
         "        echo \"bash: cd: $1: No such file or directory\" >&2\n"
@@ -2195,7 +2286,7 @@ try:
             bp = Path(b_path)
             if bp.exists():
                 txt = bp.read_text(encoding="utf-8", errors="ignore")
-                if "gamer@cloud-workstation" not in txt:
+                if "gamer@aether-pc" not in txt:
                     bp.write_text(txt + bash_custom, encoding="utf-8")
             else:
                 bp.write_text(bash_custom, encoding="utf-8")
@@ -2243,15 +2334,15 @@ try:
     # 5. Banner Oficial de Bienvenida en la Terminal (MOTD)
     motd_text = (
         "================================================================================\n"
-        "🚀 Bienvenido a tu Cloud PC Workstation (Ubuntu 22.04 LTS Pro)\n"
-        "🎮 GPU: Nvidia Tesla T4 Dual (16GB VRAM) | RAM: 32GB High-Speed | NVMe SSD\n"
-        "💾 Persistencia en la Nube: Activa en tu carpeta 'Cloud_PC' de Google Drive\n"
-        "⚡ Streaming de Latencia Cero: WebRTC / Sunshine 60 FPS Activo\n"
+        "🚀 Bienvenido a tu Aether Cloud PC (Ubuntu 24.04 LTS High-Performance Edition)\n"
+        "🎮 GPU: Nvidia Tesla High-Performance Virtual GPU | RAM: 32GB High-Speed\n"
+        "💾 Almacenamiento en la Nube: Sincronizado con Aether Cloud Storage (Google Drive)\n"
+        "⚡ Aether Streaming Engine: 60 FPS Ultra-Baja Latencia Activo\n"
         "================================================================================\n\n"
     )
     try:
         Path("/etc/motd").write_text(motd_text, encoding="utf-8")
-        Path("/etc/issue").write_text("Ubuntu 22.04 LTS Pro - Cloud Workstation \\n \\l\n\n", encoding="utf-8")
+        Path("/etc/issue").write_text("Ubuntu 24.04 LTS Pro - Aether Cloud PC \\n \\l\n\n", encoding="utf-8")
     except Exception:
         pass
 
@@ -2944,11 +3035,11 @@ if web_tunnel_wifi:
             telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
             if telegram_script.exists():
                 msg_tg = (
-                    f"🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
-                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Ubuntu (HTTP 200 OK)</a>\n"
+                    f"🚀 <b>¡Tu Aether Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
+                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Aether Cloud PC (HTTP 200 OK)</a>\n"
                     f"📱 <b>Móvil:</b> <a href='{web_tunnel_mobile}'>Modo Móvil</a>\n"
                     f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
-                    f"🎮 <i>Mandos táctiles, menú lateral Starparks y Watchdog 6080 activos.</i>"
+                    f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Watchdog 6080 activos.</i>"
                 )
                 import telegram_notifier
                 telegram_notifier.enviar_mensaje(msg_tg)
