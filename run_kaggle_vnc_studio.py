@@ -2766,27 +2766,37 @@ if not novnc_proxy_bin.exists():
 subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
 
 # Servidor Web noVNC y Gateway Unificado (Puerto 6080)
-# Permite servir noVNC en '/' y Gamepad WebSocket en '/gamepad' a través de un solo túnel
-has_nginx = (subprocess.run("which nginx >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq nginx >/dev/null 2>&1)", shell=True).returncode == 0)
+# Intentar primero Nginx para unificar / (noVNC en 6082) y /gamepad (WebSocket en 6081)
+novnc_running = False
 
-if has_nginx:
+# 1. Iniciar noVNC en puerto interno 6082
+subprocess.Popen([
+    "/kaggle/working/noVNC/utils/novnc_proxy",
+    "--vnc", "127.0.0.1:5900",
+    "--listen", "6082",
+    "--web", "/kaggle/working/noVNC"
+], env=env, stdout=log_vnc, stderr=log_vnc)
+novnc_6082 = wait_for_port(6082, timeout=8)
+
+# 2. Si Nginx está disponible y 6082 está listo, levantar Nginx en 6080
+if novnc_6082 and shutil.which("nginx"):
     try:
-        # Iniciar noVNC en puerto interno 6082
-        subprocess.Popen([
-            "/kaggle/working/noVNC/utils/novnc_proxy",
-            "--vnc", "localhost:5900",
-            "--listen", "6082",
-            "--web", "/kaggle/working/noVNC"
-        ], env=env, stdout=log_vnc, stderr=log_vnc)
-        wait_for_port(6082, timeout=8)
-
-        # Configurar Nginx para rutear /gamepad -> 6081 y / -> 6082
+        subprocess.run("killall -9 nginx 2>/dev/null || true", shell=True)
+        Path("/var/log/nginx").mkdir(parents=True, exist_ok=True)
+        Path("/run").mkdir(parents=True, exist_ok=True)
         nginx_conf = (
-            "user root;\nworker_processes auto;\npid /run/nginx.pid;\nevents { worker_connections 1024; }\n"
+            "user root;\n"
+            "worker_processes auto;\n"
+            "pid /run/nginx.pid;\n"
+            "error_log /var/log/nginx/error.log warn;\n"
+            "events { worker_connections 1024; }\n"
             "http {\n"
-            "  include /etc/nginx/mime.types;\ndefault_type application/octet-stream;\nsendfile on;\naccess_log off;\n"
+            "  include /etc/nginx/mime.types;\n"
+            "  default_type application/octet-stream;\n"
+            "  sendfile on;\n"
+            "  access_log off;\n"
             "  server {\n"
-            "    listen 6080;\n"
+            "    listen 6080 default_server;\n"
             "    location /gamepad {\n"
             "      proxy_pass http://127.0.0.1:6081;\n"
             "      proxy_http_version 1.1;\n"
@@ -2805,27 +2815,25 @@ if has_nginx:
             "}\n"
         )
         Path("/etc/nginx/nginx.conf").write_text(nginx_conf, encoding="utf-8")
-        subprocess.run("nginx -s stop 2>/dev/null || true; nginx 2>/dev/null || true", shell=True)
-        log("Gateway Nginx activo: noVNC + Gamepad unificados en puerto 6080")
+        subprocess.run("nginx 2>/dev/null || true", shell=True)
+        if wait_for_port(6080, timeout=4):
+            novnc_running = True
+            log("Gateway Nginx activo: noVNC + Gamepad unificados en puerto 6080")
     except Exception as e_ng:
-        log(f"Fallback noVNC directo: {e_ng}", "WARNING")
-        subprocess.Popen([
-            "/kaggle/working/noVNC/utils/novnc_proxy",
-            "--vnc", "localhost:5900",
-            "--listen", "6080",
-            "--web", "/kaggle/working/noVNC"
-        ], env=env, stdout=log_vnc, stderr=log_vnc)
-else:
-    # Fallback directo si nginx no estuviera disponible
+        log(f"Aviso Nginx: {e_ng}", "WARNING")
+
+# 3. Fallback Infalible: Si Nginx no abrió el puerto 6080, levantar noVNC directamente en 6080
+if not novnc_running:
+    subprocess.run("killall -9 nginx 2>/dev/null || true", shell=True)
     subprocess.Popen([
         "/kaggle/working/noVNC/utils/novnc_proxy",
-        "--vnc", "localhost:5900",
+        "--vnc", "127.0.0.1:5900",
         "--listen", "6080",
         "--web", "/kaggle/working/noVNC"
     ], env=env, stdout=log_vnc, stderr=log_vnc)
-
-# Esperar a que el puerto 6080 esté listo
-novnc_ready = wait_for_port(6080, timeout=10)
+    novnc_ready = wait_for_port(6080, timeout=10)
+else:
+    novnc_ready = True
 
 # Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)
 sunshine_bin = shutil.which("sunshine")
@@ -2886,7 +2894,7 @@ if not web_tunnel_wifi:
         if not cf_bin.exists():
             subprocess.run("wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
         if cf_bin.exists():
-            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--url", "http://localhost:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for _ in range(30):
                 line = proc_cf.stdout.readline()
                 if not line:
@@ -2909,15 +2917,26 @@ if web_tunnel_wifi:
         Path("/kaggle/working/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
         if Path("/root/gdrive/Cloud_PC/system_state").exists():
             Path("/root/gdrive/Cloud_PC/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        if Path("/root/gdrive/PC_Kaggle/system_state").exists():
+            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
         subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:Cloud_PC/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
         
         # Enviar notificación automática a tu celular por Telegram
         try:
             telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
             if telegram_script.exists():
-                subprocess.run(f"python3 '{telegram_script}' '🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE!</b>\\n\\n👉 <b>WiFi:</b> {web_tunnel_wifi}\\n📱 <b>Móvil:</b> {web_tunnel_mobile}\\n🔑 <b>Pass:</b> {VNC_PASSWORD}' >/dev/null 2>&1 || true", shell=True)
-        except Exception:
-            pass
+                msg_tg = (
+                    f"🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE!</b> 🌸\n\n"
+                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Ubuntu</a>\n"
+                    f"📱 <b>Móvil:</b> <a href='{web_tunnel_mobile}'>Modo Móvil</a>\n"
+                    f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
+                    f"🎮 <i>Mandos táctiles y menú lateral Starparks activos.</i>"
+                )
+                import telegram_notifier
+                telegram_notifier.enviar_mensaje(msg_tg)
+        except Exception as e_tg:
+            log(f"Aviso Telegram: {e_tg}", "WARNING")
     except Exception:
         pass
 
