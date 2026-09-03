@@ -1285,8 +1285,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         try {
             gpSocket = new WebSocket(wsPath);
             gpSocket.onopen = function() {
-                console.log("🎮 Gamepad UInput bridge conectado con éxito:", wsPath);
-                showToast("🎮 Mando Conectado al Kernel");
+                console.log("[GAMEPAD] Bridge conectado con éxito:", wsPath);
+                showToast("Mando Conectado al Kernel");
                 clearTimeout(gpReconnectTimer);
                 clearInterval(gpPingInterval);
                 // Heartbeat cada 25s para mantener el túnel Cloudflare permanentemente abierto
@@ -1324,9 +1324,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Detección Plug & Play de mandos físicos (Xbox, PlayStation, Switch, 8BitDo)
     window.addEventListener("gamepadconnected", function(e) {
         physicalGamepadCount++;
-        console.log("🎮 Mando físico conectado:", e.gamepad.id);
+        console.log("[GAMEPAD] Mando físico conectado:", e.gamepad.id);
         const name = e.gamepad.id.length > 20 ? e.gamepad.id.substring(0, 20) + "..." : e.gamepad.id;
-        showToast("🎮 Mando: " + name);
+        showToast("Mando Conectado: " + name);
         hapticFeedback([20, 50, 20]);
         initGamepadWebSocket();
         startPhysicalGamepadLoop();
@@ -1388,7 +1388,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             btnGamepad.classList.add("active-glow");
             document.body.classList.add("tp-gamepad-active");
             initGamepadWebSocket();
-            showToast("🎮 Mandos Táctiles Xbox Activados");
+            showToast("Mandos Táctiles Activados");
         } else {
             gpOverlay.classList.remove("visible");
             labelGamepad.innerText = "Mandos en Pantalla: OFF";
@@ -2170,21 +2170,21 @@ os.system("pgrep -f gamepad_uinput_bridge.py >/dev/null || (python3 /usr/local/b
 main_shortcuts = {
     "Tienda_Software_1Clic.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
-        "Name=🛍️ Tienda de Software & Juegos 1-Clic\\n"
+        "Name=Tienda de Software y Juegos 1-Clic\\n"
         "Comment=Explora e instala juegos, emuladores y herramientas en 1 clic\\n"
         "Exec=python3 /usr/local/bin/tienda_software_1clic.py\\n"
         "Icon=system-software-install\\nTerminal=false\\nCategories=System;\\n"
     ),
     "Test_Velocidad_Gigabit.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
-        "Name=🚀 Test de Velocidad Real Gigabit (10GB-20GB)\\n"
+        "Name=Test de Velocidad Real Gigabit (10GB-20GB)\\n"
         "Comment=Prueba de ancho de banda Gigabit real con Aria2 16x y auto-borrado\\n"
         "Exec=python3 /usr/local/bin/test_velocidad_real.py\\n"
         "Icon=network-transmit-receive\\nTerminal=true\\nCategories=Network;\\n"
     ),
     "Escaner_Redes_Conexiones.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
-        "Name=🔍 Escáner de Redes, WiFi y Conexiones\\n"
+        "Name=Escáner de Redes, WiFi y Conexiones\\n"
         "Comment=Auditoría de adaptadores de red, puertos de servicio y conexiones de afuera\\n"
         "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\\n"
         "Icon=network-wired\\nTerminal=false\\nCategories=Network;System;\\n"
@@ -2196,8 +2196,8 @@ for name, cont in main_shortcuts.items():
     s.write_text(cont, encoding="utf-8")
     s.chmod(0o755)
 
-# 3. Carpeta Organizada de Suite Core y Redes
-folder = DESKTOP_DIR / "📁 [01] Ubuntu Core & Redes Sociales"
+# 3. Carpeta Organizada de Suite Core y Redes (Sin emojis)
+folder = DESKTOP_DIR / "[01] Ubuntu Core y Redes Sociales"
 folder.mkdir(parents=True, exist_ok=True)
 
 core_shortcuts = {
@@ -2206,10 +2206,10 @@ core_shortcuts = {
     "Discord.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Discord\\nExec=discord\\nIcon=discord\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
     "Telegram.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Telegram Desktop\\nExec=telegram-desktop\\nIcon=telegram\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
     "Sunshine_Streamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Sunshine 60 FPS Panel\\nExec=google-chrome https://localhost:47990\\nIcon=input-gaming\\nTerminal=false\\nCategories=Settings;\\n",
-    "Calibrador_Mandos.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=🎮 Calibrador de Mandos (JSTest GTK)\\nExec=jstest-gtk\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Settings;\\n",
-    "Mapeador_AntiMicroX.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=🎮 Mapeador AntiMicroX (Mandos a Teclado/Mouse)\\nExec=antimicrox\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Utility;\\n",
-    "Bluetooth_Manager.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=📶 Gestor Bluetooth (Emparejar Mandos y Teclados)\\nExec=blueman-manager\\nIcon=preferences-system-bluetooth\\nTerminal=false\\nCategories=Settings;\\n",
-    "Teclado_Tactil.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=⌨️ Teclado en Pantalla (Onboard)\\nExec=onboard\\nIcon=input-keyboard\\nTerminal=false\\nCategories=Utility;\\n"
+    "Calibrador_Mandos.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Calibrador de Mandos (JSTest GTK)\\nExec=jstest-gtk\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Settings;\\n",
+    "Mapeador_AntiMicroX.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Mapeador AntiMicroX (Mandos a Teclado/Mouse)\\nExec=antimicrox\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Utility;\\n",
+    "Bluetooth_Manager.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Gestor Bluetooth (Emparejar Mandos y Teclados)\\nExec=blueman-manager\\nIcon=preferences-system-bluetooth\\nTerminal=false\\nCategories=Settings;\\n",
+    "Teclado_Tactil.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Teclado en Pantalla (Onboard)\\nExec=onboard\\nIcon=input-keyboard\\nTerminal=false\\nCategories=Utility;\\n"
 }
 
 for name, cont in core_shortcuts.items():

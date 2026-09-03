@@ -138,15 +138,15 @@ def live_log_streamer():
 threading.Thread(target=live_log_streamer, daemon=True).start()
 
 print("\n" + "=" * 78, flush=True)
-print("🌸 INICIANDO UBUNTU 24.04 LTS FULL EDITION (SUITE COMPLETA + 5TB GDRIVE)...", flush=True)
+print("[AETHER] INICIANDO UBUNTU 24.04 LTS ENTERPRISE EDITION (5TB GDRIVE)...", flush=True)
 print("=" * 78, flush=True)
 
 # ==============================================================================
-# 🚀 0.1 HYPER-TUNING DE RED: GOOGLE BBR + BUFFERS TCP 64MB + MULTI-HILO
+# 0.1 HYPER-TUNING DE RED: GOOGLE BBR + BUFFERS TCP 64MB + MULTI-HILO
 # ==============================================================================
 def optimizar_red_bbr_buffers():
     """Aplica Google BBR y amplía buffers TCP de Linux al límite físico de la red de Google Cloud."""
-    print("🌐 [Turbo Red] Optimizando Stack TCP con Google BBR y Buffers de 64MB...", flush=True)
+    print("[NETWORK] Optimizando Stack TCP con Google BBR y Buffers de 64MB...", flush=True)
     sysctls = [
         ("net.core.default_qdisc", "fq"),
         ("net.ipv4.tcp_congestion_control", "bbr"),
@@ -170,7 +170,7 @@ def optimizar_red_bbr_buffers():
         subprocess.run(f"sysctl -w {key}={val} >/dev/null 2>&1 || true", shell=True)
 
 # ==============================================================================
-# 🎮 0.2 ORQUESTADOR DUAL-GPU (NVIDIA TESLA T4 x2 - 32GB VRAM)
+# 0.2 ORQUESTADOR DUAL-GPU (NVIDIA TESLA T4 x2 - 32GB VRAM)
 # ==============================================================================
 def orquestar_dual_gpu():
     """Detecta topología de GPUs NVIDIA y asigna roles especializados para eliminar cuellos de botella."""
@@ -183,9 +183,9 @@ def orquestar_dual_gpu():
         gpus = []
 
     if gpu_count >= 2:
-        print(f"🚀 [Dual-GPU Maestro] ¡Detectadas {gpu_count} GPUs NVIDIA Tesla ({gpus[0]} x{gpu_count})!", flush=True)
-        print("   🎮 GPU 0 (16GB VRAM): Asignada a Juegos (Proton/Wine/Steam), Emuladores y Display X11.", flush=True)
-        print("   🧠 GPU 1 (16GB VRAM): Asignada a IA (Ollama/ComfyUI), Clonación de Voz y Cómputo.", flush=True)
+        print(f"[DUAL-GPU] Detectadas {gpu_count} GPUs NVIDIA Tesla ({gpus[0]} x{gpu_count})", flush=True)
+        print("   [GPU 0] 16GB VRAM: Asignada a Rendimiento Gráfico (Proton/Wine/Steam) y Display X11.", flush=True)
+        print("   [GPU 1] 16GB VRAM: Asignada a Cómputo IA (Ollama/ComfyUI) y Procesamiento.", flush=True)
         
         os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
         os.environ["__NV_PRIME_RENDER_OFFLOAD"] = "1"
@@ -200,10 +200,10 @@ def orquestar_dual_gpu():
         except Exception:
             pass
     elif gpu_count == 1:
-        print(f"⚡ [GPU Única] Detectada 1 GPU NVIDIA ({gpus[0]}). Modo Alto Rendimiento activo.", flush=True)
+        print(f"[GPU] Detectada 1 GPU NVIDIA ({gpus[0]}). Modo Alto Rendimiento activo.", flush=True)
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     else:
-        print("ℹ️ [Modo CPU] No se detectó GPU NVIDIA dedicada. Modo emulación activado.", flush=True)
+        print("[SYSTEM] No se detectó GPU NVIDIA dedicada. Modo emulación activado.", flush=True)
 
 # ==============================================================================
 # ⚡ 0.3 ACELERADOR DE DESCARGAS MULTI-HILO (16 CONEXIONES PARALELAS)
@@ -380,7 +380,7 @@ subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/nul
 # 1. [PASO 1] CONECTAR Y MONTAR GOOGLE DRIVE 5TB (Cloud_PC)
 # ==============================================================================
 t_step1 = time.time()
-print("☁️ [1/5] Conectando Google Drive (5TB - Carpeta Cloud_PC) y Kaggle API...", flush=True)
+print("[1/5] Conectando Google Drive (5TB - Carpeta Cloud_PC) y Kaggle API...", flush=True)
 log("Iniciando conexión de Google Drive...")
 GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -451,10 +451,10 @@ mount_gdrive_resilient()
 # Espera activa inteligente para confirmación del montaje
 drive_ready = wait_for_path("/root/gdrive", timeout=12)
 if drive_ready:
-    print("  ✅ [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
+    print("  [✓] Unidad de 5TB Google Drive montada físicamente en /root/gdrive.", flush=True)
     log("Google Drive 5TB montado con éxito.", "SUCCESS")
 else:
-    print("  ℹ️ Conexión con Google Drive activa en segundo plano.", flush=True)
+    print("  [INFO] Conexión con Google Drive activa en segundo plano.", flush=True)
 
 # 1.5. Configuración Base del Puntero (Eliminar X negra)
 cursor_conf = Path("/root/.icons/default")
@@ -497,7 +497,7 @@ print(f"  ⏱️ [Paso 1/5 Completado en {time.time() - t_step1:.1f}s]", flush=T
 # 2. INSTALACIÓN DE LA SUITE COMPLETA UBUNTU (GIGABYTES) + LIBREOFFICE + CODECS
 # ==============================================================================
 t_step2 = time.time()
-print("📦 [2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
+print("[2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
 full_ubuntu_pkgs = [
     "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
@@ -522,7 +522,7 @@ all_pkgs = list(set(full_ubuntu_pkgs + extra_pkgs))
 # 1. Detección Inteligente y Recursiva de Base de Datos (100GB Kaggle Dataset)
 input_dir = Path("/kaggle/input")
 input_contents = [p.name for p in input_dir.iterdir()] if input_dir.exists() else []
-print(f"  🔍 Analizando entradas en /kaggle/input: {input_contents if input_contents else 'Ninguna adjunta'}", flush=True)
+print(f"  [STORAGE] Analizando entradas en /kaggle/input: {input_contents if input_contents else 'Ninguna adjunta'}", flush=True)
 
 master_dataset_path = None
 master_archives_dir = None
@@ -560,13 +560,13 @@ if master_dataset_path and master_dataset_path.exists():
     rootfs_candidates = list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.data")) or list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.gz")) or list(master_dataset_path.rglob("ubuntu_rootfs.tar.gz"))
     if rootfs_candidates and rootfs_candidates[0].stat().st_size > 50_000_000:
         rootfs_file = rootfs_candidates[0]
-        print(f"  ⚡ [✓] ¡Imagen Pre-Compilada de Ubuntu detectada en {rootfs_file.name} ({rootfs_file.stat().st_size / (1024**2):.1f} MB)!", flush=True)
-        print("  🚀 [✓] Activando sistema completo en 3 segundos...", flush=True)
+        print(f"  [✓] Imagen Pre-Compilada de Ubuntu detectada en {rootfs_file.name} ({rootfs_file.stat().st_size / (1024**2):.1f} MB)", flush=True)
+        print("  [✓] Activando sistema completo en 3 segundos...", flush=True)
         subprocess.run(f"which pigz >/dev/null 2>&1 && (pigz -dc '{rootfs_file}' | tar -xf - -C / >> {LOG_FILE} 2>&1) || tar -xzf '{rootfs_file}' -C / >> {LOG_FILE} 2>&1", shell=True)
     elif master_archives_dir and master_archives_dir.exists():
         deb_count = len(list(master_archives_dir.glob("*.deb")))
-        print(f"  ⚡ [✓] ¡Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)!", flush=True)
-        print("  ⚡ [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
+        print(f"  [✓] Base de Datos de 100GB detectada en {master_dataset_path.name} ({deb_count} paquetes .deb)", flush=True)
+        print("  [✓] Activando entorno Ubuntu instantáneamente (0 MB descargados)...", flush=True)
         log(f"Cargando {deb_count} paquetes base desde Dataset: {master_archives_dir}")
         
         # 1. Configuración del entorno de instalación DPKG 100% no interactivo y aceleración I/O
@@ -586,18 +586,18 @@ if master_dataset_path and master_dataset_path.exists():
         subprocess.run("dpkg-divert --divert /usr/sbin/update-initramfs.real --rename /usr/sbin/update-initramfs 2>/dev/null || true; ln -sf /bin/true /usr/sbin/update-initramfs 2>/dev/null || true", shell=True)
 
         # 2. Desempaquetado masivo con dpkg -i -R (Modo Recursivo Nativo + I/O Acelerado)
-        print("  📦 [1/3] Extrayendo 1,109 paquetes oficiales del Dataset con aceleración I/O...", flush=True)
+        print("  [1/3] Extrayendo 1,109 paquetes oficiales del Dataset con aceleración I/O...", flush=True)
         res_dpkg = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i -R --force-all --force-unsafe-io --no-triggers '{master_archives_dir}' >> {LOG_FILE} 2>&1", shell=True)
         if res_dpkg.returncode != 0:
             log(f"Aviso en dpkg unpack (código {res_dpkg.returncode}). Continuando con configuración...", "WARNING")
 
         # 3. Configuración y resolución de dependencias del sistema
-        print("  📦 [2/3] Configurando entorno del sistema y servicios base...", flush=True)
+        print("  [2/3] Configurando entorno del sistema y servicios base...", flush=True)
         res_conf = subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg --configure -a --force-unsafe-io >> {LOG_FILE} 2>&1", shell=True)
         subprocess.run(f"DEBIAN_FRONTEND=noninteractive apt-get install -f -y >> {LOG_FILE} 2>&1 || true", shell=True)
     
     # 4. Reutilizar noVNC pre-empaquetado si está presente
-    print("  📦 [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
+    print("  [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
     novnc_dir = Path("/opt/noVNC")
     novnc_dir.parent.mkdir(parents=True, exist_ok=True)
     if not novnc_dir.exists():
@@ -1642,8 +1642,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         try {
             gpSocket = new WebSocket(wsPath);
             gpSocket.onopen = function() {
-                console.log("🎮 Gamepad UInput bridge conectado con éxito:", wsPath);
-                showToast("🎮 Mando Conectado al Kernel");
+                console.log("[GAMEPAD] Bridge conectado con éxito:", wsPath);
+                showToast("Mando Conectado al Kernel");
                 clearTimeout(gpReconnectTimer);
                 clearInterval(gpPingInterval);
                 // Heartbeat cada 25s para mantener el túnel Cloudflare permanentemente abierto
@@ -1681,9 +1681,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Detección Plug & Play de mandos físicos (Xbox, PlayStation, Switch, 8BitDo)
     window.addEventListener("gamepadconnected", function(e) {
         physicalGamepadCount++;
-        console.log("🎮 Mando físico conectado:", e.gamepad.id);
+        console.log("[GAMEPAD] Mando físico conectado:", e.gamepad.id);
         const name = e.gamepad.id.length > 20 ? e.gamepad.id.substring(0, 20) + "..." : e.gamepad.id;
-        showToast("🎮 Mando: " + name);
+        showToast("Mando Conectado: " + name);
         hapticFeedback([20, 50, 20]);
         initGamepadWebSocket();
         startPhysicalGamepadLoop();
@@ -1745,7 +1745,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             btnGamepad.classList.add("active-glow");
             document.body.classList.add("tp-gamepad-active");
             initGamepadWebSocket();
-            showToast("🎮 Mandos Táctiles Xbox Activados");
+            showToast("Mandos Táctiles Activados");
         } else {
             gpOverlay.classList.remove("visible");
             labelGamepad.innerText = "Mandos en Pantalla: OFF";
@@ -2495,7 +2495,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 except Exception as e:
     log(f"Aviso HUD noVNC: {e}", "WARNING")
 
-print("  ✅ [✓] Suite Oficial de Ubuntu (Gigabytes) instalada con éxito.", flush=True)
+print("  [✓] Suite Oficial de Ubuntu instalada con éxito.", flush=True)
 
 # Restaurar estado personal guardado de Google Drive con validación de integridad
 try:
@@ -2512,20 +2512,20 @@ try:
         test_tar = subprocess.run(f"tar -tzf {backup_tar} >/dev/null 2>&1", shell=True)
         if test_tar.returncode == 0:
             subprocess.run(f"tar -xzf {backup_tar} -C /root/ >> {LOG_FILE} 2>&1 || true", shell=True)
-            print("  ✅ [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
+            print("  [✓] Partidas y preferencias de usuario restauradas desde Google Drive.", flush=True)
         else:
             backup_tar.unlink(missing_ok=True)
-            print("  ℹ️ Primera ejecución: Creando entorno inicial limpio.", flush=True)
+            print("  [INFO] Primera ejecución: Creando entorno inicial limpio.", flush=True)
     else:
-        print("  ℹ️ Primera ejecución: Creando entorno inicial limpio.", flush=True)
+        print("  [INFO] Primera ejecución: Creando entorno inicial limpio.", flush=True)
 except Exception:
     pass
 
 # ==============================================================================
-# 2.5 INSTALACIÓN DEL ECOSISTEMA "MODO DIOS" (GAMING, CREADOR Y UX)
+# 2.5 INSTALACIÓN DEL ECOSISTEMA WORKSTATION (GAMING, CREADOR Y UX)
 # ==============================================================================
 if not shutil.which("steam") or not shutil.which("obs"):
-    print("  ⭐ [Modo Dios] Instalando expansiones de Latencia (BBR/Sunshine) y Ecosistema (Steam, OBS, etc)...", flush=True)
+    print("  [EXPANSION] Instalando expansiones de Latencia (BBR/Sunshine) y Ecosistema (Steam, OBS)...", flush=True)
     subprocess.run("sysctl -w net.core.default_qdisc=fq && sysctl -w net.ipv4.tcp_congestion_control=bbr", shell=True, stderr=subprocess.DEVNULL)
     subprocess.run("dpkg --add-architecture i386 && apt-get update -qq", shell=True)
     
@@ -2595,15 +2595,15 @@ if not shutil.which("steam") or not shutil.which("obs"):
     print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
     subprocess.run("wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null || (wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null) || true", shell=True)
     
-    print("  ✅ [✓] Ecosistema 'Modo Dios' instalado exitosamente.", flush=True)
+    print("  [✓] Ecosistema Workstation instalado exitosamente.", flush=True)
 
-print(f"  ⏱️ [Paso 2/5 Completado en {time.time() - t_step2:.1f}s]", flush=True)
+print(f"  [TIEMPO] Paso 2/5 Completado en {time.time() - t_step2:.1f}s", flush=True)
 
 # ==============================================================================
 # 3. SINCRONIZACIÓN PERSISTENTE GOOGLE DRIVE 5TB & APARIENCIA YARU-DARK
 # ==============================================================================
 t_step3 = time.time()
-print("🎨 [3/5] Estableciendo persistencia con Google Drive y apariencia Yaru-Dark...", flush=True)
+print("[3/5] Estableciendo persistencia con Google Drive y apariencia Yaru-Dark...", flush=True)
 
 # 1. Sincronización Simbólica Inteligente (Master Folders en Cloud_PC)
 sync_dirs = {
@@ -3103,13 +3103,13 @@ subprocess.run("chmod +x /usr/local/bin/escaner_redes_y_conexiones.py 2>/dev/nul
 # Iniciar Gamepad UInput Bridge en segundo plano para detección de mandos inmediata
 subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
 
-# Accesos directos oficiales en el escritorio (nombres ASCII para evitar bugs de UTF-8 en X11)
+# Accesos directos oficiales en el escritorio (Freedesktop Standard - Iconos corporativos finos)
 shortcuts = {
     "Tienda_de_Software_1Clic.desktop": (
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🛍️ Tienda de Software y Juegos 1-Clic\n"
+        "Name=Tienda de Software y Juegos 1-Clic\n"
         "Comment=Explora e instala juegos, emuladores y herramientas en 1 clic\n"
         "Exec=python3 /usr/local/bin/tienda_software_1clic.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -3121,7 +3121,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📊 Gestor de Databases & Recursos\n"
+        "Name=Gestor de Databases y Recursos\n"
         "Comment=Panel en vivo: conecta o desconecta databases, limpia el escritorio y monitorea RAM/GPU\n"
         "Exec=python3 /usr/local/bin/ubuntu_store.py --gui\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -3133,7 +3133,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=⚡ Liberar VRAM GPU (Modo Gaming Pro)\n"
+        "Name=Liberar VRAM GPU (Modo Gaming Pro)\n"
         "Comment=Desaloja modelos de IA de la tarjeta gráfica y libera los 16GB de VRAM para juegos\n"
         "Exec=python3 /usr/local/bin/liberar_vram.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -3145,7 +3145,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=⚡ Descargador Turbo 16x (Gigabit Multi-Hilo)\n"
+        "Name=Descargador Turbo 16x (Gigabit Multi-Hilo)\n"
         "Comment=Descarga juegos y archivos a velocidad gigabit con 16 conexiones paralelas\n"
         "Exec=xfce4-terminal --title='Descargador Turbo 16x' -e 'bash -c \"echo -e \\\"\\\\e[1;32m=== DESCARGADOR TURBO GIGABIT 16X ===\\\\e[0m\\\"; read -p \\\"Pega el enlace a descargar: \\\" url; descarga_turbo \\\"$url\\\" /root/Descargas; echo \\\"Descarga finalizada.\\\"; read -p \\\"Presiona Enter para cerrar...\\\"\"'\n"
         "Path=/root/Descargas\n"
@@ -3157,7 +3157,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🚀 Test de Velocidad Real Gigabit (1GB Test)\n"
+        "Name=Test de Velocidad Real Gigabit (1GB Test)\n"
         "Comment=Mide la velocidad real en MB/s y Gbps descargando y borrando un archivo de prueba\n"
         "Exec=xfce4-terminal --title='Test de Velocidad Real' -e 'bash -c \"python3 /usr/local/bin/test_velocidad_real.py 1gb; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\n"
         "Path=/tmp\n"
@@ -3169,7 +3169,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🔍 Escáner de Redes, WiFi y Conexiones\n"
+        "Name=Escáner de Redes, WiFi y Conexiones\n"
         "Comment=Auditoría de adaptadores de red, puertos de servicio y conexiones de afuera\n"
         "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\n"
         "Path=/root\n"
@@ -3181,7 +3181,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📁 Mis Archivos 5TB (Google Drive)\n"
+        "Name=Mis Archivos 5TB (Google Drive)\n"
         "Comment=Carpeta persistente en la nube con 5TB para juegos y archivos\n"
         "Exec=thunar /root/gdrive/Cloud_PC\n"
         "Path=/root\n"
@@ -3193,7 +3193,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=💾 Guardar Estado de mi PC (Nube)\n"
+        "Name=Guardar Estado de mi PC (Nube)\n"
         "Comment=Guarda tus partidas, descargas y cambios a Google Drive\n"
         f"Exec=python3 {BASE_DIR}/run_kaggle_vnc_studio.py --save-now\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -3205,7 +3205,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📦 Guardar en Database Ubuntu (100GB)\n"
+        "Name=Guardar en Database Ubuntu (100GB)\n"
         "Comment=Actualiza la imagen maestra de tu sistema operativo en Kaggle Datasets\n"
         f"Exec=python3 {BASE_DIR}/guardar_en_database_kaggle.py\n"
         "Path=/kaggle/working/StreamerIAWife\n"
@@ -3217,7 +3217,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=📊 Monitor GPUs Tesla T4 (nvtop)\n"
+        "Name=Monitor GPUs Tesla T4 (nvtop)\n"
         "Exec=xfce4-terminal --title='Monitor GPUs Tesla T4' -e 'nvtop'\n"
         "Path=/root\n"
         "Icon=utilities-system-monitor\n"
@@ -3228,7 +3228,7 @@ shortcuts = {
         "[Desktop Entry]\n"
         "Version=1.0\n"
         "Type=Application\n"
-        "Name=🌐 Google Chrome Oficial\n"
+        "Name=Google Chrome Oficial\n"
         "Comment=Navegador web completo con pestañas y aceleración por hardware\n"
         "Exec=google-chrome --no-sandbox --no-first-run --no-default-browser-check https://www.google.com\n"
         "Path=/root\n"
@@ -3516,13 +3516,13 @@ if sunshine_bin:
     except Exception as e_sun:
         log(f"Aviso Sunshine startup: {e_sun}", "WARNING")
 
-print(f"  ⏱️ [Paso 4/5 Completado en {time.time() - t_step4:.1f}s]", flush=True)
+print(f"  [TIEMPO] Paso 4/5 Completado en {time.time() - t_step4:.1f}s", flush=True)
 
 # ==============================================================================
 # 5. TÚNELES DE ALTA VELOCIDAD Y VERIFICACIÓN HTTP REAL (CERO 502)
 # ==============================================================================
 t_step5 = time.time()
-print("🌐 [5/5] Conectando túneles de acceso remoto verificados...", flush=True)
+print("[5/5] Conectando túneles de acceso remoto verificados...", flush=True)
 
 web_tunnel_wifi = None
 web_tunnel_mobile = None
@@ -3684,8 +3684,8 @@ for _ in range(30):
             pass
     time.sleep(0.5)
 
-print(f"  ⏱️ [Paso 5/5 Completado en {time.time() - t_step5:.1f}s]", flush=True)
-print(f"  ⚡ [Tiempo total de arranque: {time.time() - t_start_total:.1f}s]\n", flush=True)
+print(f"  [TIEMPO] Paso 5/5 Completado en {time.time() - t_step5:.1f}s", flush=True)
+print(f"  [METRICA] Tiempo total de arranque: {time.time() - t_start_total:.1f}s\n", flush=True)
 
 # ==============================================================================
 # VERIFICACIÓN DE ESTADO Y SALUD REAL DEL SISTEMA
@@ -3695,7 +3695,7 @@ drive_mounted = os.path.exists("/root/gdrive")
 try:
     import torch
     n = torch.cuda.device_count()
-    print(f"\n🎮 GPUs NVIDIA Tesla Activas: {n}", flush=True)
+    print(f"\n[GPU] Unidades NVIDIA Tesla Activas: {n}", flush=True)
     for i in range(n):
         p = torch.cuda.get_device_properties(i)
         print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
@@ -3704,34 +3704,34 @@ except Exception:
 
 try:
     df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
-    print(f"💾 Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
+    print(f"[STORAGE] Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
 except Exception:
     pass
 
 # ==============================================================================
-# 🎉 ¡UBUNTU CLOUD PC 1080p PANTALLA COMPLETA 100% ONLINE!
+# SISTEMA OPERATIVO Y SERVICIOS 100% ONLINE (ENTERPRISE WORKSTATION)
 # ==============================================================================
 print("\n" + "=" * 78, flush=True)
 if xvfb_ready and vnc_ready and novnc_ready:
-    print("🎉 🐧 ¡TU UBUNTU DESKTOP EDITION ESTÁ 100% ONLINE EN PANTALLA COMPLETA 16:9!", flush=True)
+    print("[ONLINE] UBUNTU WORKSTATION EDITION 100% OPERATIVO EN PANTALLA COMPLETA", flush=True)
 else:
-    print("⚠️ 🐧 SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
+    print("[WARN] SISTEMA INICIADO CON OBSERVACIONES EN SUBSISTEMAS:", flush=True)
 print("=" * 78, flush=True)
-print(f"  • Servidor X11 Display :1 (1080p):  {'🟢 OPERATIVO' if xvfb_ready else '🔴 ERROR DE INICIO'}", flush=True)
-print(f"  • Servidor VNC Nativo (5900):       {'🟢 PROTEGIDO CON CONTRASEÑA' if vnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
-print(f"  • Servidor Web noVNC (6080):        {'🟢 OPERATIVO (SSL ACTIVO)' if novnc_ready else '🔴 ERROR DE INICIO'}", flush=True)
-print(f"  • Google Drive 5TB FUSE Mount:      {'🟢 MONTADO (/root/gdrive)' if drive_mounted else '🔴 NO MONTADO'}", flush=True)
-print(f"  • Enrutamiento de Mínima Latencia:  🇺🇸 US-East (Miami / Ruta Directa a Venezuela)", flush=True)
+print(f"  • Servidor X11 Display :1 (1080p):  {'[OK] OPERATIVO' if xvfb_ready else '[FAIL] ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor VNC Nativo (5900):       {'[OK] PROTEGIDO' if vnc_ready else '[FAIL] ERROR DE INICIO'}", flush=True)
+print(f"  • Servidor Web noVNC (6080):        {'[OK] OPERATIVO (SSL ACTIVO)' if novnc_ready else '[FAIL] ERROR DE INICIO'}", flush=True)
+print(f"  • Google Drive 5TB FUSE Mount:      {'[OK] MONTADO (/root/gdrive)' if drive_mounted else '[FAIL] NO MONTADO'}", flush=True)
+print(f"  • Enrutamiento de Red:              US-East (Miami / Ruta Directa)", flush=True)
 print("-" * 78, flush=True)
 
 if web_tunnel_wifi:
-    print("🌐 OPCIÓN 1: NAVEGADOR WEB CON MOTOR DE TRACKPAD DE LAPTOP INTEGRADO:", flush=True)
+    print("[OPCION 1] NAVEGADOR WEB CON MOTOR DE TRACKPAD INTEGRADO:", flush=True)
     print("------------------------------------------------------------------------------", flush=True)
-    print("📶 1. MODO WIFI / FIBRA (1080p Máxima Nitidez + Trackpad):", flush=True)
-    print(f"👉 {web_tunnel_wifi}", flush=True)
-    print("\n📱 2. MODO DATOS MÓVILES (Ultra-Baja Latencia + Trackpad):", flush=True)
-    print(f"👉 {web_tunnel_mobile}", flush=True)
-    print("   • Desliza tu dedo en cualquier parte para mover la flecha del mouse suavemente.", flush=True)
+    print("[CANAL A] Modo Alta Definición (1080p Máxima Nitidez + Trackpad):", flush=True)
+    print(f"  URL: {web_tunnel_wifi}", flush=True)
+    print("\n[CANAL B] Modo Optimizado (Ultra-Baja Latencia + Trackpad):", flush=True)
+    print(f"  URL: {web_tunnel_mobile}", flush=True)
+    print("  • Desliza tu dedo en cualquier parte para mover la flecha del mouse suavemente.", flush=True)
     print("-" * 78, flush=True)
 
 pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
@@ -3739,27 +3739,26 @@ parts = pinggy_addr.split(":") if ":" in pinggy_addr else [pinggy_addr, "5900"]
 host_part = parts[0]
 port_part = parts[1] if len(parts) > 1 else "5900"
 
-print("📱 OPCIÓN 2: APP MÓVIL REALVNC VIEWER / AVNC (CONEXIÓN BINARIA TCP):", flush=True)
+print("[OPCION 2] CLIENTE NATIVO VNC (CONEXIÓN BINARIA TCP - REALVNC / AVNC):", flush=True)
 print("------------------------------------------------------------------------------", flush=True)
-print(f"👉 Para RealVNC Viewer pega:  {host_part}::{port_part}  (con dos puntos dobles)")
-print(f"👉 Para AVNC / bVNC pega:")
-print(f"   • Host / Servidor:         {host_part}")
-print(f"   • Puerto:                  {port_part}")
-print(f"🔑 Contraseña VNC:            {VNC_PASSWORD}")
+print(f"  • RealVNC Viewer:          {host_part}::{port_part}")
+print(f"  • AVNC / bVNC Host:        {host_part}")
+print(f"  • AVNC / bVNC Puerto:      {port_part}")
+print(f"  • Contraseña VNC:          {VNC_PASSWORD}")
 print("-" * 78, flush=True)
 
-print("🎮 OPCIÓN 3: MOONLIGHT + SUNSHINE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
+print("[OPCION 3] MOONLIGHT + SUNSHINE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
 print("------------------------------------------------------------------------------", flush=True)
-print(f"👉 Servidor Sunshine:         🟢 Activo en segundo plano (Puerto 47989/47990)")
-print(f"🔑 Usuario Web: admin         Contraseña: {VNC_PASSWORD}")
+print(f"  • Servidor Sunshine:       [OK] Activo en segundo plano (Puerto 47989/47990)")
+print(f"  • Credenciales Web:        admin / {VNC_PASSWORD}")
 print("=" * 78, flush=True)
 
-print("💾 SISTEMA DE PERSISTENCIA Y REGISTRO ACTIVO:", flush=True)
-print("   • 🎮 Tus 5TB de Google Drive (Cloud_PC) montados en /root/gdrive.", flush=True)
-print("   • 🏢 Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
-print("   • 💬 Redes Sociales & Comunicación: Discord, Telegram, Spotify, Chrome listos.", flush=True)
-print("   • 🛍️ Tienda de Software y Juegos 1-Clic en el Escritorio.", flush=True)
-print("   • 🖥️ Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
+print("[STORAGE] Persistencia y Almacenamiento Activos:", flush=True)
+print("  • Unidad de 5TB Google Drive (Cloud_PC) montada en /root/gdrive.", flush=True)
+print("  • Suite Ofimática LibreOffice (Writer, Calc, Impress) instalada.", flush=True)
+print("  • Comunicaciones y Navegación: Google Chrome, Discord, Telegram listos.", flush=True)
+print("  • Tienda de Software y Juegos 1-Clic en el Escritorio.", flush=True)
+print("  • Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
 
 # ==============================================================================
