@@ -742,11 +742,18 @@ body.tp-gamepad-active #cloud-perf-badge {
 }
 
 /* ========================================================================== */
-/* 2. PESTAÑA LATERAL AETHER (ERGONOMÍA NATURAL DEL PULGAR A 42% DE ALTURA)   */
+/* Ocultar barra antigua y conflictiva nativa de noVNC */
+#noVNC_control_bar_anchor, #noVNC_control_bar {
+    display: none !important;
+}
+
+/* ========================================================================== */
+/* 2. PESTAÑA LATERAL AETHER (MARGEN IZQUIERDO, PULGAR NATURAL A 42%)         */
 /* ========================================================================== */
 #aether-edge-tab {
     position: fixed;
-    right: 0;
+    left: 0;
+    right: auto;
     top: 42%;
     width: 28px;
     height: 56px;
@@ -754,27 +761,26 @@ body.tp-gamepad-active #cloud-perf-badge {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1.5px solid rgba(0, 255, 200, 0.35);
-    border-right: none;
-    border-radius: 16px 0 0 16px;
+    border-left: none;
+    border-radius: 0 16px 16px 0;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--aether-cyan);
-    font-size: 18px;
-    font-weight: 700;
     z-index: 999990;
     cursor: pointer;
     touch-action: none;
     user-select: none;
-    opacity: 0.32; /* Discreto en reposo estilo Apple HIG / Xbox TAK */
+    opacity: 0.35; /* Discreto en reposo estilo Apple HIG / Xbox TAK */
     transition: opacity 0.25s ease, background 0.2s ease, width 0.2s ease, box-shadow 0.25s ease;
-    box-shadow: -3px 0 14px rgba(0, 255, 200, 0.2);
+    box-shadow: 3px 0 14px rgba(0, 255, 200, 0.2);
 }
-/* Hitbox expandido invisible de 60px para el pulgar */
+/* Hitbox expandido invisible de 60px para el pulgar izquierdo */
 #aether-edge-tab::before {
     content: "";
     position: absolute;
-    right: 0;
+    left: 0;
+    right: auto;
     top: -15px;
     width: 60px;
     height: 86px;
@@ -783,7 +789,7 @@ body.tp-gamepad-active #cloud-perf-badge {
     opacity: 0.95 !important;
     background: rgba(13, 18, 30, 0.92);
     width: 36px;
-    box-shadow: -4px 0 22px rgba(0, 255, 200, 0.5);
+    box-shadow: 4px 0 22px rgba(0, 255, 200, 0.5);
 }
 
 /* Scrim translúcido con desenfoque de fondo */
@@ -804,24 +810,26 @@ body.tp-gamepad-active #cloud-perf-badge {
     pointer-events: auto;
 }
 
-/* Cajón Lateral Desplegable (Side Drawer - Cristal Líquido / Glassmorphism) */
+/* Cajón Lateral Desplegable (Side Drawer - Cristal Líquido / Margen Izquierdo) */
 #aether-drawer {
     position: fixed;
-    right: 0;
+    left: 0;
+    right: auto;
     top: 0;
-    width: min(270px, 82vw);
+    width: min(280px, 84vw);
     height: 100vh;
-    background: rgba(10, 15, 26, 0.86);
+    background: rgba(10, 15, 26, 0.88);
     backdrop-filter: blur(30px) saturate(180%);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
-    border-left: 1px solid rgba(0, 255, 200, 0.25);
-    box-shadow: -10px 0 45px rgba(0, 0, 0, 0.85);
+    border-right: 1px solid rgba(0, 255, 200, 0.25);
+    border-left: none;
+    box-shadow: 10px 0 45px rgba(0, 0, 0, 0.85);
     z-index: 999998;
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    padding: calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) 14px;
+    padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom)) calc(14px + var(--safe-left));
     box-sizing: border-box;
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -903,9 +911,19 @@ body.tp-gamepad-active #cloud-perf-badge {
     box-shadow: 0 0 14px rgba(0, 255, 200, 0.35);
 }
 .drawer-btn .d-icon {
-    font-size: 16px;
-    width: 22px;
-    text-align: center;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: currentColor;
+}
+.drawer-btn .d-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
 }
 .drawer-footer {
     padding-top: 12px;
@@ -933,8 +951,8 @@ body.tp-gamepad-active #cloud-perf-badge {
 /* Soporte ergonómico para smartphones en horizontal (Landscape) */
 @media (max-height: 520px) {
     #aether-drawer {
-        width: min(240px, 75vw);
-        padding: calc(8px + var(--safe-top)) calc(10px + var(--safe-right)) calc(8px + var(--safe-bottom)) 10px;
+        width: min(250px, 78vw);
+        padding: calc(8px + var(--safe-top)) 10px calc(8px + var(--safe-bottom)) calc(10px + var(--safe-left));
     }
     .drawer-header {
         margin-bottom: 6px;
@@ -1249,50 +1267,74 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <span class="ping-val" id="perf-ping-text">-- ms</span>
 </div>
 
-<!-- 2. PESTAÑA LATERAL TRANSPARENTE AETHER -->
+<!-- 2. PESTAÑA LATERAL TRANSPARENTE AETHER (MARGEN IZQUIERDO) -->
 <div id="aether-edge-tab" title="Deslizar o tocar para abrir controles">
-    ‹
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
 </div>
 <div id="aether-scrim"></div>
 
-<!-- 3. CAJÓN LATERAL DE HERRAMIENTAS (AETHER SIDE DRAWER) -->
+<!-- 3. CAJÓN LATERAL DE HERRAMIENTAS (AETHER SIDE DRAWER - MARGEN IZQUIERDO) -->
 <div id="aether-drawer">
     <div class="drawer-header">
-        <div class="drawer-title">⚡ Aether Control Panel</div>
-        <button class="drawer-close" id="btn-drawer-close">›</button>
+        <div class="drawer-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aether-cyan)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Panel de Control Aether</span>
+        </div>
+        <button class="drawer-close" id="btn-drawer-close" title="Cerrar panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
     </div>
     <div class="drawer-items">
         <button class="drawer-btn" id="btn-aether-gamepad">
-            <span class="d-icon">🎮</span>
+            <span class="d-icon" id="icon-aether-gamepad">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="6"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>
+            </span>
             <span id="label-aether-gamepad">Mandos en Pantalla: OFF</span>
         </button>
         <button class="drawer-btn active-glow" id="btn-aether-mode">
-            <span class="d-icon" id="icon-aether-mode">🖱️</span>
+            <span class="d-icon" id="icon-aether-mode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
+            </span>
             <span id="label-aether-mode">Modo Trackpad</span>
         </button>
         <button class="drawer-btn" id="btn-aether-keyboard">
-            <span class="d-icon">⌨️</span>
+            <span class="d-icon" id="icon-aether-keyboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="10" y1="12" x2="10.01" y2="12"/><line x1="14" y1="12" x2="14.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+            </span>
             <span>Teclado en Pantalla</span>
         </button>
         <button class="drawer-btn" id="btn-aether-aspect">
-            <span class="d-icon">📺</span>
+            <span class="d-icon" id="icon-aether-aspect">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </span>
             <span id="label-aether-aspect">Pantalla: Ajuste 16:9</span>
         </button>
         <button class="drawer-btn" id="btn-aether-zoom">
-            <span class="d-icon">🔍</span>
+            <span class="d-icon" id="icon-aether-zoom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </span>
             <span id="label-aether-zoom">Restablecer Zoom (100%)</span>
         </button>
         <button class="drawer-btn" id="btn-aether-audio">
-            <span class="d-icon" id="icon-aether-audio">🔊</span>
+            <span class="d-icon" id="icon-aether-audio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </span>
             <span id="label-aether-audio">Audio: Activado</span>
         </button>
         <button class="drawer-btn" id="btn-aether-fullscreen">
-            <span class="d-icon">⛶</span>
+            <span class="d-icon" id="icon-aether-fullscreen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            </span>
             <span>Pantalla Completa</span>
         </button>
     </div>
     <div class="drawer-footer">
-        <button class="drawer-exit-btn" id="btn-aether-exit">🚪 Desconectar Sesión</button>
+        <button class="drawer-exit-btn" id="btn-aether-exit">
+            <span style="display:inline-flex; align-items:center; gap:8px; justify-content:center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Desconectar Sesión</span>
+            </span>
+        </button>
     </div>
 </div>
 
@@ -1949,20 +1991,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
     }
 
+    const mouseSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>';
+    const touchSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>';
+
     function setInputMode(mode) {
         currentMode = mode;
         localStorage.setItem("cloudpc_input_mode", mode);
         if (mode === "TRACKPAD") {
             document.body.classList.add("tp-trackpad-mode");
             document.body.classList.remove("tp-touch-mode");
-            iconMode.innerText = "🖱️";
-            labelMode.innerText = "Modo Trackpad";
+            if (iconMode) iconMode.innerHTML = mouseSvg;
+            if (labelMode) labelMode.innerText = "Modo Trackpad";
             showToast("Modo Trackpad Activo (Estilo Laptop)");
         } else {
             document.body.classList.add("tp-touch-mode");
             document.body.classList.remove("tp-trackpad-mode");
-            iconMode.innerText = "👆";
-            labelMode.innerText = "Modo Táctil Directo";
+            if (iconMode) iconMode.innerHTML = touchSvg;
+            if (labelMode) labelMode.innerText = "Modo Táctil Directo";
             showToast("Modo Táctil Directo Activo (Tablet)");
         }
         hapticFeedback(20);
@@ -2351,18 +2396,20 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     // Alternar Audio / Mute
+    const speakerOnSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+    const speakerMuteSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+
     if (btnAudio) {
         attachButtonTap(btnAudio, function() {
             isAudioMuted = !isAudioMuted;
-            const rfb = getRFB();
             if (isAudioMuted) {
-                iconAudio.innerText = "🔇";
-                labelAudio.innerText = "Audio: Silenciado";
+                if (iconAudio) iconAudio.innerHTML = speakerMuteSvg;
+                if (labelAudio) labelAudio.innerText = "Audio: Silenciado";
                 btnAudio.classList.remove("active-glow");
                 showToast("Audio Silenciado");
             } else {
-                iconAudio.innerText = "🔊";
-                labelAudio.innerText = "Audio: Activado";
+                if (iconAudio) iconAudio.innerHTML = speakerOnSvg;
+                if (labelAudio) labelAudio.innerText = "Audio: Activado";
                 btnAudio.classList.add("active-glow");
                 showToast("Audio Activado");
             }
@@ -2371,12 +2418,17 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     function toggleFullScreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
+        const doc = document;
+        const docEl = document.documentElement;
+        const isFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+        if (!isFull) {
+            const request = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            if (request) request.call(docEl).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.add("active-glow");
             showToast("Pantalla Completa");
         } else {
-            document.exitFullscreen().catch(() => {});
+            const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+            if (exit) exit.call(doc).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.remove("active-glow");
             showToast("Ventana Normal");
         }
@@ -2436,6 +2488,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 })();
 </script>
 """
+            if "<meta charset=" not in content.lower():
+                content = content.replace("<head>", '<head>\n    <meta charset="utf-8">', 1)
             content = content.replace("</body>", f"{hud_code}\n</body>")
             vnc_html.write_text(content, encoding="utf-8")
 except Exception as e:
@@ -3334,6 +3388,8 @@ events {
 }
 
 http {
+    charset utf-8;
+    source_charset utf-8;
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
     sendfile on;
@@ -3350,8 +3406,9 @@ http {
         listen 6080 default_server;
         server_name _;
 
-        # 1. Archivos estáticos de noVNC y Web UI
+        # 1. Archivos estáticos de noVNC y Web UI (UTF-8 estricto)
         location / {
+            charset utf-8;
             root /opt/noVNC;
             index vnc.html;
             try_files $uri $uri/ /vnc.html;
