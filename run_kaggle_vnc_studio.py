@@ -1390,8 +1390,35 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let initialTouchCount = 0, startX = 0, startY = 0, lastX = 0, lastY = 0, totalMoved = 0;
     let dragHoldTimer = null, isTapAndHalfCandidate = false;
 
-    let scrollVelocityY = 0, lastScrollY = 0, lastScrollTime = 0, momentumAnimFrame = null;
+    let scrollVelocityY = 0, lastScrollY = 0, lastScrollX = 0, lastScrollTime = 0, momentumAnimFrame = null;
     let isPinching = false, initialPinchDist = 0, initialPinchZoom = 1.0, initialPinchMidX = 0, initialPinchMidY = 0;
+    let initialPinchWorldX = 0, initialPinchWorldY = 0, lastTapStartX = 0, lastTapStartY = 0;
+
+    function clampPanX(x, zoom) {
+        if (zoom <= 1.01) return 0;
+        const minX = window.innerWidth * (1 - zoom);
+        return Math.min(0, Math.max(minX, x));
+    }
+    function clampPanY(y, zoom) {
+        if (zoom <= 1.01) return 0;
+        const minY = window.innerHeight * (1 - zoom);
+        return Math.min(0, Math.max(minY, y));
+    }
+    function zoomToPoint(targetZoom, screenX, screenY, animate) {
+        const clampedZoom = Math.min(3.8, Math.max(1.0, targetZoom));
+        if (clampedZoom <= 1.02) {
+            currentZoom = 1.0;
+            panX = 0;
+            panY = 0;
+        } else {
+            const worldX = (screenX - panX) / currentZoom;
+            const worldY = (screenY - panY) / currentZoom;
+            currentZoom = clampedZoom;
+            panX = clampPanX(screenX - (worldX * currentZoom), currentZoom);
+            panY = clampPanY(screenY - (worldY * currentZoom), currentZoom);
+        }
+        updateCanvasTransform(animate);
+    }
 
     function getRFB() { return (window.UI && window.UI.rfb) ? window.UI.rfb : null; }
 
@@ -1834,8 +1861,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             initialPinchZoom = currentZoom;
             initialPinchMidX = (p1.clientX + p2.clientX) / 2;
             initialPinchMidY = (p1.clientY + p2.clientY) / 2;
+            initialPinchWorldX = (initialPinchMidX - panX) / currentZoom;
+            initialPinchWorldY = (initialPinchMidY - panY) / currentZoom;
             isPinching = false;
             lastScrollY = initialPinchMidY;
+            lastScrollX = initialPinchMidX;
             lastScrollTime = performance.now();
             scrollVelocityY = 0;
         }
@@ -1870,7 +1900,20 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const scaleY = (screenH / (window.innerHeight * currentZoom)) * 1.35 * accel;
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
-                updateCursorElement();
+
+                // Auto-pan si el cursor se acerca al borde de la pantalla estando ampliado
+                if (currentZoom > 1.05) {
+                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
+                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    const edgeMargin = 40;
+                    if (cx < edgeMargin) panX = clampPanX(panX + (edgeMargin - cx) * 0.35, currentZoom);
+                    if (cx > window.innerWidth - edgeMargin) panX = clampPanX(panX - (cx - (window.innerWidth - edgeMargin)) * 0.35, currentZoom);
+                    if (cy < edgeMargin) panY = clampPanY(panY + (edgeMargin - cy) * 0.35, currentZoom);
+                    if (cy > window.innerHeight - edgeMargin) panY = clampPanY(panY - (cy - (window.innerHeight - edgeMargin)) * 0.35, currentZoom);
+                    updateCanvasTransform(false);
+                } else {
+                    updateCursorElement();
+                }
                 sendMouse(isDragging ? 1 : 0);
             } else {
                 const realX = (curX - panX) / currentZoom;
@@ -1884,25 +1927,44 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const p1 = e.touches[0], p2 = e.touches[1];
             const currentDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
             const distDiff = Math.abs(currentDist - initialPinchDist);
+            const curMidX = (p1.clientX + p2.clientX) / 2;
+            const curMidY = (p1.clientY + p2.clientY) / 2;
 
-            if (distDiff > 25 || isPinching) {
+            if (distDiff > 16 || isPinching) {
                 isPinching = true;
                 const zoomFactor = currentDist / initialPinchDist;
-                currentZoom = Math.min(3.5, Math.max(1.0, initialPinchZoom * zoomFactor));
-                const midX = (p1.clientX + p2.clientX) / 2, midY = (p1.clientY + p2.clientY) / 2;
-                panX += (midX - initialPinchMidX) * 0.7;
-                panY += (midY - initialPinchMidY) * 0.7;
-                initialPinchMidX = midX; initialPinchMidY = midY;
-                if (currentZoom <= 1.05) { panX = 0; panY = 0; }
+                const newZoom = Math.min(3.8, Math.max(1.0, initialPinchZoom * zoomFactor));
+
+                // Fórmula matemática de Punto Focal Invariante (Google Maps / Figma / Apple Safari)
+                if (newZoom <= 1.02) {
+                    currentZoom = 1.0;
+                    panX = 0;
+                    panY = 0;
+                } else {
+                    currentZoom = newZoom;
+                    panX = clampPanX(curMidX - (initialPinchWorldX * currentZoom), currentZoom);
+                    panY = clampPanY(curMidY - (initialPinchWorldY * currentZoom), currentZoom);
+                }
+                updateCanvasTransform(false);
+            } else if (currentZoom > 1.05) {
+                // Si la pantalla está ampliada, dos dedos en paralelo hacen PAN del encuadre
+                const dx = curMidX - lastScrollX;
+                const dy = curMidY - lastScrollY;
+                lastScrollX = curMidX;
+                lastScrollY = curMidY;
+                panX = clampPanX(panX + dx, currentZoom);
+                panY = clampPanY(panY + dy, currentZoom);
                 updateCanvasTransform(false);
             } else {
-                const curY = (p1.clientY + p2.clientY) / 2, dy = curY - lastScrollY;
-                lastScrollY = curY;
+                // Si la pantalla está al 100%, dos dedos en paralelo hacen SCROLL de ratón
+                const dy = curMidY - lastScrollY;
+                lastScrollY = curMidY;
+                lastScrollX = curMidX;
                 const now = performance.now(), dt = now - lastScrollTime;
                 if (dt > 0) scrollVelocityY = dy / dt;
                 lastScrollTime = now;
-                if (dy > 10) { sendMouse(16); setTimeout(() => sendMouse(0), 25); }
-                else if (dy < -10) { sendMouse(8); setTimeout(() => sendMouse(0), 25); }
+                if (dy > 12) { sendMouse(16); setTimeout(() => sendMouse(0), 25); }
+                else if (dy < -12) { sendMouse(8); setTimeout(() => sendMouse(0), 25); }
             }
         }
     }, { passive: false });
@@ -1925,7 +1987,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
         if (e.touches.length === 0) {
             isTouching = false;
-            if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35) {
+            if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35 && currentZoom <= 1.05) {
                 let v = scrollVelocityY * 18;
                 let decay = () => {
                     if (Math.abs(v) > 0.8) {
@@ -1940,9 +2002,29 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
             if (initialTouchCount === 1 && duration < 380 && totalMoved < 24) {
                 hapticFeedback(12);
+                const timeSinceLastTap = touchStartTime - lastTapEndTime;
+
+                // Detección de Smart Double-Tap Zoom (Estilo Apple Safari / Google Chrome)
+                if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
+                    lastTapEndTime = 0;
+                    if (currentZoom > 1.05) {
+                        resetZoom();
+                    } else {
+                        zoomToPoint(2.2, startX, startY, true);
+                        showToast("Zoom Inteligente (220%)");
+                        hapticFeedback(20);
+                    }
+                    return;
+                }
+                lastTapStartX = startX;
+                lastTapStartY = startY;
+
+                // Corrección CRÍTICA: Proyección matemática exacta de coordenadas bajo zoom
                 if (currentMode === "TOUCH") {
-                    virtX = Math.max(0, Math.min(screenW, (startX / window.innerWidth) * screenW));
-                    virtY = Math.max(0, Math.min(screenH, (startY / window.innerHeight) * screenH));
+                    const realX = (startX - panX) / currentZoom;
+                    const realY = (startY - panY) / currentZoom;
+                    virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
+                    virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
                 }
                 const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
                 const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
@@ -1974,15 +2056,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     function updateCanvasTransform(animate) {
         const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
         if (!canvas) return;
-        canvas.style.transition = animate ? "transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)" : "none";
+        canvas.style.transition = animate ? "transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)" : "none";
         canvas.style.transformOrigin = "0 0";
         canvas.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${currentZoom})`;
         updateCursorElement();
     }
 
     function resetZoom() {
-        currentZoom = 1.0; panX = 0; panY = 0;
-        updateCanvasTransform(true);
+        zoomToPoint(1.0, window.innerWidth / 2, window.innerHeight / 2, true);
         showToast("Zoom Restablecido al 100%");
         hapticFeedback(15);
     }
