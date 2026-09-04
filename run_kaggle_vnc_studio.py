@@ -4028,10 +4028,13 @@ try:
     # --------------------------------------------------------------------------
     # Personalización Profesional de la Terminal: Aether Cloud PC Workstation
     # --------------------------------------------------------------------------
-    subprocess.run("hostname aether-pc 2>/dev/null || true; echo 'aether-pc' > /etc/hostname 2>/dev/null || true", shell=True)
-    
-    # 1. Montaje limpio de Bases de Datos en /media/Cloud_Storage (VFS Enterprise)
-    subprocess.run("mkdir -p /media/Cloud_Storage && mount --bind /kaggle/input /media/Cloud_Storage 2>/dev/null || true", shell=True)
+    try:
+        Path("/etc/hostname").write_text("aether-pc\n", encoding="utf-8")
+        Path("/media").mkdir(parents=True, exist_ok=True)
+        if Path("/kaggle/input").exists() and not Path("/media/Cloud_Storage").exists():
+            subprocess.run("ln -sfn /kaggle/input /media/Cloud_Storage 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
     
     # 2. Configuración de Shell y Bashrc Inmaculada (Aether Cloud PC)
     bash_custom = (
@@ -4338,11 +4341,6 @@ char *getenv(const char *name) {
     # 8. HARDWARE SPOOFING: Falsificar DMI y Ocultar Google Compute Engine
     # --------------------------------------------------------------------------
     try:
-        Path("/etc/cloud_product").write_text("Supermicro Workstation Pro\n", encoding="utf-8")
-        Path("/etc/cloud_vendor").write_text("Supermicro\n", encoding="utf-8")
-        subprocess.run("mount --bind /etc/cloud_product /sys/class/dmi/id/product_name 2>/dev/null || true", shell=True)
-        subprocess.run("mount --bind /etc/cloud_vendor /sys/class/dmi/id/sys_vendor 2>/dev/null || true", shell=True)
-        subprocess.run("mount --bind /etc/cloud_vendor /sys/class/dmi/id/bios_vendor 2>/dev/null || true", shell=True)
         dmi_wrapper = (
             "#!/bin/bash\n"
             "echo '# dmidecode 3.3'\n"
@@ -4385,9 +4383,6 @@ char *getenv(const char *name) {
         Path("/usr/local/bin/kaggle").write_text(kaggle_wrapper, encoding="utf-8")
         subprocess.run("chmod 755 /usr/local/bin/kaggle 2>/dev/null || true", shell=True)
         
-        # Limpieza de rastros de kernel
-        subprocess.run("dmesg -c >/dev/null 2>&1 || true", shell=True)
-        subprocess.run("echo 1 > /proc/sys/kernel/dmesg_restrict 2>/dev/null || true", shell=True)
     except Exception:
         pass
 except Exception:
@@ -5359,48 +5354,55 @@ try:
     if not cf_bin.exists():
         subprocess.run("wget -q --timeout=15 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
     if cf_bin.exists():
-        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for _ in range(30):
-            line = proc_cf.stdout.readline()
-            if not line:
-                time.sleep(0.2)
-                continue
-            if "trycloudflare.com" in line:
-                match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
-                if match:
-                    base_cf = match.group(1).strip()
-                    url_cf = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-                    url_cf_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
-                    log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
+        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        
+        def _read_cf_lines(p):
+            global url_cf, url_cf_mobile
+            for line in iter(p.stdout.readline, ''):
+                if not line:
                     break
+                if "trycloudflare.com" in line and not url_cf:
+                    match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
+                    if match:
+                        base_cf = match.group(1).strip()
+                        url_cf = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                        url_cf_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                        print(f"\n🌐 [CLOUDFLARE ONLINE] Enlace Directo Generado:\n  👉 {url_cf}\n", flush=True)
+                        log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
+        
+        threading.Thread(target=_read_cf_lines, args=(proc_cf,), daemon=True).start()
+        
+        # Esperar hasta 20s a que Cloudflare conecte
+        t_cf_limit = time.time()
+        while not url_cf and (time.time() - t_cf_limit < 20):
+            time.sleep(0.5)
 except Exception as e_cf:
     log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
-# 2. Conexión de Ngrok (En segundo plano con timeout para no bloquear el inicio)
-def _connect_ngrok_worker():
-    global web_tunnel_wifi, web_tunnel_mobile
-    if not ngrok_token:
-        return
-    try:
-        from pyngrok import ngrok, conf
+# 2. Conexión de Ngrok (Solo como respaldo si Cloudflare no estuviera disponible)
+if not url_cf and ngrok_token:
+    def _connect_ngrok_worker():
+        global web_tunnel_wifi, web_tunnel_mobile
         try:
-            ngrok.kill()
-        except Exception:
-            pass
-        ngrok.set_auth_token(ngrok_token)
-        conf.get_default().region = "us"
-        try:
-            http_tunnel = ngrok.connect(6080, "http", domain="thoroughgoingly-unrefreshing-alishia.ngrok-free.dev")
-        except Exception:
-            http_tunnel = ngrok.connect(6080, "http")
-        base_ngrok = http_tunnel.public_url
-        web_tunnel_wifi = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-        web_tunnel_mobile = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
-        log(f"Túnel Ngrok activo: {base_ngrok}", "SUCCESS")
-    except Exception as e_ngrok:
-        log(f"Aviso Ngrok: {e_ngrok}", "WARNING")
+            from pyngrok import ngrok, conf
+            try:
+                ngrok.kill()
+            except Exception:
+                pass
+            ngrok.set_auth_token(ngrok_token)
+            conf.get_default().region = "us"
+            try:
+                http_tunnel = ngrok.connect(6080, "http", domain="thoroughgoingly-unrefreshing-alishia.ngrok-free.dev")
+            except Exception:
+                http_tunnel = ngrok.connect(6080, "http")
+            base_ngrok = http_tunnel.public_url
+            web_tunnel_wifi = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+            web_tunnel_mobile = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+            print(f"\n⚡ [NGROK ONLINE] Enlace Directo: {web_tunnel_wifi}\n", flush=True)
+            log(f"Túnel Ngrok activo: {base_ngrok}", "SUCCESS")
+        except Exception as e_ngrok:
+            log(f"Aviso Ngrok: {e_ngrok}", "WARNING")
 
-if ngrok_token:
     t_ng = threading.Thread(target=_connect_ngrok_worker, daemon=True)
     t_ng.start()
     t_ng.join(timeout=8)
