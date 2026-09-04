@@ -1336,6 +1336,47 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     will-change: transform;
     pointer-events: none;
 }
+/* Botones L3 y R3 (Thumbstick Click para Sprint y Melee) */
+.gp-stick-click-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1.5px solid var(--aether-cyan);
+    color: var(--aether-cyan);
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: none;
+    box-shadow: 0 0 10px rgba(0, 255, 200, 0.25);
+    transition: transform 0.08s ease, background 0.1s ease;
+    z-index: 10;
+}
+.gp-stick-click-btn:active, .gp-stick-click-btn.pressed {
+    background: var(--aether-cyan);
+    color: #0a0f1a;
+    box-shadow: 0 0 16px var(--aether-cyan);
+    transform: scale(0.92);
+}
+.gp-guide-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--aether-cyan) !important;
+    border-color: rgba(0, 255, 200, 0.35) !important;
+}
+.gp-guide-btn:active, .gp-guide-btn.pressed {
+    background: rgba(0, 255, 200, 0.35) !important;
+    box-shadow: 0 0 12px var(--aether-cyan);
+}
 
 /* D-Pad / Cruceta Táctil */
 .gp-dpad-container {
@@ -1744,6 +1785,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         <div class="gp-stick-base">
             <div class="gp-stick-thumb" id="left-stick-thumb"></div>
         </div>
+        <button class="gp-stick-click-btn" data-btn="10" title="Click Stick Izquierdo (Sprint / L3)">L3</button>
     </div>
 
     <!-- Joystick Derecho (Cámara 3D y Apuntar) -->
@@ -1751,6 +1793,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         <div class="gp-stick-base">
             <div class="gp-stick-thumb" id="right-stick-thumb"></div>
         </div>
+        <button class="gp-stick-click-btn" data-btn="11" title="Click Stick Derecho (Crouch / R3)">R3</button>
     </div>
 
     <!-- Cruceta D-Pad -->
@@ -1781,9 +1824,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         </div>
     </div>
 
-    <!-- Botones Select y Start -->
+    <!-- Botones Centrales (Select, Guide, Start) -->
     <div class="gp-center-container">
         <button class="gp-center-btn" data-btn="8">BACK</button>
+        <button class="gp-center-btn gp-guide-btn" data-btn="16" title="Botón Xbox / Guía">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M7 7c3 3 7 7 10 10M17 7c-3 3-7 7-10 10"/></svg>
+            <span>GUIDE</span>
+        </button>
         <button class="gp-center-btn" data-btn="9">START</button>
     </div>
 </div>
@@ -1871,14 +1918,93 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let initialPinchWorldX = 0, initialPinchWorldY = 0, lastTapStartX = 0, lastTapStartY = 0;
     let lastMoveTime = 0;
 
+    // -------------------------------------------------------------------------
+    // CALIBRACIÓN MILIMÉTRICA DE PANTALLA (PROYECCIÓN INVARIANTE GEFORCE NOW & STEAM)
+    // -------------------------------------------------------------------------
+    function getViewportMetrics() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        if (isStretchedAspect) {
+            return {
+                baseW: vw,
+                baseH: vh,
+                offsetX: 0,
+                offsetY: 0,
+                renderW: vw * currentZoom,
+                renderH: vh * currentZoom,
+                scaleX: (vw * currentZoom) / screenW,
+                scaleY: (vh * currentZoom) / screenH
+            };
+        }
+
+        const targetAspect = 16 / 9;
+        const currentAspect = vw / vh;
+        let baseW, baseH, offsetX, offsetY;
+
+        if (currentAspect > targetAspect) {
+            // Pantalla ancha (smartphone horizontal): bandas negras laterales
+            baseH = vh;
+            baseW = vh * targetAspect;
+            offsetX = (vw - baseW) / 2;
+            offsetY = 0;
+        } else {
+            // Pantalla alta (tablet o vertical): bandas negras superior/inferior
+            baseW = vw;
+            baseH = vw / targetAspect;
+            offsetX = 0;
+            offsetY = (vh - baseH) / 2;
+        }
+
+        const renderW = baseW * currentZoom;
+        const renderH = baseH * currentZoom;
+
+        return {
+            baseW: baseW,
+            baseH: baseH,
+            offsetX: offsetX,
+            offsetY: offsetY,
+            renderW: renderW,
+            renderH: renderH,
+            scaleX: renderW / screenW,
+            scaleY: renderH / screenH
+        };
+    }
+
+    // Conversión de Pantalla Física (Touch/Click) a Espacio Virtual 1080p Nativo (Milimétrico)
+    function screenToVirtual(clientX, clientY) {
+        const m = getViewportMetrics();
+        const canvasX = (clientX - panX) / currentZoom;
+        const canvasY = (clientY - panY) / currentZoom;
+        const vx = (canvasX - m.offsetX) * (screenW / m.baseW);
+        const vy = (canvasY - m.offsetY) * (screenH / m.baseH);
+        return {
+            x: Math.max(0, Math.min(screenW, vx)),
+            y: Math.max(0, Math.min(screenH, vy))
+        };
+    }
+
+    // Conversión de Coordenadas Virtuales 1080p a Posición en Pantalla Física (CSS Pixels)
+    function virtualToScreen(vx, vy) {
+        const m = getViewportMetrics();
+        const canvasX = m.offsetX + (vx * (m.baseW / screenW));
+        const canvasY = m.offsetY + (vy * (m.baseH / screenH));
+        return {
+            x: panX + (canvasX * currentZoom),
+            y: panY + (canvasY * currentZoom)
+        };
+    }
+
     function clampPanX(x, zoom) {
         if (zoom <= 1.01) return 0;
-        const minX = window.innerWidth * (1 - zoom);
+        const m = getViewportMetrics();
+        const minX = m.renderW > window.innerWidth ? (window.innerWidth - m.renderW) : 0;
         return Math.min(0, Math.max(minX, x));
     }
     function clampPanY(y, zoom) {
         if (zoom <= 1.01) return 0;
-        const minY = window.innerHeight * (1 - zoom);
+        const m = getViewportMetrics();
+        const minY = m.renderH > window.innerHeight ? (window.innerHeight - m.renderH) : 0;
         return Math.min(0, Math.max(minY, y));
     }
     function zoomToPoint(targetZoom, screenX, screenY, animate) {
@@ -1888,11 +2014,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             panX = 0;
             panY = 0;
         } else {
-            const worldX = (screenX - panX) / currentZoom;
-            const worldY = (screenY - panY) / currentZoom;
+            const canvasX = (screenX - panX) / currentZoom;
+            const canvasY = (screenY - panY) / currentZoom;
             currentZoom = clampedZoom;
-            panX = clampPanX(screenX - (worldX * currentZoom), currentZoom);
-            panY = clampPanY(screenY - (worldY * currentZoom), currentZoom);
+            panX = clampPanX(screenX - (canvasX * currentZoom), currentZoom);
+            panY = clampPanY(screenY - (canvasY * currentZoom), currentZoom);
         }
         updateCanvasTransform(animate);
     }
@@ -2106,6 +2232,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     window.addEventListener("gamepaddisconnected", function(e) {
         physicalGamepadCount = Math.max(0, physicalGamepadCount - 1);
         showToast("Mando físico desconectado");
+        gpAxesState = [0, 0, 0, 0];
+        gpButtonsState = new Array(17).fill(0);
+        emitGamepadState();
     });
 
     function triggerGamepadRumble(gp, duration = 80, strong = 0.4, weak = 0.6) {
@@ -2130,27 +2259,42 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const gp = gamepads[i];
                 if (gp && gp.connected) {
                     active = true;
-                    // 1. Mapeo estándar de botones (0 a 16) con respuesta háptica de hardware
+                    // 1. Mapeo estándar de botones (0 a 16) con respuesta háptica y gradación analógica LT/RT (0..255)
                     for (let b = 0; b < gp.buttons.length && b < 17; b++) {
-                        const isPress = gp.buttons[b].pressed ? 1 : 0;
-                        if (isPress && !gpButtonsState[b] && (b === 6 || b === 7 || b === 0)) {
+                        const btnObj = gp.buttons[b];
+                        const val = typeof btnObj === "object" ? btnObj.value : (btnObj ? 1 : 0);
+                        const pressed = typeof btnObj === "object" ? btnObj.pressed : (btnObj > 0.5);
+                        if (pressed && !gpButtonsState[b] && (b === 6 || b === 7 || b === 0)) {
                             triggerGamepadRumble(gp, 60, 0.4, 0.6);
                         }
-                        if (isPress) gpButtonsState[b] = 1;
+                        // Botones 6 (LT) y 7 (RT) envían valor analógico continuo (0.0 .. 1.0) para 256 niveles
+                        gpButtonsState[b] = (b === 6 || b === 7) ? val : (pressed ? 1 : 0);
                     }
-                    // 2. Sticks analógicos físicos con Deadzone continua
+                    // 2. Sticks analógicos físicos con Deadzone continua calibrada
                     if (gp.axes.length >= 2) {
                         const ax0 = gp.axes[0], ax1 = gp.axes[1];
-                        if (Math.hypot(ax0, ax1) > 0.12) {
-                            gpAxesState[0] = ax0;
-                            gpAxesState[1] = ax1;
+                        const mag = Math.hypot(ax0, ax1);
+                        const deadzone = 0.10;
+                        if (mag < deadzone) {
+                            gpAxesState[0] = 0;
+                            gpAxesState[1] = 0;
+                        } else {
+                            const scaledMag = (mag - deadzone) / (1.0 - deadzone);
+                            gpAxesState[0] = (ax0 / mag) * scaledMag;
+                            gpAxesState[1] = (ax1 / mag) * scaledMag;
                         }
                     }
                     if (gp.axes.length >= 4) {
                         const ax2 = gp.axes[2], ax3 = gp.axes[3];
-                        if (Math.hypot(ax2, ax3) > 0.12) {
-                            gpAxesState[2] = ax2;
-                            gpAxesState[3] = ax3;
+                        const mag = Math.hypot(ax2, ax3);
+                        const deadzone = 0.10;
+                        if (mag < deadzone) {
+                            gpAxesState[2] = 0;
+                            gpAxesState[3] = 0;
+                        } else {
+                            const scaledMag = (mag - deadzone) / (1.0 - deadzone);
+                            gpAxesState[2] = (ax2 / mag) * scaledMag;
+                            gpAxesState[3] = (ax3 / mag) * scaledMag;
                         }
                     }
                     emitGamepadState();
@@ -2194,10 +2338,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // A. Control del Joystick Analógico Izquierdo (Movimiento)
     let stickTouchId = null, stickCenterX = 0, stickCenterY = 0;
+    let lastLeftStickTapTime = 0;
     const maxStickRadius = 42;
 
     if (leftStickZone) {
         leftStickZone.addEventListener("touchstart", function(e) {
+            const now = performance.now();
+            if (now - lastLeftStickTapTime < 280) {
+                // Doble tap rápido = L3 Stick Click
+                gpButtonsState[10] = 1;
+                emitGamepadState();
+                hapticFeedback([30, 20, 30]);
+                showToast("L3 Clic (Stick Izquierdo)");
+                setTimeout(() => { gpButtonsState[10] = 0; emitGamepadState(); }, 120);
+                lastLeftStickTapTime = 0;
+            } else {
+                lastLeftStickTapTime = now;
+            }
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const t = e.changedTouches[i];
                 if (stickTouchId === null) {
@@ -2272,9 +2429,22 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // B. Control del Joystick Analógico Derecho (Cámara 3D y Apuntar)
     let rightStickTouchId = null, rightStickCenterX = 0, rightStickCenterY = 0;
+    let lastRightStickTapTime = 0;
 
     if (rightStickZone) {
         rightStickZone.addEventListener("touchstart", function(e) {
+            const now = performance.now();
+            if (now - lastRightStickTapTime < 280) {
+                // Doble tap rápido = R3 Stick Click
+                gpButtonsState[11] = 1;
+                emitGamepadState();
+                hapticFeedback([30, 20, 30]);
+                showToast("R3 Clic (Stick Derecho)");
+                setTimeout(() => { gpButtonsState[11] = 0; emitGamepadState(); }, 120);
+                lastRightStickTapTime = 0;
+            } else {
+                lastRightStickTapTime = now;
+            }
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const t = e.changedTouches[i];
                 if (rightStickTouchId === null) {
@@ -2375,9 +2545,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // -------------------------------------------------------------------------
     function updateCursorElement() {
         if (!cursor) return;
-        const displayX = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-        const displayY = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-        cursor.style.transform = `translate3d(${displayX}px, ${displayY}px, 0)`;
+        const pt = virtualToScreen(virtX, virtY);
+        cursor.style.transform = `translate3d(${pt.x}px, ${pt.y}px, 0)`;
     }
 
     function sendMouse(mask) {
@@ -2393,16 +2562,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 return;
             }
         }
-        // Respaldo universal: despachar MouseEvent sintético al canvas de noVNC
+        // Respaldo universal: despachar MouseEvent sintético al canvas de noVNC con calibración milimétrica
         const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
         if (canvas) {
-            const cx = ((x / screenW) * window.innerWidth * currentZoom) + panX;
-            const cy = ((y / screenH) * window.innerHeight * currentZoom) + panY;
+            const pt = virtualToScreen(x, y);
             const btn = (mask === 4) ? 2 : ((mask === 2) ? 1 : 0);
             const evtType = mask ? "mousedown" : "mouseup";
             canvas.dispatchEvent(new MouseEvent(evtType, {
                 bubbles: true, cancelable: true, view: window,
-                clientX: cx, clientY: cy,
+                clientX: pt.x, clientY: pt.y,
                 button: btn, buttons: mask
             }));
         }
@@ -2473,10 +2641,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
             if (currentMode === "TRACKPAD") {
                 if (holdRing) {
-                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-                    holdRing.style.left = cx + "px";
-                    holdRing.style.top = cy + "px";
+                    const pt = virtualToScreen(virtX, virtY);
+                    holdRing.style.left = pt.x + "px";
+                    holdRing.style.top = pt.y + "px";
                 }
                 clearTimeout(dragHoldTimer);
                 if (holdRing) holdRing.classList.remove("active");
@@ -2492,10 +2659,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 }, 240);
             } else {
                 const clientX = e.touches[0].clientX, clientY = e.touches[0].clientY;
-                const realX = (clientX - panX) / currentZoom;
-                const realY = (clientY - panY) / currentZoom;
-                virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
-                virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
+                const vPos = screenToVirtual(clientX, clientY);
+                virtX = vPos.x;
+                virtY = vPos.y;
                 sendMouse(0);
 
                 clearTimeout(dragHoldTimer);
@@ -2579,15 +2745,17 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 }
 
                 const scaleFactor = 1.35 * accel;
-                const scaleX = (screenW / (window.innerWidth * currentZoom)) * scaleFactor;
-                const scaleY = (screenH / (window.innerHeight * currentZoom)) * scaleFactor;
+                const m = getViewportMetrics();
+                const scaleX = (screenW / m.renderW) * scaleFactor;
+                const scaleY = (screenH / m.renderH) * scaleFactor;
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
 
                 // Auto-pan si el cursor se acerca al borde de la pantalla estando ampliado
                 if (currentZoom > 1.05) {
-                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
+                    const pt = virtualToScreen(virtX, virtY);
+                    const cx = pt.x;
+                    const cy = pt.y;
                     const edgeMargin = 40;
                     if (cx < edgeMargin) panX = clampPanX(panX + (edgeMargin - cx) * 0.35, currentZoom);
                     if (cx > window.innerWidth - edgeMargin) panX = clampPanX(panX - (cx - (window.innerWidth - edgeMargin)) * 0.35, currentZoom);
@@ -2603,10 +2771,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     clearTimeout(dragHoldTimer);
                     if (holdRing) holdRing.classList.remove("active");
                 }
-                const realX = (curX - panX) / currentZoom;
-                const realY = (curY - panY) / currentZoom;
-                virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
-                virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
+                const vPos = screenToVirtual(curX, curY);
+                virtX = vPos.x;
+                virtY = vPos.y;
                 sendMouse(1);
             }
         } else if (e.touches.length === 2) {
@@ -2712,9 +2879,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     lastTapStartX = startX;
                     lastTapStartY = startY;
 
-                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-                    createRipple(cx, cy, "left-click");
+                    const pt = virtualToScreen(virtX, virtY);
+                    createRipple(pt.x, pt.y, "left-click");
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
                     lastTapEndTime = performance.now();
@@ -2734,23 +2900,20 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     lastTapStartX = startX;
                     lastTapStartY = startY;
 
-                    // Proyección matemática exacta de coordenadas bajo zoom
-                    const realX = (startX - panX) / currentZoom;
-                    const realY = (startY - panY) / currentZoom;
-                    virtX = Math.max(0, Math.min(screenW, (realX / window.innerWidth) * screenW));
-                    virtY = Math.max(0, Math.min(screenH, (realY / window.innerHeight) * screenH));
-                    const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                    const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-                    createRipple(cx, cy, "left-click");
+                    // Proyección matemática milimétrica de coordenadas bajo zoom
+                    const vPos = screenToVirtual(startX, startY);
+                    virtX = vPos.x;
+                    virtY = vPos.y;
+                    const pt = virtualToScreen(virtX, virtY);
+                    createRipple(pt.x, pt.y, "left-click");
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
                     lastTapEndTime = performance.now();
                 }
             } else if (initialTouchCount === 2 && !isPinching && duration < 380) {
                 hapticFeedback([10, 30, 10]);
-                const cx = ((virtX / screenW) * window.innerWidth * currentZoom) + panX;
-                const cy = ((virtY / screenH) * window.innerHeight * currentZoom) + panY;
-                createRipple(cx, cy, "right-click");
+                const pt = virtualToScreen(virtX, virtY);
+                createRipple(pt.x, pt.y, "right-click");
                 sendMouse(4);
                 setTimeout(() => sendMouse(0), 45);
             } else if (initialTouchCount === 3 && duration < 380) {
@@ -2763,6 +2926,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             initialTouchCount = 0;
         }
     }, { passive: false });
+
+    window.addEventListener("resize", function() {
+        updateCanvasTransform(false);
+        updateCursorElement();
+    });
 
     // -------------------------------------------------------------------------
     // 5. ACCIONES DEL MENÚ AETHER (ASPECT RATIO, TECLADO, AUDIO, FULLSCREEN)
