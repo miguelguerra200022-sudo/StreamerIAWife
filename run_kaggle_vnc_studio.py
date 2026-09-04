@@ -137,6 +137,15 @@ def live_log_streamer():
 
 threading.Thread(target=live_log_streamer, daemon=True).start()
 
+def _prefetch_tunnel_binaries():
+    try:
+        cf = Path("/usr/local/bin/cloudflared")
+        if not cf.exists():
+            subprocess.run("wget -q --timeout=15 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
+    except Exception:
+        pass
+threading.Thread(target=_prefetch_tunnel_binaries, daemon=True).start()
+
 print("\n" + "=" * 78, flush=True)
 print("[AETHER] INICIANDO UBUNTU 24.04 LTS ENTERPRISE EDITION (5TB GDRIVE)...", flush=True)
 print("=" * 78, flush=True)
@@ -5342,8 +5351,36 @@ if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOK
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Conexión Turbo de Ngrok si hay Token (Responde en < 1 segundo)
-if ngrok_token:
+# 1. Cloudflare Tunnel (Ultra-Rápido, Conexión Inmediata < 2s, Sin Límites de Banda)
+url_cf = None
+url_cf_mobile = None
+try:
+    cf_bin = Path("/usr/local/bin/cloudflared")
+    if not cf_bin.exists():
+        subprocess.run("wget -q --timeout=15 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
+    if cf_bin.exists():
+        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        for _ in range(30):
+            line = proc_cf.stdout.readline()
+            if not line:
+                time.sleep(0.2)
+                continue
+            if "trycloudflare.com" in line:
+                match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
+                if match:
+                    base_cf = match.group(1).strip()
+                    url_cf = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                    url_cf_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                    log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
+                    break
+except Exception as e_cf:
+    log(f"Aviso Cloudflare: {e_cf}", "WARNING")
+
+# 2. Conexión de Ngrok (En segundo plano con timeout para no bloquear el inicio)
+def _connect_ngrok_worker():
+    global web_tunnel_wifi, web_tunnel_mobile
+    if not ngrok_token:
+        return
     try:
         from pyngrok import ngrok, conf
         try:
@@ -5359,37 +5396,14 @@ if ngrok_token:
         base_ngrok = http_tunnel.public_url
         web_tunnel_wifi = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
         web_tunnel_mobile = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
-        log(f"Túnel Ngrok activo instantáneamente (0.8s): {base_ngrok}", "SUCCESS")
+        log(f"Túnel Ngrok activo: {base_ngrok}", "SUCCESS")
     except Exception as e_ngrok:
         log(f"Aviso Ngrok: {e_ngrok}", "WARNING")
 
-# 2. Cloudflare Tunnel (Como primario si falta Ngrok, o secundario de alta velocidad)
-url_cf = None
-url_cf_mobile = None
-try:
-    cf_bin = Path("/usr/local/bin/cloudflared")
-    if not cf_bin.exists():
-        subprocess.run("wget -q --timeout=10 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
-    if cf_bin.exists():
-        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for _ in range(25):
-            line = proc_cf.stdout.readline()
-            if not line:
-                time.sleep(0.2)
-                continue
-            if "trycloudflare.com" in line:
-                match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
-                if match:
-                    base_cf = match.group(1).strip()
-                    url_cf = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-                    url_cf_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
-                    if not web_tunnel_wifi:
-                        web_tunnel_wifi = url_cf
-                    web_tunnel_mobile = url_cf_mobile
-                    log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
-                    break
-except Exception as e_cf:
-    log(f"Aviso Cloudflare: {e_cf}", "WARNING")
+if ngrok_token:
+    t_ng = threading.Thread(target=_connect_ngrok_worker, daemon=True)
+    t_ng.start()
+    t_ng.join(timeout=8)
 
 # Guardar URL de sesión en Google Drive para acceso instantáneo remoto
 active_primary_url = url_cf if url_cf else web_tunnel_wifi
