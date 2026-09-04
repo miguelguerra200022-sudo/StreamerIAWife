@@ -3712,6 +3712,9 @@ def configurar_ubuntu_enterprise_profile():
     <property name="theme" type="string" value="Yaru-dark"/>
     <property name="title_font" type="string" value="Ubuntu Bold 10"/>
     <property name="use_compositing" type="bool" value="true"/>
+    <property name="vblank_mode" type="string" value="glx"/>
+    <property name="glx_vblank" type="bool" value="true"/>
+    <property name="sync_to_vblank" type="bool" value="true"/>
     <property name="frame_opacity" type="int" value="100"/>
     <property name="inactive_opacity" type="int" value="95"/>
     <property name="show_dock_shadow" type="bool" value="true"/>
@@ -3798,7 +3801,10 @@ subprocess.Popen([
     "x11vnc", "-display", ":1",
     "-forever", "-shared",
     "-rfbport", "5900",
-    "-noxdamage", "-noxfixes",
+    "-xdamage",
+    "-wait", "8",
+    "-defer", "8",
+    "-ncache", "10",
     "-repeat", "-capslock",
     "-nomodtweak",
     "-threads", "4"
@@ -3910,6 +3916,18 @@ http {
             proxy_read_timeout 3600s;
             proxy_send_timeout 3600s;
         }
+
+        # 4. Zero-PIN Auto-Pairing Endpoint (Sunshine / Starparks 1-Clic)
+        location /autopair {
+            proxy_pass http://127.0.0.1:47995/autopair;
+            proxy_read_timeout 15s;
+        }
+
+        # 5. PWA WebAPK Manifest (GeForce NOW Experience)
+        location /manifest.json {
+            root /opt/noVNC;
+            default_type application/manifest+json;
+        }
     }
 }
 """
@@ -3975,19 +3993,107 @@ def watchdog_novnc_loop():
 import threading
 threading.Thread(target=watchdog_novnc_loop, daemon=True).start()
 
-# Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU)
+# Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU NVENC)
 sunshine_bin = shutil.which("sunshine")
 if sunshine_bin:
     try:
         os.makedirs("/root/.config/sunshine", exist_ok=True)
         conf_p = Path("/root/.config/sunshine/sunshine.conf")
-        if not conf_p.exists():
-            conf_p.write_text("origin_pin_allowed = pc\nmin_log_level = info\nport = 47989\n", encoding="utf-8")
+        conf_nvenc = (
+            "origin_pin_allowed = pc\n"
+            "min_log_level = info\n"
+            "port = 47989\n"
+            "nvenc_preset = p1\n"
+            "nvenc_tune = ull\n"
+            "nvenc_rate_control = cbr\n"
+            "encoder = nvenc\n"
+            "channels = 2\n"
+            "audio_sink = DummyOutput\n"
+        )
+        conf_p.write_text(conf_nvenc, encoding="utf-8")
         subprocess.run(f"{sunshine_bin} --creds admin {VNC_PASSWORD} >/dev/null 2>&1 || true", shell=True)
         subprocess.Popen([sunshine_bin], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log("Servidor Sunshine (Moonlight Host) iniciado exitosamente en segundo plano")
+        log("Servidor Sunshine (Moonlight Host) iniciado exitosamente en segundo plano (NVENC 60 FPS)")
     except Exception as e_sun:
         log(f"Aviso Sunshine startup: {e_sun}", "WARNING")
+
+# Demonio Zero-PIN Auto-Pairing: Escucha en puerto 47995 y aprueba solicitudes Moonlight/APK sin códigos manuales
+def sunshine_zero_pin_worker():
+    import http.server, urllib.request, ssl, base64, urllib.parse
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    class AutoPairHandler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            parsed = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed.query)
+            pin = params.get("pin", [""])[0]
+            if pin:
+                try:
+                    req_data = json.dumps({"pin": pin, "name": "AetherStarparksClient"}).encode()
+                    req = urllib.request.Request(
+                        "https://127.0.0.1:47990/api/pin",
+                        data=req_data,
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": "Basic " + base64.b64encode(f"admin:{VNC_PASSWORD}".encode()).decode()
+                        }
+                    )
+                    with urllib.request.urlopen(req, context=ctx, timeout=4) as resp:
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json")
+                        self.send_header("Access-Control-Allow-Origin", "*")
+                        self.end_headers()
+                        self.wfile.write(b'{"status":"paired","zero_pin":true}')
+                        return
+                except Exception as e_p:
+                    self.send_response(500)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(f'{{"error":"{e_p}"}}'.encode())
+                    return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(b'{"status":"ready","service":"Aether Zero-PIN Daemon"}')
+
+        def log_message(self, format, *args):
+            pass
+
+    try:
+        srv = http.server.HTTPServer(("127.0.0.1", 47995), AutoPairHandler)
+        srv.serve_forever()
+    except Exception:
+        pass
+
+threading.Thread(target=sunshine_zero_pin_worker, daemon=True).start()
+
+# Generar PWA WebAPK Manifest para experiencia GeForce NOW en móvil
+try:
+    manifest_pwa = {
+        "name": "Aether Cloud PC Gaming",
+        "short_name": "Aether Gaming",
+        "description": "Estación de Trabajo y Consola de Cloud Gaming 60 FPS",
+        "start_url": "/vnc.html",
+        "display": "fullscreen",
+        "orientation": "landscape",
+        "background_color": "#0a0f1a",
+        "theme_color": "#00ffc8",
+        "icons": [
+            {
+                "src": "/app/images/icons/novnc-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ]
+    }
+    Path("/opt/noVNC/manifest.json").write_text(json.dumps(manifest_pwa, indent=2), encoding="utf-8")
+except Exception:
+    pass
 
 print(f"  [TIEMPO] Paso 4/5 Completado en {time.time() - t_step4:.1f}s", flush=True)
 

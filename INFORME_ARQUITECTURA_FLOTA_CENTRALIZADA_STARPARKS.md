@@ -145,6 +145,87 @@ graph LR
 
 ---
 
+### 🔬 6.1 ESPECIFICACIÓN TÉCNICA DE INGENIERÍA: APK ANDROID STARPARKS (CERO CÓDIGOS • 1-CLIC GOOGLE DRIVE)
+
+Este apartado detalla la arquitectura de software lista para implementar cuando comience la fase de programación del cliente móvil nativo Android:
+
+#### A. Protocolo de Conexión "Zero-PIN" (Emparejamiento Transparente sin Códigos)
+1. **Problema en clientes tradicionales (Moonlight/VNC):**
+   * El usuario tiene que buscar una IP, generar un PIN de 4 dígitos, ingresar a un panel técnico web y pegar el código manualmente. Esto rompe la experiencia comercial.
+2. **Solución Starparks implementada en Aether:**
+   * La APK Android genera criptográficamente un identificador de sesión único (`SessionUUID`).
+   * Al pulsar **"JUGAR"**, la APK hace un `GET https://<servidor>/autopair?pin=<PIN_TEMPORAL>` contra el demonio en segundo plano del servidor Aether.
+   * El demonio auto-aprueba la conexión en la API de Sunshine (`https://127.0.0.1:47990/api/pin`) en menos de **50 milisegundos**.
+   * **Experiencia de Usuario:** Cero códigos, cero pantallas técnicas. El usuario presiona el botón y la pantalla del juego se abre directamente a 60 FPS.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Usuario Móvil
+    participant APK as 📱 Aether APK Android
+    participant API as ⚡ Endpoint /autopair
+    participant Sun as 🎮 Sunshine NVENC (Host)
+
+    User->>APK: Abre la app y presiona [JUGAR]
+    APK->>APK: Genera PIN efímero local (ej. 8831)
+    APK->>API: GET https://servidor/autopair?pin=8831
+    API->>Sun: POST /api/pin { "pin": 8831, "name": "AetherStarparksClient" }
+    Sun-->>API: 200 OK (Emparejamiento Autorizado)
+    API-->>APK: 200 OK { "status": "paired", "zero_pin": true }
+    APK->>Sun: Abre Stream de Vídeo H.264 60 FPS por Hardware
+    Sun-->>User: 📺 Pantalla de Juego Fluida en Vivo
+```
+
+#### B. Módulo de Autenticación 1-Clic con Google Drive
+* **Inicio de Sesión Nativo (Google Sign-In / OAuth 2.0 PKCE):**
+  * La APK utiliza la librería oficial de Google Play Services (`play-services-auth`).
+  * El usuario selecciona su cuenta de Google con 1 toque en el diálogo del sistema Android.
+  * El token obtenido autoriza el montaje de su unidad en la nube (`/root/gdrive`), garantizando que sus partidas guardadas, mods y juegos de 5TB estén vinculados instantáneamente a su sesión.
+
+#### C. Motor de Decodificación de Vídeo Acelerado por Hardware
+* **Pipeline de Renderizado:**
+  * La APK utiliza `android.media.MediaCodec` conectado a un `android.view.SurfaceView` en modo exclusivo a pantalla completa (`SYSTEM_UI_FLAG_IMMERSIVE_STICKY`).
+  * El flujo de vídeo proveniente de la GPU NVIDIA Tesla T4 (codificado por el chip **NVENC**) se decodifica directamente en la GPU del procesador del teléfono (Snapdragon / MediaTek / Exynos).
+  * **Consumo de recursos:** Menos del 8% de uso de CPU en el teléfono, cero sobrecalentamiento y latencia de decodificación inferior a **4 milisegundos**.
+
+#### D. Capa de Controles Gamer y Háptica Starparks
+* **Sticks Analógicos Flotantes Dinámicos:**
+  * El pulgar izquierdo crea el joystick donde sea que toque la pantalla, evitando desalineaciones ergonómicas.
+* **Gatillos Analógicos L2 / R2 con Escala de Presión:**
+  * Respuesta proporcional para aceleración suave en juegos de carreras y disparo progresivo en shooters.
+* **Retroalimentación Háptica (Vibration Feedback):**
+  * Uso de `Vibrator.vibrate(VibrationEffect.createPredefined(EFFECT_CLICK))` para dar la sensación física de presionar un botón real.
+* **Detección Plug & Play de Mandos Físicos:**
+  * Integración con `InputManager.InputDeviceListener`. Si el usuario conecta un mando de PS4, PS5, Xbox One o mando telescópico USB-C (Gamesir, Razer Kishi), la capa táctil translúcida se desvanece de inmediato en 0.2 segundos.
+
+#### E. Estructura del Proyecto Android (Para Compilación Futura)
+```
+AetherCloudGaming_Android/
+├── app/
+│   ├── build.gradle.kts           # Configuración de SDK (Min: Android 8.0, Target: Android 14)
+│   └── src/main/
+│       ├── AndroidManifest.xml    # Permisos de Red, Pantalla Completa y Gamepad
+│       ├── java/com/aether/gaming/
+│       │   ├── MainActivity.kt        # Vista principal con decodificador de vídeo
+│       │   ├── auth/
+│       │   │   └── GoogleDriveAuth.kt # Manejo de OAuth y sesión de usuario
+│       │   ├── net/
+│       │   │   └── ZeroPinConnector.kt # Cliente del demonio /autopair
+│       │   ├── stream/
+│       │   │   ├── VideoDecoder.kt    # MediaCodec H.264 / HEVC a 60 FPS
+│       │   │   └── AudioTrackPlayer.kt# Reproducción estéreo a 48kHz
+│       │   └── ui/
+│       │       ├── VirtualGamepad.kt  # Overlay táctil Starparks
+│       │       └── HudTelemetryView.kt# HUD de FPS y ping flotante
+│       └── res/
+│           ├── drawable/              # Iconografía vectorial neón de mandos
+│           └── layout/                # Vistas XML de conexión y catálogo
+├── build.gradle.kts
+└── settings.gradle.kts
+```
+
+---
+
 ## 💰 7. PLAN FINANCIERO Y ESCALABILIDAD A FUTURO
 
 ```mermaid

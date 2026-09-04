@@ -2473,6 +2473,9 @@ for base_target in ["/root", "/etc/skel"]:
     <property name="theme" type="string" value="Yaru-dark"/>
     <property name="title_font" type="string" value="Ubuntu Bold 10"/>
     <property name="use_compositing" type="bool" value="true"/>
+    <property name="vblank_mode" type="string" value="glx"/>
+    <property name="glx_vblank" type="bool" value="true"/>
+    <property name="sync_to_vblank" type="bool" value="true"/>
     <property name="frame_opacity" type="int" value="100"/>
     <property name="inactive_opacity" type="int" value="95"/>
     <property name="show_dock_shadow" type="bool" value="true"/>
