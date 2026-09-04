@@ -62,7 +62,7 @@ if not kaggle_file.exists():
     if cuentas_path.exists():
         try:
             c_data = json.loads(cuentas_path.read_text(encoding="utf-8"))
-            act = c_data.get("cuenta_activa") or "djkevinzito@gmail.com"
+            act = c_data.get("cuenta_activa") or "miguelguerra200022@gmail.com"
             c_info = c_data.get("cuentas", {}).get(act) or list(c_data.get("cuentas", {}).values())[0]
             k_payload = {"username": c_info["username"], "key": c_info["key"]}
             kaggle_file.write_text(json.dumps(k_payload), encoding="utf-8")
@@ -2663,7 +2663,7 @@ if (BASE_DIR / "desconectar_database1.py").exists():
     subprocess.run(f"chmod +x '{WORK_DIR}/desconectar_database1.py'", shell=True)
 
 # 11. Metadatos Oficiales para Kaggle Datasets
-usuario_activo = "miguelguerra26"
+usuario_activo = "miguelguerra22"
 if kaggle_file.exists():
     try:
         data = json.loads(kaggle_file.read_text())
