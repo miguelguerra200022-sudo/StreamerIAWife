@@ -633,7 +633,7 @@ t_step2 = time.time()
 print("[2/5] Inicializando Suite Oficial Completa de Ubuntu...", flush=True)
 
 full_ubuntu_pkgs = [
-    "ubuntu-desktop", "ubuntu-restricted-extras", "libreoffice", "libreoffice-gtk3",
+    "libreoffice", "libreoffice-gtk3",
     "xfce4", "xfce4-goodies", "xfce4-terminal", "xfce4-panel", "xfdesktop4", "thunar",
     "gvfs", "gvfs-backends", "gvfs-fuse", "tumbler", "tumbler-plugins-extra",
     "evince", "gnome-calculator", "gnome-system-monitor", "gnome-disk-utility",
@@ -641,9 +641,9 @@ full_ubuntu_pkgs = [
     "x11-xserver-utils", "yaru-theme-gtk", "yaru-theme-icon", "yaru-theme-sound",
     "fonts-ubuntu", "pulseaudio", "pulseaudio-utils", "pavucontrol", "net-tools",
     "wget", "curl", "psmisc", "openssh-client", "p7zip-full", "unzip",
-    "v4l2loopback-dkms", "v4l2loopback-utils", "ffmpeg", "sox", "libportaudio2",
+    "ffmpeg", "sox", "libportaudio2", "ubuntu-restricted-addons", "libavcodec-extra",
     "wireguard-tools", "iptables", "bridge-utils", "iproute2", "kdeconnect", "qrencode",
-    "avahi-daemon", "iputils-ping", "traceroute", "nethogs", "iftop", "iperf3"
+    "avahi-daemon", "iputils-ping", "traceroute", "nethogs", "iftop", "iperf3", "aria2"
 ]
 
 extra_pkgs = []
@@ -898,15 +898,42 @@ if master_dataset_path and master_dataset_path.exists():
     print("  ✅ [✓] Suite Oficial de Ubuntu activada con éxito desde Dataset (0 MB descargados).", flush=True)
 else:
     # Método tradicional de descarga e instalación bajo demanda
-    log("Instalando paquetes oficiales de Ubuntu bajo demanda...")
-    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    log("Iniciando instalación limpia oficial de Ubuntu bajo demanda...")
 
-    # Descargar o reutilizar Google Chrome Oficial desde caché de Drive
+    # 1. Configurar mirror interno de Google Cloud Compute Engine (10 Gbps)
+    print("  ⚡ [1/4] Enlazando mirrors de alta velocidad de Google Cloud (10Gbps)...", flush=True)
+    subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+    subprocess.run("rm -f /var/lib/dpkg/lock* /var/lib/apt/lists/lock* /var/cache/apt/archives/lock* 2>/dev/null || true", shell=True)
+    subprocess.run(
+        "printf 'deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy main universe restricted multiverse\\n"
+        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-updates main universe restricted multiverse\\n"
+        "deb http://us-central1.gce.clouds.archive.ubuntu.com/ubuntu/ jammy-security main universe restricted multiverse\\n' > /etc/apt/sources.list",
+        shell=True
+    )
+    subprocess.run("printf 'Acquire::Force-IPv4 \"true\";\\nAcquire::http::Timeout \"10\";\\n' > /etc/apt/apt.conf.d/99clean", shell=True)
+
+    # 2. Debconf no-interactivo a prueba de fallos
+    subprocess.run("echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections 2>/dev/null || true", shell=True)
+    subprocess.run("echo 'keyboard-configuration keyboard-configuration/layoutcode string us' | debconf-set-selections 2>/dev/null || true", shell=True)
+    subprocess.run("echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections 2>/dev/null || true", shell=True)
+    subprocess.run("echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections 2>/dev/null || true", shell=True)
+
+    # 3. Descarga e instalación de la suite oficial
+    print("  📦 [2/4] Actualizando repositorios e instalando paquetes oficiales...", flush=True)
+    repo_pkgs = [p for p in all_pkgs if not p.endswith(".deb")]
+    cmd_install = (
+        "apt-get update -qq && "
+        f"DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get install -y --no-install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' {' '.join(repo_pkgs)} >> {LOG_FILE} 2>&1 || "
+        f"(DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken >> {LOG_FILE} 2>&1)"
+    )
+    subprocess.run(cmd_install, shell=True)
+
+    # 4. Descargar e instalar Google Chrome Oficial
+    print("  🌐 [3/4] Instalando Google Chrome Oficial de 64 bits...", flush=True)
     chrome_deb = Path("/kaggle/working/google-chrome-stable_current_amd64.deb")
     gdrive_cache_deb = Path("/root/gdrive/Cloud_PC/Cache/google-chrome-stable_current_amd64.deb")
 
     if gdrive_cache_deb.exists() and gdrive_cache_deb.stat().st_size > 50_000_000:
-        print("  ⚡ [✓] Reutilizando Google Chrome desde caché de Google Drive...", flush=True)
         try:
             shutil.copy2(gdrive_cache_deb, chrome_deb)
         except Exception:
@@ -925,22 +952,19 @@ else:
                 pass
 
     if chrome_deb.exists():
-        all_pkgs.append(str(chrome_deb))
+        subprocess.run(f"dpkg -i {chrome_deb} >> {LOG_FILE} 2>&1 || (DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-broken >> {LOG_FILE} 2>&1)", shell=True)
+        subprocess.run(f"rm -f {chrome_deb}", shell=True)
 
-    cmd_install = (
-        "apt-get update -qq && "
-        f"DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(all_pkgs)} >> {LOG_FILE} 2>&1 && "
-        "apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* && "
-        "rm -f /kaggle/working/google-chrome-stable_current_amd64.deb"
-    )
-    subprocess.run(cmd_install, shell=True)
+    # 5. Módulos de Python
+    print("  🐍 [4/4] Instalando dependencias de Python...", flush=True)
     subprocess.run(f"pip install -q pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
-    print("  ✅ [✓] Suite Oficial de Ubuntu instalada con éxito.", flush=True)
+    print("  ✅ [✓] Suite Oficial de Ubuntu instalada limpiamente con éxito.", flush=True)
 
 # Descargar noVNC si no existe
 novnc_dir = Path("/opt/noVNC")
 novnc_dir.parent.mkdir(parents=True, exist_ok=True)
-if not novnc_dir.exists():
+if not (novnc_dir / "vnc.html").exists():
+    shutil.rmtree(str(novnc_dir), ignore_errors=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run("chmod -R +x /opt/noVNC/utils 2>/dev/null || true", shell=True)
