@@ -1,7 +1,7 @@
 import os, sys, subprocess, shutil, time
 
 print("=" * 78, flush=True)
-print("🚀 [BOOT] INICIANDO UBUNTU CLOUD PC CON ACELERACIÓN GPU & DATABASE 1", flush=True)
+print("🚀 [BOOT] INICIANDO UBUNTU CLOUD PC CON GPU (INSTALACIÓN LIMPIA 100% DESDE CERO)", flush=True)
 print("=" * 78, flush=True)
 
 t_boot_begin = time.time()
@@ -28,8 +28,10 @@ os.environ["KAGGLE_USERNAME"] = "miguelguerra22"
 os.environ["KAGGLE_KEY"] = "b4031084ad25f34042347dfd7b6af451"
 os.environ["MASTER_BOOT_START"] = str(t_boot_begin)
 
-# 3. Lanzar el servidor en vivo
+# 3. Lanzar el servidor en vivo con bucle infinito anti-caídas
 os.chdir(repo_dir)
-print("🐧 Ejecutando run_kaggle_vnc_studio.py...", flush=True)
-res_run = subprocess.run([sys.executable, "run_kaggle_vnc_studio.py"])
-sys.exit(res_run.returncode)
+while True:
+    print("🐧 Ejecutando run_kaggle_vnc_studio.py (Instalación limpia sin Database)...", flush=True)
+    res_run = subprocess.run([sys.executable, "run_kaggle_vnc_studio.py"])
+    print(f"⚠️ run_kaggle_vnc_studio.py finalizó con código {res_run.returncode}. Reiniciando en 10s...", flush=True)
+    time.sleep(10)

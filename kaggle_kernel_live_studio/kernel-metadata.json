@@ -7,7 +7,5 @@
   "is_private": true,
   "enable_gpu": true,
   "enable_internet": true,
-  "dataset_sources": [
-    "miguelguerra22/ubuntu-core-os-social"
-  ]
+  "dataset_sources": []
 }
