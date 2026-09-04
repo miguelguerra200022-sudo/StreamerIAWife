@@ -5352,7 +5352,10 @@ if ngrok_token:
             pass
         ngrok.set_auth_token(ngrok_token)
         conf.get_default().region = "us"
-        http_tunnel = ngrok.connect(6080, "http")
+        try:
+            http_tunnel = ngrok.connect(6080, "http", domain="thoroughgoingly-unrefreshing-alishia.ngrok-free.dev")
+        except Exception:
+            http_tunnel = ngrok.connect(6080, "http")
         base_ngrok = http_tunnel.public_url
         web_tunnel_wifi = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
         web_tunnel_mobile = f"{base_ngrok}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
@@ -5361,13 +5364,15 @@ if ngrok_token:
         log(f"Aviso Ngrok: {e_ngrok}", "WARNING")
 
 # 2. Cloudflare Tunnel (Como primario si falta Ngrok, o secundario de alta velocidad)
+url_cf = None
+url_cf_mobile = None
 try:
     cf_bin = Path("/usr/local/bin/cloudflared")
     if not cf_bin.exists():
         subprocess.run("wget -q --timeout=10 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
     if cf_bin.exists():
         proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for _ in range(15):
+        for _ in range(25):
             line = proc_cf.stdout.readline()
             if not line:
                 time.sleep(0.2)
@@ -5376,36 +5381,42 @@ try:
                 match = re.search(r'(https://[a-zA-Z0-9-]+\.trycloudflare\.com)', line)
                 if match:
                     base_cf = match.group(1).strip()
+                    url_cf = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
+                    url_cf_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
                     if not web_tunnel_wifi:
-                        web_tunnel_wifi = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=9&compression=1&password={VNC_PASSWORD}"
-                    web_tunnel_mobile = f"{base_cf}/vnc.html?path=websockify&autoconnect=true&resize=scale&quality=6&compression=6&reconnect=true&password={VNC_PASSWORD}"
+                        web_tunnel_wifi = url_cf
+                    web_tunnel_mobile = url_cf_mobile
                     log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
                     break
 except Exception as e_cf:
     log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
 # Guardar URL de sesión en Google Drive para acceso instantáneo remoto
-if web_tunnel_wifi:
+active_primary_url = url_cf if url_cf else web_tunnel_wifi
+if active_primary_url:
     try:
-        Path("/tmp/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
-        Path("/kaggle/working/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+        Path("/tmp/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
+        Path("/kaggle/working/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
         if Path("/root/gdrive/Cloud_PC/system_state").exists():
-            Path("/root/gdrive/Cloud_PC/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+            Path("/root/gdrive/Cloud_PC/system_state/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
         if Path("/root/gdrive/PC_Kaggle/system_state").exists():
-            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(web_tunnel_wifi, encoding="utf-8")
+            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
         subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:Cloud_PC/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
         subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
         
-        # Enviar notificación automática a tu celular por Telegram
+        # Enviar notificación automática a tu celular por Telegram con enlaces duales
         try:
             telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
             if telegram_script.exists():
+                cf_section = f"🌐 <b>Enlace Cloudflare (Recomendado / Sin Límites):</b>\n<a href='{url_cf}'>ENTRAR POR CLOUDFLARE</a>\n\n" if url_cf else ""
+                ng_section = f"⚡ <b>Enlace Ngrok:</b>\n<a href='{web_tunnel_wifi}'>Entrar por Ngrok</a>\n\n" if web_tunnel_wifi and web_tunnel_wifi != url_cf else ""
                 msg_tg = (
                     f"🚀 <b>¡Tu Aether Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
-                    f"👉 <b>WiFi:</b> <a href='{web_tunnel_wifi}'>Entrar a Aether Cloud PC (HTTP 200 OK)</a>\n"
+                    f"{cf_section}"
+                    f"{ng_section}"
                     f"📱 <b>Móvil:</b> <a href='{web_tunnel_mobile}'>Modo Móvil</a>\n"
                     f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
-                    f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Watchdog 6080 activos.</i>"
+                    f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Sunshine activos.</i>"
                 )
                 try:
                     import telegram_notifier
@@ -5419,14 +5430,30 @@ if web_tunnel_wifi:
             boot_elapsed = time.time() - t_start_total
             status_payload = {
                 "status": "online",
-                "wifi_url": web_tunnel_wifi,
-                "mobile_url": web_tunnel_mobile,
+                "wifi_url": active_primary_url,
+                "cloudflare_url": url_cf,
+                "ngrok_url": web_tunnel_wifi if web_tunnel_wifi != url_cf else None,
+                "mobile_url": url_cf_mobile or web_tunnel_mobile,
                 "boot_time_seconds": round(boot_elapsed, 1),
                 "vnc_password": VNC_PASSWORD,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }
             import requests as _req_ntfy
             _req_ntfy.post("https://ntfy.sh/miguelguerra_cloudpc_status", json=status_payload, timeout=5)
+            if active_primary_url:
+                try:
+                    _req_ntfy.post(
+                        "https://ntfy.sh/miguelguerra_cloudpc_status",
+                        data=f"🚀 Tu Aether Cloud PC está ONLINE!\nEnlace Directo: {active_primary_url}\nContraseña: {VNC_PASSWORD}",
+                        headers={
+                            "Title": "🚀 Aether Cloud PC Online",
+                            "Click": active_primary_url,
+                            "Tags": "rocket,computer"
+                        },
+                        timeout=5
+                    )
+                except Exception:
+                    pass
         except Exception:
             pass
     except Exception:
@@ -5535,15 +5562,19 @@ print(f"  • Google Drive 5TB FUSE Mount:      {'[OK] MONTADO (/root/gdrive)' i
 print(f"  • Enrutamiento de Red:              US-East (Miami / Ruta Directa)", flush=True)
 print("-" * 78, flush=True)
 
-if web_tunnel_wifi:
+if active_primary_url:
     print("[OPCION 1] NAVEGADOR WEB CON MOTOR DE TRACKPAD INTEGRADO:", flush=True)
     print("------------------------------------------------------------------------------", flush=True)
-    print("[CANAL A] Modo Alta Definición (1080p Máxima Nitidez + Trackpad):", flush=True)
-    print(f"  URL: {web_tunnel_wifi}", flush=True)
-    print("\n[CANAL B] Modo Optimizado (Ultra-Baja Latencia + Trackpad):", flush=True)
-    print(f"  URL: {web_tunnel_mobile}", flush=True)
-    print("  • Desliza tu dedo en cualquier parte para mover la flecha del mouse suavemente.", flush=True)
-    print("-" * 78, flush=True)
+    if url_cf:
+        print("[CANAL CLOUDFLARE - RECOMENDADO / ULTRA-ESTABLE]:", flush=True)
+        print(f"  • Modo PC (1080p Nitidez + Trackpad): {url_cf}", flush=True)
+        print(f"  • Modo Móvil (Baja Latencia):          {url_cf_mobile}", flush=True)
+        print("-" * 78, flush=True)
+    if web_tunnel_wifi and web_tunnel_wifi != url_cf:
+        print("[CANAL NGROK - ALTERNATIVO]:", flush=True)
+        print(f"  • Modo PC (1080p Nitidez + Trackpad): {web_tunnel_wifi}", flush=True)
+        print(f"  • Modo Móvil (Baja Latencia):          {web_tunnel_mobile}", flush=True)
+        print("-" * 78, flush=True)
 
 pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
 parts = pinggy_addr.split(":") if ":" in pinggy_addr else [pinggy_addr, "5900"]
@@ -5656,7 +5687,7 @@ try:
             except Exception:
                 print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
         else:
-            print(".", end="", flush=True)
+            print(f"[{time.strftime('%H:%M:%S')}] 💓 Aether Cloud PC activo ({int(minutos*60)}s) | Watchdog OK", flush=True)
 except KeyboardInterrupt:
     print("\n🛑 Guardando estado final antes de salir...", flush=True)
     auto_save_user_state()
