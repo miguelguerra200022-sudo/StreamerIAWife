@@ -5504,12 +5504,12 @@ print(f"  [METRICA] Tiempo total de arranque: {time.time() - t_start_total:.1f}s
 drive_mounted = os.path.exists("/root/gdrive")
 
 try:
-    import torch
-    n = torch.cuda.device_count()
-    print(f"\n[GPU] Unidades NVIDIA Tesla Activas: {n}", flush=True)
-    for i in range(n):
-        p = torch.cuda.get_device_properties(i)
-        print(f"  • GPU {i}: {p.name} ({p.total_memory / (1024**3):.1f} GB VRAM)", flush=True)
+    smi_out = subprocess.check_output("nvidia-smi --query-gpu=name,memory.total --format=csv,noheader", shell=True, text=True).strip()
+    if smi_out:
+        gpus = smi_out.splitlines()
+        print(f"\n[GPU] Unidades NVIDIA Tesla Activas: {len(gpus)}", flush=True)
+        for i, g in enumerate(gpus):
+            print(f"  • GPU {i}: {g}", flush=True)
 except Exception:
     pass
 
