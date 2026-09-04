@@ -2087,6 +2087,21 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     function hapticFeedback(pattern) {
         if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch(e) {} }
+        try {
+            const gps = (typeof navigator.getGamepads === "function") ? navigator.getGamepads() : [];
+            for (let i = 0; i < gps.length; i++) {
+                const gp = gps[i];
+                if (gp && gp.connected && gp.vibrationActuator && typeof gp.vibrationActuator.playEffect === "function") {
+                    const dur = Array.isArray(pattern) ? pattern[0] : (typeof pattern === "number" ? pattern : 40);
+                    gp.vibrationActuator.playEffect("dual-rumble", {
+                        startDelay: 0,
+                        duration: Math.min(250, dur || 40),
+                        weakMagnitude: 0.55,
+                        strongMagnitude: 0.35
+                    }).catch(() => {});
+                }
+            }
+        } catch(e) {}
     }
 
     function createRipple(clientX, clientY, type) {
