@@ -503,7 +503,7 @@ KAGGLE_API_DIR.mkdir(parents=True, exist_ok=True)
 KAGGLE_API_FILE = KAGGLE_API_DIR / "kaggle.json"
 REPO_KAGGLE_JSON = BASE_DIR / "kaggle legacy.json"
 
-if REPO_KAGGLE_JSON.exists():
+if not KAGGLE_API_FILE.exists() and REPO_KAGGLE_JSON.exists():
     try:
         subprocess.run(f"cp '{REPO_KAGGLE_JSON}' '{KAGGLE_API_FILE}'", shell=True)
         subprocess.run(f"chmod 600 '{KAGGLE_API_FILE}'", shell=True)
