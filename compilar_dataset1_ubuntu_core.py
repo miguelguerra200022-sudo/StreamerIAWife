@@ -127,7 +127,10 @@ chrome_wrapper = (
     "--no-sandbox --test-type --ignore-gpu-blocklist "
     "--enable-gpu-rasterization --enable-zero-copy "
     "--use-gl=angle --use-angle=gl-egl --enable-unsafe-webgpu "
-    "--enable-features=VaapiVideoDecoder,CanvasOopRasterization,WebRTCPipeWireCapturer "
+    "--enable-features=ParallelDownloading,VaapiVideoDecoder,CanvasOopRasterization,WebRTCPipeWireCapturer "
+    "--enable-quic "
+    "--disk-cache-size=1073741824 "
+    "--media-cache-size=536870912 "
     "--disable-dev-shm-usage \"$@\"\n"
 )
 Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
@@ -150,6 +153,19 @@ steam_wrapper = (
 )
 Path("/usr/local/bin/steam").write_text(steam_wrapper, encoding="utf-8")
 subprocess.run("chmod +x /usr/local/bin/steam 2>/dev/null || true", shell=True)
+
+# Optimización de Descargas Steam (Bypass de HTTP/2 bug en Linux para saturar Gigabit)
+try:
+    steam_cfg = (
+        "@nClientDownloadEnableHTTP2PlatformLinux 0\n"
+        "@fDownloadRateImprovementToAddAnotherConnection 1.0\n"
+    )
+    for sdir in ["/root/.steam/steam", "/root/.local/share/Steam", "/etc/steam"]:
+        p = Path(sdir)
+        p.mkdir(parents=True, exist_ok=True)
+        (p / "steam_dev.cfg").write_text(steam_cfg, encoding="utf-8")
+except Exception:
+    pass
 
 # 5. Suite Gamer & Multi-Arch 32-bit (Steam, Proton, Lutris, Mandos)
 print("🎮 [4/8] Instalando Suite Gamer (Steam, Lutris, MangoHud, Gamemode, Runtimes 32-bit i386)...", flush=True)
@@ -3182,6 +3198,13 @@ main_shortcuts = {
         "Comment=Prueba de ancho de banda Gigabit real con Aria2 16x y auto-borrado\\n"
         "Exec=python3 /usr/local/bin/test_velocidad_real.py\\n"
         "Icon=network-transmit-receive\\nTerminal=true\\nCategories=Network;\\n"
+    ),
+    "Descargador_Turbo_Gigabit.desktop": (
+        "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
+        "Name=Descargador Turbo Gigabit (16 Hilos Aria2)\\n"
+        "Comment=Descargas ultra-rápidas a máxima velocidad divididas en 16 hilos simultáneos\\n"
+        "Exec=descarga_turbo\\n"
+        "Icon=download\\nTerminal=false\\nCategories=Network;Utility;\\n"
     ),
     "Escaner_Redes_Conexiones.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"

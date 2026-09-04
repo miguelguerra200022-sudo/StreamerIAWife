@@ -142,11 +142,31 @@ print("[AETHER] INICIANDO UBUNTU 24.04 LTS ENTERPRISE EDITION (5TB GDRIVE)...", 
 print("=" * 78, flush=True)
 
 # ==============================================================================
-# 0.1 HYPER-TUNING DE RED: GOOGLE BBR + BUFFERS TCP 64MB + MULTI-HILO
+# 0.1 HYPER-TUNING DE RED: GOOGLE BBR + BUFFERS TCP 64MB + DNS ULTRA-RÁPIDO
 # ==============================================================================
 def optimizar_red_bbr_buffers():
-    """Aplica Google BBR y amplía buffers TCP de Linux al límite físico de la red de Google Cloud."""
-    print("[NETWORK] Optimizando Stack TCP con Google BBR y Buffers de 64MB...", flush=True)
+    """Aplica Google BBR, amplía buffers TCP de Linux a 64MB y acelera DNS al límite físico de la red de Google Cloud (10Gbps+)."""
+    print("[NETWORK] Optimizando Stack TCP con Google BBR, Buffers de 64MB y DNS Ultra-Rápido...", flush=True)
+    
+    # 1. Optimización del DNS Resolver (Cloudflare 1.1.1.1 + Google 8.8.8.8 con single-request-reopen)
+    try:
+        resolv_p = Path("/etc/resolv.conf")
+        if resolv_p.exists():
+            content = resolv_p.read_text(encoding="utf-8")
+            if "single-request-reopen" not in content:
+                header = (
+                    "# BigTech Ultra-Fast DNS Optimization (Latencia < 5ms)\n"
+                    "options single-request-reopen timeout:1 attempts:2 rotate\n"
+                    "nameserver 1.1.1.1\n"
+                    "nameserver 8.8.8.8\n"
+                    "nameserver 1.0.0.1\n"
+                    "nameserver 8.8.4.4\n"
+                )
+                resolv_p.write_text(header + content, encoding="utf-8")
+    except Exception:
+        pass
+
+    # 2. Kernel Sysctl para enlaces Cloud de 10Gbps+ (BBR + BDP Buffers 64MB)
     sysctls = [
         ("net.core.default_qdisc", "fq"),
         ("net.ipv4.tcp_congestion_control", "bbr"),
@@ -154,20 +174,30 @@ def optimizar_red_bbr_buffers():
         ("net.core.wmem_max", "67108864"),
         ("net.core.rmem_default", "33554432"),
         ("net.core.wmem_default", "33554432"),
-        ("net.ipv4.tcp_rmem", "4096 87380 33554432"),
-        ("net.ipv4.tcp_wmem", "4096 65536 33554432"),
+        ("net.ipv4.tcp_rmem", "4096 87380 67108864"),
+        ("net.ipv4.tcp_wmem", "4096 65536 67108864"),
         ("net.ipv4.tcp_window_scaling", "1"),
         ("net.ipv4.tcp_fastopen", "3"),
         ("net.ipv4.tcp_slow_start_after_idle", "0"),
         ("net.ipv4.tcp_timestamps", "1"),
         ("net.ipv4.tcp_sack", "1"),
-        ("net.core.netdev_max_backlog", "16384"),
-        ("net.core.somaxconn", "8192"),
+        ("net.core.netdev_max_backlog", "262144"),
+        ("net.core.somaxconn", "65535"),
+        ("net.ipv4.tcp_max_syn_backlog", "65535"),
         ("net.ipv4.tcp_fin_timeout", "15"),
-        ("net.ipv4.tcp_tw_reuse", "1")
+        ("net.ipv4.tcp_tw_reuse", "1"),
+        ("net.ipv4.tcp_notsent_lowat", "16384"),
+        ("net.ipv4.ip_local_port_range", "1024 65535")
     ]
     for key, val in sysctls:
         subprocess.run(f"sysctl -w {key}={val} >/dev/null 2>&1 || true", shell=True)
+
+    try:
+        conf_lines = "\n".join([f"{k} = {v}" for k, v in sysctls]) + "\n"
+        Path("/etc/sysctl.d").mkdir(parents=True, exist_ok=True)
+        Path("/etc/sysctl.d/99-bbr-cloud.conf").write_text(conf_lines, encoding="utf-8")
+    except Exception:
+        pass
 
 # ==============================================================================
 # 0.2 ORQUESTADOR DUAL-GPU (NVIDIA TESLA T4 x2 - 32GB VRAM)
@@ -208,46 +238,67 @@ def orquestar_dual_gpu():
 # ==============================================================================
 # ⚡ 0.3 ACELERADOR DE DESCARGAS MULTI-HILO (16 CONEXIONES PARALELAS)
 # ==============================================================================
+# ⚡ 0.3 ACELERADOR DE DESCARGAS MULTI-HILO (16 CONEXIONES PARALELAS ARIA2C)
+# ==============================================================================
 def instalar_acelerador_descargas():
-    """Configura Aria2c multi-hilo con 16 conexiones paralelas para saturar conexiones Gigabit de Google."""
+    """Configura Aria2c multi-hilo con 16 conexiones paralelas y lanza interfaz CLI y GUI universal."""
     subprocess.run("which aria2c >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq aria2 >> /kaggle/working/cloudpc_system.log 2>&1 || true)", shell=True)
     turbo_script = """#!/bin/bash
+# ⚡ Acelerador de Descargas Turbo Gigabit (16 Conexiones Simultáneas)
 URL="$1"
 DEST="${2:-/root/Descargas}"
-mkdir -p "$DEST"
+
 if [ -z "$URL" ]; then
-    echo "Uso: descarga_turbo <URL> [Directorio]"
-    exit 1
+    if [ -n "$DISPLAY" ] && command -v zenity &>/dev/null; then
+        URL=$(zenity --entry --title="⚡ Descargador Turbo Gigabit (16 Hilos)" --text="Pega el enlace de descarga directa (HTTP/HTTPS/FTP):" --width=540 2>/dev/null)
+        [ -z "$URL" ] && exit 0
+        SEL_DEST=$(zenity --file-selection --directory --title="Selecciona Carpeta de Destino" --filename="$DEST" 2>/dev/null)
+        [ -n "$SEL_DEST" ] && DEST="$SEL_DEST"
+    else
+        echo "Uso: descarga_turbo <URL> [Directorio]"
+        exit 1
+    fi
 fi
+
+mkdir -p "$DEST"
 echo "⚡ Descargando con 16 conexiones paralelas de ultra-velocidad hacia $DEST..."
 aria2c -x 16 -s 16 -k 1M --file-allocation=none --summary-interval=1 --continue=true -d "$DEST" "$URL"
+STATUS=$?
+if [ $STATUS -eq 0 ] && [ -n "$DISPLAY" ] && command -v zenity &>/dev/null; then
+    zenity --notification --text="✅ Descarga completada exitosamente en $DEST" 2>/dev/null || true
+fi
 """
     try:
-        Path("/usr/local/bin/descarga_turbo").write_text(turbo_script)
+        Path("/usr/local/bin/descarga_turbo").write_text(turbo_script, encoding="utf-8")
         subprocess.run("chmod +x /usr/local/bin/descarga_turbo 2>/dev/null || true", shell=True)
     except Exception:
         pass
 
 # ==============================================================================
-# ⚡ 0.4 ACELERADOR MULTI-NÚCLEO DE INSTALACIÓN (APT/DPKG) Y DESCOMPRESIÓN (PIGZ)
+# ⚡ 0.4 ACELERADOR MULTI-NÚCLEO DE INSTALACIÓN (APT/DPKG/PIP) Y DESCARGAS GUI (CHROME/STEAM)
 # ==============================================================================
 def acelerar_instalaciones_y_desempaquetado():
-    """Optimiza APT, DPKG y descompresores (pigz/7z/zstd) para usar el 100% de los núcleos de CPU y desactivar syncs lentos."""
-    print("⚡ [Turbo CPU] Activando multi-núcleo en APT/DPKG y descompresores paralelos...", flush=True)
-    # 1. Desactivar fsync en DPKG (300% más rápido en contenedores Docker)
+    """Optimiza APT, DPKG, PIP, Chrome y Steam para usar el 100% de los núcleos de CPU y transferir a velocidad gigabit."""
+    print("⚡ [Turbo I/O & Red] Configurando APT, DPKG y PIP en modo Gigabit Multi-Hilo...", flush=True)
+    
+    # 1. Desactivar fsync en DPKG (300% más rápido en contenedores Docker/Kaggle)
     try:
         Path("/etc/dpkg/dpkg.cfg.d").mkdir(parents=True, exist_ok=True)
         Path("/etc/dpkg/dpkg.cfg.d/02apt-speedup").write_text("force-unsafe-io\n", encoding="utf-8")
     except Exception:
         pass
 
-    # 2. Configurar APT en modo tubería y sin bloqueos innecesarios
+    # 2. Configurar APT en modo tubería HTTP persistente, sin traducciones ni cuellos de botella
     try:
         Path("/etc/apt/apt.conf.d").mkdir(parents=True, exist_ok=True)
         apt_turbo = (
             'Acquire::Languages "none";\n'
+            'Acquire::IndexTargets::deb::Contents-deb::DefaultEnabled "false";\n'
+            'Acquire::ForceIPv4 "true";\n'
             'Acquire::Queue-Mode "host";\n'
             'Acquire::http::Pipeline-Depth "10";\n'
+            'Acquire::http::No-Cache "true";\n'
+            'Acquire::BrokenProxy "true";\n'
             'APT::Install-Recommends "0";\n'
             'APT::Install-Suggests "0";\n'
             'DPkg::Options { "--force-confdef"; "--force-confold"; };\n'
@@ -256,7 +307,22 @@ def acelerar_instalaciones_y_desempaquetado():
     except Exception:
         pass
 
-    # 3. Reemplazar gzip con pigz paralelo si está disponible para usar todos los núcleos en .tar.gz y .deb
+    # 3. Optimización Global de PIP (Descargas paralelas y timeouts controlados)
+    try:
+        pip_conf = (
+            "[global]\n"
+            "timeout = 15\n"
+            "index-url = https://pypi.org/simple\n"
+            "trusted-host = pypi.org pypi.python.org files.pythonhosted.org\n"
+            "no-cache-dir = false\n"
+        )
+        Path("/root/.pip").mkdir(parents=True, exist_ok=True)
+        Path("/root/.pip/pip.conf").write_text(pip_conf, encoding="utf-8")
+        Path("/etc/pip.conf").write_text(pip_conf, encoding="utf-8")
+    except Exception:
+        pass
+
+    # 4. Reemplazar gzip con pigz paralelo si está disponible para usar todos los núcleos en .tar.gz y .deb
     subprocess.run("which pigz >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq pigz >> /kaggle/working/cloudpc_system.log 2>&1 || true)", shell=True)
     if Path("/usr/bin/pigz").exists():
         try:
@@ -264,9 +330,41 @@ def acelerar_instalaciones_y_desempaquetado():
         except Exception:
             pass
 
-# Ejecutar optimizaciones maestras de arranque
-acelerar_instalaciones_y_desempaquetado()
+    # 5. Wrapper de Google Chrome con Descargas Paralelas y HTTP/3 QUIC Habilitadas
+    chrome_wrapper = (
+        "#!/bin/bash\n"
+        "exec /usr/bin/google-chrome-stable "
+        "--no-sandbox --test-type --ignore-gpu-blocklist "
+        "--enable-gpu-rasterization --enable-zero-copy "
+        "--use-gl=angle --use-angle=gl-egl --enable-unsafe-webgpu "
+        "--enable-features=ParallelDownloading,VaapiVideoDecoder,CanvasOopRasterization,WebRTCPipeWireCapturer "
+        "--enable-quic "
+        "--disk-cache-size=1073741824 "
+        "--media-cache-size=536870912 "
+        "--disable-dev-shm-usage \"$@\"\n"
+    )
+    try:
+        Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
+        subprocess.run("chmod +x /usr/local/bin/google-chrome 2>/dev/null || true", shell=True)
+    except Exception:
+        pass
+
+    # 6. Optimización de Descargas Steam (Bypass de HTTP/2 bug en Linux)
+    try:
+        steam_cfg = (
+            "@nClientDownloadEnableHTTP2PlatformLinux 0\n"
+            "@fDownloadRateImprovementToAddAnotherConnection 1.0\n"
+        )
+        for sdir in ["/root/.steam/steam", "/root/.local/share/Steam", "/etc/steam"]:
+            p = Path(sdir)
+            p.mkdir(parents=True, exist_ok=True)
+            (p / "steam_dev.cfg").write_text(steam_cfg, encoding="utf-8")
+    except Exception:
+        pass
+
+# Ejecutar optimizaciones maestras de arranque (Stack de red BBR primero)
 optimizar_red_bbr_buffers()
+acelerar_instalaciones_y_desempaquetado()
 orquestar_dual_gpu()
 instalar_acelerador_descargas()
 
@@ -3738,13 +3836,17 @@ if not shutil.which("steam") or not shutil.which("obs"):
     # Runtimes gráficos y de audio de 32 bits (i386) para Steam y Proton (DXVK)
     subprocess.run("DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libgl1-mesa-dri:i386 libgl1:i386 libvulkan1:i386 mesa-vulkan-drivers:i386 libasound2-plugins:i386 python3-tk || true", shell=True)
     
-    # Wrapper acelerado por hardware GPU para Google Chrome
+    # Wrapper acelerado por hardware GPU para Google Chrome con Descargas Paralelas Multi-Hilo
     chrome_wrapper = (
         "#!/bin/bash\n"
         "exec /usr/bin/google-chrome-stable "
         "--no-sandbox --test-type --ignore-gpu-blocklist "
         "--enable-gpu-rasterization --enable-zero-copy "
-        "--enable-features=VaapiVideoDecoder,CanvasOopRasterization "
+        "--use-gl=angle --use-angle=gl-egl --enable-unsafe-webgpu "
+        "--enable-features=ParallelDownloading,VaapiVideoDecoder,CanvasOopRasterization,WebRTCPipeWireCapturer "
+        "--enable-quic "
+        "--disk-cache-size=1073741824 "
+        "--media-cache-size=536870912 "
         "--disable-dev-shm-usage \"$@\"\n"
     )
     Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
