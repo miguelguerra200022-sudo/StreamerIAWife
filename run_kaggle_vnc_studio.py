@@ -4227,10 +4227,28 @@ if web_tunnel_wifi:
                     f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
                     f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Watchdog 6080 activos.</i>"
                 )
-                import telegram_notifier
-                telegram_notifier.enviar_mensaje(msg_tg)
-        except Exception as e_tg:
-            log(f"Aviso Telegram: {e_tg}", "WARNING")
+                try:
+                    import telegram_notifier
+                    telegram_notifier.enviar_mensaje(msg_tg)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        # Publicar telemetría y URL pública en canal seguro en tiempo real
+        try:
+            boot_elapsed = time.time() - t_start_total
+            status_payload = {
+                "status": "online",
+                "wifi_url": web_tunnel_wifi,
+                "mobile_url": web_tunnel_mobile,
+                "boot_time_seconds": round(boot_elapsed, 1),
+                "vnc_password": VNC_PASSWORD,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            import requests as _req_ntfy
+            _req_ntfy.post("https://ntfy.sh/miguelguerra_cloudpc_status", json=status_payload, timeout=5)
+        except Exception:
+            pass
     except Exception:
         pass
 
