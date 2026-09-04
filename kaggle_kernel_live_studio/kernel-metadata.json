@@ -1,6 +1,6 @@
 {
-  "id": "miguel55755/ubuntu-cloud-pc-live",
-  "title": "Ubuntu Cloud PC Live",
+  "id": "miguel55755/aether-cloud-pc",
+  "title": "Aether Cloud PC",
   "code_file": "main.py",
   "language": "python",
   "kernel_type": "script",
