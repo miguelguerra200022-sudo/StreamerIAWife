@@ -599,8 +599,31 @@ if master_dataset_path and master_dataset_path.exists():
                 subprocess.run(f"cp -an {sq_mount_point}/* / 2>/dev/null || true", shell=True)
                 print(f"  [✓] Sistema SquashFS montado en {time.time() - t_decomp:.2f} segundos (Cero I/O en disco)!", flush=True)
 
+        # NIVEL 1.5: Extracción directa con unsquashfs (Zero-Mount / Multi-Núcleo)
+        if not squash_mounted and is_squashfs:
+            if not shutil.which("unsquashfs"):
+                subprocess.run("apt-get update -qq && apt-get install -y -qq squashfs-tools >/dev/null 2>&1 || true", shell=True)
+            if shutil.which("unsquashfs"):
+                print("  ⚡ [Nivel 1.5] Extrayendo SquashFS con unsquashfs multi-núcleo...", flush=True)
+                res_unsq = subprocess.run(f"unsquashfs -f -d / '{rootfs_file}' >> {LOG_FILE} 2>&1", shell=True)
+                if res_unsq.returncode == 0:
+                    squash_mounted = True
+                    print(f"  [✓] Sistema SquashFS extraído en {time.time() - t_decomp:.2f} segundos!", flush=True)
+
         # NIVEL 2: Stream Zstandard Multi-Núcleo AVX-512 (~1.0s - 1.5s)
         if not squash_mounted:
+            # Buscar paquete tar Zstandard si squashfs no se pudo procesar
+            tar_candidates = (
+                list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.data")) or
+                list(master_dataset_path.rglob("ubuntu_master_rootfs.tar.zst")) or
+                list(master_dataset_path.rglob("*.tar.data")) or
+                list(master_dataset_path.rglob("*.tar.zst"))
+            )
+            if tar_candidates:
+                rootfs_file = tar_candidates[0]
+                is_zstd = True
+                magic_bytes = b"\x28\xb5\x2f\xfd"
+
             # Asegurar binario zstd
             if not shutil.which("zstd"):
                 subprocess.run("dpkg -i /kaggle/input/*/apt_archives/zstd*.deb 2>/dev/null || (apt-get update -qq && apt-get install -y -qq zstd >/dev/null 2>&1) || true", shell=True)
@@ -661,14 +684,19 @@ if master_dataset_path and master_dataset_path.exists():
     print("  [3/3] Configurando noVNC WebRTC y Google Chrome...", flush=True)
     novnc_dir = Path("/opt/noVNC")
     novnc_dir.parent.mkdir(parents=True, exist_ok=True)
-    if not novnc_dir.exists():
-        found_novnc = list(master_dataset_path.rglob("noVNC"))
-        if found_novnc and found_novnc[0].is_dir():
-            try:
-                shutil.copytree(found_novnc[0], novnc_dir)
-            except Exception:
-                pass
-        if not novnc_dir.exists():
+    if not (novnc_dir / "vnc.html").exists():
+        found_novnc_tar = list(master_dataset_path.rglob("noVNC.tar"))
+        if found_novnc_tar:
+            print("  ⚡ Extrayendo noVNC pre-empaquetado instantáneamente...", flush=True)
+            subprocess.run(f"tar -xf '{found_novnc_tar[0]}' -C /opt/ >> {LOG_FILE} 2>&1 || true", shell=True)
+        if not (novnc_dir / "vnc.html").exists():
+            found_novnc = list(master_dataset_path.rglob("noVNC"))
+            if found_novnc and found_novnc[0].is_dir():
+                try:
+                    shutil.copytree(found_novnc[0], novnc_dir)
+                except Exception:
+                    pass
+        if not (novnc_dir / "vnc.html").exists():
             subprocess.run(f"git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC >> {LOG_FILE} 2>&1", shell=True)
             subprocess.run(f"git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify >> {LOG_FILE} 2>&1", shell=True)
     subprocess.run("chmod -R +x /opt/noVNC/utils 2>/dev/null || true", shell=True)
@@ -683,6 +711,12 @@ if master_dataset_path and master_dataset_path.exists():
     if chrome_debs:
         subprocess.run(f"DEBIAN_FRONTEND=noninteractive dpkg -i --force-unsafe-io {chrome_debs[0]} >> {LOG_FILE} 2>&1 || true", shell=True)
         
+    # 5. Ejecutar setup.py de Database 1 para periféricos y lanzadores
+    found_setup = list(master_dataset_path.rglob("setup.py"))
+    if found_setup:
+        print("  🎮 Configurando lanzadores de escritorio y periféricos de Database 1...", flush=True)
+        subprocess.run(f"python3 '{found_setup[0]}' >> {LOG_FILE} 2>&1 || true", shell=True)
+
     subprocess.run(f"pip install -q --no-warn-script-location pyngrok websockets aiohttp Pillow mss edge-tts python-dotenv openai >> {LOG_FILE} 2>&1", shell=True)
     print("  ✅ [✓] Suite Oficial de Ubuntu activada con éxito desde Dataset (0 MB descargados).", flush=True)
 else:
