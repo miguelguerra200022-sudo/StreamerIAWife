@@ -5055,21 +5055,12 @@ tailscale_info = {
 if tailscaled_bin:
     try:
         os.makedirs("/root/.config/tailscale", exist_ok=True)
-        subprocess.run("mkdir -p /dev/net && mknod /dev/net/tun c 10 200 2>/dev/null || true", shell=True)
-        
-        tun_accessible = False
-        try:
-            with open("/dev/net/tun", "r+b") as f_tun:
-                tun_accessible = True
-        except Exception:
-            tun_accessible = False
-            
-        tun_arg = "" if tun_accessible else "--tun=userspace-networking"
+        tun_arg = "--tun=userspace-networking"
         subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
         time.sleep(0.3)
         ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
         subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log(f"Tailscale daemon activo ({'Kernel TUN' if tun_accessible else 'Userspace Networking SOCKS5:1055'})")
+        log("Tailscale daemon activo (Userspace Networking SOCKS5:1055)")
 
         def tailscale_manager_loop():
             global tailscale_info
@@ -5346,7 +5337,7 @@ if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOK
 if not ngrok_token:
     ngrok_token = DEFAULT_NGROK
 
-# 1. Cloudflare Tunnel (Ultra-Rápido, Conexión Inmediata < 2s, Sin Límites de Banda)
+# 1. Cloudflare Tunnel (Ultra-Rápido con protocolo HTTP/2 Anti-Drop, Sin Límites de Banda)
 url_cf = None
 url_cf_mobile = None
 try:
@@ -5354,7 +5345,7 @@ try:
     if not cf_bin.exists():
         subprocess.run("wget -q --timeout=15 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -O /usr/local/bin/cloudflared 2>/dev/null && chmod +x /usr/local/bin/cloudflared || true", shell=True)
     if cf_bin.exists():
-        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        proc_cf = subprocess.Popen(["cloudflared", "tunnel", "--protocol", "http2", "--url", "http://127.0.0.1:6080"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
         
         def _read_cf_lines(p):
             global url_cf, url_cf_mobile
@@ -5371,16 +5362,11 @@ try:
                         log(f"Túnel Cloudflare conectado: {base_cf}", "SUCCESS")
         
         threading.Thread(target=_read_cf_lines, args=(proc_cf,), daemon=True).start()
-        
-        # Esperar hasta 20s a que Cloudflare conecte
-        t_cf_limit = time.time()
-        while not url_cf and (time.time() - t_cf_limit < 20):
-            time.sleep(0.5)
 except Exception as e_cf:
     log(f"Aviso Cloudflare: {e_cf}", "WARNING")
 
-# 2. Conexión de Ngrok (Solo como respaldo si Cloudflare no estuviera disponible)
-if not url_cf and ngrok_token:
+# 2. Conexión de Ngrok en Paralelo (Redundancia Enterprise Dual)
+if ngrok_token:
     def _connect_ngrok_worker():
         global web_tunnel_wifi, web_tunnel_mobile
         try:
@@ -5405,46 +5391,52 @@ if not url_cf and ngrok_token:
 
     t_ng = threading.Thread(target=_connect_ngrok_worker, daemon=True)
     t_ng.start()
-    t_ng.join(timeout=8)
 
-# Guardar URL de sesión en Google Drive para acceso instantáneo remoto
+# Esperar hasta 12s para capturar al menos un túnel online
+t_tunnel_limit = time.time()
+while (not url_cf and not web_tunnel_wifi) and (time.time() - t_tunnel_limit < 12):
+    time.sleep(0.5)
+
 active_primary_url = url_cf if url_cf else web_tunnel_wifi
-if active_primary_url:
+
+# Guardar URL de sesión y notificar por Telegram en hilo desacoplado (Cero Bloqueo)
+def _async_post_tunnel_tasks():
+    time.sleep(1)
+    act_url = url_cf if url_cf else web_tunnel_wifi
+    if not act_url:
+        return
     try:
-        Path("/tmp/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
-        Path("/kaggle/working/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
-        if Path("/root/gdrive/Cloud_PC/system_state").exists():
-            Path("/root/gdrive/Cloud_PC/system_state/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
-        if Path("/root/gdrive/PC_Kaggle/system_state").exists():
-            Path("/root/gdrive/PC_Kaggle/system_state/current_vnc_url.txt").write_text(active_primary_url, encoding="utf-8")
-        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:Cloud_PC/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
-        subprocess.run("rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+        Path("/tmp/current_vnc_url.txt").write_text(act_url, encoding="utf-8")
+        Path("/kaggle/working/current_vnc_url.txt").write_text(act_url, encoding="utf-8")
+        subprocess.run("timeout 5 rclone copyto /tmp/current_vnc_url.txt gdrive:Cloud_PC/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+        subprocess.run("timeout 5 rclone copyto /tmp/current_vnc_url.txt gdrive:PC_Kaggle/system_state/current_vnc_url.txt >/dev/null 2>&1 || true", shell=True)
+    except Exception:
+        pass
         
-        # Enviar notificación automática a tu celular por Telegram con enlaces duales
-        try:
-            telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
-            if telegram_script.exists():
-                cf_section = f"🌐 <b>Enlace Cloudflare (Recomendado / Sin Límites):</b>\n<a href='{url_cf}'>ENTRAR POR CLOUDFLARE</a>\n\n" if url_cf else ""
-                ng_section = f"⚡ <b>Enlace Ngrok:</b>\n<a href='{web_tunnel_wifi}'>Entrar por Ngrok</a>\n\n" if web_tunnel_wifi and web_tunnel_wifi != url_cf else ""
-                msg_tg = (
-                    f"🚀 <b>¡Tu Aether Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
-                    f"{cf_section}"
-                    f"{ng_section}"
-                    f"📱 <b>Móvil:</b> <a href='{web_tunnel_mobile}'>Modo Móvil</a>\n"
-                    f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
-                    f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Sunshine activos.</i>"
-                )
-                try:
-                    import telegram_notifier
-                    telegram_notifier.enviar_mensaje(msg_tg)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+    try:
+        telegram_script = Path(__file__).resolve().parent / "telegram_notifier.py"
+        if telegram_script.exists():
+            cf_section = f"🌐 <b>Enlace Cloudflare (Recomendado / Sin Límites):</b>\n<a href='{url_cf}'>ENTRAR POR CLOUDFLARE</a>\n\n" if url_cf else ""
+            ng_section = f"⚡ <b>Enlace Ngrok:</b>\n<a href='{web_tunnel_wifi}'>Entrar por Ngrok</a>\n\n" if web_tunnel_wifi else ""
+            mob_url = url_cf_mobile if url_cf_mobile else web_tunnel_mobile
+            msg_tg = (
+                f"🚀 <b>¡Tu Aether Cloud PC está ONLINE y VERIFICADA!</b> 🌸\n\n"
+                f"{cf_section}"
+                f"{ng_section}"
+                f"📱 <b>Móvil:</b> <a href='{mob_url}'>Modo Móvil</a>\n"
+                f"🔑 <b>Pass:</b> <code>{VNC_PASSWORD}</code>\n"
+                f"🎮 <i>Mandos táctiles Xbox, panel lateral Aether y Sunshine activos.</i>"
+            )
+            try:
+                import telegram_notifier
+                telegram_notifier.enviar_mensaje(msg_tg)
+            except Exception:
+                pass
     except Exception:
         pass
 
-# Pinggy SSH tunnel eliminado para evitar bloqueo de red por reverse-SSH en Google Cloud/Kaggle
+threading.Thread(target=_async_post_tunnel_tasks, daemon=True).start()
+
 vnc_app_address = []
 if tailscale_info.get("ip"):
     vnc_app_address.append(f"{tailscale_info['ip']}:5900")
@@ -5453,12 +5445,21 @@ print(f"  [TIEMPO] Paso 5/5 Completado en {time.time() - t_step5:.1f}s", flush=T
 print(f"  [METRICA] Tiempo total de arranque: {time.time() - t_start_total:.1f}s\n", flush=True)
 
 # ==============================================================================
-# VERIFICACIÓN DE ESTADO Y SALUD REAL DEL SISTEMA
+# VERIFICACIÓN DE ESTADO Y SALUD REAL DEL SISTEMA (SEGURO Y SIN BLOQUEOS FUSE)
 # ==============================================================================
-drive_mounted = os.path.exists("/root/gdrive")
+def _is_gdrive_mounted_safe():
+    try:
+        if os.path.exists("/proc/mounts"):
+            with open("/proc/mounts", "r", encoding="utf-8", errors="ignore") as f_m:
+                return any("/root/gdrive" in line for line in f_m)
+        return False
+    except Exception:
+        return False
+
+drive_mounted = _is_gdrive_mounted_safe()
 
 try:
-    smi_out = subprocess.check_output("nvidia-smi --query-gpu=name,memory.total --format=csv,noheader", shell=True, text=True).strip()
+    smi_out = subprocess.check_output("timeout 5 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null", shell=True, text=True).strip()
     if smi_out:
         gpus = smi_out.splitlines()
         print(f"\n[GPU] Unidades NVIDIA Tesla Activas: {len(gpus)}", flush=True)
@@ -5468,8 +5469,9 @@ except Exception:
     pass
 
 try:
-    df_out = subprocess.check_output("df -h /kaggle/working | tail -1", shell=True, text=True).split()
-    print(f"[STORAGE] Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
+    df_out = subprocess.check_output("timeout 3 df -h /kaggle/working 2>/dev/null | tail -1", shell=True, text=True).split()
+    if len(df_out) >= 4:
+        print(f"[STORAGE] Espacio Libre en Disco: {df_out[3]} disponibles de {df_out[1]}", flush=True)
 except Exception:
     pass
 
@@ -5497,7 +5499,7 @@ if active_primary_url:
         print(f"  • Modo PC (1080p Nitidez + Trackpad): {url_cf}", flush=True)
         print(f"  • Modo Móvil (Baja Latencia):          {url_cf_mobile}", flush=True)
         print("-" * 78, flush=True)
-    if web_tunnel_wifi and web_tunnel_wifi != url_cf:
+    if web_tunnel_wifi:
         print("[CANAL NGROK - ALTERNATIVO]:", flush=True)
         print(f"  • Modo PC (1080p Nitidez + Trackpad): {web_tunnel_wifi}", flush=True)
         print(f"  • Modo Móvil (Baja Latencia):          {web_tunnel_mobile}", flush=True)
@@ -5538,15 +5540,15 @@ try:
     segundos_activos = 0
     while True:
         try:
-            time.sleep(15)
-            segundos_activos += 15
+            time.sleep(10)
+            segundos_activos += 10
             minutos = segundos_activos / 60
             
             # Watchdog: Monitoreo activo de procesos
             xvfb_alive = Path("/tmp/.X11-unix/X1").exists()
             vnc_alive = wait_for_port(5900, timeout=1)
             novnc_alive = wait_for_port(6080, timeout=1)
-            drive_alive = Path("/root/gdrive").exists()
+            drive_alive = _is_gdrive_mounted_safe()
             
             if not xvfb_alive:
                 print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor X11 Display :1 no responde.", flush=True)
@@ -5566,21 +5568,21 @@ try:
             except Exception:
                 pass
                 
-            if segundos_activos % 300 == 0:
-                auto_save_user_state()
+            if segundos_activos % 120 == 0:
+                threading.Thread(target=auto_save_user_state, daemon=True).start()
                 try:
-                    ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
-                    disk_str = subprocess.check_output("df -h / 2>/dev/null | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
+                    ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True, timeout=5).strip()
+                    disk_str = subprocess.check_output("df -h / 2>/dev/null | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True, timeout=5).strip()
                     gpu_info = ""
                     try:
-                        gpu_lines = subprocess.check_output("nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True).strip().splitlines()
+                        gpu_lines = subprocess.check_output("timeout 5 nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True, timeout=5).strip().splitlines()
                         if gpu_lines:
                             gpu_parts = []
                             for g in gpu_lines:
                                 parts = [x.strip() for x in g.split(",")]
                                 if len(parts) >= 4:
                                     idx, util, mem_u, mem_t = parts[0], parts[1], parts[2], parts[3]
-                                    gpu_parts.append(f"T4-{idx}: {util}% ({mem_u}/{mem_t}MB)")
+                                    gpu_parts.append(f"GPU-{idx}: {util}% ({mem_u}/{mem_t}MB)")
                             if gpu_parts:
                                 gpu_info = " | 🎮 " + ", ".join(gpu_parts)
                     except Exception:
@@ -5589,7 +5591,7 @@ try:
                 except Exception:
                     print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
             else:
-                print(f"[{time.strftime('%H:%M:%S')}] 💓 Aether Cloud PC activo ({segundos_activos}s) | Watchdog OK", flush=True)
+                print(f"[{time.strftime('%H:%M:%S')}] 💓 Aether Cloud PC activo ({segundos_activos}s | {segundos_activos//60} min) | noVNC: {'OK' if novnc_alive else 'FAIL'} | Watchdog OK", flush=True)
         except Exception as e_tick:
             print(f"⚠️ [WATCHDOG] Excepción recuperada en bucle: {e_tick}", flush=True)
             time.sleep(5)

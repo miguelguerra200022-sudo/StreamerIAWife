@@ -1,6 +1,6 @@
 {
-  "id": "miguel55755/aether-desktop-pc",
-  "title": "Aether Desktop PC",
+  "id": "miguel55755/aether-cloud-workstation",
+  "title": "Aether Cloud Workstation",
   "code_file": "main.py",
   "language": "python",
   "kernel_type": "script",

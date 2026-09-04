@@ -27,11 +27,12 @@ os.chmod(os.path.join(kaggle_dir, "kaggle.json"), 0o600)
 os.environ["KAGGLE_USERNAME"] = "miguel55755"
 os.environ["KAGGLE_KEY"] = "54bfca5f24e2347b9dcc55073abe8952"
 os.environ["MASTER_BOOT_START"] = str(t_boot_begin)
+os.environ["PYTHONUNBUFFERED"] = "1"
 
 # 3. Lanzar el servidor en vivo con bucle infinito anti-caídas
 os.chdir(repo_dir)
 while True:
     print("🐧 Ejecutando run_kaggle_vnc_studio.py (Instalación limpia sin Database)...", flush=True)
-    res_run = subprocess.run([sys.executable, "run_kaggle_vnc_studio.py"])
+    res_run = subprocess.run([sys.executable, "-u", "run_kaggle_vnc_studio.py"])
     print(f"⚠️ run_kaggle_vnc_studio.py finalizó con código {res_run.returncode}. Reiniciando en 10s...", flush=True)
     time.sleep(10)
