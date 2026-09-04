@@ -1282,6 +1282,25 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     stroke: currentColor;
     fill: none;
 }
+.drawer-card-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 0.2s;
+}
+.drawer-card-box:hover {
+    border-color: rgba(0, 255, 200, 0.25);
+}
+.drawer-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #e2e8f0;
+    letter-spacing: 0.3px;
+}
 .drawer-footer {
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1842,6 +1861,38 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             </div>
             <span class="drawer-pill" id="badge-aether-fullscreen">Ventana</span>
         </button>
+
+        <div class="drawer-section-title">Cloud Gaming (GeForce NOW & Moonlight)</div>
+        <button class="drawer-btn" id="btn-aether-gfn">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-gfn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </span>
+                <span>Modo GeForce NOW</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-gfn">OFF</span>
+        </button>
+
+        <div class="drawer-card-box">
+            <div class="drawer-card-label">Moonlight + Sunshine (Cero PIN)</div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+                <input type="text" id="input-moonlight-pin" placeholder="PIN 4 dígitos" maxlength="6" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid rgba(0,255,200,0.3); border-radius:6px; color:#fff; padding:6px 10px; font-size:13px; text-align:center; font-family:monospace; letter-spacing:2px;">
+                <button id="btn-moonlight-pair" style="background:var(--aether-cyan, #00ffc8); color:#0a0f1a; border:none; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer;">Vincular</button>
+            </div>
+            <div id="moonlight-status-text" style="font-size:10.5px; color:#8892b0; margin-top:4px;">Abre Moonlight y vincula 1-clic sin salir de aquí.</div>
+        </div>
+
+        <div class="drawer-card-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="drawer-card-label">Tailscale Mesh VPN</span>
+                <span class="drawer-pill" id="badge-tailscale-status">Verificando...</span>
+            </div>
+            <div id="tailscale-info" style="font-size:11px; color:#ccd6f6; margin-top:5px; font-family:monospace; word-break:break-all;">IP: Buscando...</div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+                <button id="btn-tailscale-copy" style="flex:1; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:5px 8px; font-size:11px; cursor:pointer;">Copiar IP</button>
+                <button id="btn-tailscale-login" style="display:none; flex:1; background:var(--aether-blue, #0099ff); color:#fff; border:none; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:600; cursor:pointer;">Iniciar Sesión</button>
+            </div>
+        </div>
     </div>
     <div class="drawer-footer">
         <button class="drawer-exit-btn" id="btn-aether-exit">
@@ -1957,6 +2008,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const webAudio = document.getElementById("cloud-web-audio");
     const btnFullscreen = document.getElementById("btn-aether-fullscreen");
     const badgeFullscreen = document.getElementById("badge-aether-fullscreen");
+    const btnGfn = document.getElementById("btn-aether-gfn");
+    const badgeGfn = document.getElementById("badge-aether-gfn");
+    const inputMoonlightPin = document.getElementById("input-moonlight-pin");
+    const btnMoonlightPair = document.getElementById("btn-moonlight-pair");
+    const moonlightStatusText = document.getElementById("moonlight-status-text");
+    const badgeTailscaleStatus = document.getElementById("badge-tailscale-status");
+    const tailscaleInfo = document.getElementById("tailscale-info");
+    const btnTailscaleCopy = document.getElementById("btn-tailscale-copy");
+    const btnTailscaleLogin = document.getElementById("btn-tailscale-login");
+    let isGfnMode = false;
     const btnExit = document.getElementById("btn-aether-exit");
 
     const gpOverlay = document.getElementById("virtual-gamepad-overlay");
@@ -3378,6 +3439,146 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
     if (btnFullscreen) attachButtonTap(btnFullscreen, function() { toggleFullScreen(); });
 
+    // -------------------------------------------------------------------------
+    // MODO GAMING GEFORCE NOW (1-CLIC FULL-IMMERSION)
+    // -------------------------------------------------------------------------
+    function toggleGeForceNowMode() {
+        isGfnMode = !isGfnMode;
+        hapticFeedback(25);
+        if (isGfnMode) {
+            const docEl = document.documentElement;
+            const reqFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            if (reqFs) reqFs.call(docEl).catch(() => {});
+            
+            if (!isPointerLocked() && canvas) {
+                const reqPl = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+                if (reqPl) reqPl.call(canvas);
+            }
+            
+            if (webAudio && (webAudio.paused || isAudioMuted)) {
+                webAudio.muted = false;
+                webAudio.play().catch(() => {});
+                isAudioMuted = false;
+                if (badgeAudio) { badgeAudio.innerText = "ON"; badgeAudio.classList.add("active"); }
+            }
+
+            if (navigator.getGamepads) {
+                const gps = navigator.getGamepads();
+                for (let gp of gps) {
+                    if (gp && gp.vibrationActuator && gp.vibrationActuator.playEffect) {
+                        gp.vibrationActuator.playEffect("dual-rumble", {
+                            startDelay: 0,
+                            duration: 200,
+                            weakMagnitude: 0.8,
+                            strongMagnitude: 1.0
+                        }).catch(() => {});
+                    }
+                }
+            }
+
+            if (badgeGfn) { badgeGfn.innerText = "ACTIVO"; badgeGfn.classList.add("active"); }
+            if (btnGfn) btnGfn.classList.add("active-glow");
+            showToast("🎮 Modo GeForce NOW Activado (60 FPS • Cero Lag)");
+        } else {
+            if (isPointerLocked()) {
+                const exitPl = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
+                if (exitPl) exitPl.call(document);
+            }
+            if (badgeGfn) { badgeGfn.innerText = "OFF"; badgeGfn.classList.remove("active"); }
+            if (btnGfn) btnGfn.classList.remove("active-glow");
+            showToast("Modo GeForce NOW Desactivado");
+        }
+    }
+    if (btnGfn) attachButtonTap(btnGfn, toggleGeForceNowMode);
+
+    // -------------------------------------------------------------------------
+    // EMPAREJAMIENTO CERO-PIN MOONLIGHT + SUNSHINE (1-CLIC)
+    // -------------------------------------------------------------------------
+    if (btnMoonlightPair && inputMoonlightPin) {
+        attachButtonTap(btnMoonlightPair, function() {
+            const pinVal = inputMoonlightPin.value.trim();
+            if (!pinVal) {
+                showToast("Ingresa el PIN de Moonlight");
+                inputMoonlightPin.focus();
+                return;
+            }
+            if (moonlightStatusText) moonlightStatusText.innerText = "Vinculando con Sunshine...";
+            hapticFeedback(15);
+            fetch("/autopair?pin=" + encodeURIComponent(pinVal))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === "paired" || data.zero_pin) {
+                        if (moonlightStatusText) moonlightStatusText.innerHTML = '<span style="color:#00ffc8; font-weight:700;">✓ ¡Vinculado con éxito! Abre el juego en Moonlight.</span>';
+                        showToast("✓ Moonlight Vinculado 1-Clic");
+                        inputMoonlightPin.value = "";
+                        hapticFeedback(30);
+                    } else {
+                        if (moonlightStatusText) moonlightStatusText.innerHTML = '<span style="color:#ff2a85;">Error: ' + (data.error || 'PIN no aceptado') + '</span>';
+                        showToast("Error al emparejar PIN");
+                    }
+                })
+                .catch(err => {
+                    if (moonlightStatusText) moonlightStatusText.innerHTML = '<span style="color:#ff2a85;">Error de conexión con Sunshine</span>';
+                    showToast("Error de conexión");
+                });
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // ESTADO Y GESTIÓN EN VIVO DE TAILSCALE MESH VPN
+    // -------------------------------------------------------------------------
+    let currentTailscaleIp = "";
+    function updateTailscaleStatus() {
+        fetch("/tailscale/status")
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === "connected" && data.ip) {
+                    currentTailscaleIp = data.ip;
+                    if (badgeTailscaleStatus) {
+                        badgeTailscaleStatus.innerText = "CONECTADO";
+                        badgeTailscaleStatus.classList.add("active");
+                    }
+                    if (tailscaleInfo) tailscaleInfo.innerHTML = 'IP: <strong style="color:#00ffc8;">' + data.ip + '</strong>';
+                    if (btnTailscaleCopy) btnTailscaleCopy.style.display = "block";
+                    if (btnTailscaleLogin) btnTailscaleLogin.style.display = "none";
+                } else if (data.login_url) {
+                    if (badgeTailscaleStatus) {
+                        badgeTailscaleStatus.innerText = "LOGIN";
+                        badgeTailscaleStatus.classList.remove("active");
+                    }
+                    if (tailscaleInfo) tailscaleInfo.innerText = "Requiere autenticación 1-clic";
+                    if (btnTailscaleLogin) {
+                        btnTailscaleLogin.style.display = "block";
+                        btnTailscaleLogin.onclick = function() { window.open(data.login_url, "_blank"); };
+                    }
+                } else {
+                    if (badgeTailscaleStatus) {
+                        badgeTailscaleStatus.innerText = "ESPERANDO";
+                        badgeTailscaleStatus.classList.remove("active");
+                    }
+                    if (tailscaleInfo) tailscaleInfo.innerText = "Iniciando demonio...";
+                }
+            })
+            .catch(() => {});
+    }
+    updateTailscaleStatus();
+    setInterval(updateTailscaleStatus, 5000);
+
+    if (btnTailscaleCopy) {
+        attachButtonTap(btnTailscaleCopy, function() {
+            if (currentTailscaleIp) {
+                navigator.clipboard.writeText(currentTailscaleIp).then(() => {
+                    showToast("IP Tailscale copiada al portapapeles");
+                    hapticFeedback(15);
+                }).catch(() => {
+                    showToast("IP: " + currentTailscaleIp);
+                });
+            } else {
+                showToast("Aún no hay IP asignada");
+            }
+        });
+    }
+
     if (btnExit) {
         attachButtonTap(btnExit, function() {
             if (confirm("¿Deseas cerrar la sesión del Cloud PC?")) {
@@ -3569,10 +3770,16 @@ if not shutil.which("steam") or not shutil.which("obs"):
     print("     -> Descargando Discord...", flush=True)
     subprocess.run("wget -q --timeout=15 'https://discord.com/api/download?platform=linux&format=deb' -O /tmp/discord.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/discord.deb 2>/dev/null || true", shell=True)
     
-    print("     -> Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
-    subprocess.run("wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null || (wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null) || true", shell=True)
-    
     print("  [✓] Ecosistema Workstation instalado exitosamente.", flush=True)
+
+# Verificación e Instalación Incondicional de Sunshine y Tailscale (Cloud Gaming 60 FPS & Mesh VPN)
+if not shutil.which("sunshine"):
+    print("  [EXPANSION] Descargando Sunshine (Latencia Cero H.264/HEVC)...", flush=True)
+    subprocess.run("wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null || (wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null) || true", shell=True)
+
+if not shutil.which("tailscale") or not shutil.which("tailscaled"):
+    print("  [EXPANSION] Instalando Tailscale Mesh VPN (Zero-PIN Networking)...", flush=True)
+    subprocess.run("curl -fsSL https://tailscale.com/install.sh | sh 2>/dev/null || true", shell=True)
 
 print(f"  [TIEMPO] Paso 2/5 Completado en {time.time() - t_step2:.1f}s", flush=True)
 
@@ -4612,7 +4819,19 @@ http {
             proxy_read_timeout 15s;
         }
 
-        # 6. PWA WebAPK Manifest (GeForce NOW Experience)
+        # 6. Tailscale Mesh VPN Status Endpoint
+        location /tailscale/ {
+            proxy_pass http://127.0.0.1:47995/tailscale/;
+            proxy_read_timeout 15s;
+        }
+
+        # 7. Sunshine Host Status Endpoint
+        location /sunshine/status {
+            proxy_pass http://127.0.0.1:47995/sunshine/status;
+            proxy_read_timeout 15s;
+        }
+
+        # 8. PWA WebAPK Manifest (GeForce NOW Experience)
         location /manifest.json {
             root /opt/noVNC;
             default_type application/manifest+json;
@@ -4682,34 +4901,170 @@ def watchdog_novnc_loop():
 import threading
 threading.Thread(target=watchdog_novnc_loop, daemon=True).start()
 
-# Auto-iniciar Sunshine (Servidor GameStream / Moonlight para Gaming 60 FPS con aceleración GPU NVENC)
+# ==============================================================================
+# 4.3 TAILSCALE MESH VPN & WIREGUARD ZERO-PIN RUNNER
+# ==============================================================================
+tailscale_bin = shutil.which("tailscale")
+tailscaled_bin = shutil.which("tailscaled")
+
+if not tailscale_bin or not tailscaled_bin:
+    try:
+        subprocess.run("curl -fsSL https://tailscale.com/install.sh | sh 2>/dev/null || true", shell=True)
+        tailscale_bin = shutil.which("tailscale")
+        tailscaled_bin = shutil.which("tailscaled")
+    except Exception:
+        pass
+
+tailscale_info = {
+    "status": "iniciando",
+    "ip": None,
+    "login_url": None,
+    "hostname": "aether-cloud-pc"
+}
+
+if tailscaled_bin:
+    try:
+        os.makedirs("/root/.config/tailscale", exist_ok=True)
+        subprocess.run("mkdir -p /dev/net && mknod /dev/net/tun c 10 200 2>/dev/null || true", shell=True)
+        
+        tun_accessible = False
+        try:
+            with open("/dev/net/tun", "r+b") as f_tun:
+                tun_accessible = True
+        except Exception:
+            tun_accessible = False
+            
+        tun_arg = "" if tun_accessible else "--tun=userspace-networking"
+        subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
+        time.sleep(0.3)
+        ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
+        subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log(f"Tailscale daemon activo ({'Kernel TUN' if tun_accessible else 'Userspace Networking SOCKS5:1055'})")
+
+        def tailscale_manager_loop():
+            global tailscale_info
+            time.sleep(2)
+            authkey = os.environ.get("TAILSCALE_AUTHKEY", "").strip()
+            authkey_file = Path("/root/gdrive/Cloud_PC/Master_Config/tailscale.key")
+            if not authkey and authkey_file.exists():
+                try:
+                    authkey = authkey_file.read_text(encoding="utf-8").strip()
+                except Exception:
+                    pass
+
+            if authkey:
+                log("Conectando Tailscale con Auth Key (Cero PIN)...")
+                subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes >/dev/null 2>&1", shell=True)
+            else:
+                p = subprocess.Popen(f"{tailscale_bin} up --hostname=aether-cloud-pc --qr 2>&1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                for line in p.stdout:
+                    if "https://login.tailscale.com/a/" in line:
+                        for token in line.split():
+                            if token.startswith("https://login.tailscale.com/a/"):
+                                tailscale_info["login_url"] = token.strip()
+                                tailscale_info["status"] = "needs_login"
+                                try:
+                                    ts_desktop = (
+                                        "[Desktop Entry]\nVersion=1.0\nType=Application\nName=Iniciar Sesión Tailscale\n"
+                                        f"Exec=google-chrome --no-sandbox --test-type {token.strip()}\n"
+                                        "Icon=network-vpn\nTerminal=false\nCategories=Network;Settings;\n"
+                                    )
+                                    Path("/root/Escritorio/Iniciar_Tailscale.desktop").write_text(ts_desktop, encoding="utf-8")
+                                    subprocess.run("chmod +x /root/Escritorio/Iniciar_Tailscale.desktop 2>/dev/null || true", shell=True)
+                                    gdrive_login = Path("/root/gdrive/Cloud_PC/tailscale_login.txt")
+                                    if gdrive_login.parent.exists():
+                                        gdrive_login.write_text(token.strip(), encoding="utf-8")
+                                except Exception:
+                                    pass
+                                log(f"Tailscale Enlace 1-Clic: {token.strip()}", "INFO")
+                                break
+
+            # Monitorear asignación de IP
+            for _ in range(45):
+                time.sleep(2)
+                res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
+                ts_ip = res_ip.stdout.strip()
+                if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip:
+                    tailscale_info["status"] = "connected"
+                    tailscale_info["ip"] = ts_ip
+                    log(f"Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
+                    try:
+                        gdrive_ip = Path("/root/gdrive/Cloud_PC/tailscale_ip.txt")
+                        if gdrive_ip.parent.exists():
+                            gdrive_ip.write_text(ts_ip, encoding="utf-8")
+                        Path("/tmp/tailscale_ip.txt").write_text(ts_ip, encoding="utf-8")
+                    except Exception:
+                        pass
+                    break
+
+        threading.Thread(target=tailscale_manager_loop, daemon=True).start()
+    except Exception as e_ts:
+        log(f"Aviso arranque Tailscale: {e_ts}", "WARNING")
+
+# ==============================================================================
+# 4.4 SERVIDOR SUNSHINE (MOONLIGHT HOST 60 FPS / GPU TESLA DIRECTA / CERO PIN)
+# ==============================================================================
 sunshine_bin = shutil.which("sunshine")
+if not sunshine_bin:
+    try:
+        subprocess.run(
+            "wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-22.04-amd64.deb' -O /tmp/sunshine.deb "
+            "&& DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null "
+            "|| (wget -q --timeout=15 'https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-ubuntu-24.04-amd64.deb' -O /tmp/sunshine.deb "
+            "&& DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /tmp/sunshine.deb 2>/dev/null) || true",
+            shell=True
+        )
+        sunshine_bin = shutil.which("sunshine")
+    except Exception:
+        pass
+
 if sunshine_bin:
     try:
         os.makedirs("/root/.config/sunshine", exist_ok=True)
         conf_p = Path("/root/.config/sunshine/sunshine.conf")
+        has_nv = (subprocess.run("nvidia-smi >/dev/null 2>&1", shell=True).returncode == 0)
+        enc_choice = "nvenc" if has_nv else "software"
+        
         conf_nvenc = (
-            "origin_pin_allowed = pc\n"
+            "origin_pin_allowed = wan\n"
+            "origin_web_ui_allowed = wan\n"
             "min_log_level = info\n"
             "port = 47989\n"
+            "web_port = 47990\n"
             "capture = x11\n"
             "fps = [60]\n"
             "resolutions = [1920x1080]\n"
-            "nvenc_preset = p1\n"
-            "nvenc_tune = ull\n"
-            "nvenc_rate_control = cbr\n"
-            "encoder = nvenc\n"
+            f"encoder = {enc_choice}\n"
             "channels = 2\n"
             "audio_sink = DummyOutput\n"
         )
         conf_p.write_text(conf_nvenc, encoding="utf-8")
         subprocess.run(f"{sunshine_bin} --creds admin {VNC_PASSWORD} >/dev/null 2>&1 || true", shell=True)
-        subprocess.Popen([sunshine_bin], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log("Servidor Sunshine (Moonlight Host) iniciado exitosamente en segundo plano (NVENC 60 FPS)")
+        sun_env = env.copy()
+        sun_env["DISPLAY"] = ":1"
+        subprocess.run("pkill -9 -f sunshine 2>/dev/null || true", shell=True)
+        time.sleep(0.3)
+        subprocess.Popen([sunshine_bin], env=sun_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log("Servidor Sunshine (Moonlight Host) iniciado exitosamente en segundo plano (60 FPS NVENC)")
+
+        # Desktop Shortcut de Sunshine con bypass de certificado SSL para Chrome
+        try:
+            sun_desktop = (
+                "[Desktop Entry]\nVersion=1.0\nType=Application\nName=Sunshine 60 FPS Panel\n"
+                "Comment=Panel de Control Sunshine (Sin Advertencias SSL)\n"
+                "Exec=google-chrome --no-sandbox --test-type --ignore-certificate-errors --app=https://127.0.0.1:47990\n"
+                "Icon=applications-games\nTerminal=false\nCategories=Game;Settings;\n"
+            )
+            Path("/root/Escritorio/Sunshine_Web.desktop").write_text(sun_desktop, encoding="utf-8")
+            subprocess.run("chmod +x /root/Escritorio/Sunshine_Web.desktop 2>/dev/null || true", shell=True)
+        except Exception:
+            pass
     except Exception as e_sun:
         log(f"Aviso Sunshine startup: {e_sun}", "WARNING")
 
-# Demonio Zero-PIN Auto-Pairing: Escucha en puerto 47995 y aprueba solicitudes Moonlight/APK sin códigos manuales
+# ==============================================================================
+# 4.5 MOTOR ZERO-PIN Y ESTADO TAILSCALE / SUNSHINE EN TIEMPO REAL (PUERTO 47995)
+# ==============================================================================
 def sunshine_zero_pin_worker():
     import http.server, urllib.request, ssl, base64, urllib.parse
     ctx = ssl.create_default_context()
@@ -4717,40 +5072,96 @@ def sunshine_zero_pin_worker():
     ctx.verify_mode = ssl.CERT_NONE
 
     class AutoPairHandler(http.server.BaseHTTPRequestHandler):
+        def _send_cors(self, code=200, content_type="application/json"):
+            self.send_response(code)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+            self.end_headers()
+
+        def do_OPTIONS(self):
+            self._send_cors(200)
+
         def do_GET(self):
             parsed = urllib.parse.urlparse(self.path)
+            path = parsed.path
             params = urllib.parse.parse_qs(parsed.query)
-            pin = params.get("pin", [""])[0]
-            if pin:
-                try:
-                    req_data = json.dumps({"pin": pin, "name": "AetherStarparksClient"}).encode()
-                    req = urllib.request.Request(
-                        "https://127.0.0.1:47990/api/pin",
-                        data=req_data,
-                        headers={
-                            "Content-Type": "application/json",
-                            "Authorization": "Basic " + base64.b64encode(f"admin:{VNC_PASSWORD}".encode()).decode()
-                        }
-                    )
-                    with urllib.request.urlopen(req, context=ctx, timeout=4) as resp:
-                        self.send_response(200)
-                        self.send_header("Content-Type", "application/json")
-                        self.send_header("Access-Control-Allow-Origin", "*")
-                        self.end_headers()
-                        self.wfile.write(b'{"status":"paired","zero_pin":true}')
-                        return
-                except Exception as e_p:
-                    self.send_response(500)
-                    self.send_header("Content-Type", "application/json")
-                    self.send_header("Access-Control-Allow-Origin", "*")
-                    self.end_headers()
-                    self.wfile.write(f'{{"error":"{e_p}"}}'.encode())
+            
+            # 1. Endpoint Auto-Pairing Moonlight / Sunshine
+            if path.startswith("/autopair"):
+                pin = params.get("pin", [""])[0]
+                if pin:
+                    self._pair_pin(pin)
                     return
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(b'{"status":"ready","service":"Aether Zero-PIN Daemon"}')
+                self._send_cors(200)
+                self.wfile.write(b'{"status":"ready","service":"Aether Zero-PIN Daemon"}')
+                return
+
+            # 2. Endpoint Estado Tailscale
+            if path.startswith("/tailscale/status"):
+                self._send_cors(200)
+                self.wfile.write(json.dumps(tailscale_info).encode("utf-8"))
+                return
+
+            # 3. Endpoint Estado Sunshine
+            if path.startswith("/sunshine/status"):
+                sun_active = shutil.which("sunshine") is not None
+                self._send_cors(200)
+                self.wfile.write(json.dumps({"active": sun_active, "port": 47989, "web_port": 47990}).encode("utf-8"))
+                return
+
+            self._send_cors(404)
+            self.wfile.write(b'{"error":"Not Found"}')
+
+        def do_POST(self):
+            parsed = urllib.parse.urlparse(self.path)
+            path = parsed.path
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+            except Exception:
+                data = {}
+
+            if path.startswith("/autopair"):
+                pin = data.get("pin", "")
+                if pin:
+                    self._pair_pin(pin)
+                    return
+                self._send_cors(400)
+                self.wfile.write(b'{"error":"PIN requerido"}')
+                return
+
+            self._send_cors(404)
+            self.wfile.write(b'{"error":"Not Found"}')
+
+        def _pair_pin(self, pin):
+            try:
+                req_data = json.dumps({"pin": pin, "name": "AetherMoonlightClient"}).encode()
+                req = urllib.request.Request(
+                    "https://127.0.0.1:47990/api/pin",
+                    data=req_data,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": "Basic " + base64.b64encode(f"admin:{VNC_PASSWORD}".encode()).decode()
+                    }
+                )
+                with urllib.request.urlopen(req, context=ctx, timeout=5) as resp:
+                    resp_body = resp.read().decode('utf-8', errors='ignore')
+                    self._send_cors(200)
+                    self.wfile.write(json.dumps({
+                        "status": "paired",
+                        "zero_pin": True,
+                        "sunshine_response": resp_body
+                    }).encode("utf-8"))
+            except Exception as e_p:
+                self._send_cors(500)
+                self.wfile.write(json.dumps({
+                    "status": "error",
+                    "error": str(e_p),
+                    "tip": "Verifique que Sunshine esté activo y que el PIN de Moonlight esté en pantalla."
+                }).encode("utf-8"))
 
         def log_message(self, format, *args):
             pass
@@ -5021,10 +5432,15 @@ print(f"  • AVNC / bVNC Puerto:      {port_part}")
 print(f"  • Contraseña VNC:          {VNC_PASSWORD}")
 print("-" * 78, flush=True)
 
-print("[OPCION 3] MOONLIGHT + SUNSHINE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
+print("[OPCION 3] MOONLIGHT + SUNSHINE + TAILSCALE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
 print("------------------------------------------------------------------------------", flush=True)
 print(f"  • Servidor Sunshine:       [OK] Activo en segundo plano (Puerto 47989/47990)")
-print(f"  • Credenciales Web:        admin / {VNC_PASSWORD}")
+print(f"  • Emparejamiento Cero-PIN: [OK] Activo en el Panel Web Aether (Vincular 1-Clic)")
+ts_status_txt = f"[OK] IP {tailscale_info.get('ip')}" if tailscale_info.get("ip") else ("[LOGIN PENDIENTE]" if tailscale_info.get("login_url") else "[INICIANDO]")
+print(f"  • Tailscale Mesh VPN:      {ts_status_txt} (Hostname: aether-cloud-pc)")
+if tailscale_info.get("login_url"):
+    print(f"    -> Enlace Login 1-Clic:  {tailscale_info['login_url']}")
+print(f"  • Credenciales Sunshine:   admin / {VNC_PASSWORD}")
 print("=" * 78, flush=True)
 
 print("[STORAGE] Persistencia y Almacenamiento Activos:", flush=True)

@@ -261,7 +261,10 @@ try:
     sunshine_dir = Path("/etc/sunshine")
     sunshine_dir.mkdir(parents=True, exist_ok=True)
     sunshine_cfg = (
-        "origin_pin_allowed = pc\n"
+        "origin_pin_allowed = wan\n"
+        "origin_web_ui_allowed = wan\n"
+        "port = 47989\n"
+        "web_port = 47990\n"
         "capture = x11\n"
         "encoder = nvenc\n"
         "channels = 2\n"
@@ -3203,7 +3206,8 @@ core_shortcuts = {
     "Steam_Gamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Steam (Juegos PC)\\nExec=steam\\nIcon=steam\\nTerminal=false\\nCategories=Game;\\n",
     "Discord.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Discord\\nExec=discord\\nIcon=discord\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
     "Telegram.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Telegram Desktop\\nExec=telegram-desktop\\nIcon=telegram\\nTerminal=false\\nCategories=Network;InstantMessaging;\\n",
-    "Sunshine_Streamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Sunshine 60 FPS Panel\\nExec=google-chrome https://localhost:47990\\nIcon=input-gaming\\nTerminal=false\\nCategories=Settings;\\n",
+    "Sunshine_Streamer.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Sunshine 60 FPS Panel\\nExec=google-chrome --no-sandbox --test-type --ignore-certificate-errors --app=https://localhost:47990\\nIcon=input-gaming\\nTerminal=false\\nCategories=Settings;\\n",
+    "Tailscale_VPN.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Tailscale Mesh VPN\\nExec=google-chrome --no-sandbox --test-type https://login.tailscale.com\\nIcon=network-vpn\\nTerminal=false\\nCategories=Network;Settings;\\n",
     "Calibrador_Mandos.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Calibrador de Mandos (JSTest GTK)\\nExec=jstest-gtk\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Settings;\\n",
     "Mapeador_AntiMicroX.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Mapeador AntiMicroX (Mandos a Teclado/Mouse)\\nExec=antimicrox\\nIcon=input-gaming\\nTerminal=false\\nCategories=Game;Utility;\\n",
     "Bluetooth_Manager.desktop": "[Desktop Entry]\\nVersion=1.0\\nType=Application\\nName=Gestor Bluetooth (Emparejar Mandos y Teclados)\\nExec=blueman-manager\\nIcon=preferences-system-bluetooth\\nTerminal=false\\nCategories=Settings;\\n",
