@@ -104,7 +104,8 @@ IGNORE_KEYWORDS = [
     "glib-gobject-critical", "glib-gobject-warning", "negative content width",
     "attempting to add a widget with type", "edid is empty", "could not map keysym",
     "-noscr", "it may be disabled", "ignoring pre-dependency problem", "pre-dependency problem",
-    "failed to resolve user", "tmpfiles.d", "config-error-dialog.sh", "speech-dispatcher", "colord"
+    "failed to resolve user", "tmpfiles.d", "config-error-dialog.sh", "speech-dispatcher", "colord",
+    "blueman", "rfcommerror", "import _blueman"
 ]
 
 def live_log_streamer():
@@ -3841,7 +3842,7 @@ if not shutil.which("steam") or not shutil.which("obs"):
     print("     -> Descargando e Instalando Steam, Lutris, MangoHud, Gamemode y Drivers de Mandos...", flush=True)
     subprocess.run(
         "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq steam lutris mangohud gamemode "
-        "xboxdrv joystick jstest-gtk evtest antimicrox bluez bluez-tools blueman libevdev2 python3-evdev "
+        "xboxdrv joystick jstest-gtk evtest antimicrox bluez bluez-tools libevdev2 python3-evdev "
         "wget curl software-properties-common",
         shell=True
     )
@@ -4322,14 +4323,14 @@ char *getenv(const char *name) {
         pass
 
     # --------------------------------------------------------------------------
-    # 7. SANITIZACIÓN DE HOSTS (Seguro para DNS)
+    # 7. CONFIGURACIÓN DE HOSTNAME LOCAL
     # --------------------------------------------------------------------------
     try:
         hosts_file = Path("/etc/hosts")
         if hosts_file.exists():
             h_text = hosts_file.read_text(encoding="utf-8", errors="ignore")
-            if "metadata.google.internal" not in h_text:
-                hosts_file.write_text(h_text + "\n127.0.0.1 metadata.google.internal\n", encoding="utf-8")
+            if "aether-pc" not in h_text:
+                hosts_file.write_text(h_text + "\n127.0.0.1 aether-pc\n", encoding="utf-8")
     except Exception:
         pass
 
@@ -4387,7 +4388,6 @@ char *getenv(const char *name) {
         # Limpieza de rastros de kernel
         subprocess.run("dmesg -c >/dev/null 2>&1 || true", shell=True)
         subprocess.run("echo 1 > /proc/sys/kernel/dmesg_restrict 2>/dev/null || true", shell=True)
-        subprocess.run("rm -f /.dockerenv 2>/dev/null || true", shell=True)
     except Exception:
         pass
 except Exception:
@@ -5439,102 +5439,13 @@ if active_primary_url:
                     pass
         except Exception:
             pass
-        # Publicar telemetría y URL pública en canal seguro en tiempo real
-        try:
-            boot_elapsed = time.time() - t_start_total
-            status_payload = {
-                "status": "online",
-                "wifi_url": active_primary_url,
-                "cloudflare_url": url_cf,
-                "ngrok_url": web_tunnel_wifi if web_tunnel_wifi != url_cf else None,
-                "mobile_url": url_cf_mobile or web_tunnel_mobile,
-                "boot_time_seconds": round(boot_elapsed, 1),
-                "vnc_password": VNC_PASSWORD,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            }
-            import requests as _req_ntfy
-            _req_ntfy.post("https://ntfy.sh/miguelguerra_cloudpc_status", json=status_payload, timeout=5)
-            if active_primary_url:
-                try:
-                    _req_ntfy.post(
-                        "https://ntfy.sh/miguelguerra_cloudpc_status",
-                        data=f"🚀 Tu Aether Cloud PC está ONLINE!\nEnlace Directo: {active_primary_url}\nContraseña: {VNC_PASSWORD}",
-                        headers={
-                            "Title": "🚀 Aether Cloud PC Online",
-                            "Click": active_primary_url,
-                            "Tags": "rocket,computer"
-                        },
-                        timeout=5
-                    )
-                except Exception:
-                    pass
-        except Exception:
-            pass
     except Exception:
         pass
 
-# 2. Túnel TCP Pinggy / Localhost.run con bucle de auto-reconexión y API de depuración
-def run_pinggy_tunnel():
-    nodes = ["a.pinggy.io", "free.pinggy.io", "t.pinggy.io"]
-    idx = 0
-    while True:
-        target_node = nodes[idx % len(nodes)]
-        idx += 1
-        try:
-            # Iniciamos SSH hacia Pinggy habilitando el puerto de depuración local 4300
-            proc = subprocess.Popen(
-                ["ssh", "-p", "443", "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30", "-R0:localhost:5900", "-L4300:localhost:4300", f"tcp@{target_node}"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
-            )
-            for raw_line in iter(proc.stdout.readline, ''):
-                if not raw_line:
-                    break
-                # Limpiar secuencias de escape ANSI para evitar que rompan la búsqueda
-                clean_line = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', raw_line).strip()
-                
-                # Coincidencia con cualquier formato de URL TCP de Pinggy
-                match = (
-                    re.search(r'tcp://([a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}:\d+)', clean_line) or
-                    re.search(r'([a-zA-Z0-9.-]+\.pinggy(?:-free)?\.link:\d+)', clean_line) or
-                    re.search(r'([a-zA-Z0-9.-]+\.pinggy\.io:\d+)', clean_line)
-                )
-                if match:
-                    addr = match.group(1).replace("tcp://", "").strip()
-                    if addr and addr not in vnc_app_address:
-                        vnc_app_address.clear()
-                        vnc_app_address.append(addr)
-            proc.wait()
-        except Exception:
-            pass
-        time.sleep(2)
-
-threading.Thread(target=run_pinggy_tunnel, daemon=True).start()
-
-# Esperador inteligente: Consulta tanto la salida directa como la API HTTP de Pinggy (puerto 4300)
-for _ in range(30):
-    if vnc_app_address and web_tunnel_wifi:
-        break
-    # Intentar obtener la URL desde la API local del depurador de Pinggy
-    if not vnc_app_address:
-        try:
-            import urllib.request
-            req = urllib.request.Request("http://127.0.0.1:4300/urls", headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=0.8) as resp:
-                data = json.loads(resp.read().decode())
-                urls = data.get("urls", []) if isinstance(data, dict) else []
-                for u in urls:
-                    if ":" in u:
-                        cleaned = u.replace("tcp://", "").replace("https://", "").replace("http://", "").strip()
-                        if cleaned and cleaned not in vnc_app_address:
-                            vnc_app_address.clear()
-                            vnc_app_address.append(cleaned)
-                            break
-        except Exception:
-            pass
-    time.sleep(0.5)
+# Pinggy SSH tunnel eliminado para evitar bloqueo de red por reverse-SSH en Google Cloud/Kaggle
+vnc_app_address = []
+if tailscale_info.get("ip"):
+    vnc_app_address.append(f"{tailscale_info['ip']}:5900")
 
 print(f"  [TIEMPO] Paso 5/5 Completado en {time.time() - t_step5:.1f}s", flush=True)
 print(f"  [METRICA] Tiempo total de arranque: {time.time() - t_start_total:.1f}s\n", flush=True)
@@ -5590,18 +5501,16 @@ if active_primary_url:
         print(f"  • Modo Móvil (Baja Latencia):          {web_tunnel_mobile}", flush=True)
         print("-" * 78, flush=True)
 
-pinggy_addr = vnc_app_address[0] if vnc_app_address else "free.pinggy.link (Consultando...)"
-parts = pinggy_addr.split(":") if ":" in pinggy_addr else [pinggy_addr, "5900"]
-host_part = parts[0]
-port_part = parts[1] if len(parts) > 1 else "5900"
-
-print("[OPCION 2] CLIENTE NATIVO VNC (CONEXIÓN BINARIA TCP - REALVNC / AVNC):", flush=True)
-print("------------------------------------------------------------------------------", flush=True)
-print(f"  • RealVNC Viewer:          {host_part}::{port_part}")
-print(f"  • AVNC / bVNC Host:        {host_part}")
-print(f"  • AVNC / bVNC Puerto:      {port_part}")
-print(f"  • Contraseña VNC:          {VNC_PASSWORD}")
-print("-" * 78, flush=True)
+if vnc_app_address:
+    pinggy_addr = vnc_app_address[0]
+    parts = pinggy_addr.split(":") if ":" in pinggy_addr else [pinggy_addr, "5900"]
+    host_part = parts[0]
+    port_part = parts[1] if len(parts) > 1 else "5900"
+    print("[OPCION 2] CLIENTE NATIVO VNC (CONEXIÓN DIRECTA TCP - REALVNC / AVNC):", flush=True)
+    print("------------------------------------------------------------------------------", flush=True)
+    print(f"  • Host / Dirección:        {host_part}:{port_part}")
+    print(f"  • Contraseña VNC:          {VNC_PASSWORD}")
+    print("-" * 78, flush=True)
 
 print("[OPCION 3] MOONLIGHT + SUNSHINE + TAILSCALE (GAMING 60 FPS / GPU TESLA DIRECTA):", flush=True)
 print("------------------------------------------------------------------------------", flush=True)
@@ -5621,31 +5530,6 @@ print("  • Comunicaciones y Navegación: Google Chrome, Discord, Telegram list
 print("  • Tienda de Software y Juegos 1-Clic en el Escritorio.", flush=True)
 print("  • Relación de aspecto 16:9 nativa Full HD perfecta.", flush=True)
 print("=" * 78 + "\n", flush=True)
-
-# ==============================================================================
-# Instalador Inteligente (Secuestrador de APT)
-# ==============================================================================
-apt_wrapper = """#!/bin/bash
-if [[ " $@ " =~ " install " ]] && command -v zenity &> /dev/null && [ -n "$DISPLAY" ] && [ "$DEBIAN_FRONTEND" != "noninteractive" ]; then
-    zenity --question --title="🛡️ Instalador Inteligente Ubuntu Cloud" \\
-           --text="⚠️ Estás instalando software en la <b>Raíz de Kaggle</b> (límite 20GB).\\n\\nEste programa NO se guardará en Google Drive, pero sí sus configuraciones.\\n\\n¿Continuar con la instalación?" \\
-           --width=450
-    if [ $? -ne 0 ]; then
-        echo "❌ Instalación cancelada para proteger los 20GB."
-        exit 1
-    fi
-fi
-if [ "$(basename "$0")" = "apt" ]; then
-    /usr/bin/apt.real "$@"
-else
-    /usr/bin/apt-get.real "$@"
-fi
-"""
-if not Path("/usr/bin/apt.real").exists():
-    subprocess.run("mv /usr/bin/apt /usr/bin/apt.real && mv /usr/bin/apt-get /usr/bin/apt-get.real", shell=True)
-    Path("/usr/bin/apt").write_text(apt_wrapper)
-    Path("/usr/bin/apt-get").write_text(apt_wrapper)
-    subprocess.run("chmod +x /usr/bin/apt /usr/bin/apt-get", shell=True)
 
 # Mantener viva la celda con monitoreo de salud, auto-guardado y reporte de telemetría en tiempo real
 try:

@@ -16,7 +16,7 @@
       "username": "miguelguerra22",
       "key": "b4031084ad25f34042347dfd7b6af451",
       "titulo": "Cuenta GPU Master 2 (miguelguerra200022@gmail.com / miguelguerra22)",
-      "activa": true,
+      "activa": false,
       "es_master": true,
       "exencion_ghost_shield": true,
       "permisos": "SUPERADMIN_ROOT",
@@ -27,14 +27,14 @@
       "username": "miguel55755",
       "key": "54bfca5f24e2347b9dcc55073abe8952",
       "titulo": "Cuenta GPU Master 3 (2026liam2000@gmail.com / miguel55755)",
-      "activa": false,
+      "activa": true,
       "es_master": true,
       "exencion_ghost_shield": true,
       "permisos": "SUPERADMIN_ROOT",
       "notas": "Tercera cuenta con cuota de GPU T4 x2 y CPU independiente (Kaggle.txt)"
     }
   },
-  "cuenta_activa": "miguelguerra200022@gmail.com",
+  "cuenta_activa": "2026liam2000@gmail.com",
   "excepciones_activas": [
     "djkevinzito@gmail.com",
     "miguelguerra200022@gmail.com",

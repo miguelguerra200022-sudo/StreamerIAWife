@@ -21,11 +21,11 @@ if res_clone.returncode != 0:
 kaggle_dir = os.path.expanduser("~/.kaggle")
 os.makedirs(kaggle_dir, exist_ok=True)
 with open(os.path.join(kaggle_dir, "kaggle.json"), "w") as f:
-    f.write('{"username": "miguelguerra22", "key": "b4031084ad25f34042347dfd7b6af451"}\n')
+    f.write('{"username": "miguel55755", "key": "54bfca5f24e2347b9dcc55073abe8952"}\n')
 os.chmod(os.path.join(kaggle_dir, "kaggle.json"), 0o600)
 
-os.environ["KAGGLE_USERNAME"] = "miguelguerra22"
-os.environ["KAGGLE_KEY"] = "b4031084ad25f34042347dfd7b6af451"
+os.environ["KAGGLE_USERNAME"] = "miguel55755"
+os.environ["KAGGLE_KEY"] = "54bfca5f24e2347b9dcc55073abe8952"
 os.environ["MASTER_BOOT_START"] = str(t_boot_begin)
 
 # 3. Lanzar el servidor en vivo con bucle infinito anti-caídas
