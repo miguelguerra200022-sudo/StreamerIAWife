@@ -1027,6 +1027,16 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     display: none !important;
 }
 
+/* Renderizado Ultra-Nítido Canvas BigTech & Aislamiento Táctil Completo */
+#noVNC_canvas, canvas {
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
 /* ========================================================================== */
 /* 2. PESTAÑA LATERAL AETHER (MARGEN IZQUIERDO, PULGAR NATURAL A 42%)         */
 /* ========================================================================== */
@@ -1662,6 +1672,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             </div>
             <span class="drawer-pill active" id="badge-aether-mode">Trackpad</span>
         </button>
+        <button class="drawer-btn" id="btn-aether-pointerlock">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-pointerlock">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                </span>
+                <span>Modo Gaming 3D</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-pointerlock">OFF</span>
+        </button>
         <button class="drawer-btn" id="btn-aether-keyboard">
             <div class="drawer-btn-left">
                 <span class="d-icon" id="icon-aether-keyboard">
@@ -1778,6 +1797,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
 </svg>
 <div id="cloud-toast">Modo Trackpad Activo</div>
+<audio id="cloud-web-audio" preload="none"></audio>
 
 <script>
 (function() {
@@ -1796,6 +1816,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnMode = document.getElementById("btn-aether-mode");
     const iconMode = document.getElementById("icon-aether-mode");
     const badgeMode = document.getElementById("badge-aether-mode");
+    const btnPointerLock = document.getElementById("btn-aether-pointerlock");
+    const badgePointerLock = document.getElementById("badge-aether-pointerlock");
     const btnKeyboard = document.getElementById("btn-aether-keyboard");
     const btnAspect = document.getElementById("btn-aether-aspect");
     const badgeAspect = document.getElementById("badge-aether-aspect");
@@ -1804,6 +1826,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnAudio = document.getElementById("btn-aether-audio");
     const iconAudio = document.getElementById("icon-aether-audio");
     const badgeAudio = document.getElementById("badge-aether-audio");
+    const webAudio = document.getElementById("cloud-web-audio");
     const btnFullscreen = document.getElementById("btn-aether-fullscreen");
     const badgeFullscreen = document.getElementById("badge-aether-fullscreen");
     const btnExit = document.getElementById("btn-aether-exit");
@@ -2085,6 +2108,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         showToast("Mando físico desconectado");
     });
 
+    function triggerGamepadRumble(gp, duration = 80, strong = 0.4, weak = 0.6) {
+        if (gp && gp.vibrationActuator && typeof gp.vibrationActuator.playEffect === "function") {
+            try {
+                gp.vibrationActuator.playEffect("dual-rumble", {
+                    startDelay: 0,
+                    duration: duration,
+                    weakMagnitude: weak,
+                    strongMagnitude: strong
+                });
+            } catch(e) {}
+        }
+    }
+
     function startPhysicalGamepadLoop() {
         if (physicalPollingFrame) return;
         function poll() {
@@ -2094,9 +2130,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const gp = gamepads[i];
                 if (gp && gp.connected) {
                     active = true;
-                    // 1. Mapeo estándar de botones (0 a 16)
+                    // 1. Mapeo estándar de botones (0 a 16) con respuesta háptica de hardware
                     for (let b = 0; b < gp.buttons.length && b < 17; b++) {
                         const isPress = gp.buttons[b].pressed ? 1 : 0;
+                        if (isPress && !gpButtonsState[b] && (b === 6 || b === 7 || b === 0)) {
+                            triggerGamepadRumble(gp, 60, 0.4, 0.6);
+                        }
                         if (isPress) gpButtonsState[b] = 1;
                     }
                     // 2. Sticks analógicos físicos con Deadzone continua
@@ -2789,27 +2828,114 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // Alternar Audio / Mute
+    // Alternar Audio / Mute con Transmisión Real HTTP 48kHz
     const speakerOnSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
     const speakerMuteSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+
+    function playAudioStream() {
+        if (!webAudio) return;
+        webAudio.src = window.location.origin + "/audio?t=" + Date.now();
+        webAudio.play().catch(() => {});
+    }
+    function stopAudioStream() {
+        if (!webAudio) return;
+        webAudio.pause();
+        webAudio.removeAttribute("src");
+        webAudio.load();
+    }
 
     if (btnAudio) {
         attachButtonTap(btnAudio, function() {
             isAudioMuted = !isAudioMuted;
             if (isAudioMuted) {
+                stopAudioStream();
                 if (iconAudio) iconAudio.innerHTML = speakerMuteSvg;
                 if (badgeAudio) { badgeAudio.innerText = "MUTE"; badgeAudio.classList.remove("active"); }
                 btnAudio.classList.remove("active-glow");
                 showToast("Audio Silenciado");
             } else {
+                playAudioStream();
                 if (iconAudio) iconAudio.innerHTML = speakerOnSvg;
                 if (badgeAudio) { badgeAudio.innerText = "ON"; badgeAudio.classList.add("active"); }
                 btnAudio.classList.add("active-glow");
-                showToast("Audio Activado");
+                showToast("Audio Activado (48kHz)");
             }
             hapticFeedback(18);
         });
     }
+
+    // Auto-desbloqueo de Audio en el primer toque del usuario
+    document.addEventListener("pointerdown", function unlockAudio() {
+        if (webAudio && !isAudioMuted && (!webAudio.src || webAudio.paused)) {
+            playAudioStream();
+        }
+    }, { once: true });
+
+    // Modo Gaming 3D / Pointer Lock (Estándar GeForce NOW & Steam)
+    function isPointerLocked() {
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        return !!(canvas && (document.pointerLockElement === canvas || document.mozPointerLockElement === canvas || document.webkitPointerLockElement === canvas));
+    }
+
+    function togglePointerLock() {
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        if (!canvas) return;
+        if (!isPointerLocked()) {
+            const req = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+            if (req) {
+                const p = req.call(canvas);
+                if (p && p.catch) p.catch(() => {});
+            }
+            showToast("Modo Gaming 3D (ESC para liberar)");
+        } else {
+            const exit = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
+            if (exit) exit.call(document);
+            showToast("Puntero Liberado");
+        }
+        closeDrawer();
+    }
+
+    if (btnPointerLock) attachButtonTap(btnPointerLock, togglePointerLock);
+
+    const onPointerLockChange = function() {
+        const locked = isPointerLocked();
+        if (badgePointerLock) {
+            badgePointerLock.innerText = locked ? "LOCK" : "OFF";
+            if (locked) badgePointerLock.classList.add("active");
+            else badgePointerLock.classList.remove("active");
+        }
+        if (btnPointerLock) {
+            if (locked) btnPointerLock.classList.add("active-glow");
+            else btnPointerLock.classList.remove("active-glow");
+        }
+        if (cursor) cursor.style.display = locked ? "none" : "";
+    };
+    document.addEventListener("pointerlockchange", onPointerLockChange);
+    document.addEventListener("mozpointerlockchange", onPointerLockChange);
+    document.addEventListener("webkitpointerlockchange", onPointerLockChange);
+
+    // Captura de deltas relativos de ratón para rotación 360 grados en juegos y apps 3D
+    document.addEventListener("mousemove", function(e) {
+        if (isPointerLocked()) {
+            const dx = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
+            const dy = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
+            virtX = Math.max(0, Math.min(screenW, virtX + dx));
+            virtY = Math.max(0, Math.min(screenH, virtY + dy));
+            sendMouse(e.buttons);
+        }
+    });
+    document.addEventListener("mousedown", function(e) {
+        if (isPointerLocked()) sendMouse(e.buttons);
+    });
+    document.addEventListener("mouseup", function(e) {
+        if (isPointerLocked()) sendMouse(e.buttons);
+    });
+
+    // Prevención de Cierre Accidental de Pestaña durante Sesión Activa
+    window.addEventListener("beforeunload", function(e) {
+        e.preventDefault();
+        return (e.returnValue = "Sesión de Cloud PC en progreso. ¿Deseas salir?");
+    });
 
     function toggleFullScreen() {
         const doc = document;
@@ -2820,12 +2946,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (request) request.call(docEl).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.add("active-glow");
             if (badgeFullscreen) { badgeFullscreen.innerText = "Pantalla"; badgeFullscreen.classList.add("active"); }
+            if (navigator.keyboard && navigator.keyboard.lock) {
+                try { navigator.keyboard.lock(["Escape", "AltLeft", "AltRight", "Tab", "KeyW", "KeyN"]); } catch(e) {}
+            }
             showToast("Pantalla Completa");
         } else {
             const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
             if (exit) exit.call(doc).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.remove("active-glow");
             if (badgeFullscreen) { badgeFullscreen.innerText = "Ventana"; badgeFullscreen.classList.remove("active"); }
+            if (navigator.keyboard && navigator.keyboard.unlock) {
+                try { navigator.keyboard.unlock(); } catch(e) {}
+            }
             showToast("Ventana Normal");
         }
         hapticFeedback(20);
@@ -3721,19 +3853,24 @@ vnc_pass_file = vnc_pass_dir / "passwd"
 subprocess.run(f"x11vnc -storepasswd '{VNC_PASSWORD}' '{vnc_pass_file}' 2>/dev/null || true", shell=True)
 subprocess.run(f"chmod 600 '{vnc_pass_file}' 2>/dev/null || true", shell=True)
 
-# Iniciar PulseAudio nativo en modo TCP local
+# Iniciar PulseAudio nativo en modo TCP local (48kHz Stereo DummyOutput)
 subprocess.run(
     "pulseaudio -k 2>/dev/null || true; "
     "pulseaudio -D --exit-idle-time=-1 --system=false "
     "--load='module-native-protocol-tcp auth-anonymous=1 port=4713' "
-    "--load='module-null-sink sink_name=VirtualSink' >> {LOG_FILE} 2>&1 || true",
+    "--load='module-null-sink sink_name=DummyOutput rate=48000 channels=2 format=s16le sink_properties=device.description=Virtual_Cloud_Audio' >> {LOG_FILE} 2>&1 || true",
     shell=True, env=env
 )
 
-# Iniciar pantalla Xvfb a 1080p nativa (1920x1080)
+# Iniciar pantalla Xvfb a 1080p nativa (1920x1080) con extensiones GLX, RENDER y DAMAGE
 subprocess.Popen([
     "Xvfb", ":1",
-    "-screen", "0", "1920x1080x24",
+    "-screen", "0", "1920x1080x24+32",
+    "-dpi", "96",
+    "+extension", "GLX",
+    "+extension", "RENDER",
+    "+extension", "DAMAGE",
+    "+extension", "XTEST",
     "-ac", "-noreset", "-nolisten", "tcp"
 ], env=env)
 
@@ -3880,12 +4017,17 @@ subprocess.Popen([
     "-forever", "-shared",
     "-rfbport", "5900",
     "-xdamage",
-    "-wait", "8",
-    "-defer", "8",
-    "-ncache", "10",
+    "-wait", "4",
+    "-defer", "4",
+    "-ncache", "0",
+    "-wirecopyrect",
+    "-nowf",
+    "-nodpms",
+    "-noscr",
     "-repeat", "-capslock",
     "-nomodtweak",
-    "-threads", "4"
+    "-threads", "4",
+    "-24to32"
 ] + cmd_vnc_auth, env=env, stdout=log_vnc, stderr=log_vnc)
 
 # Esperar a que x11vnc esté escuchando en puerto 5900
@@ -3930,7 +4072,54 @@ subprocess.Popen([
     "--web", "/opt/noVNC"
 ], env=env, stdout=log_vnc, stderr=log_vnc)
 
-# Configurar y levantar Nginx en puerto 6080 (Enrutador inverso unificado: VNC + Gamepad + Web)
+# Servidor de Audio HTTP en puerto 6083 (PulseAudio DummyOutput -> Nginx /audio)
+def audio_http_broadcaster_worker():
+    import http.server, socketserver
+    class AudioHTTPHandler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if "/audio" in self.path:
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/mpeg")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
+                self.send_header("Connection", "keep-alive")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                proc = subprocess.Popen(
+                    ["ffmpeg", "-loglevel", "quiet", "-f", "pulse", "-i", "DummyOutput.monitor", "-c:a", "libmp3lame", "-b:a", "128k", "-f", "mp3", "pipe:1"],
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+                )
+                try:
+                    while True:
+                        chunk = proc.stdout.read(4096)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                except Exception:
+                    pass
+                finally:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+            else:
+                self.send_response(404)
+                self.end_headers()
+        def log_message(self, format, *args):
+            pass
+    try:
+        class ReusableThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+            allow_reuse_address = True
+            daemon_threads = True
+        srv = ReusableThreadingServer(("127.0.0.1", 6083), AudioHTTPHandler)
+        srv.serve_forever()
+    except Exception:
+        pass
+
+threading.Thread(target=audio_http_broadcaster_worker, daemon=True).start()
+
+# Configurar y levantar Nginx en puerto 6080 (Enrutador inverso unificado: VNC + Gamepad + Audio + Web)
 nginx_ready = False
 nginx_bin = shutil.which("nginx")
 if nginx_bin:
@@ -3995,13 +4184,21 @@ http {
             proxy_send_timeout 3600s;
         }
 
-        # 4. Zero-PIN Auto-Pairing Endpoint (Sunshine / Starparks 1-Clic)
+        # 4. Canal de Audio en Vivo (PulseAudio MP3 Stream 48kHz)
+        location /audio {
+            proxy_pass http://127.0.0.1:6083/audio;
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+
+        # 5. Zero-PIN Auto-Pairing Endpoint (Sunshine / Starparks 1-Clic)
         location /autopair {
             proxy_pass http://127.0.0.1:47995/autopair;
             proxy_read_timeout 15s;
         }
 
-        # 5. PWA WebAPK Manifest (GeForce NOW Experience)
+        # 6. PWA WebAPK Manifest (GeForce NOW Experience)
         location /manifest.json {
             root /opt/noVNC;
             default_type application/manifest+json;
@@ -4081,6 +4278,9 @@ if sunshine_bin:
             "origin_pin_allowed = pc\n"
             "min_log_level = info\n"
             "port = 47989\n"
+            "capture = x11\n"
+            "fps = [60]\n"
+            "resolutions = [1920x1080]\n"
             "nvenc_preset = p1\n"
             "nvenc_tune = ull\n"
             "nvenc_rate_control = cbr\n"

@@ -262,9 +262,12 @@ try:
     sunshine_dir.mkdir(parents=True, exist_ok=True)
     sunshine_cfg = (
         "origin_pin_allowed = pc\n"
+        "capture = x11\n"
         "encoder = nvenc\n"
         "channels = 2\n"
         "audio_sink = DummyOutput\n"
+        "fps = [60]\n"
+        "resolutions = [1920x1080]\n"
         "min_log_level = info\n"
         "fec_percentage = 20\n"
     )
@@ -545,6 +548,16 @@ body.tp-gamepad-active #cloud-telemetry-panel {
 /* Ocultar barra antigua y conflictiva nativa de noVNC */
 #noVNC_control_bar_anchor, #noVNC_control_bar {
     display: none !important;
+}
+
+/* Renderizado Ultra-Nítido Canvas BigTech & Aislamiento Táctil Completo */
+#noVNC_canvas, canvas {
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    touch-action: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
 }
 
 /* ========================================================================== */
@@ -1182,6 +1195,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             </div>
             <span class="drawer-pill active" id="badge-aether-mode">Trackpad</span>
         </button>
+        <button class="drawer-btn" id="btn-aether-pointerlock">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-pointerlock">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                </span>
+                <span>Modo Gaming 3D</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-pointerlock">OFF</span>
+        </button>
         <button class="drawer-btn" id="btn-aether-keyboard">
             <div class="drawer-btn-left">
                 <span class="d-icon" id="icon-aether-keyboard">
@@ -1298,6 +1320,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
 </svg>
 <div id="cloud-toast">Modo Trackpad Activo</div>
+<audio id="cloud-web-audio" preload="none"></audio>
 
 <script>
 (function() {
@@ -1316,6 +1339,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnMode = document.getElementById("btn-aether-mode");
     const iconMode = document.getElementById("icon-aether-mode");
     const badgeMode = document.getElementById("badge-aether-mode");
+    const btnPointerLock = document.getElementById("btn-aether-pointerlock");
+    const badgePointerLock = document.getElementById("badge-aether-pointerlock");
     const btnKeyboard = document.getElementById("btn-aether-keyboard");
     const btnAspect = document.getElementById("btn-aether-aspect");
     const badgeAspect = document.getElementById("badge-aether-aspect");
@@ -1324,6 +1349,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnAudio = document.getElementById("btn-aether-audio");
     const iconAudio = document.getElementById("icon-aether-audio");
     const badgeAudio = document.getElementById("badge-aether-audio");
+    const webAudio = document.getElementById("cloud-web-audio");
     const btnFullscreen = document.getElementById("btn-aether-fullscreen");
     const badgeFullscreen = document.getElementById("badge-aether-fullscreen");
     const btnExit = document.getElementById("btn-aether-exit");
@@ -1605,6 +1631,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         showToast("Mando físico desconectado");
     });
 
+    function triggerGamepadRumble(gp, duration = 80, strong = 0.4, weak = 0.6) {
+        if (gp && gp.vibrationActuator && typeof gp.vibrationActuator.playEffect === "function") {
+            try {
+                gp.vibrationActuator.playEffect("dual-rumble", {
+                    startDelay: 0,
+                    duration: duration,
+                    weakMagnitude: weak,
+                    strongMagnitude: strong
+                });
+            } catch(e) {}
+        }
+    }
+
     function startPhysicalGamepadLoop() {
         if (physicalPollingFrame) return;
         function poll() {
@@ -1614,9 +1653,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const gp = gamepads[i];
                 if (gp && gp.connected) {
                     active = true;
-                    // 1. Mapeo estándar de botones (0 a 16)
+                    // 1. Mapeo estándar de botones (0 a 16) con respuesta háptica de hardware
                     for (let b = 0; b < gp.buttons.length && b < 17; b++) {
                         const isPress = gp.buttons[b].pressed ? 1 : 0;
+                        if (isPress && !gpButtonsState[b] && (b === 6 || b === 7 || b === 0)) {
+                            triggerGamepadRumble(gp, 60, 0.4, 0.6);
+                        }
                         if (isPress) gpButtonsState[b] = 1;
                     }
                     // 2. Sticks analógicos físicos con Deadzone continua
@@ -2309,27 +2351,114 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // Alternar Audio / Mute
+    // Alternar Audio / Mute con Transmisión Real HTTP 48kHz
     const speakerOnSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
     const speakerMuteSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+
+    function playAudioStream() {
+        if (!webAudio) return;
+        webAudio.src = window.location.origin + "/audio?t=" + Date.now();
+        webAudio.play().catch(() => {});
+    }
+    function stopAudioStream() {
+        if (!webAudio) return;
+        webAudio.pause();
+        webAudio.removeAttribute("src");
+        webAudio.load();
+    }
 
     if (btnAudio) {
         attachButtonTap(btnAudio, function() {
             isAudioMuted = !isAudioMuted;
             if (isAudioMuted) {
+                stopAudioStream();
                 if (iconAudio) iconAudio.innerHTML = speakerMuteSvg;
                 if (badgeAudio) { badgeAudio.innerText = "MUTE"; badgeAudio.classList.remove("active"); }
                 btnAudio.classList.remove("active-glow");
                 showToast("Audio Silenciado");
             } else {
+                playAudioStream();
                 if (iconAudio) iconAudio.innerHTML = speakerOnSvg;
                 if (badgeAudio) { badgeAudio.innerText = "ON"; badgeAudio.classList.add("active"); }
                 btnAudio.classList.add("active-glow");
-                showToast("Audio Activado");
+                showToast("Audio Activado (48kHz)");
             }
             hapticFeedback(18);
         });
     }
+
+    // Auto-desbloqueo de Audio en el primer toque del usuario
+    document.addEventListener("pointerdown", function unlockAudio() {
+        if (webAudio && !isAudioMuted && (!webAudio.src || webAudio.paused)) {
+            playAudioStream();
+        }
+    }, { once: true });
+
+    // Modo Gaming 3D / Pointer Lock (Estándar GeForce NOW & Steam)
+    function isPointerLocked() {
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        return !!(canvas && (document.pointerLockElement === canvas || document.mozPointerLockElement === canvas || document.webkitPointerLockElement === canvas));
+    }
+
+    function togglePointerLock() {
+        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        if (!canvas) return;
+        if (!isPointerLocked()) {
+            const req = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+            if (req) {
+                const p = req.call(canvas);
+                if (p && p.catch) p.catch(() => {});
+            }
+            showToast("Modo Gaming 3D (ESC para liberar)");
+        } else {
+            const exit = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
+            if (exit) exit.call(document);
+            showToast("Puntero Liberado");
+        }
+        closeDrawer();
+    }
+
+    if (btnPointerLock) attachButtonTap(btnPointerLock, togglePointerLock);
+
+    const onPointerLockChange = function() {
+        const locked = isPointerLocked();
+        if (badgePointerLock) {
+            badgePointerLock.innerText = locked ? "LOCK" : "OFF";
+            if (locked) badgePointerLock.classList.add("active");
+            else badgePointerLock.classList.remove("active");
+        }
+        if (btnPointerLock) {
+            if (locked) btnPointerLock.classList.add("active-glow");
+            else btnPointerLock.classList.remove("active-glow");
+        }
+        if (cursor) cursor.style.display = locked ? "none" : "";
+    };
+    document.addEventListener("pointerlockchange", onPointerLockChange);
+    document.addEventListener("mozpointerlockchange", onPointerLockChange);
+    document.addEventListener("webkitpointerlockchange", onPointerLockChange);
+
+    // Captura de deltas relativos de ratón para rotación 360 grados en juegos y apps 3D
+    document.addEventListener("mousemove", function(e) {
+        if (isPointerLocked()) {
+            const dx = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
+            const dy = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
+            virtX = Math.max(0, Math.min(screenW, virtX + dx));
+            virtY = Math.max(0, Math.min(screenH, virtY + dy));
+            sendMouse(e.buttons);
+        }
+    });
+    document.addEventListener("mousedown", function(e) {
+        if (isPointerLocked()) sendMouse(e.buttons);
+    });
+    document.addEventListener("mouseup", function(e) {
+        if (isPointerLocked()) sendMouse(e.buttons);
+    });
+
+    // Prevención de Cierre Accidental de Pestaña durante Sesión Activa
+    window.addEventListener("beforeunload", function(e) {
+        e.preventDefault();
+        return (e.returnValue = "Sesión de Cloud PC en progreso. ¿Deseas salir?");
+    });
 
     function toggleFullScreen() {
         const doc = document;
@@ -2340,12 +2469,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (request) request.call(docEl).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.add("active-glow");
             if (badgeFullscreen) { badgeFullscreen.innerText = "Pantalla"; badgeFullscreen.classList.add("active"); }
+            if (navigator.keyboard && navigator.keyboard.lock) {
+                try { navigator.keyboard.lock(["Escape", "AltLeft", "AltRight", "Tab", "KeyW", "KeyN"]); } catch(e) {}
+            }
             showToast("Pantalla Completa");
         } else {
             const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
             if (exit) exit.call(doc).catch(() => {});
             if (btnFullscreen) btnFullscreen.classList.remove("active-glow");
             if (badgeFullscreen) { badgeFullscreen.innerText = "Ventana"; badgeFullscreen.classList.remove("active"); }
+            if (navigator.keyboard && navigator.keyboard.unlock) {
+                try { navigator.keyboard.unlock(); } catch(e) {}
+            }
             showToast("Ventana Normal");
         }
         hapticFeedback(20);
