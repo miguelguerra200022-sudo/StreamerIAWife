@@ -270,11 +270,16 @@ optimizar_red_bbr_buffers()
 orquestar_dual_gpu()
 instalar_acelerador_descargas()
 
-# Directorios Clave
-GDRIVE_CONF_DIR = Path.home() / ".rclone"
+# Directorios Clave (Estándar Oficial XDG y Legacy Rclone)
+GDRIVE_CONF_DIR = Path.home() / ".config" / "rclone"
+GDRIVE_CONF_DIR.mkdir(parents=True, exist_ok=True)
 GDRIVE_CONF_FILE = GDRIVE_CONF_DIR / "rclone.conf"
+LEGACY_RCLONE_DIR = Path.home() / ".rclone"
+LEGACY_RCLONE_DIR.mkdir(parents=True, exist_ok=True)
+LEGACY_RCLONE_FILE = LEGACY_RCLONE_DIR / "rclone.conf"
 os.environ["RCLONE_CONFIG"] = str(GDRIVE_CONF_FILE)
 REPO_RCLONE_B64 = BASE_DIR / "rclone_gdrive.b64"
+REPO_RCLONE_CONF = BASE_DIR / "rclone.conf"
 EXTRA_PKGS_FILE = BASE_DIR / "packages_extra.txt"
 STATE_DIR = Path("/kaggle/working/Ubuntu_State")
 STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -343,12 +348,12 @@ def auto_save_user_state():
                     log("Auto-guardado del sistema a Google Drive (FUSE Directo) completado.", "SUCCESS")
                 except Exception:
                     subprocess.run(
-                        f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                        f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 10 --drive-chunk-size 64M --fast-list >/dev/null 2>&1 || true",
                         shell=True
                     )
             else:
                 subprocess.run(
-                    f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 3 >/dev/null 2>&1 || true",
+                    f"rclone copy {save_tar} gdrive:Cloud_PC/system_state/ --tpslimit 10 --drive-chunk-size 64M --fast-list >/dev/null 2>&1 || true",
                     shell=True
                 )
                 log("Auto-guardado del sistema a Google Drive (Cloud_PC) completado.", "SUCCESS")
@@ -397,10 +402,22 @@ if REPO_KAGGLE_JSON.exists():
     except Exception:
         pass
 
+conf_bytes = None
 if REPO_RCLONE_B64.exists() and REPO_RCLONE_B64.stat().st_size > 10:
     try:
-        decoded = base64.b64decode(REPO_RCLONE_B64.read_text().strip())
-        GDRIVE_CONF_FILE.write_bytes(decoded)
+        conf_bytes = base64.b64decode(REPO_RCLONE_B64.read_text().strip())
+    except Exception:
+        pass
+if not conf_bytes and REPO_RCLONE_CONF.exists() and REPO_RCLONE_CONF.stat().st_size > 10:
+    try:
+        conf_bytes = REPO_RCLONE_CONF.read_bytes()
+    except Exception:
+        pass
+if conf_bytes:
+    try:
+        GDRIVE_CONF_FILE.write_bytes(conf_bytes)
+        LEGACY_RCLONE_FILE.write_bytes(conf_bytes)
+        subprocess.run(f"chmod 600 '{GDRIVE_CONF_FILE}' '{LEGACY_RCLONE_FILE}' 2>/dev/null || true", shell=True)
     except Exception:
         pass
 
@@ -413,32 +430,50 @@ os.environ["STEAM_EXTRA_COMPAT_TOOLS_PATHS"] = "/root/gdrive/Cloud_PC/compatibil
 os.environ["PROTON_LOG_DIR"] = "/tmp"
 os.environ["NPM_CONFIG_CACHE"] = "/tmp/.npm"
 
-# Iniciar Rclone Mount (FUSE) con reintentos automáticos y protección contra rate-limits de Google Drive
+# Iniciar Rclone Mount (FUSE) con parámetros de alto rendimiento BigTech y protección contra 403 Rate Limits
 def mount_gdrive_resilient():
     os.makedirs("/root/gdrive", exist_ok=True)
     os.makedirs("/root/gdrive/Cloud_PC", exist_ok=True)
-    os.makedirs("/tmp/rclone_cache", exist_ok=True)
+    # Seleccionar almacenamiento NVMe de alta velocidad para caché VFS en vez de RAM (/tmp)
+    cache_dir = Path("/kaggle/working/.rclone_cache") if Path("/kaggle/working").exists() else Path.home() / ".cache/rclone"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    # Pre-crear estructura de directorios persistentes en Google Drive si no existen
+    try:
+        subprocess.run("rclone mkdir gdrive:Cloud_PC/system_state >/dev/null 2>&1 || true", shell=True, timeout=8)
+        subprocess.run("rclone mkdir gdrive:Cloud_PC/wineprefix >/dev/null 2>&1 || true", shell=True, timeout=8)
+        subprocess.run("rclone mkdir gdrive:Cloud_PC/Juegos >/dev/null 2>&1 || true", shell=True, timeout=8)
+    except Exception:
+        pass
+
     log_rclone = open(LOG_FILE, "a", encoding="utf-8")
     for attempt in range(1, 4):
         try:
             subprocess.Popen([
                 "rclone", "mount", "gdrive:", "/root/gdrive",
-                "--cache-dir", "/tmp/rclone_cache",
-                "--vfs-cache-mode", "writes",
-                "--vfs-cache-max-size", "10G",
-                "--vfs-cache-max-age", "1m",
-                "--vfs-read-chunk-size", "64M",
-                "--buffer-size", "64M",
+                "--cache-dir", str(cache_dir),
+                "--vfs-cache-mode", "full",
+                "--vfs-cache-max-size", "15G",
+                "--vfs-cache-max-age", "24h",
+                "--vfs-write-back", "5s",
+                "--vfs-read-chunk-size", "32M",
+                "--vfs-read-chunk-size-limit", "256M",
+                "--buffer-size", "32M",
+                "--drive-chunk-size", "128M",
+                "--drive-skip-gdocs",
+                "--drive-use-trash=false",
+                "--poll-interval", "15s",
+                "--dir-cache-time", "72h",
+                "--fast-list",
+                "--allow-other",
                 "--allow-non-empty",
-                "--tpslimit", "3",
-                "--tpslimit-burst", "1",
-                "--drive-pacer-min-sleep", "200ms",
+                "--tpslimit", "10",
+                "--tpslimit-burst", "2",
+                "--drive-pacer-min-sleep", "100ms",
                 "--drive-pacer-burst", "2",
                 "--low-level-retries", "15",
                 "--retries", "10",
-                "--retries-sleep", "5s",
-                "--dir-cache-time", "72h",
-                "--drive-chunk-size", "128M",
+                "--retries-sleep", "3s",
                 "--daemon"
             ], stdout=log_rclone, stderr=log_rclone)
             break
@@ -3447,7 +3482,7 @@ try:
         shutil.copy2(direct_backup, backup_tar)
     else:
         subprocess.run(
-            f"rclone copy gdrive:Cloud_PC/system_state/ubuntu_user_state.tar.gz {STATE_DIR} --tpslimit 3 >/dev/null 2>&1 || true",
+            f"rclone copy gdrive:Cloud_PC/system_state/ubuntu_user_state.tar.gz {STATE_DIR} --tpslimit 10 --drive-chunk-size 64M --fast-list >/dev/null 2>&1 || true",
             shell=True
         )
     if backup_tar.exists() and backup_tar.stat().st_size > 1000:

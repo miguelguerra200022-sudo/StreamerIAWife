@@ -3150,6 +3150,22 @@ os.system("pgrep -f gamepad_uinput_bridge.py >/dev/null || (python3 /usr/local/b
 
 # 5. Accesos Directos Principales en el Escritorio
 main_shortcuts = {
+    "Mis_Archivos_5TB_GoogleDrive.desktop": (
+        "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
+        "Name=Mis Archivos 5TB (Google Drive)\\n"
+        "Comment=Carpeta persistente en la nube con 5TB para juegos y archivos\\n"
+        "Exec=thunar /root/gdrive/Cloud_PC\\n"
+        "Path=/root\\n"
+        "Icon=folder-remote\\nTerminal=false\\nCategories=System;Utility;\\n"
+    ),
+    "Guardar_Estado_de_mi_PC.desktop": (
+        "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
+        "Name=Guardar Estado de mi PC (Nube)\\n"
+        "Comment=Guarda tus partidas, descargas y cambios a Google Drive\\n"
+        "Exec=python3 /kaggle/working/StreamerIAWife/run_kaggle_vnc_studio.py --save-now\\n"
+        "Path=/kaggle/working/StreamerIAWife\\n"
+        "Icon=system-software-update\\nTerminal=true\\nCategories=System;\\n"
+    ),
     "Tienda_Software_1Clic.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=Tienda de Software y Juegos 1-Clic\\n"
