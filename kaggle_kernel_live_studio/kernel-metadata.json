@@ -1,0 +1,13 @@
+{
+  "id": "miguelguerra22/ubuntu-cloud-pc-live",
+  "title": "Ubuntu Cloud PC Live",
+  "code_file": "main.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "miguelguerra22/ubuntu-core-os-social"
+  ]
+}

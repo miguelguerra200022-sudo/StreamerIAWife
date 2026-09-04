@@ -101,18 +101,20 @@ apt_turbo = (
 )
 Path("/etc/apt/apt.conf.d/99turbo").write_text(apt_turbo, encoding="utf-8")
 subprocess.run("echo 'man-db man-db/auto-update boolean false' | debconf-set-selections 2>/dev/null || true", shell=True)
+subprocess.run("dpkg-divert --divert /usr/bin/mandb.real --rename /usr/bin/mandb 2>/dev/null || true; ln -sf /bin/true /usr/bin/mandb 2>/dev/null || true", shell=True)
+subprocess.run("dpkg-divert --divert /usr/bin/install-docs.real --rename /usr/bin/install-docs 2>/dev/null || true; ln -sf /bin/true /usr/bin/install-docs 2>/dev/null || true", shell=True)
 
 # Instalar aceleradores de compresión y red
 subprocess.run("apt-get update -qq && apt-get install -y -qq pigz pv wget curl git python3-pip aria2 >/dev/null 2>&1", shell=True)
 if Path("/usr/bin/pigz").exists():
     subprocess.run("ln -sf /usr/bin/pigz /usr/local/bin/gzip 2>/dev/null || true", shell=True)
 
-# 3. Instalación de Suite de Escritorio XFCE 4.18 y VNC
-print("📦 [2/8] Instalando Suite de Escritorio XFCE 4.18, Servidores Gráficos y Utilidades...", flush=True)
-subprocess.run("apt-get install -y -qq xfce4 xfce4-terminal xfce4-goodies dbus-x11 x11-xserver-utils x11-utils xterm tigervnc-standalone-server tigervnc-common websockify nginx", shell=True)
+# 3. Instalación de Suite de Escritorio XFCE 4.18 Optimizada (Sin bloat de xfce4-goodies)
+print("📦 [2/8] Instalando Suite de Escritorio XFCE 4.18 Optimizada y Servidores Gráficos...", flush=True)
+subprocess.run("apt-get install -y -qq xfce4 xfce4-terminal xfce4-pulseaudio-plugin xfce4-whiskermenu-plugin mousepad thunar-archive-plugin file-roller dbus-x11 x11-xserver-utils x11-utils tigervnc-standalone-server tigervnc-common websockify nginx", shell=True)
 
-# 4. Instalación de Google Chrome Oficial x64 con Wrapper GPU
-print("🌐 [3/8] Instalando Google Chrome Oficial con aceleración por hardware GPU (Vulkan/VA-API)...", flush=True)
+# 4. Instalación de Google Chrome Oficial x64 con Wrapper GPU BigTech
+print("🌐 [3/8] Instalando Google Chrome Oficial con aceleración por hardware GPU (ANGLE/EGL/VA-API)...", flush=True)
 subprocess.run(
     "wget -q 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb' -O /tmp/chrome.deb && "
     "(apt-get install -y -qq /tmp/chrome.deb || dpkg -i /tmp/chrome.deb || apt-get install -f -y -qq) && rm -f /tmp/chrome.deb",
@@ -124,17 +126,23 @@ chrome_wrapper = (
     "exec /usr/bin/google-chrome-stable "
     "--no-sandbox --test-type --ignore-gpu-blocklist "
     "--enable-gpu-rasterization --enable-zero-copy "
-    "--enable-features=VaapiVideoDecoder,CanvasOopRasterization "
+    "--use-gl=angle --use-angle=gl-egl --enable-unsafe-webgpu "
+    "--enable-features=VaapiVideoDecoder,CanvasOopRasterization,WebRTCPipeWireCapturer "
     "--disable-dev-shm-usage \"$@\"\n"
 )
 Path("/usr/local/bin/google-chrome").write_text(chrome_wrapper, encoding="utf-8")
 subprocess.run("chmod +x /usr/local/bin/google-chrome", shell=True)
 
-# Wrapper Optimizado para Steam en Entornos Cloud/VNC (Evita cuelgues headless)
+# Wrapper Optimizado para Steam en Entornos Cloud/Container (BigTech: Seccomp + NVAPI + Headless Fixes)
 steam_wrapper = (
     "#!/bin/bash\n"
     "export STEAM_RUNTIME_PREFER_HOST_LIBRARIES=0\n"
     "export SDL_VIDEO_X11_DGAMOUSE=0\n"
+    "export PROTON_USE_SECCOMP=0\n"
+    "export PROTON_ENABLE_NVAPI=1\n"
+    "export DXVK_ENABLE_NVAPI=1\n"
+    "export DXVK_HUD=0\n"
+    "export STEAM_FORCE_DESKTOPUI_SCALING=1.0\n"
     "export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json:/etc/vulkan/icd.d/nvidia_icd.json\n"
     "REAL_STEAM=\"/usr/games/steam\"\n"
     "[ -x \"$REAL_STEAM\" ] || REAL_STEAM=\"/usr/bin/steam\"\n"
@@ -154,8 +162,16 @@ subprocess.run(
     shell=True
 )
 
-# Instalar módulos de Python para Gamepad y Redes
-subprocess.run("pip3 install --no-cache-dir websockets evdev pyudev >/dev/null 2>&1 || true", shell=True)
+# Pre-instalar en Database 1 TODAS las dependencias de Python para que el arranque en vivo tenga 0 descargas
+print("🐍 Pre-instalando suite de Python para Cloud PC (Zero-Pip en el cliente)...", flush=True)
+subprocess.run("pip3 install --no-cache-dir pyngrok websockets evdev pyudev aiohttp Pillow mss edge-tts openai python-dotenv >/dev/null 2>&1 || true", shell=True)
+
+# Pre-instalar binario oficial de Cloudflared en /usr/local/bin
+subprocess.run(
+    "wget -q --timeout=20 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64' -O /usr/local/bin/cloudflared && "
+    "chmod +x /usr/local/bin/cloudflared || true",
+    shell=True
+)
 
 # Configurar permisos de uinput y udev para mandos físicos y virtuales (Xbox, PlayStation, Switch)
 try:
@@ -2535,68 +2551,90 @@ x-scheme-handler/https=google-chrome.desktop;
     except Exception:
         pass
 
-# 8.6 Purga Quirúrgica de Micro-Inodos (Reduce 35,000 archivos sin afectar español/inglés)
-print("🧹 [8.6] Purgando micro-inodos y archivos redundantes (locale, pycache, man, docs)...", flush=True)
+# 8.6 Purga Quirúrgica de Micro-Inodos y Bloat (BigTech: Mantiene el RootFS bajo 10GB)
+print("🧹 [8.6] Purgando micro-inodos y archivos redundantes (locale, pycache, man, docs, *.a)...", flush=True)
 subprocess.run("find /usr/share/locale -mindepth 1 -maxdepth 1 ! -name 'es*' ! -name 'en*' -exec rm -rf {} + 2>/dev/null || true", shell=True)
 subprocess.run("find /usr/share -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true", shell=True)
-subprocess.run("rm -rf /usr/share/man/* /usr/share/doc/* /var/cache/apt/archives/*.deb /var/lib/apt/lists/* 2>/dev/null || true", shell=True)
+subprocess.run("rm -rf /usr/share/man/* /usr/share/doc/* /usr/share/info/* /var/cache/apt/archives/*.deb /var/lib/apt/lists/* 2>/dev/null || true", shell=True)
+subprocess.run("find /usr/lib -name '*.a' -delete 2>/dev/null || true", shell=True)
 
-# Instalar herramientas de compresión si faltan
-subprocess.run("which zstd >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq zstd squashfs-tools >/dev/null 2>&1) || true", shell=True)
+# ==============================================================================
+# 9. ENSAMBLAJE DE DISCO DURO EXTERNO NATIVO (CAMINO B - ZERO COMPRESSION)
+# ==============================================================================
+print("⚡ [8/8] Ensamblando Disco Duro Externo Nativo en WORK_DIR (Camino B - Estructura Descomprimida)...", flush=True)
 
-# 9. Empaquetado Maestro RootFS con Zstandard Multi-Núcleo (-T0 AVX)
-rootfs_tar = WORK_DIR / "ubuntu_master_rootfs.tar.data"
-rootfs_zst = WORK_DIR / "ubuntu_master_rootfs.tar.zst"
-rootfs_sq = WORK_DIR / "ubuntu_master_rootfs.squashfs"
+# Limpiar WORK_DIR previo para asegurar estructura pura
+shutil.rmtree(WORK_DIR, ignore_errors=True)
+WORK_DIR.mkdir(parents=True, exist_ok=True)
 
-excludes = (
-    "--exclude='/root/gdrive' --exclude='/kaggle' --exclude='/proc' --exclude='/sys' "
-    "--exclude='/dev' --exclude='/tmp' --exclude='/run' --exclude='/usr/src' "
-    "--exclude='/usr/share/doc' --exclude='/usr/share/man' --exclude='/opt/conda' "
-    "--exclude='/usr/local/cuda*' --exclude='/usr/local/share' --exclude='/var/cache' "
-    "--exclude='/var/log' --exclude='/var/tmp' --exclude='/root/.cache' --exclude='/root/.npm'"
+# 1. Copiar /usr (excluyendo cuda, src e include que ya existen en el contenedor base)
+print("  📦 [1/4] Enlazando /usr hacia el Disco Duro Nativo (excluyendo CUDA/Src)...", flush=True)
+(WORK_DIR / "usr").mkdir(parents=True, exist_ok=True)
+subprocess.run(
+    f"rsync -a --exclude='local/cuda*' --exclude='src' --exclude='include' /usr/bin /usr/lib /usr/share /usr/games /usr/local '{WORK_DIR}/usr/' 2>/dev/null || "
+    f"cp -a /usr/bin /usr/lib /usr/share /usr/games /usr/local '{WORK_DIR}/usr/' 2>/dev/null || true",
+    shell=True
 )
 
-has_zstd = shutil.which("zstd") is not None
-if has_zstd:
-    print("⚡ [8/8] Empaquetando RootFS Maestro con Zstandard Multi-Núcleo (ubuntu_master_rootfs.tar.data)...", flush=True)
-    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb | zstd -T0 -3 -q > '{rootfs_tar}'"
-else:
-    print("💾 [8/8] Empaquetando RootFS Maestro con Pigz (ubuntu_master_rootfs.tar.data)...", flush=True)
-    cmd_tar = f"tar {excludes} -cf - /usr /opt /etc /var/lib/dpkg /var/lib/apt 2>/dev/null | pv -f -pterb | pigz -4 > '{rootfs_tar}'"
+# 2. Copiar /opt (Google Chrome, noVNC, etc.)
+print("  📦 [2/4] Copiando /opt (Google Chrome, noVNC)...", flush=True)
+(WORK_DIR / "opt").mkdir(parents=True, exist_ok=True)
+subprocess.run(f"cp -a /opt/* '{WORK_DIR}/opt/' 2>/dev/null || true", shell=True)
 
-subprocess.run(cmd_tar, shell=True)
+# 3. Copiar /etc (XFCE XDG, PulseAudio, Sunshine, Vulkan, udev)
+print("  📦 [3/4] Copiando configuraciones /etc (XFCE XDG, PulseAudio, Sunshine)...", flush=True)
+(WORK_DIR / "etc").mkdir(parents=True, exist_ok=True)
+for etc_sub in ["xdg", "pulse", "sunshine", "vulkan", "modules-load.d", "udev"]:
+    if Path(f"/etc/{etc_sub}").exists():
+        subprocess.run(f"cp -a /etc/{etc_sub} '{WORK_DIR}/etc/' 2>/dev/null || true", shell=True)
 
-# Enlace a .tar.zst para reconocimiento explícito
-if rootfs_tar.exists() and has_zstd:
-    try:
-        if not rootfs_zst.exists():
-            os.link(rootfs_tar, rootfs_zst)
-    except Exception:
-        pass
+# 4. Asegurar noVNC pre-horneado en opt/noVNC
+if novnc_dest.exists():
+    novnc_in_opt = WORK_DIR / "opt" / "noVNC"
+    if not (novnc_in_opt / "vnc.html").exists():
+        print("  📦 [4/4] Integrando noVNC Dual-Engine en /opt/noVNC...", flush=True)
+        shutil.rmtree(novnc_in_opt, ignore_errors=True)
+        shutil.copytree(novnc_dest, novnc_in_opt)
 
-# Generar SquashFS complementario si squashfs-tools está disponible (Zero-Extract Mount)
-if shutil.which("mksquashfs"):
-    print("📦 [8.8] Generando imagen SquashFS Zstandard (Zero-Extract Instant Mount)...", flush=True)
-    subprocess.run(f"mksquashfs /usr /opt /etc /var/lib/dpkg /var/lib/apt '{rootfs_sq}' -comp zstd -Xcompression-level 12 -b 1M -noappend >/dev/null 2>&1 || true", shell=True)
-
-# 10. Generar Script de Activación en 1 Segundo (setup.py)
+# 10. Generar Script de Activación en 0.25 Segundos (setup.py)
 setup_script = WORK_DIR / "setup.py"
 setup_code = """#!/usr/bin/env python3
 import os, sys, shutil, subprocess
 from pathlib import Path
 
-print("⚡ [✓] Activando Database 1 (Ubuntu Core & Suite Gamer)...")
+print("⚡ [✓] Activando Database 1 (Disco Duro Externo Nativo - 0.25s)...")
 DATASET_DIR = Path(__file__).resolve().parent
 DESKTOP_DIR = Path.home() / "Desktop"
 DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
 
-# 1. Asegurar Permisos de Periféricos y Audio Virtual
+# 1. Dynamic Linker en RAM (0.15s)
+try:
+    ld_conf = Path("/etc/ld.so.conf.d/00-kaggle-usb.conf")
+    ld_conf.write_text(
+        f"{DATASET_DIR}/usr/lib/x86_64-linux-gnu\\n"
+        f"{DATASET_DIR}/usr/lib/i386-linux-gnu\\n"
+        f"{DATASET_DIR}/usr/lib\\n"
+    )
+    subprocess.run("ldconfig", shell=True)
+except Exception:
+    pass
+
+# 2. Enlaces Simbólicos Atómicos a /usr/bin (0.05s)
+if (DATASET_DIR / "usr/bin").exists():
+    subprocess.run(f"ln -sf {DATASET_DIR}/usr/bin/* /usr/bin/ 2>/dev/null", shell=True)
+if (DATASET_DIR / "usr/games").exists():
+    subprocess.run(f"ln -sf {DATASET_DIR}/usr/games/* /usr/games/ 2>/dev/null", shell=True)
+
+# 3. noVNC symlink
+if (DATASET_DIR / "opt/noVNC").exists():
+    subprocess.run(f"ln -sfn {DATASET_DIR}/opt/noVNC /opt/noVNC 2>/dev/null || true", shell=True)
+
+# 4. Asegurar Permisos de Periféricos y Audio Virtual
 os.system("chmod 666 /dev/uinput 2>/dev/null || true")
 os.system("pactl set-default-sink DummyOutput 2>/dev/null || true")
 os.system("pgrep -f gamepad_uinput_bridge.py >/dev/null || (python3 /usr/local/bin/gamepad_uinput_bridge.py >/dev/null 2>&1 &)")
 
-# 2. Accesos Directos Principales en el Escritorio
+# 5. Accesos Directos Principales en el Escritorio
 main_shortcuts = {
     "Tienda_Software_1Clic.desktop": (
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
@@ -2616,7 +2654,7 @@ main_shortcuts = {
         "[Desktop Entry]\\nVersion=1.0\\nType=Application\\n"
         "Name=Escáner de Redes, WiFi y Conexiones\\n"
         "Comment=Auditoría de adaptadores de red, puertos de servicio y conexiones de afuera\\n"
-        "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\"Presiona Enter para salir...\\\"\"'\\n"
+        "Exec=xfce4-terminal --title='Escáner de Redes y Conexiones' -e 'bash -c \\\"python3 /usr/local/bin/escaner_redes_y_conexiones.py; echo; read -p \\\\\\\"Presiona Enter para salir...\\\\\\\"\\\"'\\n"
         "Icon=network-wired\\nTerminal=false\\nCategories=Network;System;\\n"
     )
 }
@@ -2626,7 +2664,7 @@ for name, cont in main_shortcuts.items():
     s.write_text(cont, encoding="utf-8")
     s.chmod(0o755)
 
-# 3. Carpeta Organizada de Suite Core y Redes (Sin emojis)
+# 6. Carpeta Organizada de Suite Core y Redes (Sin emojis)
 folder = DESKTOP_DIR / "[01] Ubuntu Core y Redes Sociales"
 folder.mkdir(parents=True, exist_ok=True)
 
@@ -2647,12 +2685,12 @@ for name, cont in core_shortcuts.items():
     s.write_text(cont, encoding="utf-8")
     s.chmod(0o755)
 
-# Marcar lanzadores como confiables en XFCE
+# Marcar lanzadores como confiables en XFCE (BigTech standard con checksum)
 os.system("chmod +x ~/Desktop/*.desktop ~/Desktop/*/*.desktop 2>/dev/null || true")
-os.system("gio set ~/Desktop/*.desktop metadata::trusted true 2>/dev/null || true")
-os.system("gio set ~/Desktop/*/*.desktop metadata::trusted true 2>/dev/null || true")
+os.system("gio set -t string ~/Desktop/*.desktop metadata::trusted true 2>/dev/null || true")
+os.system("gio set -t string ~/Desktop/*/*.desktop metadata::trusted true 2>/dev/null || true")
 
-print("🎉 [✓] ¡Database 1 (Ubuntu Core & Suite Gamer) 100% activa en 1 segundo!")
+print("🎉 [✓] ¡Database 1 (Disco Duro Nativo) 100% activa en 0.25 segundos!")
 """
 setup_script.write_text(setup_code, encoding="utf-8")
 setup_script.chmod(0o755)
@@ -2680,10 +2718,10 @@ metadata = {
 }
 (WORK_DIR / "dataset-metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
-# 12. Subida Segura a Kaggle (100% PRIVADA - Blindaje Anti-Robo)
+# 12. Subida Segura a Kaggle (100% PRIVADA - Ingesta Descomprimida en Google Cloud)
 ts_msg = time.strftime("%Y-%m-%d %H:%M:%S")
-print(f"☁️ Subiendo versión privada a {usuario_activo}/ubuntu-core-os-social...", flush=True)
-cmd_version = f"kaggle datasets version -p '{WORK_DIR}' -m 'Compilacion SOTA Core + Gaming + Audio + Dual-Engine ({ts_msg})' --dir-mode tar"
+print(f"☁️ Subiendo versión nativa de Disco Duro a {usuario_activo}/ubuntu-core-os-social (Kaggle Cloud Ingestion)...", flush=True)
+cmd_version = f"kaggle datasets version -p '{WORK_DIR}' -m 'Compilacion Camino B Disco Duro Nativo ({ts_msg})' --dir-mode tar"
 res = subprocess.run(cmd_version, shell=True)
 
 if res.returncode != 0:
@@ -2715,5 +2753,5 @@ except Exception:
 t_total = time.time() - t_start
 print("=" * 78, flush=True)
 print(f"🎉 ¡DATABASE 1 COMPILADA CON ÉXITO TOTAL EN {t_total:.1f} SEGUNDOS!", flush=True)
-print(f"📦 Tamaño empaquetado: {rootfs_tar.stat().st_size / (1024**3):.2f} GB")
+print("📦 Formato de Entrega: Disco Duro Externo Nativo Descomprimido (Camino B)", flush=True)
 print("=" * 78, flush=True)

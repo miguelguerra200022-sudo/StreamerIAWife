@@ -14,14 +14,18 @@ import shutil
 from pathlib import Path
 
 DESKTOP_DIR = Path.home() / "Desktop"
-folder = DESKTOP_DIR / "📁 [01] Ubuntu Core & Redes Sociales"
-
 print("🧹 Desconectando Database 1 (Ubuntu Core & Suite Gamer)...", flush=True)
 
-# 1. Eliminar accesos directos
-if folder.exists():
-    shutil.rmtree(folder, ignore_errors=True)
-    print("  [✓] Accesos directos de Database 1 eliminados del Escritorio.", flush=True)
+# 1. Eliminar accesos directos (soporta nombres corporativos y legados)
+candidate_folders = [
+    DESKTOP_DIR / "[01] Ubuntu Core y Redes Sociales",
+    DESKTOP_DIR / "📁 [01] Ubuntu Core & Redes Sociales",
+    DESKTOP_DIR / "[01] Ubuntu Core & Redes Sociales"
+]
+for f_candidate in candidate_folders:
+    if f_candidate.exists():
+        shutil.rmtree(f_candidate, ignore_errors=True)
+        print(f"  [✓] Carpeta {f_candidate.name} eliminada del Escritorio.", flush=True)
 
 # 2. Detener procesos en segundo plano de Database 1
 os.system("pkill -f gamepad_uinput_bridge.py 2>/dev/null || true")
