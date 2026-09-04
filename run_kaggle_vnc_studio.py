@@ -5649,59 +5649,64 @@ if not Path("/usr/bin/apt.real").exists():
 
 # Mantener viva la celda con monitoreo de salud, auto-guardado y reporte de telemetría en tiempo real
 try:
-    minutos = 0
+    segundos_activos = 0
     while True:
-        time.sleep(30)
-        minutos += 0.5
-        
-        # Watchdog: Monitoreo activo de procesos
-        xvfb_alive = Path("/tmp/.X11-unix/X1").exists()
-        vnc_alive = wait_for_port(5900, timeout=1)
-        novnc_alive = wait_for_port(6080, timeout=1)
-        drive_alive = Path("/root/gdrive").exists()
-        
-        if not xvfb_alive:
-            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor X11 Display :1 no responde.", flush=True)
-        if not vnc_alive:
-            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor VNC (5900) no responde.", flush=True)
-        if not novnc_alive:
-            print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor noVNC (6080) no responde.", flush=True)
-
-        # Storage Sentinel: Guardián de disco que auto-purga residuos en /kaggle/working cada 30 segundos
         try:
-            kw_dir = Path("/kaggle/working")
-            if kw_dir.exists():
-                for tmp_f in kw_dir.glob("*.tmp"):
-                    tmp_f.unlink(missing_ok=True)
-                for stray_deb in kw_dir.glob("*.deb"):
-                    stray_deb.unlink(missing_ok=True)
-        except Exception:
-            pass
+            time.sleep(15)
+            segundos_activos += 15
+            minutos = segundos_activos / 60
             
-        if minutos % 5 == 0:
-            auto_save_user_state()
+            # Watchdog: Monitoreo activo de procesos
+            xvfb_alive = Path("/tmp/.X11-unix/X1").exists()
+            vnc_alive = wait_for_port(5900, timeout=1)
+            novnc_alive = wait_for_port(6080, timeout=1)
+            drive_alive = Path("/root/gdrive").exists()
+            
+            if not xvfb_alive:
+                print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor X11 Display :1 no responde.", flush=True)
+            if not vnc_alive:
+                print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor VNC (5900) no responde.", flush=True)
+            if not novnc_alive:
+                print(f"\n🔴 [{time.strftime('%H:%M:%S')}] [ALERTA DE PROCESO] Servidor noVNC (6080) no responde.", flush=True)
+
+            # Storage Sentinel: Guardián de disco que auto-purga residuos en /kaggle/working cada 30 segundos
             try:
-                ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
-                disk_str = subprocess.check_output("df -h / 2>/dev/null | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
-                gpu_info = ""
-                try:
-                    gpu_lines = subprocess.check_output("nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True).strip().splitlines()
-                    if gpu_lines:
-                        gpu_parts = []
-                        for g in gpu_lines:
-                            parts = [x.strip() for x in g.split(",")]
-                            if len(parts) >= 4:
-                                idx, util, mem_u, mem_t = parts[0], parts[1], parts[2], parts[3]
-                                gpu_parts.append(f"T4-{idx}: {util}% ({mem_u}/{mem_t}MB)")
-                        if gpu_parts:
-                            gpu_info = " | 🎮 " + ", ".join(gpu_parts)
-                except Exception:
-                    pass
-                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | 🟢 RAM: {ram_str} | 💾 Disco: {disk_str}{gpu_info} | ☁️ Drive: {'Conectado' if drive_alive else 'Desconectado'} | Estado Guardado ✅", flush=True)
+                kw_dir = Path("/kaggle/working")
+                if kw_dir.exists():
+                    for tmp_f in kw_dir.glob("*.tmp"):
+                        tmp_f.unlink(missing_ok=True)
+                    for stray_deb in kw_dir.glob("*.deb"):
+                        stray_deb.unlink(missing_ok=True)
             except Exception:
-                print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
-        else:
-            print(f"[{time.strftime('%H:%M:%S')}] 💓 Aether Cloud PC activo ({int(minutos*60)}s) | Watchdog OK", flush=True)
+                pass
+                
+            if segundos_activos % 300 == 0:
+                auto_save_user_state()
+                try:
+                    ram_str = subprocess.check_output("free -h | grep Mem: | awk '{print $3 \"/\" $2}'", shell=True, text=True).strip()
+                    disk_str = subprocess.check_output("df -h / 2>/dev/null | tail -1 | awk '{print $4 \" libres\"}'", shell=True, text=True).strip()
+                    gpu_info = ""
+                    try:
+                        gpu_lines = subprocess.check_output("nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null", shell=True, text=True).strip().splitlines()
+                        if gpu_lines:
+                            gpu_parts = []
+                            for g in gpu_lines:
+                                parts = [x.strip() for x in g.split(",")]
+                                if len(parts) >= 4:
+                                    idx, util, mem_u, mem_t = parts[0], parts[1], parts[2], parts[3]
+                                    gpu_parts.append(f"T4-{idx}: {util}% ({mem_u}/{mem_t}MB)")
+                            if gpu_parts:
+                                gpu_info = " | 🎮 " + ", ".join(gpu_parts)
+                    except Exception:
+                        pass
+                    print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | 🟢 RAM: {ram_str} | 💾 Disco: {disk_str}{gpu_info} | ☁️ Drive: {'Conectado' if drive_alive else 'Desconectado'} | Estado Guardado ✅", flush=True)
+                except Exception:
+                    print(f"\n📊 [{time.strftime('%H:%M:%S')}] Telemetría ({int(minutos)} min activo) | Estado Guardado en Drive ✅", flush=True)
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] 💓 Aether Cloud PC activo ({segundos_activos}s) | Watchdog OK", flush=True)
+        except Exception as e_tick:
+            print(f"⚠️ [WATCHDOG] Excepción recuperada en bucle: {e_tick}", flush=True)
+            time.sleep(5)
 except KeyboardInterrupt:
     print("\n🛑 Guardando estado final antes de salir...", flush=True)
     auto_save_user_state()
