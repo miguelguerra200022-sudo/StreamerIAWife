@@ -1174,6 +1174,16 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
 }
+.drawer-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(0, 255, 200, 0.7);
+    margin-top: 6px;
+    margin-bottom: 2px;
+    padding-left: 4px;
+}
 .drawer-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1695,6 +1705,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         </button>
     </div>
     <div class="drawer-items">
+        <div class="drawer-section-title">Entrada y Control</div>
+        <button class="drawer-btn active-glow" id="btn-aether-mode">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-mode">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
+                </span>
+                <span>Modo de Entrada</span>
+            </div>
+            <span class="drawer-pill active" id="badge-aether-mode">Trackpad</span>
+        </button>
         <button class="drawer-btn" id="btn-aether-gamepad">
             <div class="drawer-btn-left">
                 <span class="d-icon" id="icon-aether-gamepad">
@@ -1704,14 +1724,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             </div>
             <span class="drawer-pill" id="badge-aether-gamepad">OFF</span>
         </button>
-        <button class="drawer-btn active-glow" id="btn-aether-mode">
+        <button class="drawer-btn" id="btn-aether-sensitivity">
             <div class="drawer-btn-left">
-                <span class="d-icon" id="icon-aether-mode">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>
+                <span class="d-icon" id="icon-aether-sensitivity">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </span>
-                <span>Modo de Entrada</span>
+                <span>Sensibilidad Trackpad</span>
             </div>
-            <span class="drawer-pill active" id="badge-aether-mode">Trackpad</span>
+            <span class="drawer-pill" id="badge-aether-sensitivity">1.0x</span>
+        </button>
+        <button class="drawer-btn" id="btn-aether-scroll">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-scroll">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/><polyline points="5 8 12 1 19 8"/></svg>
+                </span>
+                <span>Desplazamiento Scroll</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-scroll">Estándar</span>
         </button>
         <button class="drawer-btn" id="btn-aether-pointerlock">
             <div class="drawer-btn-left">
@@ -1731,6 +1760,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             </div>
             <span class="drawer-pill">Activar</span>
         </button>
+
+        <div class="drawer-section-title">Pantalla, Telemetría y Audio</div>
         <button class="drawer-btn" id="btn-aether-aspect">
             <div class="drawer-btn-left">
                 <span class="d-icon" id="icon-aether-aspect">
@@ -1757,6 +1788,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 <span>Canal de Audio</span>
             </div>
             <span class="drawer-pill active" id="badge-aether-audio">ON</span>
+        </button>
+        <button class="drawer-btn" id="btn-aether-telem">
+            <div class="drawer-btn-left">
+                <span class="d-icon" id="icon-aether-telem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </span>
+                <span>Diagnóstico Stream</span>
+            </div>
+            <span class="drawer-pill" id="badge-aether-telem">HUD</span>
         </button>
         <button class="drawer-btn" id="btn-aether-fullscreen">
             <div class="drawer-btn-left">
@@ -1866,6 +1906,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnPointerLock = document.getElementById("btn-aether-pointerlock");
     const badgePointerLock = document.getElementById("badge-aether-pointerlock");
     const btnKeyboard = document.getElementById("btn-aether-keyboard");
+    const btnSensitivity = document.getElementById("btn-aether-sensitivity");
+    const badgeSensitivity = document.getElementById("badge-aether-sensitivity");
+    const btnScroll = document.getElementById("btn-aether-scroll");
+    const badgeScroll = document.getElementById("badge-aether-scroll");
+    const btnTelem = document.getElementById("btn-aether-telem");
+    const badgeTelem = document.getElementById("badge-aether-telem");
     const btnAspect = document.getElementById("btn-aether-aspect");
     const badgeAspect = document.getElementById("badge-aether-aspect");
     const btnZoom = document.getElementById("btn-aether-zoom");
@@ -1907,6 +1953,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let isGamepadVisible = localStorage.getItem("cloudpc_gp_visible") === "true";
     let isStretchedAspect = false;
     let isAudioMuted = false;
+
+    let trackpadSens = parseFloat(localStorage.getItem("cloudpc_tp_sens") || "1.0");
+    let isNaturalScroll = localStorage.getItem("cloudpc_natural_scroll") === "true";
+    let scrollAccumulatorY = 0;
+    let isEdgeSwiping = false, edgeSwipeStartX = 0;
+    let threeTouchStartY = 0, threeTouchStartX = 0, threeTouchMoved = 0, isThreeFingerGesture = false;
 
     let currentZoom = 1.0, panX = 0, panY = 0;
     let isDragging = false, isTouching = false, touchStartTime = 0, lastTapEndTime = 0;
@@ -2066,14 +2118,27 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         scrim.classList.add("open");
         edgeTab.classList.add("active");
         hapticFeedback(20);
+        try {
+            history.pushState({ aetherDrawerOpen: true }, "");
+        } catch(e) {}
     }
 
-    function closeDrawer() {
+    function closeDrawer(preventHistoryBack) {
+        if (!drawer.classList.contains("open")) return;
         drawer.classList.remove("open");
         scrim.classList.remove("open");
         edgeTab.classList.remove("active");
         resetEdgeIdleTimer();
+        if (!preventHistoryBack && history.state && history.state.aetherDrawerOpen) {
+            try { history.back(); } catch(e) {}
+        }
     }
+
+    window.addEventListener("popstate", function(e) {
+        if (drawer && drawer.classList.contains("open")) {
+            closeDrawer(true);
+        }
+    });
 
     // Helper para garantizar respuesta táctil instantánea y sin rebotes en botones del menú
     function attachButtonTap(elem, callback) {
@@ -2589,6 +2654,21 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
     }
 
+    function sendKeyCombo(downKeysym, pressKeysym) {
+        const rfb = getRFB();
+        if (!rfb) return;
+        const sk = (typeof rfb.sendKey === "function") ? rfb.sendKey.bind(rfb) : (typeof rfb._sendKey === "function" ? rfb._sendKey.bind(rfb) : null);
+        if (!sk) return;
+        sk(downKeysym, 1);
+        setTimeout(() => {
+            sk(pressKeysym, 1);
+            setTimeout(() => {
+                sk(pressKeysym, 0);
+                setTimeout(() => sk(downKeysym, 0), 40);
+            }, 60);
+        }, 30);
+    }
+
     const mouseSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"/><line x1="12" y1="6" x2="12" y2="10"/></svg>';
     const touchSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>';
 
@@ -2629,6 +2709,19 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         totalMoved = 0;
         cancelAnimationFrame(momentumAnimFrame);
         resetEdgeIdleTimer();
+
+        // Deslizamiento desde el borde izquierdo para abrir el Panel Aether
+        if (e.touches.length === 1 && !drawer.classList.contains("open")) {
+            const touchX = e.touches[0].clientX;
+            if (touchX < 30) {
+                isEdgeSwiping = true;
+                edgeSwipeStartX = touchX;
+            } else {
+                isEdgeSwiping = false;
+            }
+        } else {
+            isEdgeSwiping = false;
+        }
 
         if (e.touches.length === 1) {
             isTouching = true;
@@ -2683,6 +2776,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 sendMouse(0);
             }
 
+            scrollAccumulatorY = 0;
             const p1 = e.touches[0], p2 = e.touches[1];
             initialPinchDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
             initialPinchZoom = currentZoom;
@@ -2695,6 +2789,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             lastScrollX = initialPinchMidX;
             lastScrollTime = performance.now();
             scrollVelocityY = 0;
+        } else if (e.touches.length === 3) {
+            threeTouchStartY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
+            threeTouchStartX = (e.touches[0].clientX + e.touches[1].clientX + e.touches[2].clientX) / 3;
+            threeTouchMoved = 0;
+            isThreeFingerGesture = true;
         }
     }, { passive: false });
 
@@ -2702,6 +2801,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
             e.target.closest("#right-stick-zone")) return;
+
+        // Desplazamiento desde el borde para abrir el cajón lateral
+        if (isEdgeSwiping && e.touches.length === 1) {
+            const curTouchX = e.touches[0].clientX;
+            if (curTouchX - edgeSwipeStartX > 42) {
+                isEdgeSwiping = false;
+                openDrawer();
+                return;
+            }
+        }
 
         if (isTouching && e.touches.length === 1) {
             e.preventDefault();
@@ -2728,23 +2837,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     showToast("Arrastre Bloqueado (Tap & Drag)");
                 }
 
-                // Filtro deadband anti-jitter para micro-temblores en reposo
+                // Filtro deadband anti-jitter para micro-temblores en reposo (estándar Windows Precision)
                 if (dist < 0.65 && !isDragging) {
                     return;
                 }
 
-                // Velocidad física normalizada en px/ms
+                // Física balística multinivel con sensibilidad configurable (estándar Apple macOS Trackpad)
                 const v = dist / dt;
                 let accel = 1.0;
-                if (v < 0.25) {
-                    accel = 0.78; // Micro-precisión para apuntar píxel por píxel
-                } else if (v < 1.2) {
-                    accel = 0.78 + (v - 0.25) * 0.95; // Transición lineal cómoda
+                if (v < 0.20) {
+                    accel = 0.70; // Micro-precisión subpíxel para apuntar elementos finos
+                } else if (v < 1.0) {
+                    accel = 0.70 + (v - 0.20) * 0.95; // Transición lineal ergonómica 1:1
                 } else {
-                    accel = Math.min(3.4, 1.68 + Math.pow(v - 1.2, 1.25)); // Aceleración suave para cruzar la pantalla 1080p
+                    accel = Math.min(3.6, 1.46 + Math.pow(v - 1.0, 1.25)); // Aceleración balística progresiva
                 }
 
-                const scaleFactor = 1.35 * accel;
+                const scaleFactor = 1.35 * accel * trackpadSens;
                 const m = getViewportMetrics();
                 const scaleX = (screenW / m.renderW) * scaleFactor;
                 const scaleY = (screenH / m.renderH) * scaleFactor;
@@ -2810,16 +2919,27 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 panY = clampPanY(panY + dy, currentZoom);
                 updateCanvasTransform(false);
             } else {
-                // Si la pantalla está al 100%, dos dedos en paralelo hacen SCROLL de ratón
+                // Modo Scroll a Dos Dedos con Acumulador Fino de Subpíxeles y Scroll Natural/Estándar
                 const dy = curMidY - lastScrollY;
                 lastScrollY = curMidY;
                 lastScrollX = curMidX;
-                const now = performance.now(), dt = now - lastScrollTime;
+                const now = performance.now(), dt = Math.max(8, now - lastScrollTime);
                 if (dt > 0) scrollVelocityY = dy / dt;
                 lastScrollTime = now;
-                if (dy > 12) { sendMouse(16); setTimeout(() => sendMouse(0), 25); }
-                else if (dy < -12) { sendMouse(8); setTimeout(() => sendMouse(0), 25); }
+
+                scrollAccumulatorY += dy;
+                const step = 14;
+                while (Math.abs(scrollAccumulatorY) >= step) {
+                    const mask = scrollAccumulatorY > 0 ? (isNaturalScroll ? 8 : 16) : (isNaturalScroll ? 16 : 8);
+                    sendMouse(mask);
+                    setTimeout(() => sendMouse(0), 18);
+                    scrollAccumulatorY += (scrollAccumulatorY > 0 ? -step : step);
+                }
             }
+        } else if (e.touches.length === 3 && isThreeFingerGesture) {
+            e.preventDefault();
+            const curMidY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
+            threeTouchMoved = curMidY - threeTouchStartY;
         }
     }, { passive: false });
 
@@ -2828,6 +2948,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
             e.target.closest("#right-stick-zone")) return;
 
+        isEdgeSwiping = false;
         clearTimeout(dragHoldTimer);
         if (holdRing) holdRing.classList.remove("active");
         const duration = performance.now() - touchStartTime;
@@ -2843,12 +2964,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
         if (e.touches.length === 0) {
             isTouching = false;
+            // Inercia Cinética de Desplazamiento (Exponential Decay Momentum)
             if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35 && currentZoom <= 1.05) {
-                let v = scrollVelocityY * 18;
+                let v = scrollVelocityY * 16;
                 let decay = () => {
                     if (Math.abs(v) > 0.8) {
-                        sendMouse(v > 0 ? 16 : 8);
-                        setTimeout(() => sendMouse(0), 20);
+                        const mask = v > 0 ? (isNaturalScroll ? 8 : 16) : (isNaturalScroll ? 16 : 8);
+                        sendMouse(mask);
+                        setTimeout(() => sendMouse(0), 18);
                         v *= 0.88;
                         momentumAnimFrame = requestAnimationFrame(decay);
                     }
@@ -2910,17 +3033,37 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     setTimeout(() => sendMouse(0), 45);
                     lastTapEndTime = performance.now();
                 }
-            } else if (initialTouchCount === 2 && !isPinching && duration < 380) {
+            } else if (initialTouchCount === 2 && !isPinching && duration < 380 && totalMoved < 20) {
+                // Toque a dos dedos = Clic Secundario (Right Click)
                 hapticFeedback([10, 30, 10]);
                 const pt = virtualToScreen(virtX, virtY);
                 createRipple(pt.x, pt.y, "right-click");
                 sendMouse(4);
                 setTimeout(() => sendMouse(0), 45);
-            } else if (initialTouchCount === 3 && duration < 380) {
-                hapticFeedback(22);
-                sendMouse(2);
-                setTimeout(() => sendMouse(0), 45);
+            } else if (initialTouchCount === 3) {
+                // Gestos a 3 dedos (macOS Mission Control / Windows 11 Precision Touchpad)
+                if (Math.abs(threeTouchMoved) > 55) {
+                    if (threeTouchMoved < -55) {
+                        // Swipe 3 dedos hacia ARRIBA: Mostrar Escritorio (Super_L + D)
+                        sendKeyCombo(0xFFEB, 0x0064);
+                        showToast("Mostrar Escritorio (Super+D)");
+                        hapticFeedback([25, 40, 25]);
+                    } else {
+                        // Swipe 3 dedos hacia ABAJO: Alternar Ventanas (Alt + Tab)
+                        sendKeyCombo(0xFFE9, 0xFF09);
+                        showToast("Alternar Ventanas (Alt+Tab)");
+                        hapticFeedback([25, 40, 25]);
+                    }
+                } else if (duration < 380) {
+                    // Toque 3 dedos rápido = Clic Central de Ratón (Rueda / Pegar X11)
+                    hapticFeedback(22);
+                    sendMouse(2);
+                    setTimeout(() => sendMouse(0), 45);
+                    showToast("Clic Central (Rueda)");
+                }
+                isThreeFingerGesture = false;
             } else if (initialTouchCount === 4 && duration < 400) {
+                // Toque 4 dedos = Pantalla Completa Inmersiva
                 toggleFullScreen();
             }
             initialTouchCount = 0;
@@ -3061,6 +3204,59 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             showToast("Puntero Liberado");
         }
         closeDrawer();
+    }
+
+    // Control de Sensibilidad de Trackpad (0.75x, 1.0x, 1.4x)
+    const sensLevels = [
+        { val: 0.75, label: "0.75x" },
+        { val: 1.0,  label: "1.0x" },
+        { val: 1.4,  label: "1.4x" }
+    ];
+    let currentSensIdx = sensLevels.findIndex(s => Math.abs(s.val - trackpadSens) < 0.05);
+    if (currentSensIdx === -1) currentSensIdx = 1;
+    function updateSensUI() {
+        if (badgeSensitivity) badgeSensitivity.innerText = sensLevels[currentSensIdx].label;
+    }
+    updateSensUI();
+    if (btnSensitivity) {
+        attachButtonTap(btnSensitivity, function() {
+            currentSensIdx = (currentSensIdx + 1) % sensLevels.length;
+            trackpadSens = sensLevels[currentSensIdx].val;
+            localStorage.setItem("cloudpc_tp_sens", trackpadSens.toString());
+            updateSensUI();
+            showToast("Sensibilidad Trackpad: " + sensLevels[currentSensIdx].label);
+            hapticFeedback(18);
+        });
+    }
+
+    // Alternar Desplazamiento Natural (Apple) vs Estándar (PC)
+    function updateScrollUI() {
+        if (badgeScroll) {
+            badgeScroll.innerText = isNaturalScroll ? "Natural" : "Estándar";
+            if (isNaturalScroll) badgeScroll.classList.add("active");
+            else badgeScroll.classList.remove("active");
+        }
+    }
+    updateScrollUI();
+    if (btnScroll) {
+        attachButtonTap(btnScroll, function() {
+            isNaturalScroll = !isNaturalScroll;
+            localStorage.setItem("cloudpc_natural_scroll", isNaturalScroll ? "true" : "false");
+            updateScrollUI();
+            showToast(isNaturalScroll ? "Scroll Natural (Estilo Apple)" : "Scroll Estándar (Estilo PC)");
+            hapticFeedback(18);
+        });
+    }
+
+    // Toggle de Telemetría desde el Cajón
+    if (btnTelem) {
+        attachButtonTap(btnTelem, function() {
+            if (telemPanel) {
+                telemPanel.classList.toggle("open");
+                hapticFeedback(16);
+            }
+            closeDrawer();
+        });
     }
 
     if (btnPointerLock) attachButtonTap(btnPointerLock, togglePointerLock);
