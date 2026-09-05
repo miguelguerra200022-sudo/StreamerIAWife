@@ -1806,6 +1806,34 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #cloud-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#aether-kbd-dismiss {
+    position: fixed; right: calc(14px + var(--safe-right));
+    bottom: calc(18px + var(--safe-bottom));
+    background: rgba(10, 15, 26, 0.94);
+    color: #00ffc8;
+    border: 1px solid rgba(0, 255, 200, 0.5);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 12px; font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 255, 200, 0.3);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 999999;
+    display: none;
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+#aether-kbd-dismiss:active {
+    transform: scale(0.95);
+    background: rgba(0, 255, 200, 0.2);
+}
+#aether-kbd-dismiss.visible {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 </style>
 
 <!-- 1. STREAM TELEMETRY HUD (ESTÁNDAR GAMING GEFORCE NOW & STEAM DECK) -->
@@ -1944,7 +1972,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 </span>
                 <span>Teclado en Pantalla</span>
             </div>
-            <span class="drawer-pill">Activar</span>
+            <span class="drawer-pill" id="badge-aether-keyboard">OFF</span>
         </button>
 
         <div class="drawer-section-title">Pantalla, Telemetría y Audio</div>
@@ -2006,17 +2034,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         </button>
 
         <div class="drawer-card-box">
-            <div class="drawer-card-label">Moonlight + Sunshine (Cero PIN)</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="drawer-card-label">Moonlight + Sunshine 60 FPS</span>
+                <span class="drawer-pill active" id="badge-sunshine-status">Activo</span>
+            </div>
             <div style="display:flex; gap:6px; margin-top:6px;">
                 <input type="text" id="input-moonlight-pin" placeholder="PIN 4 dígitos" maxlength="6" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid rgba(0,255,200,0.3); border-radius:6px; color:#fff; padding:6px 10px; font-size:13px; text-align:center; font-family:monospace; letter-spacing:2px;">
                 <button id="btn-moonlight-pair" style="background:var(--aether-cyan, #00ffc8); color:#0a0f1a; border:none; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer;">Vincular</button>
             </div>
-            <div id="moonlight-status-text" style="font-size:10.5px; color:#8892b0; margin-top:4px;">Abre Moonlight y vincula 1-clic sin salir de aquí.</div>
+            <div id="moonlight-status-text" style="font-size:10.5px; color:#8892b0; margin-top:4px;">1. Conecta con la IP de abajo. 2. Pon el PIN aquí y pulsa Vincular.</div>
+            <div style="margin-top:8px;">
+                <button id="btn-open-sunshine-web" style="width:100%; background:rgba(0,255,200,0.12); color:#00ffc8; border:1px solid rgba(0,255,200,0.3); border-radius:6px; padding:5px 8px; font-size:11px; font-weight:600; cursor:pointer;">Abrir Panel Web Sunshine (47990)</button>
+            </div>
         </div>
 
         <div class="drawer-card-box">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="drawer-card-label">Tailscale Mesh VPN</span>
+                <span class="drawer-card-label">Tailscale VPN (Jugar por Internet)</span>
                 <span class="drawer-pill" id="badge-tailscale-status">Verificando...</span>
             </div>
             <div id="tailscale-info" style="font-size:11px; color:#ccd6f6; margin-top:5px; font-family:monospace; word-break:break-all;">IP: Buscando...</div>
@@ -2024,6 +2058,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 <button id="btn-tailscale-copy" style="flex:1; background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:5px 8px; font-size:11px; cursor:pointer;">Copiar IP</button>
                 <button id="btn-tailscale-login" style="display:none; flex:1; background:var(--aether-blue, #0099ff); color:#fff; border:none; border-radius:6px; padding:5px 8px; font-size:11px; font-weight:600; cursor:pointer;">Iniciar Sesión</button>
             </div>
+            <div style="font-size:10px; color:#8892b0; margin-top:4px;">Usa esta IP en Moonlight para jugar desde cualquier red móvil o Wi-Fi.</div>
         </div>
     </div>
     <div class="drawer-footer">
@@ -2102,6 +2137,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
 </svg>
 <div id="cloud-toast">Modo Trackpad Activo</div>
+<button id="aether-kbd-dismiss" title="Cerrar teclado en pantalla">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <span>Ocultar Teclado</span>
+</button>
 <audio id="cloud-web-audio" preload="none"></audio>
 
 <script>
@@ -2124,6 +2163,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const btnPointerLock = document.getElementById("btn-aether-pointerlock");
     const badgePointerLock = document.getElementById("badge-aether-pointerlock");
     const btnKeyboard = document.getElementById("btn-aether-keyboard");
+    const badgeKeyboard = document.getElementById("badge-aether-keyboard");
+    const kbdDismissBtn = document.getElementById("aether-kbd-dismiss");
+    let isVirtualKeyboardActive = false;
+    const btnOpenSunshineWeb = document.getElementById("btn-open-sunshine-web");
     const btnSensitivity = document.getElementById("btn-aether-sensitivity");
     const badgeSensitivity = document.getElementById("badge-aether-sensitivity");
     const btnScroll = document.getElementById("btn-aether-scroll");
@@ -2416,6 +2459,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let drawerTouchStartY = 0;
     let drawerLastScrollTime = 0;
     let drawerScrollTimeout = null;
+    let lastGlobalTouchTime = 0;
+
+    window.addEventListener("touchstart", function() { lastGlobalTouchTime = performance.now(); }, { capture: true, passive: true });
+    window.addEventListener("touchend", function() { lastGlobalTouchTime = performance.now(); }, { capture: true, passive: true });
 
     function markDrawerScrolling() {
         drawerIsScrolling = true;
@@ -2423,7 +2470,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         clearTimeout(drawerScrollTimeout);
         drawerScrollTimeout = setTimeout(() => {
             drawerIsScrolling = false;
-        }, 320);
+        }, 350);
     }
 
     const drawerItems = document.querySelector(".drawer-items");
@@ -2445,7 +2492,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (e.touches.length === 1) {
                 const dx = e.touches[0].clientX - drawerTouchStartX;
                 const dy = e.touches[0].clientY - drawerTouchStartY;
-                if (Math.hypot(dx, dy) > 6) {
+                if (Math.hypot(dx, dy) > 5) {
                     markDrawerScrolling();
                 }
             }
@@ -2462,7 +2509,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }, { capture: true, passive: true });
     }
 
-    // Helper anti-accidental de Grado Industrial (Estándar BigTech: Chrome / Material Design)
+    // Helper anti-accidental de Grado Industrial (Estándar BigTech: Chrome / Material Design / FastClick)
     function attachButtonTap(elem, callback) {
         if (!elem) return;
         let btnTouchStartX = 0;
@@ -2489,7 +2536,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (e.touches.length === 1) {
                 const dx = e.touches[0].clientX - btnTouchStartX;
                 const dy = e.touches[0].clientY - btnTouchStartY;
-                if (Math.hypot(dx, dy) > 6) {
+                if (Math.hypot(dx, dy) > 7) {
                     btnMoved = true;
                     markDrawerScrolling();
                 }
@@ -2502,39 +2549,44 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }, { passive: true });
 
         elem.addEventListener("touchend", function(e) {
+            // SUPRESIÓN OBLIGATORIA DEL CLIC SINTÉTICO DEL NAVEGADOR
+            e.preventDefault();
+            e.stopPropagation();
+
             const sc = getScrollContainer();
             const curScrollTop = sc ? sc.scrollTop : 0;
             const scrollDelta = Math.abs(curScrollTop - btnStartScrollTop);
             const duration = performance.now() - btnTouchStartTime;
             const timeSinceScroll = performance.now() - drawerLastScrollTime;
 
-            // Si el dedo se movió > 6px, el contenedor hizo scroll > 3px, se soltó durante inercia de scroll (< 320ms), o fue un toque largo (> 450ms), se descarta al 100%
-            if (btnMoved || scrollDelta > 3 || drawerIsScrolling || timeSinceScroll < 320 || duration > 450) {
-                e.stopPropagation();
-                setTimeout(() => { btnMoved = false; }, 100);
+            // Si el dedo se movió > 7px, el contenedor hizo scroll > 4px, hubo scroll reciente (< 350ms), o fue un toque sostenido (> 420ms), descartar sin activar
+            if (btnMoved || scrollDelta > 4 || drawerIsScrolling || timeSinceScroll < 350 || duration > 420) {
+                btnMoved = false;
                 return;
             }
-            e.preventDefault();
-            e.stopPropagation();
+
             const now = performance.now();
-            if (now - lastTapTime < 280) return;
+            if (now - lastTapTime < 300) return;
             lastTapTime = now;
             callback(e);
         }, { passive: false });
 
         elem.addEventListener("click", function(e) {
             e.stopPropagation();
-            const sc = getScrollContainer();
-            const curScrollTop = sc ? sc.scrollTop : 0;
-            const scrollDelta = Math.abs(curScrollTop - btnStartScrollTop);
-            const timeSinceScroll = performance.now() - drawerLastScrollTime;
-
-            if (btnMoved || scrollDelta > 3 || drawerIsScrolling || timeSinceScroll < 320) {
+            // Ignorar clics sintéticos residuales producidos por toques táctiles
+            if (performance.now() - lastGlobalTouchTime < 700) {
+                e.preventDefault();
+                return;
+            }
+            if (drawerIsScrolling || (performance.now() - drawerLastScrollTime < 350)) {
                 e.preventDefault();
                 return;
             }
             const now = performance.now();
-            if (now - lastTapTime < 280) return;
+            if (now - lastTapTime < 300) {
+                e.preventDefault();
+                return;
+            }
             lastTapTime = now;
             callback(e);
         });
@@ -3142,6 +3194,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             e.target.closest("#aether-scrim") ||
             e.target.closest("#cloud-telemetry-panel") ||
             e.target.closest("#cloud-perf-badge") ||
+            e.target.closest("#aether-kbd-dismiss") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") ||
             e.target.closest(".gp-stick-zone") ||
             e.target.closest(".gp-stick-click-btn") ||
@@ -3155,6 +3208,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // GESTOS TÁCTILES Y MOTOR DE TRACKPAD EN CAPTURE PHASE UNIVERSAL
     function handleTouchStart(e) {
         if (shouldIgnoreTouch(e)) return;
+
+        // Si el teclado virtual está inactivo, asegurar que ningún input residual reabra el teclado al tocar la pantalla
+        if (!isVirtualKeyboardActive) {
+            const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
+            if (inputElem && document.activeElement === inputElem) {
+                inputElem.blur();
+            }
+        }
 
         // Prevenir comportamiento nativo del navegador (pan de página, zoom, pull-to-refresh)
         e.preventDefault();
@@ -3302,8 +3363,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
                 const scaleFactor = 1.35 * accel * trackpadSens;
                 const m = getViewportMetrics();
-                const scaleX = (screenW / m.renderW) * scaleFactor;
-                const scaleY = (screenH / m.renderH) * scaleFactor;
+                const canvas = getCanvas();
+                let renderW = m.renderW;
+                let renderH = m.renderH;
+                if (canvas) {
+                    const rect = canvas.getBoundingClientRect();
+                    if (rect.width > 20 && rect.height > 20) {
+                        renderW = rect.width;
+                        renderH = rect.height;
+                    }
+                }
+                const scaleX = (screenW / renderW) * scaleFactor;
+                const scaleY = (screenH / renderH) * scaleFactor;
 
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
@@ -3563,24 +3634,91 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // Teclado en pantalla
-    if (btnKeyboard) {
-        attachButtonTap(btnKeyboard, function() {
-            const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
+    // Gestión Quirúrgica de Teclado en Pantalla (Activar / Desactivar sin trampas de foco)
+    function setVirtualKeyboardState(active) {
+        isVirtualKeyboardActive = !!active;
+        const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
+        const rfb = getRFB();
+
+        if (isVirtualKeyboardActive) {
+            if (badgeKeyboard) {
+                badgeKeyboard.innerText = "ON";
+                badgeKeyboard.classList.add("active");
+            }
+            if (btnKeyboard) btnKeyboard.classList.add("active-glow");
+            if (kbdDismissBtn) kbdDismissBtn.classList.add("visible");
             if (inputElem) {
-                inputElem.focus();
                 try {
+                    inputElem.focus({ preventScroll: true });
                     const l = inputElem.value.length;
                     inputElem.setSelectionRange(l, l);
-                } catch(e) {}
+                } catch(e) {
+                    inputElem.focus();
+                }
             }
-            if (window.UI && typeof window.UI.toggleVirtualKeyboard === "function") {
-                try { window.UI.toggleVirtualKeyboard(); } catch(e) {}
-            } else if (window.UI && typeof window.UI.showVirtualKeyboard === "function") {
+            if (window.UI && typeof window.UI.showVirtualKeyboard === "function") {
                 try { window.UI.showVirtualKeyboard(); } catch(e) {}
             }
-            showToast("Teclado en Pantalla");
+            showToast("Teclado Activado");
+        } else {
+            if (badgeKeyboard) {
+                badgeKeyboard.innerText = "OFF";
+                badgeKeyboard.classList.remove("active");
+            }
+            if (btnKeyboard) btnKeyboard.classList.remove("active-glow");
+            if (kbdDismissBtn) kbdDismissBtn.classList.remove("visible");
+            if (inputElem) {
+                try { inputElem.blur(); } catch(e) {}
+            }
+            if (document.activeElement && document.activeElement.blur) {
+                try { document.activeElement.blur(); } catch(e) {}
+            }
+            if (window.UI && typeof window.UI.hideVirtualKeyboard === "function") {
+                try { window.UI.hideVirtualKeyboard(); } catch(e) {}
+            }
+            const novncKbdBtn = document.getElementById("noVNC_keyboard_button");
+            if (novncKbdBtn) novncKbdBtn.classList.remove("noVNC_selected");
+            if (rfb) {
+                rfb.focusOnClick = true;
+            }
+            showToast("Teclado Desactivado");
+        }
+    }
+
+    if (btnKeyboard) {
+        attachButtonTap(btnKeyboard, function() {
+            setVirtualKeyboardState(!isVirtualKeyboardActive);
+            hapticFeedback(20);
             closeDrawer();
+        });
+    }
+
+    if (kbdDismissBtn) {
+        attachButtonTap(kbdDismissBtn, function(e) {
+            e.stopPropagation();
+            setVirtualKeyboardState(false);
+            hapticFeedback(20);
+        });
+    }
+
+    // Auto-sincronizar si el usuario cierra el teclado de Android o iOS con el botón atrás del sistema
+    const nativeKbdInput = document.getElementById("noVNC_keyboardinput");
+    if (nativeKbdInput) {
+        nativeKbdInput.addEventListener("blur", function() {
+            setTimeout(function() {
+                if (document.activeElement !== nativeKbdInput && isVirtualKeyboardActive) {
+                    setVirtualKeyboardState(false);
+                }
+            }, 250);
+        });
+    }
+
+    // Acceso 1-clic al Panel Web de Sunshine (47990)
+    if (btnOpenSunshineWeb) {
+        attachButtonTap(btnOpenSunshineWeb, function() {
+            window.open(window.location.origin + "/sunshine/", "_blank");
+            showToast("Abriendo Sunshine Web UI...");
+            hapticFeedback(20);
         });
     }
 
@@ -4357,6 +4495,7 @@ subprocess.run(f"cp {BASE_DIR}/escaner_redes_y_conexiones.py /usr/local/bin/esca
 subprocess.run("chmod +x /usr/local/bin/escaner_redes_y_conexiones.py 2>/dev/null || true", shell=True)
 
 # Iniciar Gamepad UInput Bridge en segundo plano para detección de mandos inmediata
+subprocess.run("[ -e /dev/uinput ] || mknod /dev/uinput c 10 223 2>/dev/null || true; chmod 0666 /dev/uinput 2>/dev/null || true", shell=True)
 subprocess.Popen("python3 /usr/local/bin/gamepad_uinput_bridge.py >> /kaggle/working/cloudpc_gamepad.log 2>&1", shell=True)
 
 # Accesos directos oficiales en el escritorio (Freedesktop Standard - Iconos corporativos finos)
@@ -4747,7 +4886,7 @@ except Exception:
 
 # Iniciar Gamepad UInput Daemon en puerto 6081
 log("Iniciando Gamepad UInput Bridge en puerto 6081...")
-subprocess.run("chmod 0666 /dev/uinput 2>/dev/null || true", shell=True)
+subprocess.run("[ -e /dev/uinput ] || mknod /dev/uinput c 10 223 2>/dev/null || true; chmod 0666 /dev/uinput 2>/dev/null || true", shell=True)
 subprocess.run(f"cp {BASE_DIR}/gamepad_uinput_bridge.py /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
 subprocess.run("chmod +x /usr/local/bin/gamepad_uinput_bridge.py 2>/dev/null || true", shell=True)
 subprocess.run("pkill -9 -f 'gamepad_uinput_bridge' 2>/dev/null || true", shell=True)
@@ -4885,25 +5024,37 @@ http {
             proxy_send_timeout 3600s;
         }
 
-        # 5. Zero-PIN Auto-Pairing Endpoint (Sunshine / Starparks 1-Clic)
+        # 5. Sunshine Web UI Reverse Proxy (Acceso global HTTPS por Nginx)
+        location /sunshine/ {
+            proxy_pass https://127.0.0.1:47990/;
+            proxy_ssl_verify off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host $host;
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+        }
+
+        # 6. Zero-PIN Auto-Pairing Endpoint (Sunshine / Starparks 1-Clic)
         location /autopair {
             proxy_pass http://127.0.0.1:47995/autopair;
             proxy_read_timeout 15s;
         }
 
-        # 6. Tailscale Mesh VPN Status Endpoint
+        # 7. Tailscale Mesh VPN Status Endpoint
         location /tailscale/ {
             proxy_pass http://127.0.0.1:47995/tailscale/;
             proxy_read_timeout 15s;
         }
 
-        # 7. Sunshine Host Status Endpoint
+        # 8. Sunshine Host Status Endpoint
         location /sunshine/status {
             proxy_pass http://127.0.0.1:47995/sunshine/status;
             proxy_read_timeout 15s;
         }
 
-        # 8. PWA WebAPK Manifest (GeForce NOW Experience)
+        # 9. PWA WebAPK Manifest (GeForce NOW Experience)
         location /manifest.json {
             root /opt/noVNC;
             default_type application/manifest+json;
@@ -5004,32 +5155,56 @@ if tailscaled_bin:
             except Exception:
                 pass
 
-        if authkey:
-            tailscale_info["status"] = "iniciando"
-            os.makedirs("/root/.config/tailscale", exist_ok=True)
-            tun_arg = "--tun=userspace-networking"
-            subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
-            time.sleep(0.3)
-            ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
-            subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            log("Tailscale daemon activo con Auth Key (Userspace Networking SOCKS5:1055)")
+        os.makedirs("/root/.config/tailscale", exist_ok=True)
+        tun_arg = "--tun=userspace-networking"
+        subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
+        time.sleep(0.3)
+        ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
+        subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log("Tailscale daemon iniciado (Userspace Networking SOCKS5:1055)")
 
-            def tailscale_manager_loop():
-                global tailscale_info
-                time.sleep(2)
+        def tailscale_manager_loop():
+            global tailscale_info
+            time.sleep(2)
+            if authkey:
+                tailscale_info["status"] = "iniciando"
                 log("Conectando Tailscale con Auth Key (Cero PIN)...")
-                subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes >/dev/null 2>&1", shell=True)
-                for _ in range(30):
-                    time.sleep(2)
-                    res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
-                    ts_ip = res_ip.stdout.strip()
-                    if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip:
-                        tailscale_info["status"] = "connected"
-                        tailscale_info["ip"] = ts_ip
-                        log(f"Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
-                        break
+                subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes --reset >/dev/null 2>&1", shell=True)
+            else:
+                tailscale_info["status"] = "iniciando"
+                log("Iniciando Tailscale interactivo para acceso WAN por Internet...")
+                up_proc = subprocess.Popen(
+                    f"{tailscale_bin} up --hostname=aether-cloud-pc --accept-routes --reset",
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True
+                )
+                for line in up_proc.stdout:
+                    if "login.tailscale.com" in line or "tailscale.com/a/" in line:
+                        import re
+                        m_url = re.search(r'https://[^\s]+', line)
+                        if m_url:
+                            login_url = m_url.group(0)
+                            tailscale_info["login_url"] = login_url
+                            tailscale_info["status"] = "login_required"
+                            log(f"🔑 TAILSCALE WAN LOGIN URL: {login_url}", "SUCCESS")
+                            log(f"Inicia sesión en este enlace para vincular Moonlight por Internet: {login_url}")
+                            break
 
-            threading.Thread(target=tailscale_manager_loop, daemon=True).start()
+            for _ in range(60):
+                time.sleep(2)
+                res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
+                ts_ip = res_ip.stdout.strip()
+                if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip and "error" not in ts_ip.lower():
+                    tailscale_info["status"] = "connected"
+                    tailscale_info["ip"] = ts_ip
+                    tailscale_info["login_url"] = None
+                    log(f"🌐 Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
+                    log(f"🎮 Sunshine listo para jugar por Internet: Conéctate en Moonlight a {ts_ip}", "SUCCESS")
+                    break
+
+        threading.Thread(target=tailscale_manager_loop, daemon=True).start()
     except Exception as e_ts:
         log(f"Aviso arranque Tailscale: {e_ts}", "WARNING")
 
@@ -5069,6 +5244,7 @@ if sunshine_bin:
             f"encoder = {enc_choice}\n"
             "channels = 2\n"
             "audio_sink = DummyOutput\n"
+            "upnp = false\n"
         )
         conf_p.write_text(conf_nvenc, encoding="utf-8")
         subprocess.run(f"{sunshine_bin} --creds admin {VNC_PASSWORD} >/dev/null 2>&1 || true", shell=True)

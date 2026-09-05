@@ -76,6 +76,10 @@ def get_virtual_pad():
     global virtual_pad
     if virtual_pad is None:
         try:
+            if not os.path.exists("/dev/uinput"):
+                import subprocess
+                subprocess.run("mknod /dev/uinput c 10 223 2>/dev/null || true", shell=True)
+                subprocess.run("chmod 0666 /dev/uinput 2>/dev/null || true", shell=True)
             virtual_pad = UInput(
                 events=GAMEPAD_CAPABILITIES,
                 name="Microsoft X-Box 360 pad",
