@@ -1291,7 +1291,7 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     user-select: none;
-    touch-action: none;
+    touch-action: pan-y;
 }
 #aether-drawer.open {
     transform: translate3d(0, 0, 0);
@@ -2251,8 +2251,27 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         };
     }
 
+    function getRFB() { return (window.UI && window.UI.rfb) ? window.UI.rfb : null; }
+    function getCanvas() {
+        const rfb = getRFB();
+        if (rfb && rfb._canvas) return rfb._canvas;
+        return document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+    }
+
     // Conversión de Pantalla Física (Touch/Click) a Espacio Virtual 1080p Nativo (Milimétrico)
     function screenToVirtual(clientX, clientY) {
+        const canvas = getCanvas();
+        if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width > 20 && rect.height > 20) {
+                const vx = ((clientX - rect.left) / rect.width) * screenW;
+                const vy = ((clientY - rect.top) / rect.height) * screenH;
+                return {
+                    x: Math.max(0, Math.min(screenW, vx)),
+                    y: Math.max(0, Math.min(screenH, vy))
+                };
+            }
+        }
         const m = getViewportMetrics();
         const canvasX = (clientX - panX) / currentZoom;
         const canvasY = (clientY - panY) / currentZoom;
@@ -2266,6 +2285,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // Conversión de Coordenadas Virtuales 1080p a Posición en Pantalla Física (CSS Pixels)
     function virtualToScreen(vx, vy) {
+        const canvas = getCanvas();
+        if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width > 20 && rect.height > 20) {
+                return {
+                    x: rect.left + (vx / screenW) * rect.width,
+                    y: rect.top + (vy / screenH) * rect.height
+                };
+            }
+        }
         const m = getViewportMetrics();
         const canvasX = m.offsetX + (vx * (m.baseW / screenW));
         const canvasY = m.offsetY + (vy * (m.baseH / screenH));
@@ -2302,8 +2331,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
         updateCanvasTransform(animate);
     }
-
-    function getRFB() { return (window.UI && window.UI.rfb) ? window.UI.rfb : null; }
 
     function showToast(msg) {
         if (!toast) return;
@@ -2383,22 +2410,91 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
     });
 
-    // Helper para garantizar respuesta táctil instantánea y sin rebotes en botones del menú
+    // Control de scroll y supresión de activación accidental en el panel Aether
+    let drawerIsScrolling = false;
+    let drawerTouchStartX = 0;
+    let drawerTouchStartY = 0;
+    let drawerLastScrollTime = 0;
+
+    if (drawer) {
+        drawer.addEventListener("touchstart", function(e) {
+            if (e.touches.length === 1) {
+                drawerTouchStartX = e.touches[0].clientX;
+                drawerTouchStartY = e.touches[0].clientY;
+                drawerIsScrolling = false;
+            }
+        }, { capture: true, passive: true });
+
+        drawer.addEventListener("touchmove", function(e) {
+            if (e.touches.length === 1) {
+                const dx = e.touches[0].clientX - drawerTouchStartX;
+                const dy = e.touches[0].clientY - drawerTouchStartY;
+                if (Math.hypot(dx, dy) > 8) {
+                    drawerIsScrolling = true;
+                    drawerLastScrollTime = performance.now();
+                }
+            }
+        }, { capture: true, passive: true });
+
+        drawer.addEventListener("touchend", function(e) {
+            if (drawerIsScrolling) {
+                setTimeout(() => { drawerIsScrolling = false; }, 220);
+            }
+        }, { capture: true, passive: true });
+    }
+
+    // Helper anti-accidental para garantizar respuesta táctil y CERO disparos al desplazarse verticalmente
     function attachButtonTap(elem, callback) {
         if (!elem) return;
-        let lastTap = 0;
-        const handle = function(e) {
+        let btnTouchStartX = 0;
+        let btnTouchStartY = 0;
+        let btnMoved = false;
+        let lastTapTime = 0;
+
+        elem.addEventListener("touchstart", function(e) {
+            if (e.touches.length === 1) {
+                btnTouchStartX = e.touches[0].clientX;
+                btnTouchStartY = e.touches[0].clientY;
+                btnMoved = false;
+            }
+        }, { passive: true });
+
+        elem.addEventListener("touchmove", function(e) {
+            if (e.touches.length === 1) {
+                const dx = e.touches[0].clientX - btnTouchStartX;
+                const dy = e.touches[0].clientY - btnTouchStartY;
+                if (Math.hypot(dx, dy) > 8) {
+                    btnMoved = true;
+                    drawerIsScrolling = true;
+                    drawerLastScrollTime = performance.now();
+                }
+            }
+        }, { passive: true });
+
+        elem.addEventListener("touchend", function(e) {
+            if (btnMoved || drawerIsScrolling || (performance.now() - drawerLastScrollTime < 250)) {
+                e.stopPropagation();
+                return;
+            }
+            e.preventDefault();
             e.stopPropagation();
             const now = performance.now();
-            if (now - lastTap < 220) return;
-            lastTap = now;
+            if (now - lastTapTime < 250) return;
+            lastTapTime = now;
             callback(e);
-        };
-        elem.addEventListener("click", handle);
-        elem.addEventListener("touchend", function(e) {
-            e.preventDefault();
-            handle(e);
         }, { passive: false });
+
+        elem.addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (btnMoved || drawerIsScrolling || (performance.now() - drawerLastScrollTime < 250)) {
+                e.preventDefault();
+                return;
+            }
+            const now = performance.now();
+            if (now - lastTapTime < 250) return;
+            lastTapTime = now;
+            callback(e);
+        });
     }
 
     // Permitir clics y desplazamiento suave dentro del drawer sin sangrado al canvas
@@ -2849,7 +2945,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     });
 
     // -------------------------------------------------------------------------
-    // 4. MODO TRACKPAD & TÁCTIL DIRECTO (GESTOS CHROME REMOTE DESKTOP)
+    // 4. MODO TRACKPAD & TÁCTIL DIRECTO (GESTOS CHROME REMOTE DESKTOP & GUACAMOLE)
     // -------------------------------------------------------------------------
     function updateCursorElement() {
         if (!cursor) return;
@@ -2857,32 +2953,84 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         cursor.style.transform = `translate3d(${pt.x}px, ${pt.y}px, 0)`;
     }
 
-    function sendMouse(mask) {
+    // Inyección de Puntero en Kernel X11 / TigerVNC (Tres Capas: Socket Directo, API noVNC y DOM)
+    function sendPointer(x, y, mask) {
         const rfb = getRFB();
-        const x = Math.round(virtX);
-        const y = Math.round(virtY);
-        if (rfb) {
-            if (typeof rfb._sendMouse === "function") {
-                rfb._sendMouse(x, y, mask);
-                return;
-            } else if (typeof rfb.sendMouse === "function") {
-                rfb.sendMouse(x, y, mask);
-                return;
+        const px = Math.max(0, Math.min(screenW, Math.round(x)));
+        const py = Math.max(0, Math.min(screenH, Math.round(y)));
+
+        if (rfb && rfb._rfbConnectionState === 'connected' && !rfb._viewOnly) {
+            // Método 1: Envío binario PointerEvent directo al socket RFB (100% Preciso en Framebuffer 1080p)
+            if (rfb._sock && rfb.constructor && rfb.constructor.messages && typeof rfb.constructor.messages.pointerEvent === "function") {
+                try {
+                    rfb.constructor.messages.pointerEvent(rfb._sock, px, py, mask);
+                    rfb._mousePos = { x: px, y: py };
+                    rfb._mouseButtonMask = mask;
+                    return;
+                } catch(e) {}
+            }
+            // Método 2: Invocación de _sendMouse con calibración de escala y offset
+            if (typeof rfb._sendMouse === "function" && rfb._display) {
+                try {
+                    const scale = rfb._display._scale || 1;
+                    const vx = (px - (rfb._display._viewportLoc ? rfb._display._viewportLoc.x : 0)) * scale;
+                    const vy = (py - (rfb._display._viewportLoc ? rfb._display._viewportLoc.y : 0)) * scale;
+                    rfb._sendMouse(vx, vy, mask);
+                    return;
+                } catch(e) {}
             }
         }
-        // Respaldo universal: despachar MouseEvent sintético al canvas de noVNC con calibración milimétrica
-        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+
+        // Método 3: Fallback sintético al canvas con proyección geométrica milimétrica
+        const canvas = getCanvas();
         if (canvas) {
-            const pt = virtualToScreen(x, y);
+            const rect = canvas.getBoundingClientRect();
+            const clientX = rect.left + (px / screenW) * rect.width;
+            const clientY = rect.top + (py / screenH) * rect.height;
             const btn = (mask === 4) ? 2 : ((mask === 2) ? 1 : 0);
             const evtType = mask ? "mousedown" : "mouseup";
-            canvas.dispatchEvent(new MouseEvent(evtType, {
-                bubbles: true, cancelable: true, view: window,
-                clientX: pt.x, clientY: pt.y,
-                button: btn, buttons: mask
-            }));
+            try {
+                canvas.dispatchEvent(new MouseEvent("mousemove", {
+                    bubbles: true, cancelable: true, view: window,
+                    clientX: clientX, clientY: clientY,
+                    buttons: mask
+                }));
+                if (mask !== undefined) {
+                    canvas.dispatchEvent(new MouseEvent(evtType, {
+                        bubbles: true, cancelable: true, view: window,
+                        clientX: clientX, clientY: clientY,
+                        button: btn, buttons: mask
+                    }));
+                }
+            } catch(e) {}
         }
     }
+
+    function sendMouse(mask) {
+        sendPointer(virtX, virtY, mask);
+    }
+
+    function sendMouseMove() {
+        sendPointer(virtX, virtY, isDragging ? 1 : 0);
+    }
+
+    // Desactivar GestureHandler nativo de noVNC para evitar colisiones con el Trackpad
+    function setupNoVNCHooks() {
+        const rfb = getRFB();
+        if (rfb) {
+            if (rfb._gestures && rfb._gestures._target) {
+                try {
+                    rfb._gestures.detach();
+                    console.log("[AETHER] Gestures nativos de noVNC desacoplados para Trackpad Aether Pro");
+                } catch(e) {}
+            }
+            if (rfb._canvas) {
+                if (!rfb._canvas.id) rfb._canvas.id = "noVNC_canvas";
+                rfb._canvas.style.touchAction = "none";
+            }
+        }
+    }
+    setInterval(setupNoVNCHooks, 400);
 
     function sendKey(keysym) {
         const rfb = getRFB();
@@ -2933,6 +3081,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
         hapticFeedback(20);
         updateCursorElement();
+        setupNoVNCHooks();
     }
 
     if (btnMode) {
@@ -2941,11 +3090,32 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         });
     }
 
-    // Gestos de Pantalla cuando los mandos en pantalla no están interactuando
-    window.addEventListener("touchstart", function(e) {
-        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
-            e.target.closest("#right-stick-zone")) return;
+    // Filtro para ignorar toques en controles UI (drawer, edge tab, mandos gamepad)
+    function shouldIgnoreTouch(e) {
+        if (!e.target) return false;
+        return !!(
+            e.target.closest("#aether-drawer") ||
+            e.target.closest("#aether-edge-tab") ||
+            e.target.closest("#aether-scrim") ||
+            e.target.closest("#cloud-telemetry-panel") ||
+            e.target.closest("#cloud-perf-badge") ||
+            e.target.closest("#virtual-gamepad-overlay [data-btn]") ||
+            e.target.closest(".gp-stick-zone") ||
+            e.target.closest(".gp-stick-click-btn") ||
+            e.target.closest(".gp-dpad-container") ||
+            e.target.closest(".gp-abxy-container") ||
+            e.target.closest(".gp-shoulders-container") ||
+            e.target.closest(".gp-center-container")
+        );
+    }
+
+    // GESTOS TÁCTILES Y MOTOR DE TRACKPAD EN CAPTURE PHASE UNIVERSAL
+    function handleTouchStart(e) {
+        if (shouldIgnoreTouch(e)) return;
+
+        // Prevenir comportamiento nativo del navegador (pan de página, zoom, pull-to-refresh)
+        e.preventDefault();
+        e.stopPropagation();
 
         initialTouchCount = e.touches.length;
         touchStartTime = performance.now();
@@ -2953,62 +3123,51 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         cancelAnimationFrame(momentumAnimFrame);
         resetEdgeIdleTimer();
 
-        // Deslizamiento desde el borde izquierdo para abrir el Panel Aether
-        if (e.touches.length === 1 && !drawer.classList.contains("open")) {
-            const touchX = e.touches[0].clientX;
-            if (touchX < 30) {
-                isEdgeSwiping = true;
-                edgeSwipeStartX = touchX;
-            } else {
-                isEdgeSwiping = false;
-            }
-        } else {
-            isEdgeSwiping = false;
-        }
-
+        // 1 Dedo: Movimiento de Puntero (Trackpad) o Posicionamiento Directo (Touch)
         if (e.touches.length === 1) {
             isTouching = true;
             startX = lastX = e.touches[0].clientX;
             startY = lastY = e.touches[0].clientY;
             lastMoveTime = touchStartTime;
 
+            // Deslizamiento desde el margen izquierdo para abrir el menú Aether
+            if (startX < 28 && !drawer.classList.contains("open")) {
+                isEdgeSwiping = true;
+                edgeSwipeStartX = startX;
+            } else {
+                isEdgeSwiping = false;
+            }
+
             const timeSinceLastTap = touchStartTime - lastTapEndTime;
-            isTapAndHalfCandidate = (currentMode === "TRACKPAD" && timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35);
+            isTapAndHalfCandidate = (currentMode === "TRACKPAD" && timeSinceLastTap < 320 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35);
+
+            clearTimeout(dragHoldTimer);
+            if (holdRing) {
+                const pt = virtualToScreen(virtX, virtY);
+                holdRing.style.left = pt.x + "px";
+                holdRing.style.top = pt.y + "px";
+                holdRing.classList.remove("active");
+            }
 
             if (currentMode === "TRACKPAD") {
-                if (holdRing) {
-                    const pt = virtualToScreen(virtX, virtY);
-                    holdRing.style.left = pt.x + "px";
-                    holdRing.style.top = pt.y + "px";
-                }
-                clearTimeout(dragHoldTimer);
-                if (holdRing) holdRing.classList.remove("active");
+                // Long-press hold para iniciar Arrastre (Drag & Drop)
                 dragHoldTimer = setTimeout(function() {
-                    if (isTouching && totalMoved < 14 && e.touches.length === 1) {
+                    if (isTouching && totalMoved < 14 && initialTouchCount === 1) {
                         isDragging = true;
                         if (holdRing) holdRing.classList.add("active");
                         if (cursor) cursor.classList.add("cursor-dragging");
-                        hapticFeedback(30);
+                        hapticFeedback(35);
                         sendMouse(1);
                         showToast("Arrastre Bloqueado (Drag & Drop)");
                     }
-                }, 240);
+                }, 320);
             } else {
-                const clientX = e.touches[0].clientX, clientY = e.touches[0].clientY;
-                const vPos = screenToVirtual(clientX, clientY);
+                // MODO TÁCTIL DIRECTO: Mover puntero de inmediato al toque
+                const vPos = screenToVirtual(startX, startY);
                 virtX = vPos.x;
                 virtY = vPos.y;
-                sendMouse(0);
-
-                clearTimeout(dragHoldTimer);
-                dragHoldTimer = setTimeout(function() {
-                    if (isTouching && totalMoved < 12 && e.touches.length === 1) {
-                        hapticFeedback([15, 35, 15]);
-                        sendMouse(4);
-                        createRipple(clientX, clientY, "right-click");
-                        setTimeout(() => sendMouse(0), 40);
-                    }
-                }, 380);
+                updateCursorElement();
+                sendMouseMove();
             }
         } else if (e.touches.length === 2) {
             clearTimeout(dragHoldTimer);
@@ -3038,14 +3197,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             threeTouchMoved = 0;
             isThreeFingerGesture = true;
         }
-    }, { passive: false });
+    }
 
-    window.addEventListener("touchmove", function(e) {
-        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
-            e.target.closest("#right-stick-zone")) return;
+    function handleTouchMove(e) {
+        if (shouldIgnoreTouch(e)) return;
 
-        // Desplazamiento desde el borde para abrir el cajón lateral
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Deslizamiento desde el borde izquierdo para abrir el menú Aether
         if (isEdgeSwiping && e.touches.length === 1) {
             const curTouchX = e.touches[0].clientX;
             if (curTouchX - edgeSwipeStartX > 42) {
@@ -3056,80 +3216,79 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
 
         if (isTouching && e.touches.length === 1) {
-            e.preventDefault();
             const curX = e.touches[0].clientX, curY = e.touches[0].clientY;
             const dx = curX - lastX, dy = curY - lastY;
             lastX = curX; lastY = curY;
             const dist = Math.hypot(dx, dy);
             totalMoved += dist;
 
+            const now = performance.now();
+            const dt = Math.max(8, now - lastMoveTime);
+            lastMoveTime = now;
+
+            if (totalMoved > 10 && !isDragging) {
+                clearTimeout(dragHoldTimer);
+                if (holdRing) holdRing.classList.remove("active");
+            }
+
+            // Tap & Drag (Doble toque y arrastre inmediato)
+            if (isTapAndHalfCandidate && totalMoved > 6 && !isDragging) {
+                isDragging = true;
+                if (cursor) cursor.classList.add("cursor-dragging");
+                hapticFeedback(25);
+                sendMouse(1);
+                showToast("Arrastre Bloqueado (Tap & Drag)");
+            }
+
             if (currentMode === "TRACKPAD") {
-                const now = performance.now();
-                const dt = Math.max(8, now - lastMoveTime);
-                lastMoveTime = now;
-
-                if (totalMoved > 10 && !isDragging) {
-                    clearTimeout(dragHoldTimer);
-                    if (holdRing) holdRing.classList.remove("active");
-                }
-                if (isTapAndHalfCandidate && totalMoved > 6 && !isDragging) {
-                    isDragging = true;
-                    if (cursor) cursor.classList.add("cursor-dragging");
-                    hapticFeedback(25);
-                    sendMouse(1);
-                    showToast("Arrastre Bloqueado (Tap & Drag)");
-                }
-
-                // Filtro deadband anti-jitter para micro-temblores en reposo (estándar Windows Precision)
-                if (dist < 0.65 && !isDragging) {
+                // Filtro anti-jitter para micro-temblores en reposo (< 0.5px)
+                if (dist < 0.5 && !isDragging) {
                     return;
                 }
 
-                // Física balística multinivel con sensibilidad configurable (estándar Apple macOS Trackpad)
-                const v = dist / dt;
+                // Aceleración Balística Estándar Apple macOS / Chrome Remote Desktop
+                const v = dist / dt; // velocidad instantánea (px/ms)
                 let accel = 1.0;
                 if (v < 0.20) {
-                    accel = 0.70; // Micro-precisión subpíxel para apuntar elementos finos
+                    accel = 0.75; // Micro-precisión subpíxel para botones finos y enlaces
                 } else if (v < 1.0) {
-                    accel = 0.70 + (v - 0.20) * 0.95; // Transición lineal ergonómica 1:1
+                    accel = 0.75 + (v - 0.20) * 0.95; // Transición lineal ergonómica 1:1
                 } else {
-                    accel = Math.min(3.6, 1.46 + Math.pow(v - 1.0, 1.25)); // Aceleración balística progresiva
+                    accel = Math.min(3.5, 1.5 + Math.pow(v - 1.0, 1.25)); // Aceleración balística progresiva
                 }
 
                 const scaleFactor = 1.35 * accel * trackpadSens;
                 const m = getViewportMetrics();
                 const scaleX = (screenW / m.renderW) * scaleFactor;
                 const scaleY = (screenH / m.renderH) * scaleFactor;
+
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
 
-                // Auto-pan si el cursor se acerca al borde de la pantalla estando ampliado
+                // Auto-pan suave si el cursor llega al borde estando ampliado con zoom
                 if (currentZoom > 1.05) {
                     const pt = virtualToScreen(virtX, virtY);
-                    const cx = pt.x;
-                    const cy = pt.y;
                     const edgeMargin = 40;
-                    if (cx < edgeMargin) panX = clampPanX(panX + (edgeMargin - cx) * 0.35, currentZoom);
-                    if (cx > window.innerWidth - edgeMargin) panX = clampPanX(panX - (cx - (window.innerWidth - edgeMargin)) * 0.35, currentZoom);
-                    if (cy < edgeMargin) panY = clampPanY(panY + (edgeMargin - cy) * 0.35, currentZoom);
-                    if (cy > window.innerHeight - edgeMargin) panY = clampPanY(panY - (cy - (window.innerHeight - edgeMargin)) * 0.35, currentZoom);
+                    if (pt.x < edgeMargin) panX = clampPanX(panX + (edgeMargin - pt.x) * 0.35, currentZoom);
+                    if (pt.x > window.innerWidth - edgeMargin) panX = clampPanX(panX - (pt.x - (window.innerWidth - edgeMargin)) * 0.35, currentZoom);
+                    if (pt.y < edgeMargin) panY = clampPanY(panY + (edgeMargin - pt.y) * 0.35, currentZoom);
+                    if (pt.y > window.innerHeight - edgeMargin) panY = clampPanY(panY - (pt.y - (window.innerHeight - edgeMargin)) * 0.35, currentZoom);
                     updateCanvasTransform(false);
                 } else {
                     updateCursorElement();
                 }
-                sendMouse(isDragging ? 1 : 0);
+
+                // Transmisión inmediata y continua del movimiento al servidor VNC
+                sendMouseMove();
             } else {
-                if (totalMoved > 10 && !isDragging) {
-                    clearTimeout(dragHoldTimer);
-                    if (holdRing) holdRing.classList.remove("active");
-                }
+                // MODO TÁCTIL DIRECTO (TABLET)
                 const vPos = screenToVirtual(curX, curY);
                 virtX = vPos.x;
                 virtY = vPos.y;
-                sendMouse(1);
+                updateCursorElement();
+                sendMouseMove();
             }
         } else if (e.touches.length === 2) {
-            e.preventDefault();
             const p1 = e.touches[0], p2 = e.touches[1];
             const currentDist = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
             const distDiff = Math.abs(currentDist - initialPinchDist);
@@ -3141,7 +3300,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 const zoomFactor = currentDist / initialPinchDist;
                 const newZoom = Math.min(3.8, Math.max(1.0, initialPinchZoom * zoomFactor));
 
-                // Fórmula matemática de Punto Focal Invariante (Google Maps / Figma / Apple Safari)
                 if (newZoom <= 1.02) {
                     currentZoom = 1.0;
                     panX = 0;
@@ -3151,9 +3309,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     panX = clampPanX(curMidX - (initialPinchWorldX * currentZoom), currentZoom);
                     panY = clampPanY(curMidY - (initialPinchWorldY * currentZoom), currentZoom);
                 }
+                if (badgeZoom) badgeZoom.innerText = Math.round(currentZoom * 100) + "%";
                 updateCanvasTransform(false);
             } else if (currentZoom > 1.05) {
-                // Si la pantalla está ampliada, dos dedos en paralelo hacen PAN del encuadre
+                // Pan a dos dedos en modo zoom ampliado
                 const dx = curMidX - lastScrollX;
                 const dy = curMidY - lastScrollY;
                 lastScrollX = curMidX;
@@ -3162,7 +3321,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 panY = clampPanY(panY + dy, currentZoom);
                 updateCanvasTransform(false);
             } else {
-                // Modo Scroll a Dos Dedos con Acumulador Fino de Subpíxeles y Scroll Natural/Estándar
+                // Modo Scroll a Dos Dedos con Acumulador Fino de Subpíxeles
                 const dy = curMidY - lastScrollY;
                 lastScrollY = curMidY;
                 lastScrollX = curMidX;
@@ -3180,16 +3339,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 }
             }
         } else if (e.touches.length === 3 && isThreeFingerGesture) {
-            e.preventDefault();
             const curMidY = (e.touches[0].clientY + e.touches[1].clientY + e.touches[2].clientY) / 3;
             threeTouchMoved = curMidY - threeTouchStartY;
         }
-    }, { passive: false });
+    }
 
-    window.addEventListener("touchend", function(e) {
-        if (e.target.closest("#aether-drawer") || e.target.closest("#aether-edge-tab") ||
-            e.target.closest("#virtual-gamepad-overlay [data-btn]") || e.target.closest("#left-stick-zone") ||
-            e.target.closest("#right-stick-zone")) return;
+    function handleTouchEnd(e) {
+        if (shouldIgnoreTouch(e)) return;
+
+        e.preventDefault();
+        e.stopPropagation();
 
         isEdgeSwiping = false;
         clearTimeout(dragHoldTimer);
@@ -3200,14 +3359,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             isDragging = false;
             if (cursor) cursor.classList.remove("cursor-dragging");
             sendMouse(0);
-            hapticFeedback(12);
+            hapticFeedback(15);
             lastTapEndTime = performance.now();
             return;
         }
 
         if (e.touches.length === 0) {
             isTouching = false;
-            // Inercia Cinética de Desplazamiento (Exponential Decay Momentum)
+
+            // Inercia Cinética de Scroll
             if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35 && currentZoom <= 1.05) {
                 let v = scrollVelocityY * 16;
                 let decay = () => {
@@ -3222,96 +3382,86 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 decay();
             }
 
-            if (initialTouchCount === 1 && duration < 380 && totalMoved < 24) {
-                hapticFeedback(12);
+            // Toque con 1 dedo (< 320ms y < 15px)
+            if (initialTouchCount === 1 && duration < 320 && totalMoved < 15) {
                 const timeSinceLastTap = touchStartTime - lastTapEndTime;
 
-                if (currentMode === "TRACKPAD") {
-                    // MODO TRACKPAD: Doble tap en reposo = Doble Clic real para abrir carpetas / apps
-                    if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
-                        lastTapEndTime = 0;
-                        hapticFeedback([15, 35, 15]);
-                        sendMouse(1);
+                // Doble Clic (Dos toques consecutivos)
+                if (timeSinceLastTap < 300 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
+                    lastTapEndTime = 0;
+                    hapticFeedback([15, 35, 15]);
+                    sendMouse(1);
+                    setTimeout(() => {
+                        sendMouse(0);
                         setTimeout(() => {
-                            sendMouse(0);
-                            setTimeout(() => {
-                                sendMouse(1);
-                                setTimeout(() => sendMouse(0), 45);
-                            }, 40);
-                        }, 45);
-                        showToast("Doble Clic (Abrir)");
-                        return;
-                    }
-                    lastTapStartX = startX;
-                    lastTapStartY = startY;
+                            sendMouse(1);
+                            setTimeout(() => sendMouse(0), 45);
+                        }, 40);
+                    }, 45);
+                    showToast("Doble Clic (Abrir)");
+                    return;
+                }
 
+                lastTapStartX = startX;
+                lastTapStartY = startY;
+                lastTapEndTime = performance.now();
+
+                if (currentMode === "TRACKPAD") {
                     const pt = virtualToScreen(virtX, virtY);
                     createRipple(pt.x, pt.y, "left-click");
+                    hapticFeedback(12);
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
-                    lastTapEndTime = performance.now();
                 } else {
-                    // MODO TÁCTIL DIRECTO (TABLET): Doble tap = Smart Zoom 2.2x / 1.0x
-                    if (timeSinceLastTap < 280 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
-                        lastTapEndTime = 0;
-                        if (currentZoom > 1.05) {
-                            resetZoom();
-                        } else {
-                            zoomToPoint(2.2, startX, startY, true);
-                            showToast("Zoom Inteligente (220%)");
-                            hapticFeedback(20);
-                        }
-                        return;
-                    }
-                    lastTapStartX = startX;
-                    lastTapStartY = startY;
-
-                    // Proyección matemática milimétrica de coordenadas bajo zoom
                     const vPos = screenToVirtual(startX, startY);
                     virtX = vPos.x;
                     virtY = vPos.y;
                     const pt = virtualToScreen(virtX, virtY);
                     createRipple(pt.x, pt.y, "left-click");
+                    hapticFeedback(12);
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
-                    lastTapEndTime = performance.now();
                 }
-            } else if (initialTouchCount === 2 && !isPinching && duration < 380 && totalMoved < 20) {
-                // Toque a dos dedos = Clic Secundario (Right Click)
-                hapticFeedback([10, 30, 10]);
+            } else if (initialTouchCount === 2 && !isPinching && duration < 320 && totalMoved < 15) {
+                // Toque a 2 dedos = Clic Derecho (Right Click)
+                hapticFeedback([12, 35, 12]);
                 const pt = virtualToScreen(virtX, virtY);
                 createRipple(pt.x, pt.y, "right-click");
                 sendMouse(4);
                 setTimeout(() => sendMouse(0), 45);
+                showToast("Clic Secundario");
             } else if (initialTouchCount === 3) {
-                // Gestos a 3 dedos (macOS Mission Control / Windows 11 Precision Touchpad)
-                if (Math.abs(threeTouchMoved) > 55) {
-                    if (threeTouchMoved < -55) {
-                        // Swipe 3 dedos hacia ARRIBA: Mostrar Escritorio (Super_L + D)
-                        sendKeyCombo(0xFFEB, 0x0064);
+                // Gestos a 3 dedos
+                if (Math.abs(threeTouchMoved) > 50) {
+                    if (threeTouchMoved < -50) {
+                        sendKeyCombo(0xFFEB, 0x0064); // Super + D
                         showToast("Mostrar Escritorio (Super+D)");
                         hapticFeedback([25, 40, 25]);
                     } else {
-                        // Swipe 3 dedos hacia ABAJO: Alternar Ventanas (Alt + Tab)
-                        sendKeyCombo(0xFFE9, 0xFF09);
+                        sendKeyCombo(0xFFE9, 0xFF09); // Alt + Tab
                         showToast("Alternar Ventanas (Alt+Tab)");
                         hapticFeedback([25, 40, 25]);
                     }
-                } else if (duration < 380) {
-                    // Toque 3 dedos rápido = Clic Central de Ratón (Rueda / Pegar X11)
+                } else if (duration < 350) {
+                    // Toque 3 dedos = Clic Central de Ratón
                     hapticFeedback(22);
                     sendMouse(2);
                     setTimeout(() => sendMouse(0), 45);
-                    showToast("Clic Central (Rueda)");
+                    showToast("Clic Central (Rueda / Pegar)");
                 }
                 isThreeFingerGesture = false;
             } else if (initialTouchCount === 4 && duration < 400) {
-                // Toque 4 dedos = Pantalla Completa Inmersiva
                 toggleFullScreen();
             }
             initialTouchCount = 0;
         }
-    }, { passive: false });
+    }
+
+    // Registro en Capture Phase Universal: Ejecuta ANTES de cualquier listener del canvas
+    window.addEventListener("touchstart", handleTouchStart, { capture: true, passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { capture: true, passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { capture: true, passive: false });
+    window.addEventListener("touchcancel", handleTouchEnd, { capture: true, passive: false });
 
     window.addEventListener("resize", function() {
         updateCanvasTransform(false);
@@ -3373,11 +3523,17 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Teclado en pantalla
     if (btnKeyboard) {
         attachButtonTap(btnKeyboard, function() {
-            const inputElem = document.querySelector("#noVNC_keyboardinput") || document.querySelector("input[type=text]");
-            if (inputElem) {
-                inputElem.focus();
-                showToast("Teclado Activado");
+            if (window.UI && typeof window.UI.toggleVirtualKeyboard === "function") {
+                window.UI.toggleVirtualKeyboard();
+            } else if (window.UI && typeof window.UI.showVirtualKeyboard === "function") {
+                window.UI.showVirtualKeyboard();
+            } else {
+                const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
+                if (inputElem) {
+                    inputElem.focus();
+                }
             }
+            showToast("Teclado en Pantalla");
             closeDrawer();
         });
     }
@@ -3427,23 +3583,40 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     // Modo Gaming 3D / Pointer Lock (Estándar GeForce NOW & Steam)
     function isPointerLocked() {
-        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        const canvas = getCanvas();
         return !!(canvas && (document.pointerLockElement === canvas || document.mozPointerLockElement === canvas || document.webkitPointerLockElement === canvas));
     }
 
     function togglePointerLock() {
-        const canvas = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
-        if (!canvas) return;
+        const canvas = getCanvas();
+        if (!canvas) {
+            showToast("Pantalla no disponible");
+            closeDrawer();
+            return;
+        }
         if (!isPointerLocked()) {
             const req = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
             if (req) {
-                const p = req.call(canvas);
-                if (p && p.catch) p.catch(() => {});
+                try {
+                    const p = req.call(canvas);
+                    if (p && p.catch) {
+                        p.catch(() => {
+                            showToast("Pointer Lock requiere ratón físico");
+                        });
+                    } else {
+                        showToast("Modo Gaming 3D (ESC para liberar)");
+                    }
+                } catch(e) {
+                    showToast("Pointer Lock requiere ratón físico");
+                }
+            } else {
+                showToast("Navegador no soporta Pointer Lock");
             }
-            showToast("Modo Gaming 3D (ESC para liberar)");
         } else {
             const exit = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
-            if (exit) exit.call(document);
+            if (exit) {
+                try { exit.call(document); } catch(e) {}
+            }
             showToast("Puntero Liberado");
         }
         closeDrawer();
@@ -3582,9 +3755,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const reqFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
             if (reqFs) reqFs.call(docEl).catch(() => {});
             
+            const canvas = getCanvas();
             if (!isPointerLocked() && canvas) {
                 const reqPl = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-                if (reqPl) reqPl.call(canvas);
+                if (reqPl) {
+                    try { reqPl.call(canvas); } catch(e) {}
+                }
             }
             
             if (webAudio && (webAudio.paused || isAudioMuted)) {
@@ -3683,12 +3859,20 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                         btnTailscaleLogin.style.display = "block";
                         btnTailscaleLogin.onclick = function() { window.open(data.login_url, "_blank"); };
                     }
-                } else {
+                } else if (data.status === "unconfigured" || (!data.ip && !data.login_url && data.status !== "iniciando")) {
                     if (badgeTailscaleStatus) {
-                        badgeTailscaleStatus.innerText = "ESPERANDO";
+                        badgeTailscaleStatus.innerText = "OPCIONAL";
                         badgeTailscaleStatus.classList.remove("active");
                     }
-                    if (tailscaleInfo) tailscaleInfo.innerText = "Iniciando demonio...";
+                    if (tailscaleInfo) tailscaleInfo.innerText = "Tailscale no configurado (opcional)";
+                    if (btnTailscaleCopy) btnTailscaleCopy.style.display = "none";
+                    if (btnTailscaleLogin) btnTailscaleLogin.style.display = "none";
+                } else {
+                    if (badgeTailscaleStatus) {
+                        badgeTailscaleStatus.innerText = "INICIANDO";
+                        badgeTailscaleStatus.classList.remove("active");
+                    }
+                    if (tailscaleInfo) tailscaleInfo.innerText = "Iniciando servicio...";
                 }
             })
             .catch(() => {});
@@ -3713,9 +3897,13 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
     if (btnExit) {
         attachButtonTap(btnExit, function() {
-            if (confirm("¿Deseas cerrar la sesión del Cloud PC?")) {
-                window.close();
-                showToast("Sesión Finalizada");
+            if (confirm("¿Deseas cerrar y desconectar la sesión del Cloud PC?")) {
+                const rfb = getRFB();
+                if (rfb && typeof rfb.disconnect === "function") {
+                    try { rfb.disconnect(); } catch(e) {}
+                }
+                showToast("Sesión Desconectada");
+                setTimeout(() => { try { window.close(); } catch(e) {} }, 400);
             }
             closeDrawer();
         });
@@ -4746,7 +4934,7 @@ if not tailscale_bin or not tailscaled_bin:
         pass
 
 tailscale_info = {
-    "status": "iniciando",
+    "status": "unconfigured",
     "ip": None,
     "login_url": None,
     "hostname": "aether-cloud-pc"
@@ -4763,6 +4951,7 @@ if tailscaled_bin:
                 pass
 
         if authkey:
+            tailscale_info["status"] = "iniciando"
             os.makedirs("/root/.config/tailscale", exist_ok=True)
             tun_arg = "--tun=userspace-networking"
             subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
