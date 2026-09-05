@@ -634,6 +634,12 @@ def build_sandbox_html():
                 const deltaVirtY = cur.y - oldVy;
                 const moveDist = Math.hypot(deltaVirtX, deltaVirtY);
 
+                let activeFinger = null;
+                if (window.touchTrackMap && window.touchTrackMap.size > 0) {{
+                    const ft = window.touchTrackMap.values().next().value;
+                    if (ft) activeFinger = {{ x: ft.lastX, y: ft.lastY }};
+                }}
+
                 // Registro de Deslizamiento Continuo del Puntero (Cada 75ms o movimientos claros)
                 const now = Date.now();
                 if (moveDist > 2 && (now - lastLoggedMove > 75)) {{
@@ -644,12 +650,12 @@ def build_sandbox_html():
                     if (cur.x <= 0 || cur.x >= 1920 || cur.y <= 0 || cur.y >= 1080) {{
                         anomaly = "BORDE_ESCRITORIO";
                     }}
-                    recordTelemetry(actionName, cur, targetName, "Move", `Delta Virt: (dx:${{Math.round(deltaVirtX)}}, dy:${{Math.round(deltaVirtY)}}) | Puntero en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, anomaly);
+                    recordTelemetry(actionName, cur, targetName, "Move", `Delta Virt: (dx:${{Math.round(deltaVirtX)}}, dy:${{Math.round(deltaVirtY)}}) | Puntero en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, anomaly, activeFinger);
                 }}
 
                 // Click Izquierdo presionado
                 if (mask === 1 && oldMask !== 1) {{
-                    recordTelemetry("CLICK_LEFT", cur, "Canvas", "Down", `Virtual(${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
+                    recordTelemetry("CLICK_LEFT", cur, "Canvas", "Down", `Virtual(${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
 
                     // Comprobar arrastre de cabecera de ventana
                     if (cur.x >= win.x && cur.x <= win.x + win.w &&
@@ -657,7 +663,7 @@ def build_sandbox_html():
                         win.isDragging = true;
                         win.dragOffX = cur.x - win.x;
                         win.dragOffY = cur.y - win.y;
-                        recordTelemetry("WIN_DRAG", cur, "WindowHeader", "StartDrag", "Ventana enganchada con éxito");
+                        recordTelemetry("WIN_DRAG", cur, "WindowHeader", "StartDrag", "Ventana enganchada con éxito", "", activeFinger);
                     }}
 
                     // Comprobar botones dentro de la ventana
@@ -672,7 +678,7 @@ def build_sandbox_html():
                                 win.terminalLines.push(`[CLICK] ${{b.label}} activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
                                 if (win.terminalLines.length > 7) win.terminalLines.shift();
                             }}
-                            recordTelemetry("BTN_CLICK", cur, b.label, "Pressed", "Botón interior de ventana pulsado");
+                            recordTelemetry("BTN_CLICK", cur, b.label, "Pressed", "Botón interior de ventana pulsado", "", activeFinger);
                         }}
                     }});
 
@@ -682,7 +688,7 @@ def build_sandbox_html():
                             cur.y >= ic.y && cur.y <= ic.y + 80) {{
                             win.terminalLines.push(`[LANZADOR] Abriendo ${{ic.label}}...`);
                             if (win.terminalLines.length > 7) win.terminalLines.shift();
-                            recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado");
+                            recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado", "", activeFinger);
                         }}
                     }});
                 }}
@@ -699,19 +705,19 @@ def build_sandbox_html():
                     }} else {{
                         win.isDragging = false;
                         dt.isOver = false;
-                        recordTelemetry("WIN_DRAG", cur, "WindowHeader", "Drop", `Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`);
+                        recordTelemetry("WIN_DRAG", cur, "WindowHeader", "Drop", `Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`, "", activeFinger);
                     }}
                 }}
 
                 // Click Derecho presionado (Toque sostenido o 2 dedos)
                 if (mask === 4 && oldMask !== 4) {{
-                    recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
+                    recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
                     win.terminalLines.push(`[CLICK DERECHO] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
                 }}
 
                 if (mask === 0 && oldMask !== 0) {{
-                    recordTelemetry("MOUSE_UP", cur, "Canvas", "Release", "Botones liberados");
+                    recordTelemetry("MOUSE_UP", cur, "Canvas", "Release", "Botones liberados", "", activeFinger);
                 }}
             }},
 
@@ -864,7 +870,7 @@ def build_sandbox_html():
         }}, 16);
 
         // Registro de Toques y Deslizamientos Físicos Continuos en Pantalla
-        const touchTrackMap = new Map();
+        const touchTrackMap = window.touchTrackMap || (window.touchTrackMap = new Map());
         let lastLoggedSlideTime = 0;
 
         window.addEventListener("touchstart", function(e) {{
