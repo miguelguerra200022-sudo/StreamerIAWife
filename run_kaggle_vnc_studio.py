@@ -1363,7 +1363,7 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    touch-action: manipulation;
+    touch-action: pan-y;
     transition: all 0.2s ease;
 }
 .drawer-btn:hover, .drawer-btn:active {
@@ -2095,7 +2095,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
 <!-- 5. CURSOR Y ANILLO VISUAL -->
 <svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
-    <path d="M4 4l7 17 2.5-6.5L20 12 4 4z"/>
+    <path d="M0 0l7 18 2.5-7 7-2.5L0 0z"/>
 </svg>
 <svg id="cloud-hold-ring" viewBox="0 0 44 44">
     <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
@@ -2410,18 +2410,34 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         }
     });
 
-    // Control de scroll y supresión de activación accidental en el panel Aether
+    // Control de scroll y supresión absoluta de activación accidental en el panel Aether
     let drawerIsScrolling = false;
     let drawerTouchStartX = 0;
     let drawerTouchStartY = 0;
     let drawerLastScrollTime = 0;
+    let drawerScrollTimeout = null;
+
+    function markDrawerScrolling() {
+        drawerIsScrolling = true;
+        drawerLastScrollTime = performance.now();
+        clearTimeout(drawerScrollTimeout);
+        drawerScrollTimeout = setTimeout(() => {
+            drawerIsScrolling = false;
+        }, 320);
+    }
+
+    const drawerItems = document.querySelector(".drawer-items");
+    if (drawerItems) {
+        drawerItems.addEventListener("scroll", markDrawerScrolling, { passive: true });
+    }
 
     if (drawer) {
+        drawer.addEventListener("scroll", markDrawerScrolling, { capture: true, passive: true });
+
         drawer.addEventListener("touchstart", function(e) {
             if (e.touches.length === 1) {
                 drawerTouchStartX = e.touches[0].clientX;
                 drawerTouchStartY = e.touches[0].clientY;
-                drawerIsScrolling = false;
             }
         }, { capture: true, passive: true });
 
@@ -2429,33 +2445,43 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (e.touches.length === 1) {
                 const dx = e.touches[0].clientX - drawerTouchStartX;
                 const dy = e.touches[0].clientY - drawerTouchStartY;
-                if (Math.hypot(dx, dy) > 8) {
-                    drawerIsScrolling = true;
-                    drawerLastScrollTime = performance.now();
+                if (Math.hypot(dx, dy) > 6) {
+                    markDrawerScrolling();
                 }
             }
         }, { capture: true, passive: true });
 
         drawer.addEventListener("touchend", function(e) {
             if (drawerIsScrolling) {
-                setTimeout(() => { drawerIsScrolling = false; }, 220);
+                markDrawerScrolling();
             }
+        }, { capture: true, passive: true });
+
+        drawer.addEventListener("touchcancel", function(e) {
+            markDrawerScrolling();
         }, { capture: true, passive: true });
     }
 
-    // Helper anti-accidental para garantizar respuesta táctil y CERO disparos al desplazarse verticalmente
+    // Helper anti-accidental de Grado Industrial (Estándar BigTech: Chrome / Material Design)
     function attachButtonTap(elem, callback) {
         if (!elem) return;
         let btnTouchStartX = 0;
         let btnTouchStartY = 0;
+        let btnTouchStartTime = 0;
+        let btnStartScrollTop = 0;
         let btnMoved = false;
         let lastTapTime = 0;
+
+        const getScrollContainer = () => elem.closest(".drawer-items") || drawer;
 
         elem.addEventListener("touchstart", function(e) {
             if (e.touches.length === 1) {
                 btnTouchStartX = e.touches[0].clientX;
                 btnTouchStartY = e.touches[0].clientY;
+                btnTouchStartTime = performance.now();
                 btnMoved = false;
+                const sc = getScrollContainer();
+                btnStartScrollTop = sc ? sc.scrollTop : 0;
             }
         }, { passive: true });
 
@@ -2463,35 +2489,52 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             if (e.touches.length === 1) {
                 const dx = e.touches[0].clientX - btnTouchStartX;
                 const dy = e.touches[0].clientY - btnTouchStartY;
-                if (Math.hypot(dx, dy) > 8) {
+                if (Math.hypot(dx, dy) > 6) {
                     btnMoved = true;
-                    drawerIsScrolling = true;
-                    drawerLastScrollTime = performance.now();
+                    markDrawerScrolling();
                 }
             }
         }, { passive: true });
 
+        elem.addEventListener("touchcancel", function(e) {
+            btnMoved = true;
+            markDrawerScrolling();
+        }, { passive: true });
+
         elem.addEventListener("touchend", function(e) {
-            if (btnMoved || drawerIsScrolling || (performance.now() - drawerLastScrollTime < 250)) {
+            const sc = getScrollContainer();
+            const curScrollTop = sc ? sc.scrollTop : 0;
+            const scrollDelta = Math.abs(curScrollTop - btnStartScrollTop);
+            const duration = performance.now() - btnTouchStartTime;
+            const timeSinceScroll = performance.now() - drawerLastScrollTime;
+
+            // Si el dedo se movió > 6px, el contenedor hizo scroll > 3px, se soltó durante inercia de scroll (< 320ms), o fue un toque largo (> 450ms), se descarta al 100%
+            if (btnMoved || scrollDelta > 3 || drawerIsScrolling || timeSinceScroll < 320 || duration > 450) {
                 e.stopPropagation();
+                setTimeout(() => { btnMoved = false; }, 100);
                 return;
             }
             e.preventDefault();
             e.stopPropagation();
             const now = performance.now();
-            if (now - lastTapTime < 250) return;
+            if (now - lastTapTime < 280) return;
             lastTapTime = now;
             callback(e);
         }, { passive: false });
 
         elem.addEventListener("click", function(e) {
             e.stopPropagation();
-            if (btnMoved || drawerIsScrolling || (performance.now() - drawerLastScrollTime < 250)) {
+            const sc = getScrollContainer();
+            const curScrollTop = sc ? sc.scrollTop : 0;
+            const scrollDelta = Math.abs(curScrollTop - btnStartScrollTop);
+            const timeSinceScroll = performance.now() - drawerLastScrollTime;
+
+            if (btnMoved || scrollDelta > 3 || drawerIsScrolling || timeSinceScroll < 320) {
                 e.preventDefault();
                 return;
             }
             const now = performance.now();
-            if (now - lastTapTime < 250) return;
+            if (now - lastTapTime < 280) return;
             lastTapTime = now;
             callback(e);
         });
@@ -3523,15 +3566,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // Teclado en pantalla
     if (btnKeyboard) {
         attachButtonTap(btnKeyboard, function() {
+            const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
+            if (inputElem) {
+                inputElem.focus();
+                try {
+                    const l = inputElem.value.length;
+                    inputElem.setSelectionRange(l, l);
+                } catch(e) {}
+            }
             if (window.UI && typeof window.UI.toggleVirtualKeyboard === "function") {
-                window.UI.toggleVirtualKeyboard();
+                try { window.UI.toggleVirtualKeyboard(); } catch(e) {}
             } else if (window.UI && typeof window.UI.showVirtualKeyboard === "function") {
-                window.UI.showVirtualKeyboard();
-            } else {
-                const inputElem = document.getElementById("noVNC_keyboardinput") || document.querySelector("textarea") || document.querySelector("input");
-                if (inputElem) {
-                    inputElem.focus();
-                }
+                try { window.UI.showVirtualKeyboard(); } catch(e) {}
             }
             showToast("Teclado en Pantalla");
             closeDrawer();
@@ -3857,7 +3903,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     if (tailscaleInfo) tailscaleInfo.innerText = "Requiere autenticación 1-clic";
                     if (btnTailscaleLogin) {
                         btnTailscaleLogin.style.display = "block";
-                        btnTailscaleLogin.onclick = function() { window.open(data.login_url, "_blank"); };
+                        btnTailscaleLogin.dataset.loginUrl = data.login_url;
                     }
                 } else if (data.status === "unconfigured" || (!data.ip && !data.login_url && data.status !== "iniciando")) {
                     if (badgeTailscaleStatus) {
@@ -3879,6 +3925,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
     updateTailscaleStatus();
     setInterval(updateTailscaleStatus, 5000);
+
+    if (btnTailscaleLogin) {
+        attachButtonTap(btnTailscaleLogin, function() {
+            if (btnTailscaleLogin.dataset.loginUrl) {
+                window.open(btnTailscaleLogin.dataset.loginUrl, "_blank");
+            }
+        });
+    }
 
     if (btnTailscaleCopy) {
         attachButtonTap(btnTailscaleCopy, function() {
