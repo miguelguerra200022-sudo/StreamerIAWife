@@ -1763,8 +1763,18 @@ try:
     filter: drop-shadow(0 0 8px var(--aether-cyan));
 }
 body.tp-trackpad-mode #cloud-virtual-cursor { display: block; }
-body.tp-touch-mode #cloud-virtual-cursor { display: none; }
+body.tp-touch-mode #cloud-virtual-cursor { display: block; }
 body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
+
+#cloud-finger-contact {
+    position: fixed; width: 38px; height: 38px; pointer-events: none !important;
+    z-index: 999997; transform: translate3d(-50%, -50%, 0); opacity: 0;
+    border-radius: 50%; border: 1.8px solid rgba(0, 255, 200, 0.7);
+    background: radial-gradient(circle, rgba(0, 255, 200, 0.25) 0%, rgba(0, 255, 200, 0) 72%);
+    box-shadow: 0 0 12px rgba(0, 255, 200, 0.45);
+    transition: opacity 0.15s ease; will-change: transform, opacity;
+}
+#cloud-finger-contact.active { opacity: 1; }
 
 #cloud-hold-ring {
     position: fixed; width: 44px; height: 44px; pointer-events: none;
@@ -2088,6 +2098,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
     <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
 </svg>
+<div id="cloud-finger-contact" aria-hidden="true"></div>
 <div id="cloud-toast">Modo Trackpad Activo</div>
 <button id="aether-kbd-dismiss" title="Cerrar teclado en pantalla">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -2187,54 +2198,82 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     // -------------------------------------------------------------------------
     // CALIBRACIÓN MILIMÉTRICA DE PANTALLA (PROYECCIÓN INVARIANTE GEFORCE NOW & STEAM)
     // -------------------------------------------------------------------------
-    function getViewportMetrics() {
+    function getDisplayGeometry() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
+        const canvas = getCanvas();
+
+        let containerW = vw;
+        let containerH = vh;
+        let containerLeft = 0;
+        let containerTop = 0;
+
+        if (canvas && canvas.parentElement) {
+            const pRect = canvas.parentElement.getBoundingClientRect();
+            if (pRect.width > 20 && pRect.height > 20) {
+                containerW = pRect.width;
+                containerH = pRect.height;
+                containerLeft = pRect.left;
+                containerTop = pRect.top;
+            }
+        }
 
         if (isStretchedAspect) {
+            const renderW = containerW * currentZoom;
+            const renderH = containerH * currentZoom;
             return {
-                baseW: vw,
-                baseH: vh,
-                offsetX: 0,
-                offsetY: 0,
-                renderW: vw * currentZoom,
-                renderH: vh * currentZoom,
-                scaleX: (vw * currentZoom) / screenW,
-                scaleY: (vh * currentZoom) / screenH
+                left: containerLeft + panX,
+                top: containerTop + panY,
+                width: renderW,
+                height: renderH,
+                baseW: containerW,
+                baseH: containerH,
+                offsetX: containerLeft,
+                offsetY: containerTop,
+                scaleX: renderW / screenW,
+                scaleY: renderH / screenH
             };
         }
 
-        const targetAspect = 16 / 9;
-        const currentAspect = vw / vh;
+        const targetAspect = screenW / screenH; // 1920 / 1080 = 16:9
+        const containerAspect = containerW / containerH;
         let baseW, baseH, offsetX, offsetY;
 
-        if (currentAspect > targetAspect) {
-            // Pantalla ancha (smartphone horizontal): bandas negras laterales
-            baseH = vh;
-            baseW = vh * targetAspect;
-            offsetX = (vw - baseW) / 2;
-            offsetY = 0;
+        if (containerAspect > targetAspect) {
+            // Pantalla ancha (smartphone horizontal): bandas negras laterales (pillarboxing)
+            baseH = containerH;
+            baseW = containerH * targetAspect;
+            offsetX = containerLeft + (containerW - baseW) / 2;
+            offsetY = containerTop;
         } else {
-            // Pantalla alta (tablet o vertical): bandas negras superior/inferior
-            baseW = vw;
-            baseH = vw / targetAspect;
-            offsetX = 0;
-            offsetY = (vh - baseH) / 2;
+            // Pantalla alta (tablet o vertical): bandas negras superior/inferior (letterboxing)
+            baseW = containerW;
+            baseH = containerW / targetAspect;
+            offsetX = containerLeft;
+            offsetY = containerTop + (containerH - baseH) / 2;
         }
 
         const renderW = baseW * currentZoom;
         const renderH = baseH * currentZoom;
+        const renderLeft = offsetX + panX;
+        const renderTop = offsetY + panY;
 
         return {
+            left: renderLeft,
+            top: renderTop,
+            width: renderW,
+            height: renderH,
             baseW: baseW,
             baseH: baseH,
             offsetX: offsetX,
             offsetY: offsetY,
-            renderW: renderW,
-            renderH: renderH,
             scaleX: renderW / screenW,
             scaleY: renderH / screenH
         };
+    }
+
+    function getViewportMetrics() {
+        return getDisplayGeometry();
     }
 
     function getRFB() { return (window.UI && window.UI.rfb) ? window.UI.rfb : null; }
@@ -2244,49 +2283,25 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         return document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
     }
 
-    // Conversión de Pantalla Física (Touch/Click) a Espacio Virtual 1080p Nativo (Milimétrico)
+    // Conversión de Pantalla Física (Touch/Click) a Espacio Virtual 1080p Nativo (Milimétrico y Calibrado)
     function screenToVirtual(clientX, clientY) {
-        const canvas = getCanvas();
-        if (canvas) {
-            const rect = canvas.getBoundingClientRect();
-            if (rect.width > 20 && rect.height > 20) {
-                const vx = ((clientX - rect.left) / rect.width) * screenW;
-                const vy = ((clientY - rect.top) / rect.height) * screenH;
-                return {
-                    x: Math.max(0, Math.min(screenW, vx)),
-                    y: Math.max(0, Math.min(screenH, vy))
-                };
-            }
-        }
-        const m = getViewportMetrics();
-        const canvasX = (clientX - panX) / currentZoom;
-        const canvasY = (clientY - panY) / currentZoom;
-        const vx = (canvasX - m.offsetX) * (screenW / m.baseW);
-        const vy = (canvasY - m.offsetY) * (screenH / m.baseH);
+        const geo = getDisplayGeometry();
+        const vx = ((clientX - geo.left) / geo.width) * screenW;
+        const vy = ((clientY - geo.top) / geo.height) * screenH;
         return {
-            x: Math.max(0, Math.min(screenW, vx)),
-            y: Math.max(0, Math.min(screenH, vy))
+            x: Math.max(0, Math.min(screenW, Math.round(vx))),
+            y: Math.max(0, Math.min(screenH, Math.round(vy)))
         };
     }
 
     // Conversión de Coordenadas Virtuales 1080p a Posición en Pantalla Física (CSS Pixels)
     function virtualToScreen(vx, vy) {
-        const canvas = getCanvas();
-        if (canvas) {
-            const rect = canvas.getBoundingClientRect();
-            if (rect.width > 20 && rect.height > 20) {
-                return {
-                    x: rect.left + (vx / screenW) * rect.width,
-                    y: rect.top + (vy / screenH) * rect.height
-                };
-            }
-        }
-        const m = getViewportMetrics();
-        const canvasX = m.offsetX + (vx * (m.baseW / screenW));
-        const canvasY = m.offsetY + (vy * (m.baseH / screenH));
+        const geo = getDisplayGeometry();
+        const sx = geo.left + (vx / screenW) * geo.width;
+        const sy = geo.top + (vy / screenH) * geo.height;
         return {
-            x: panX + (canvasX * currentZoom),
-            y: panY + (canvasY * currentZoom)
+            x: Math.round(sx * 10) / 10,
+            y: Math.round(sy * 10) / 10
         };
     }
 
@@ -3159,9 +3174,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         // Método 3: Fallback sintético al canvas con proyección geométrica milimétrica
         const canvas = getCanvas();
         if (canvas) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = rect.left + (px / screenW) * rect.width;
-            const clientY = rect.top + (py / screenH) * rect.height;
+            const sPt = virtualToScreen(px, py);
+            const clientX = sPt.x;
+            const clientY = sPt.y;
             const btn = (mask === 4) ? 2 : ((mask === 2) ? 1 : 0);
             const evtType = mask ? "mousedown" : "mouseup";
             try {
@@ -3189,10 +3204,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         sendPointer(virtX, virtY, isDragging ? 1 : 0);
     }
 
-    // Desactivar GestureHandler nativo de noVNC para evitar colisiones con el Trackpad
+    // Desactivar GestureHandler nativo y cursor duplicado de noVNC para evitar colisiones con el Trackpad
     function setupNoVNCHooks() {
         const rfb = getRFB();
         if (rfb) {
+            rfb.showDotCursor = false;
+            if (rfb._cursor && rfb._cursor._canvas) {
+                try { rfb._cursor._canvas.style.display = "none"; } catch(e) {}
+            }
             if (rfb._gestures && rfb._gestures._target) {
                 try {
                     rfb._gestures.detach();
@@ -3313,6 +3332,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             startY = lastY = e.touches[0].clientY;
             lastMoveTime = touchStartTime;
 
+            const fingerContact = document.getElementById("cloud-finger-contact");
+            if (fingerContact) {
+                fingerContact.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+                fingerContact.classList.add("active");
+            }
+
             // Deslizamiento desde el margen izquierdo para abrir el menú Aether
             if (startX < 28 && !drawer.classList.contains("open")) {
                 isEdgeSwiping = true;
@@ -3333,9 +3358,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             }
 
             if (currentMode === "TRACKPAD") {
-                // Long-press hold para iniciar Arrastre (Drag & Drop)
+                // Long-press hold para iniciar Arrastre (Tolerancia ergonómica 25px para pulgar humano)
                 dragHoldTimer = setTimeout(function() {
-                    if (isTouching && totalMoved < 14 && initialTouchCount === 1) {
+                    if (isTouching && totalMoved < 25 && initialTouchCount === 1) {
                         isDragging = true;
                         if (holdRing) holdRing.classList.add("active");
                         if (cursor) cursor.classList.add("cursor-dragging");
@@ -3343,7 +3368,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                         sendMouse(1);
                         showToast("Arrastre Bloqueado (Drag & Drop)");
                     }
-                }, 320);
+                }, 300);
             } else {
                 // MODO TÁCTIL DIRECTO: Mover puntero de inmediato al toque
                 const vPos = screenToVirtual(startX, startY);
@@ -3405,11 +3430,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const dist = Math.hypot(dx, dy);
             totalMoved += dist;
 
+            const fingerContact = document.getElementById("cloud-finger-contact");
+            if (fingerContact) {
+                fingerContact.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+            }
+
             const now = performance.now();
             const dt = Math.max(8, now - lastMoveTime);
             lastMoveTime = now;
 
-            if (totalMoved > 10 && !isDragging) {
+            if (totalMoved > 25 && !isDragging) {
                 clearTimeout(dragHoldTimer);
                 if (holdRing) holdRing.classList.remove("active");
             }
@@ -3440,20 +3470,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     accel = Math.min(3.5, 1.5 + Math.pow(v - 1.0, 1.25)); // Aceleración balística progresiva
                 }
 
-                const scaleFactor = 1.35 * accel * trackpadSens;
-                const m = getViewportMetrics();
-                const canvas = getCanvas();
-                let renderW = m.renderW;
-                let renderH = m.renderH;
-                if (canvas) {
-                    const rect = canvas.getBoundingClientRect();
-                    if (rect.width > 20 && rect.height > 20) {
-                        renderW = rect.width;
-                        renderH = rect.height;
-                    }
-                }
-                const scaleX = (screenW / renderW) * scaleFactor;
-                const scaleY = (screenH / renderH) * scaleFactor;
+                const scaleFactor = 1.25 * accel * trackpadSens;
+                const geo = getDisplayGeometry();
+                const scaleX = (screenW / geo.width) * scaleFactor;
+                const scaleY = (screenH / geo.height) * scaleFactor;
 
                 virtX = Math.max(0, Math.min(screenW, virtX + (dx * scaleX)));
                 virtY = Math.max(0, Math.min(screenH, virtY + (dy * scaleY)));
@@ -3474,7 +3494,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 // Transmisión inmediata y continua del movimiento al servidor VNC
                 sendMouseMove();
             } else {
-                // MODO TÁCTIL DIRECTO (TABLET)
+                // MODO TÁCTIL DIRECTO (TABLET): Arrastre natural al deslizar el dedo
+                if (totalMoved > 8 && !isDragging) {
+                    isDragging = true;
+                    if (cursor) cursor.classList.add("cursor-dragging");
+                    sendMouse(1);
+                }
                 const vPos = screenToVirtual(curX, curY);
                 virtX = vPos.x;
                 virtY = vPos.y;
@@ -3559,6 +3584,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
         if (e.touches.length === 0) {
             isTouching = false;
+
+            const fingerContact = document.getElementById("cloud-finger-contact");
+            if (fingerContact) {
+                fingerContact.classList.remove("active");
+            }
 
             // Inercia Cinética de Scroll
             if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35 && currentZoom <= 1.05) {

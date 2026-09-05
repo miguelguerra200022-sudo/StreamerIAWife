@@ -32,7 +32,7 @@ def get_hud_code():
     return ""
 
 def log_telemetry_entry(entry):
-    """Guarda una entrada formateada en test_touch_telemetry.log"""
+    """Guarda una entrada formateada y auditada en test_touch_telemetry.log"""
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     millis = int((time.time() % 1) * 1000)
     ts = f"[{now}.{millis:03d}]"
@@ -40,10 +40,14 @@ def log_telemetry_entry(entry):
     evt_type = entry.get("type", "EVENT")
     details = entry.get("details", "")
     coords = entry.get("coords", "")
+    finger = entry.get("finger", "--")
     action = entry.get("action", "")
     target = entry.get("target", "")
+    anomaly = entry.get("anomaly", "")
 
-    line = f"{ts} {evt_type:<16} | Coords: {coords:<24} | Target: {target:<20} | Action: {action:<14} | {details}\n"
+    anomaly_tag = f"⚠️ [ANOMALÍA: {anomaly}]" if anomaly else "✓ [OK: CALIBRADO]"
+
+    line = f"{ts} {evt_type:<16} | Dedo: {finger:<14} | PunteroVirt: {coords:<14} | Target: {target:<16} | Acción: {action:<10} | {anomaly_tag:<30} | {details}\n"
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line)
     return line
@@ -85,12 +89,15 @@ def build_sandbox_html():
             touch-action: none;
         }}
         #noVNC_canvas {{
-            width: 100vw;
-            height: 100vh;
-            object-fit: contain;
+            max-width: 100vw;
+            max-height: 100vh;
+            aspect-ratio: 16 / 9;
+            width: auto;
+            height: auto;
             background: #090e1a;
             display: block;
             touch-action: none;
+            box-shadow: 0 0 32px rgba(0,0,0,0.85);
         }}
 
         /* HUD DE TELEMETRÍA EN VIVO: Centrado Inferior para no tapar los botones ni los mandos */
@@ -284,13 +291,15 @@ def build_sandbox_html():
         let telemetryBuffer = [];
         let lastSendTime = 0;
 
-        function recordTelemetry(type, coords, target, action, details) {{
+        function recordTelemetry(type, coords, target, action, details, anomaly, finger) {{
             const item = {{
                 time: Date.now(),
                 type: type,
                 coords: typeof coords === "object" ? `(${{Math.round(coords.x)}}, ${{Math.round(coords.y)}})` : String(coords),
+                finger: finger ? (typeof finger === "object" ? `(${{Math.round(finger.x)}}, ${{Math.round(finger.y)}})` : String(finger)) : "--",
                 target: target || "Screen",
                 action: action || "",
+                anomaly: anomaly || "",
                 details: details || ""
             }};
             telemetryBuffer.push(item);
@@ -298,16 +307,18 @@ def build_sandbox_html():
             // Actualizar Ticker y Stream en el HUD flotante
             const ticker = document.getElementById("tel-ticker-text");
             if (ticker) {{
-                ticker.textContent = `[${{type}}] ${{action}} ${{item.coords}} ${{details ? '— ' + details.substring(0, 28) : ''}}`;
+                const anomAlert = anomaly ? `⚠️ [${{anomaly}}] ` : "";
+                ticker.textContent = `${{anomAlert}}[${{type}}] Dedo:${{item.finger}} -> Puntero:${{item.coords}} | ${{action}}`;
             }}
 
             const stream = document.getElementById("tel-stream-list");
             if (stream) {{
                 const el = document.createElement("div");
-                el.className = "tel-log-item highlight";
-                el.textContent = `[${{type}}] ${{action}} ${{item.coords}} | ${{details}}`;
+                el.className = anomaly ? "tel-log-item" : "tel-log-item highlight";
+                if (anomaly) el.style.color = "#f43f5e";
+                el.textContent = `${{anomaly ? '⚠️ ' : ''}}[${{type}}] D:${{item.finger}} -> P:${{item.coords}} | ${{action}} | ${{details}}`;
                 stream.insertBefore(el, stream.firstChild);
-                while (stream.children.length > 6) {{
+                while (stream.children.length > 8) {{
                     stream.removeChild(stream.lastChild);
                 }}
             }}
@@ -586,36 +597,8 @@ def build_sandbox_html():
             ctx.fillText("Arrastra la ventana aquí para verificar precisión", dt.x + dt.w / 2, dt.y + dt.h / 2 + 14);
             ctx.textAlign = "left";
 
-            // 5. Cursor y Estela del Puntero Virtual
-            const cur = state.cursor;
-            cur.trail.push({{ x: cur.x, y: cur.y, alpha: 0.5 }});
-            cur.trail.forEach(t => {{
-                ctx.fillStyle = `rgba(56, 189, 248, ${{t.alpha}})`;
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, 4, 0, Math.PI * 2);
-                ctx.fill();
-                t.alpha *= 0.80;
-            }});
-            cur.trail = cur.trail.filter(t => t.alpha > 0.05);
-
-            // Dibujar cursor estilizado
-            ctx.save();
-            ctx.translate(cur.x, cur.y);
-            ctx.fillStyle = cur.mask === 1 ? "#00ffc8" : (cur.mask === 4 ? "#ef4444" : "#ffffff");
-            ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, 22);
-            ctx.lineTo(6, 17);
-            ctx.lineTo(12, 28);
-            ctx.lineTo(16, 26);
-            ctx.lineTo(10, 15);
-            ctx.lineTo(18, 15);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
+            // 5. Unificación Total: El puntero oficial es #cloud-virtual-cursor (DOM SVG calibrado a 60/120Hz).
+            // La superficie canvas nunca dibuja un segundo cursor redundante.
 
             requestAnimationFrame(drawCanvas);
         }}
@@ -651,13 +634,17 @@ def build_sandbox_html():
                 const deltaVirtY = cur.y - oldVy;
                 const moveDist = Math.hypot(deltaVirtX, deltaVirtY);
 
-                // Registro de Deslizamiento Continuo del Puntero (Cada 80ms o movimientos claros)
+                // Registro de Deslizamiento Continuo del Puntero (Cada 75ms o movimientos claros)
                 const now = Date.now();
-                if (moveDist > 3 && (now - lastLoggedMove > 80)) {{
+                if (moveDist > 2 && (now - lastLoggedMove > 75)) {{
                     lastLoggedMove = now;
                     const actionName = win.isDragging ? "WIN_DRAGGING" : (mask === 1 ? "MOUSE_DRAG" : "POINTER_MOVE");
                     const targetName = win.isDragging ? "WindowHeader" : "DesktopCanvas";
-                    recordTelemetry(actionName, cur, targetName, "Move", `Delta Virt: (dx:${{Math.round(deltaVirtX)}}, dy:${{Math.round(deltaVirtY)}}) | Puntero en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
+                    let anomaly = "";
+                    if (cur.x <= 0 || cur.x >= 1920 || cur.y <= 0 || cur.y >= 1080) {{
+                        anomaly = "BORDE_ESCRITORIO";
+                    }}
+                    recordTelemetry(actionName, cur, targetName, "Move", `Delta Virt: (dx:${{Math.round(deltaVirtX)}}, dy:${{Math.round(deltaVirtY)}}) | Puntero en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, anomaly);
                 }}
 
                 // Click Izquierdo presionado
@@ -908,20 +895,47 @@ def build_sandbox_html():
                     const dist = Math.hypot(dx, dy);
 
                     // Registrar si hubo desplazamiento físico
-                    if (dist >= 3) {{
+                    if (dist >= 2) {{
                         track.lastX = t.clientX;
                         track.lastY = t.clientY;
 
-                        if (now - lastLoggedSlideTime > 80 && window.recordTelemetry) {{
+                        if (now - lastLoggedSlideTime > 75 && window.recordTelemetry) {{
                             lastLoggedSlideTime = now;
                             const totalDx = t.clientX - track.startX;
                             const totalDy = t.clientY - track.startY;
+
+                            // Comprobación de Incongruencias y Anomalías en Tiempo Real
+                            let anomaly = "";
+                            const cur = (typeof state !== "undefined") ? state.cursor : {{ x: 960, y: 540, mask: 0 }};
+
+                            // 1. Detección de cursores duplicados en el DOM
+                            const cursorsFound = document.querySelectorAll("#cloud-virtual-cursor").length;
+                            if (cursorsFound > 1) {{
+                                anomaly = "PUNTERO_DUPLICADO (" + cursorsFound + ")";
+                            }}
+
+                            // 2. Detección de Drift/Desfase en Modo Táctil Directo
+                            if (typeof currentMode !== "undefined" && currentMode === "TOUCH" && typeof virtualToScreen === "function") {{
+                                const sPos = virtualToScreen(cur.x, cur.y);
+                                const drift = Math.hypot(t.clientX - sPos.x, t.clientY - sPos.y);
+                                if (drift > 28) {{
+                                    anomaly = "DESFASE_TACTIL (" + Math.round(drift) + "px)";
+                                }}
+                            }}
+
+                            // 3. Límite de Escritorio
+                            if (cur.x <= 0 || cur.x >= 1920 || cur.y <= 0 || cur.y >= 1080) {{
+                                if (!anomaly) anomaly = "LIMITE_ESCRITORIO";
+                            }}
+
                             window.recordTelemetry(
                                 "FINGER_SLIDE",
-                                {{ x: t.clientX, y: t.clientY }},
+                                cur,
                                 track.target,
                                 "Slide",
-                                `Desplazamiento pantalla: (dx:${{Math.round(dx)}}, dy:${{Math.round(dy)}}) | Total: (dx:${{Math.round(totalDx)}}, dy:${{Math.round(totalDy)}})`
+                                `Dedo: (dx:${{Math.round(dx)}}, dy:${{Math.round(dy)}}) Total: (dx:${{Math.round(totalDx)}}, dy:${{Math.round(totalDy)}}) | PunteroVirt: (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`,
+                                anomaly,
+                                {{ x: t.clientX, y: t.clientY }}
                             );
                         }}
                     }}
