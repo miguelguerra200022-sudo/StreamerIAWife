@@ -1004,188 +1004,42 @@ try:
 
 /* ========================================================================== */
 /* ========================================================================== */
-/* 1. STREAM TELEMETRY HUD (ESTÁNDAR GAMING GEFORCE NOW CTRL+N & STEAM DECK)  */
 /* ========================================================================== */
-#cloud-perf-badge {
+/* 1. VELOCÍMETRO ULTRA-MINIMALISTA: TEXTO PURO SIN MARCOS NI FONDOS          */
+/* ========================================================================== */
+#cloud-speed-indicator {
     position: fixed;
-    bottom: calc(10px + var(--safe-bottom));
-    left: calc(12px + var(--safe-left));
-    background: rgba(10, 15, 26, 0.82);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(0, 255, 200, 0.32);
-    border-radius: 9999px;
-    padding: 5px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-    font-size: 11px;
-    font-weight: 700;
-    color: #f8fafc;
-    z-index: 999980;
-    cursor: pointer;
-    user-select: none;
-    touch-action: manipulation;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.65), 0 0 10px rgba(0, 255, 200, 0.15);
-    line-height: 1;
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-#cloud-perf-badge:hover, #cloud-perf-badge:active {
-    background: rgba(13, 20, 36, 0.95);
-    border-color: var(--aether-cyan);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(0, 255, 200, 0.35);
-    transform: scale(1.03);
-}
-#cloud-perf-badge .perf-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--aether-cyan);
-    box-shadow: 0 0 8px var(--aether-cyan);
-    animation: perf-pulse 2s infinite ease-in-out;
-}
-@keyframes perf-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.65; transform: scale(0.85); }
-}
-.hud-metric {
+    bottom: calc(6px + var(--safe-bottom, 0px));
+    left: calc(8px + var(--safe-left, 0px));
     display: inline-flex;
     align-items: baseline;
-    gap: 2px;
-}
-.hud-val {
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-}
-.fps-val { color: var(--aether-cyan); }
-.ping-val { color: var(--aether-blue); }
-.hud-unit {
-    font-size: 9px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.50);
-    text-transform: uppercase;
-}
-.hud-sep {
-    width: 1px;
-    height: 11px;
-    background: rgba(255, 255, 255, 0.18);
-}
-.hud-signal {
-    width: 14px;
-    height: 11px;
-    display: inline-flex;
-    align-items: flex-end;
-    gap: 1.5px;
-}
-.hud-signal .bar {
-    width: 2.5px;
-    background: rgba(255, 255, 255, 0.20);
-    border-radius: 1px;
-    transition: background 0.25s ease;
-}
-.hud-signal .b1 { height: 3px; }
-.hud-signal .b2 { height: 6px; }
-.hud-signal .b3 { height: 9px; }
-.hud-signal .b4 { height: 11px; }
-.hud-signal.lvl-4 .bar { background: #00ffc8; }
-.hud-signal.lvl-3 .b1, .hud-signal.lvl-3 .b2, .hud-signal.lvl-3 .b3 { background: #00ffc8; }
-.hud-signal.lvl-2 .b1, .hud-signal.lvl-2 .b2 { background: #facc15; }
-.hud-signal.lvl-1 .b1 { background: #f43f5e; }
-
-.hud-tag {
-    font-size: 9.5px;
+    gap: 4px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 10.5px;
     font-weight: 700;
-    padding: 1.5px 5px;
-    border-radius: 4px;
-    background: rgba(0, 255, 200, 0.15);
-    color: var(--aether-cyan);
-    border: 1px solid rgba(0, 255, 200, 0.3);
-}
-
-/* Panel de Diagnóstico Telemétrico Expandido (GeForce NOW Ctrl+N Standard) */
-#cloud-telemetry-panel {
-    position: fixed;
-    bottom: calc(52px + var(--safe-bottom));
-    left: calc(12px + var(--safe-left));
-    background: rgba(10, 15, 26, 0.92);
-    backdrop-filter: blur(28px) saturate(190%);
-    -webkit-backdrop-filter: blur(28px) saturate(190%);
-    border: 1px solid rgba(0, 255, 200, 0.35);
-    border-radius: 14px;
-    padding: 12px 14px;
-    width: min(280px, 86vw);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 200, 0.2);
-    z-index: 999985;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(10px) scale(0.95);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #f8fafc;
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 2px #000000, 0 0 5px rgba(0, 0, 0, 0.9);
+    z-index: 999980;
+    pointer-events: none !important;
     user-select: none;
+    -webkit-user-select: none;
+    line-height: 1;
 }
-#cloud-telemetry-panel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
-}
-.telem-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 8px;
-}
-.telem-title {
-    font-size: 11px;
+#cloud-speed-indicator .speed-fps-val {
+    color: var(--aether-cyan, #00ffc8);
     font-weight: 800;
-    color: var(--aether-cyan);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
 }
-.telem-close {
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.5);
-    display: flex;
-    align-items: center;
-    padding: 2px;
+#cloud-speed-indicator .speed-sep {
+    color: rgba(255, 255, 255, 0.35);
 }
-.telem-close:hover { color: #f8fafc; }
-.telem-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.telem-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-}
-.telem-key {
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
-}
-.telem-val {
+#cloud-speed-indicator .speed-ping-val {
+    color: var(--aether-blue, #38bdf8);
     font-weight: 700;
-    color: #f8fafc;
-}
-.telem-val.cyan { color: var(--aether-cyan); }
-.telem-val.blue { color: var(--aether-blue); }
-
-/* Auto-reubicación cuando los mandos están activos */
-body.tp-gamepad-active #cloud-perf-badge {
-    bottom: auto;
-    top: calc(10px + var(--safe-top));
-    left: calc(125px + var(--safe-left));
-}
-body.tp-gamepad-active #cloud-telemetry-panel {
-    bottom: auto;
-    top: calc(48px + var(--safe-top));
-    left: calc(125px + var(--safe-left));
 }
 
 /* ========================================================================== */
@@ -1486,9 +1340,21 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     user-select: none;
     touch-action: none;
     display: none;
+    opacity: 1;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 #virtual-gamepad-overlay.visible {
     display: block;
+}
+/* Sistema de Visibilidad Inteligente: Atenuación suave en reposo (TAK / Steam Link 20% ghost) */
+#virtual-gamepad-overlay.gp-idle-ghost {
+    opacity: 0.20;
+    transition: opacity 0.8s ease;
+}
+/* Ocultamiento Automático al Conectar Mando Físico (Estándar TAK y RetroArch) */
+#virtual-gamepad-overlay.gp-phys-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* Base de Joysticks Analógicos: Arco Ergonómico TAK con Grip Cóncavo */
@@ -1966,69 +1832,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 }
 </style>
 
-<!-- 1. STREAM TELEMETRY HUD (ESTÁNDAR GAMING GEFORCE NOW & STEAM DECK) -->
-<div id="cloud-perf-badge" title="Tocar para abrir diagnóstico avanzado de stream">
-    <div class="perf-dot" id="perf-status-dot"></div>
-    <div class="hud-metric">
-        <span class="hud-val fps-val" id="perf-fps-text">60</span>
-        <span class="hud-unit">FPS</span>
-    </div>
-    <div class="hud-sep"></div>
-    <div class="hud-metric">
-        <span class="hud-val ping-val" id="perf-ping-text">--</span>
-        <span class="hud-unit">MS</span>
-    </div>
-    <div class="hud-signal lvl-4" id="perf-signal-bars" title="Calidad de enlace">
-        <span class="bar b1"></span>
-        <span class="bar b2"></span>
-        <span class="bar b3"></span>
-        <span class="bar b4"></span>
-    </div>
-    <span class="hud-tag" id="perf-res-tag">1080p</span>
-</div>
-
-<!-- PANEL DIAGNÓSTICO TELEMÉTRICO EXPANDIBLE (GEFORCE NOW CTRL+N) -->
-<div id="cloud-telemetry-panel">
-    <div class="telem-header">
-        <span class="telem-title">Telemetría de Transmisión</span>
-        <span class="telem-close" id="btn-close-telem" title="Cerrar diagnóstico">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </span>
-    </div>
-    <div class="telem-grid">
-        <div class="telem-row">
-            <span class="telem-key">Resolución Activa</span>
-            <span class="telem-val cyan" id="telem-res-val">1920 × 1080 (16:9)</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Refresco de Pantalla</span>
-            <span class="telem-val" id="telem-refresh-val">60 Hz Nativo</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Frame Pacing (Tiempo)</span>
-            <span class="telem-val cyan" id="telem-pacing-val">16.6 ms</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Latencia de Red (RTT)</span>
-            <span class="telem-val blue" id="telem-rtt-val">-- ms</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Calidad de Enlace</span>
-            <span class="telem-val cyan" id="telem-quality-val">Óptima (100%)</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Motor de Streaming</span>
-            <span class="telem-val">Nginx • Websockify</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Canal de Audio</span>
-            <span class="telem-val" id="telem-audio-val">PulseAudio 48kHz</span>
-        </div>
-        <div class="telem-row">
-            <span class="telem-key">Kernel Gamepad</span>
-            <span class="telem-val">Virtual X-Box (/dev/uinput)</span>
-        </div>
-    </div>
+<!-- 1. VELOCÍMETRO ULTRA-MINIMALISTA (LETRAS Y NÚMEROS PUROS SOBRE PANTALLA, SIN MARCOS) -->
+<div id="cloud-speed-indicator" aria-hidden="true">
+    <span class="speed-fps-val" id="perf-fps-text">60 FPS</span>
+    <span class="speed-sep">·</span>
+    <span class="speed-ping-val" id="perf-ping-text">-- ms</span>
 </div>
 
 <!-- 2. PESTAÑA LATERAL TRANSPARENTE AETHER (MARGEN IZQUIERDO) -->
@@ -2345,18 +2153,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const rightStickZone = document.getElementById("right-stick-zone");
     const rightStickThumb = document.getElementById("right-stick-thumb");
 
-    // Telemetría Gaming GeForce NOW & Steam Deck
-    const perfBadge = document.getElementById("cloud-perf-badge");
+    // Velocímetro Ultra-Minimalista (FPS y Ping sobre pantalla, sin marcos)
     const perfFps = document.getElementById("perf-fps-text");
     const perfPing = document.getElementById("perf-ping-text");
-    const perfDot = document.getElementById("perf-status-dot");
-    const perfSignalBars = document.getElementById("perf-signal-bars");
-    const telemPanel = document.getElementById("cloud-telemetry-panel");
-    const btnCloseTelem = document.getElementById("btn-close-telem");
-    const telemResVal = document.getElementById("telem-res-val");
-    const telemRttVal = document.getElementById("telem-rtt-val");
-    const telemPacingVal = document.getElementById("telem-pacing-val");
-    const telemQualityVal = document.getElementById("telem-quality-val");
 
     const cursor = document.getElementById("cloud-virtual-cursor");
     const holdRing = document.getElementById("cloud-hold-ring");
@@ -2866,8 +2665,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         physicalGamepadCount++;
         console.log("[GAMEPAD] Mando físico conectado:", e.gamepad.id);
         const name = e.gamepad.id.length > 20 ? e.gamepad.id.substring(0, 20) + "..." : e.gamepad.id;
-        showToast("Mando Conectado: " + name);
+        showToast("Mando Físico: " + name);
         hapticFeedback([20, 50, 20]);
+        // Estándar TAK y RetroArch: Auto-ocultar mandos táctiles al conectar mando físico
+        if (isGamepadVisible && gpOverlay) {
+            gpOverlay.classList.add("gp-phys-hidden");
+        }
         initGamepadWebSocket();
         startPhysicalGamepadLoop();
     });
@@ -2875,6 +2678,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     window.addEventListener("gamepaddisconnected", function(e) {
         physicalGamepadCount = Math.max(0, physicalGamepadCount - 1);
         showToast("Mando físico desconectado");
+        if (physicalGamepadCount === 0 && isGamepadVisible && gpOverlay) {
+            gpOverlay.classList.remove("gp-phys-hidden");
+            wakeGamepadOverlay();
+        }
         gpAxesState = [0, 0, 0, 0];
         gpButtonsState = new Array(17).fill(0);
         emitGamepadState();
@@ -2953,18 +2760,47 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         physicalPollingFrame = requestAnimationFrame(poll);
     }
 
+    // Sistema de Visibilidad Inteligente y Auto-Fade de Mandos (Microsoft TAK + Steam Link)
+    let gpIdleTimer = null;
+    const GP_IDLE_TIMEOUT = 4000; // 4s de inactividad para pasar a modo reposo (ghost 20%)
+
+    function wakeGamepadOverlay() {
+        if (!isGamepadVisible || !gpOverlay || physicalGamepadCount > 0) return;
+        if (gpOverlay.classList.contains("gp-idle-ghost")) {
+            gpOverlay.classList.remove("gp-idle-ghost");
+        }
+        clearTimeout(gpIdleTimer);
+        gpIdleTimer = setTimeout(() => {
+            const hasActiveTouch = (stickTouchId !== null) || (typeof rightStickTouchId !== "undefined" && rightStickTouchId !== null) || gpButtonsState.some(b => b === 1);
+            if (!hasActiveTouch && isGamepadVisible && gpOverlay && physicalGamepadCount === 0) {
+                gpOverlay.classList.add("gp-idle-ghost");
+            }
+        }, GP_IDLE_TIMEOUT);
+    }
+
+    window.addEventListener("touchstart", wakeGamepadOverlay, { passive: true });
+    window.addEventListener("touchmove", wakeGamepadOverlay, { passive: true });
+
     function setGamepadVisibility(visible) {
         isGamepadVisible = visible;
         localStorage.setItem("cloudpc_gp_visible", visible ? "true" : "false");
         if (visible) {
             gpOverlay.classList.add("visible");
+            gpOverlay.classList.remove("gp-idle-ghost");
+            if (physicalGamepadCount > 0) {
+                gpOverlay.classList.add("gp-phys-hidden");
+            } else {
+                gpOverlay.classList.remove("gp-phys-hidden");
+                wakeGamepadOverlay();
+            }
             if (badgeGamepad) { badgeGamepad.innerText = "ON"; badgeGamepad.classList.add("active"); }
             btnGamepad.classList.add("active-glow");
             document.body.classList.add("tp-gamepad-active");
             initGamepadWebSocket();
             showToast("Mandos Táctiles Activados");
         } else {
-            gpOverlay.classList.remove("visible");
+            clearTimeout(gpIdleTimer);
+            gpOverlay.classList.remove("visible", "gp-idle-ghost", "gp-phys-hidden");
             if (badgeGamepad) { badgeGamepad.innerText = "OFF"; badgeGamepad.classList.remove("active"); }
             btnGamepad.classList.remove("active-glow");
             document.body.classList.remove("tp-gamepad-active");
@@ -3436,8 +3272,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             e.target.closest("#aether-drawer") ||
             e.target.closest("#aether-edge-tab") ||
             e.target.closest("#aether-scrim") ||
-            e.target.closest("#cloud-telemetry-panel") ||
-            e.target.closest("#cloud-perf-badge") ||
+            e.target.closest("#cloud-speed-indicator") ||
             e.target.closest("#aether-kbd-dismiss") ||
             e.target.closest("#virtual-gamepad-overlay [data-btn]") ||
             e.target.closest(".gp-stick-zone") ||
@@ -4346,28 +4181,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     }
 
     // -------------------------------------------------------------------------
-    // 6. TELEMETRÍA Y CONTROLADOR HUD (ESTÁNDAR GEFORCE NOW CTRL+N)
+    // 6. VELOCÍMETRO ULTRA-MINIMALISTA (FPS Y PING EN BORDE INFERIOR IZQUIERDO)
     // -------------------------------------------------------------------------
-    if (perfBadge && telemPanel) {
-        attachButtonTap(perfBadge, function(e) {
-            telemPanel.classList.toggle("open");
-            hapticFeedback(16);
-        });
-    }
-    if (btnCloseTelem && telemPanel) {
-        attachButtonTap(btnCloseTelem, function(e) {
-            telemPanel.classList.remove("open");
-            hapticFeedback(12);
-        });
-    }
-    document.addEventListener("pointerdown", function(e) {
-        if (telemPanel && telemPanel.classList.contains("open")) {
-            if (!e.target.closest("#cloud-telemetry-panel") && !e.target.closest("#cloud-perf-badge")) {
-                telemPanel.classList.remove("open");
-            }
-        }
-    });
-
     let frameCount = 0, lastFpsTime = performance.now();
     function fpsLoop() {
         frameCount++;
@@ -4375,15 +4190,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         const delta = now - lastFpsTime;
         if (delta >= 1000) {
             const currentFps = Math.round((frameCount * 1000) / delta);
-            if (perfFps) perfFps.innerText = currentFps;
-            if (perfDot) {
-                perfDot.style.backgroundColor = currentFps >= 45 ? "#00ffc8" : (currentFps >= 25 ? "#facc15" : "#f43f5e");
-                perfDot.style.boxShadow = "0 0 8px " + perfDot.style.backgroundColor;
-            }
-            if (telemPacingVal) {
-                const pacing = (1000 / Math.max(1, currentFps)).toFixed(1);
-                telemPacingVal.innerText = pacing + " ms";
-            }
+            if (perfFps) perfFps.innerText = currentFps + " FPS";
             frameCount = 0;
             lastFpsTime = now;
         }
@@ -4398,17 +4205,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         img.onload = img.onerror = function() {
             const rtt = Math.round(performance.now() - start);
             const displayRtt = (rtt > 0 && rtt < 999) ? rtt : 18;
-            if (perfPing) perfPing.innerText = displayRtt;
-            if (telemRttVal) telemRttVal.innerText = displayRtt + " ms";
-
-            if (perfSignalBars) {
-                perfSignalBars.className = "hud-signal " + (
-                    displayRtt < 30 ? "lvl-4" : (displayRtt < 55 ? "lvl-3" : (displayRtt < 90 ? "lvl-2" : "lvl-1"))
-                );
-            }
-            if (telemQualityVal) {
-                telemQualityVal.innerText = displayRtt < 40 ? "Óptima (100%)" : (displayRtt < 80 ? "Buena (92%)" : "Media (75%)");
-            }
+            if (perfPing) perfPing.innerText = displayRtt + " ms";
         };
     }
     setInterval(measureNetworkPing, 2000);
