@@ -1056,6 +1056,7 @@ try:
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
+    will-change: transform;
 }
 
 /* ========================================================================== */
@@ -1757,6 +1758,17 @@ try:
     z-index: 999999; transform: translate3d(0, 0, 0); display: none;
     filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85)); will-change: transform;
 }
+#cloud-virtual-cursor path {
+    transform-origin: 0 0;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1), fill 0.12s ease;
+}
+#cloud-virtual-cursor.cursor-clicked path {
+    transform: scale(0.85);
+}
+#cloud-virtual-cursor.cursor-right-clicked path {
+    transform: scale(0.85);
+    fill: #ff2a85 !important;
+}
 #cloud-virtual-cursor.cursor-dragging path {
     fill: var(--aether-cyan) !important;
     stroke: #0a0f1a !important;
@@ -1765,38 +1777,6 @@ try:
 body.tp-trackpad-mode #cloud-virtual-cursor { display: block; }
 body.tp-touch-mode #cloud-virtual-cursor { display: block; }
 body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
-
-#cloud-finger-contact {
-    position: fixed; width: 38px; height: 38px; pointer-events: none !important;
-    z-index: 999997; transform: translate3d(-50%, -50%, 0); opacity: 0;
-    border-radius: 50%; border: 1.8px solid rgba(0, 255, 200, 0.7);
-    background: radial-gradient(circle, rgba(0, 255, 200, 0.25) 0%, rgba(0, 255, 200, 0) 72%);
-    box-shadow: 0 0 12px rgba(0, 255, 200, 0.45);
-    transition: opacity 0.15s ease; will-change: transform, opacity;
-}
-#cloud-finger-contact.active { opacity: 1; }
-
-#cloud-hold-ring {
-    position: fixed; width: 44px; height: 44px; pointer-events: none;
-    z-index: 999998; transform: translate3d(-50%, -50%, 0) scale(0.6);
-    opacity: 0; transition: opacity 0.1s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-#cloud-hold-ring.active { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
-#cloud-hold-ring circle.progress {
-    stroke-dasharray: 120; stroke-dashoffset: 120; transition: stroke-dashoffset 0.24s linear;
-}
-#cloud-hold-ring.active circle.progress { stroke-dashoffset: 0; }
-
-.cloud-touch-ripple {
-    position: fixed; border-radius: 50%; pointer-events: none; z-index: 999997;
-    transform: translate(-50%, -50%) scale(0); animation: ripple-pop 0.35s ease-out forwards;
-}
-.cloud-touch-ripple.left-click { border: 2px solid rgba(0, 255, 200, 0.85); background: rgba(0, 255, 200, 0.2); }
-.cloud-touch-ripple.right-click { border: 2px solid rgba(255, 42, 133, 0.85); background: rgba(255, 42, 133, 0.25); }
-@keyframes ripple-pop {
-    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; width: 20px; height: 20px; }
-    100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; width: 44px; height: 44px; }
-}
 
 #cloud-toast {
     position: fixed; top: calc(16px + var(--safe-top)); left: 50%;
@@ -2090,15 +2070,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     </div>
 </div>
 
-<!-- 5. CURSOR Y ANILLO VISUAL -->
+<!-- 5. CURSOR VIRTUAL PROFESIONAL (ESTÁNDAR BIGTECH SIN CÍRCULOS NI RIPPLES) -->
 <svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
     <path d="M0 0l7 18 2.5-7 7-2.5L0 0z"/>
 </svg>
-<svg id="cloud-hold-ring" viewBox="0 0 44 44">
-    <circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="3"/>
-    <circle class="progress" cx="22" cy="22" r="19" fill="none" stroke="#00ffc8" stroke-width="3" stroke-linecap="round" transform="rotate(-90 22 22)"/>
-</svg>
-<div id="cloud-finger-contact" aria-hidden="true"></div>
 <div id="cloud-toast">Modo Trackpad Activo</div>
 <button id="aether-kbd-dismiss" title="Cerrar teclado en pantalla">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -2169,7 +2144,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     const perfPing = document.getElementById("perf-ping-text");
 
     const cursor = document.getElementById("cloud-virtual-cursor");
-    const holdRing = document.getElementById("cloud-hold-ring");
     const toast = document.getElementById("cloud-toast");
 
     const screenW = 1920, screenH = 1080;
@@ -2305,31 +2279,52 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         };
     }
 
-    function clampPanX(x, zoom) {
+    // Sistema de Delimitación y Clamping BigTech (Google Chrome Remote Desktop / Moonlight)
+    // Considera offsets exactos de bandas negras (pillarboxing/letterboxing) en pantallas panorámicas 20:9
+    function clampPanX(newPanX, zoom) {
         if (zoom <= 1.01) return 0;
-        const m = getViewportMetrics();
-        const minX = m.renderW > window.innerWidth ? (window.innerWidth - m.renderW) : 0;
-        return Math.min(0, Math.max(minX, x));
+        const geo = getDisplayGeometry();
+        const vw = window.innerWidth;
+        const renderW = geo.baseW * zoom;
+        if (renderW > vw) {
+            const maxPan = -geo.offsetX;
+            const minPan = vw - geo.offsetX - renderW;
+            return Math.min(maxPan, Math.max(minPan, newPanX));
+        }
+        return 0;
     }
-    function clampPanY(y, zoom) {
+
+    function clampPanY(newPanY, zoom) {
         if (zoom <= 1.01) return 0;
-        const m = getViewportMetrics();
-        const minY = m.renderH > window.innerHeight ? (window.innerHeight - m.renderH) : 0;
-        return Math.min(0, Math.max(minY, y));
+        const geo = getDisplayGeometry();
+        const vh = window.innerHeight;
+        const renderH = geo.baseH * zoom;
+        if (renderH > vh) {
+            const maxPan = -geo.offsetY;
+            const minPan = vh - geo.offsetY - renderH;
+            return Math.min(maxPan, Math.max(minPan, newPanY));
+        }
+        return 0;
     }
+
+    // Zoom Anclado a Punto Focal Físico Subpíxel (Zero Drift)
     function zoomToPoint(targetZoom, screenX, screenY, animate) {
-        const clampedZoom = Math.min(3.8, Math.max(1.0, targetZoom));
+        const clampedZoom = Math.min(4.0, Math.max(1.0, targetZoom));
         if (clampedZoom <= 1.02) {
             currentZoom = 1.0;
             panX = 0;
             panY = 0;
         } else {
-            const canvasX = (screenX - panX) / currentZoom;
-            const canvasY = (screenY - panY) / currentZoom;
+            const geo = getDisplayGeometry();
+            const canvasX = (screenX - geo.offsetX - panX) / currentZoom;
+            const canvasY = (screenY - geo.offsetY - panY) / currentZoom;
             currentZoom = clampedZoom;
-            panX = clampPanX(screenX - (canvasX * currentZoom), currentZoom);
-            panY = clampPanY(screenY - (canvasY * currentZoom), currentZoom);
+            const rawPanX = screenX - geo.offsetX - (canvasX * currentZoom);
+            const rawPanY = screenY - geo.offsetY - (canvasY * currentZoom);
+            panX = clampPanX(rawPanX, currentZoom);
+            panY = clampPanY(rawPanY, currentZoom);
         }
+        if (badgeZoom) badgeZoom.innerText = Math.round(currentZoom * 100) + "%";
         updateCanvasTransform(animate);
     }
 
@@ -2360,13 +2355,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         } catch(e) {}
     }
 
-    function createRipple(clientX, clientY, type) {
-        const r = document.createElement("div");
-        r.className = `cloud-touch-ripple ${type}`;
-        r.style.left = clientX + "px";
-        r.style.top = clientY + "px";
-        document.body.appendChild(r);
-        setTimeout(() => r.remove(), 380);
+    // Feedback Táctil y Visual en Cursor BigTech (Sin círculos obstructivos en pantalla)
+    function triggerCursorClickEffect(type) {
+        if (!cursor) return;
+        cursor.classList.remove("cursor-clicked", "cursor-right-clicked");
+        void cursor.offsetWidth; // Disparar reflow para reanimación inmediata
+        cursor.classList.add(type === "right" ? "cursor-right-clicked" : "cursor-clicked");
+        setTimeout(() => {
+            cursor.classList.remove("cursor-clicked", "cursor-right-clicked");
+        }, 120);
     }
 
     // -------------------------------------------------------------------------
@@ -3332,12 +3329,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             startY = lastY = e.touches[0].clientY;
             lastMoveTime = touchStartTime;
 
-            const fingerContact = document.getElementById("cloud-finger-contact");
-            if (fingerContact) {
-                fingerContact.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
-                fingerContact.classList.add("active");
-            }
-
             // Deslizamiento desde el margen izquierdo para abrir el menú Aether
             if (startX < 28 && !drawer.classList.contains("open")) {
                 isEdgeSwiping = true;
@@ -3350,25 +3341,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             isTapAndHalfCandidate = (currentMode === "TRACKPAD" && timeSinceLastTap < 320 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35);
 
             clearTimeout(dragHoldTimer);
-            if (holdRing) {
-                const pt = virtualToScreen(virtX, virtY);
-                holdRing.style.left = pt.x + "px";
-                holdRing.style.top = pt.y + "px";
-                holdRing.classList.remove("active");
-            }
 
             if (currentMode === "TRACKPAD") {
                 // Long-press hold para iniciar Arrastre (Tolerancia ergonómica 25px para pulgar humano)
                 dragHoldTimer = setTimeout(function() {
                     if (isTouching && totalMoved < 25 && initialTouchCount === 1) {
                         isDragging = true;
-                        if (holdRing) holdRing.classList.add("active");
                         if (cursor) cursor.classList.add("cursor-dragging");
                         hapticFeedback(35);
                         sendMouse(1);
                         showToast("Arrastre Bloqueado (Drag & Drop)");
                     }
-                }, 300);
+                }, 280);
             } else {
                 // MODO TÁCTIL DIRECTO: Mover puntero de inmediato al toque
                 const vPos = screenToVirtual(startX, startY);
@@ -3379,7 +3363,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             }
         } else if (e.touches.length === 2) {
             clearTimeout(dragHoldTimer);
-            if (holdRing) holdRing.classList.remove("active");
             if (isDragging) {
                 isDragging = false;
                 if (cursor) cursor.classList.remove("cursor-dragging");
@@ -3392,8 +3375,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             initialPinchZoom = currentZoom;
             initialPinchMidX = (p1.clientX + p2.clientX) / 2;
             initialPinchMidY = (p1.clientY + p2.clientY) / 2;
-            initialPinchWorldX = (initialPinchMidX - panX) / currentZoom;
-            initialPinchWorldY = (initialPinchMidY - panY) / currentZoom;
+            const geo = getDisplayGeometry();
+            initialPinchWorldX = (initialPinchMidX - geo.offsetX - panX) / currentZoom;
+            initialPinchWorldY = (initialPinchMidY - geo.offsetY - panY) / currentZoom;
             isPinching = false;
             lastScrollY = initialPinchMidY;
             lastScrollX = initialPinchMidX;
@@ -3430,18 +3414,12 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const dist = Math.hypot(dx, dy);
             totalMoved += dist;
 
-            const fingerContact = document.getElementById("cloud-finger-contact");
-            if (fingerContact) {
-                fingerContact.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
-            }
-
             const now = performance.now();
             const dt = Math.max(8, now - lastMoveTime);
             lastMoveTime = now;
 
             if (totalMoved > 25 && !isDragging) {
                 clearTimeout(dragHoldTimer);
-                if (holdRing) holdRing.classList.remove("active");
             }
 
             // Tap & Drag (Doble toque y arrastre inmediato)
@@ -3481,11 +3459,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 // Auto-pan suave si el cursor llega al borde estando ampliado con zoom
                 if (currentZoom > 1.05) {
                     const pt = virtualToScreen(virtX, virtY);
-                    const edgeMargin = 40;
-                    if (pt.x < edgeMargin) panX = clampPanX(panX + (edgeMargin - pt.x) * 0.35, currentZoom);
-                    if (pt.x > window.innerWidth - edgeMargin) panX = clampPanX(panX - (pt.x - (window.innerWidth - edgeMargin)) * 0.35, currentZoom);
-                    if (pt.y < edgeMargin) panY = clampPanY(panY + (edgeMargin - pt.y) * 0.35, currentZoom);
-                    if (pt.y > window.innerHeight - edgeMargin) panY = clampPanY(panY - (pt.y - (window.innerHeight - edgeMargin)) * 0.35, currentZoom);
+                    const edgeMargin = 42;
+                    if (pt.x < edgeMargin) panX = clampPanX(panX + (edgeMargin - pt.x) * 0.4, currentZoom);
+                    if (pt.x > window.innerWidth - edgeMargin) panX = clampPanX(panX - (pt.x - (window.innerWidth - edgeMargin)) * 0.4, currentZoom);
+                    if (pt.y < edgeMargin) panY = clampPanY(panY + (edgeMargin - pt.y) * 0.4, currentZoom);
+                    if (pt.y > window.innerHeight - edgeMargin) panY = clampPanY(panY - (pt.y - (window.innerHeight - edgeMargin)) * 0.4, currentZoom);
                     updateCanvasTransform(false);
                 } else {
                     updateCursorElement();
@@ -3513,19 +3491,23 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             const curMidX = (p1.clientX + p2.clientX) / 2;
             const curMidY = (p1.clientY + p2.clientY) / 2;
 
-            if (distDiff > 16 || isPinching) {
+            if (distDiff > 12 || isPinching) {
+                // Modo Pinch-to-Zoom con anclaje de punto focal BigTech
                 isPinching = true;
-                const zoomFactor = currentDist / initialPinchDist;
-                const newZoom = Math.min(3.8, Math.max(1.0, initialPinchZoom * zoomFactor));
+                const zoomFactor = currentDist / Math.max(10, initialPinchDist);
+                const targetZoom = Math.min(4.0, Math.max(1.0, initialPinchZoom * zoomFactor));
 
-                if (newZoom <= 1.02) {
+                if (targetZoom <= 1.02) {
                     currentZoom = 1.0;
                     panX = 0;
                     panY = 0;
                 } else {
-                    currentZoom = newZoom;
-                    panX = clampPanX(curMidX - (initialPinchWorldX * currentZoom), currentZoom);
-                    panY = clampPanY(curMidY - (initialPinchWorldY * currentZoom), currentZoom);
+                    const geo = getDisplayGeometry();
+                    currentZoom = targetZoom;
+                    const rawPanX = curMidX - geo.offsetX - (initialPinchWorldX * currentZoom);
+                    const rawPanY = curMidY - geo.offsetY - (initialPinchWorldY * currentZoom);
+                    panX = clampPanX(rawPanX, currentZoom);
+                    panY = clampPanY(rawPanY, currentZoom);
                 }
                 if (badgeZoom) badgeZoom.innerText = Math.round(currentZoom * 100) + "%";
                 updateCanvasTransform(false);
@@ -3570,7 +3552,6 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
         isEdgeSwiping = false;
         clearTimeout(dragHoldTimer);
-        if (holdRing) holdRing.classList.remove("active");
         const duration = performance.now() - touchStartTime;
 
         if (isDragging) {
@@ -3582,13 +3563,15 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
             return;
         }
 
+        if (isPinching) {
+            isPinching = false;
+            if (currentZoom < 1.05) {
+                resetZoom();
+            }
+        }
+
         if (e.touches.length === 0) {
             isTouching = false;
-
-            const fingerContact = document.getElementById("cloud-finger-contact");
-            if (fingerContact) {
-                fingerContact.classList.remove("active");
-            }
 
             // Inercia Cinética de Scroll
             if (initialTouchCount === 2 && !isPinching && Math.abs(scrollVelocityY) > 0.35 && currentZoom <= 1.05) {
@@ -3612,6 +3595,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 // Doble Clic (Dos toques consecutivos)
                 if (timeSinceLastTap < 300 && Math.hypot(startX - lastTapStartX, startY - lastTapStartY) < 35) {
                     lastTapEndTime = 0;
+                    triggerCursorClickEffect("left");
                     hapticFeedback([15, 35, 15]);
                     sendMouse(1);
                     setTimeout(() => {
@@ -3630,8 +3614,7 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                 lastTapEndTime = performance.now();
 
                 if (currentMode === "TRACKPAD") {
-                    const pt = virtualToScreen(virtX, virtY);
-                    createRipple(pt.x, pt.y, "left-click");
+                    triggerCursorClickEffect("left");
                     hapticFeedback(12);
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
@@ -3639,17 +3622,16 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                     const vPos = screenToVirtual(startX, startY);
                     virtX = vPos.x;
                     virtY = vPos.y;
-                    const pt = virtualToScreen(virtX, virtY);
-                    createRipple(pt.x, pt.y, "left-click");
+                    updateCursorElement();
+                    triggerCursorClickEffect("left");
                     hapticFeedback(12);
                     sendMouse(1);
                     setTimeout(() => sendMouse(0), 45);
                 }
             } else if (initialTouchCount === 2 && !isPinching && duration < 320 && totalMoved < 15) {
                 // Toque a 2 dedos = Clic Derecho (Right Click)
+                triggerCursorClickEffect("right");
                 hapticFeedback([12, 35, 12]);
-                const pt = virtualToScreen(virtX, virtY);
-                createRipple(pt.x, pt.y, "right-click");
                 sendMouse(4);
                 setTimeout(() => sendMouse(0), 45);
                 showToast("Clic Secundario");
@@ -3709,7 +3691,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         showToast("Zoom Restablecido al 100%");
         hapticFeedback(15);
     }
-    if (btnZoom) attachButtonTap(btnZoom, function() { resetZoom(); });
+
+    function toggleZoom() {
+        if (currentZoom > 1.05) {
+            resetZoom();
+        } else {
+            zoomToPoint(2.0, window.innerWidth / 2, window.innerHeight / 2, true);
+            if (badgeZoom) badgeZoom.innerText = "200%";
+            showToast("Zoom Ampliado al 200%");
+            hapticFeedback(20);
+        }
+    }
+    if (btnZoom) attachButtonTap(btnZoom, function() { toggleZoom(); });
 
     // Alternar Aspect Ratio (16:9 con bandas o 20:9 Pantalla Completa Estirada) con persistencia
     function applyAspect(stretched) {

@@ -98,6 +98,7 @@ def build_sandbox_html():
             display: block;
             touch-action: none;
             box-shadow: 0 0 32px rgba(0,0,0,0.85);
+            will-change: transform;
         }}
 
         /* HUD DE TELEMETRÍA EN VIVO: Centrado Inferior para no tapar los botones ni los mandos */
