@@ -1476,7 +1476,7 @@ body.tp-gamepad-active #cloud-telemetry-panel {
 }
 
 /* ========================================================================== */
-/* 3. CAPA DE MANDOS VIRTUALES TÁCTILES: XBOX TAK FUSION + CRISTAL LÍQUIDO    */
+/* 3. CAPA DE MANDOS VIRTUALES: MICROSOFT TAK + NEO-RETROPAD + XBOX VECTOR    */
 /* ========================================================================== */
 #virtual-gamepad-overlay {
     position: fixed;
@@ -1491,58 +1491,80 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     display: block;
 }
 
-/* Joystick Analógico Izquierdo con Deadzone y Resorte Elástico */
+/* Base de Joysticks Analógicos: Arco Ergonómico TAK con Grip Cóncavo */
 .gp-stick-zone {
     position: absolute;
-    bottom: calc(18px + var(--safe-bottom));
-    left: calc(18px + var(--safe-left));
-    width: 140px;
-    height: 140px;
+    bottom: calc(24px + var(--safe-bottom, 0px));
+    left: calc(24px + var(--safe-left, 0px));
+    width: 144px;
+    height: 144px;
     pointer-events: auto;
     touch-action: none;
 }
-/* Joystick Analógico Derecho (Cámara 3D y Apuntar) */
+/* Joystick Derecho: Barrido Interno para Control 3D de Cámara / Puntero */
 .gp-right-stick-zone {
     left: auto !important;
-    right: calc(180px + var(--safe-right));
-    bottom: calc(22px + var(--safe-bottom));
+    right: calc(192px + var(--safe-right, 0px));
+    bottom: calc(24px + var(--safe-bottom, 0px));
 }
 .gp-stick-base {
     position: absolute;
-    width: 130px;
-    height: 130px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.38);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(0, 255, 200, 0.35);
-    box-shadow: 0 0 16px rgba(0, 255, 200, 0.15), inset 0 0 10px rgba(0,0,0,0.5);
+    background: radial-gradient(circle, rgba(15, 23, 42, 0.5) 0%, rgba(10, 15, 26, 0.75) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid rgba(0, 255, 200, 0.35);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 0 16px rgba(0, 255, 200, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.gp-stick-thumb {
-    width: 52px;
-    height: 52px;
+/* Anillos Guía de Centrado en el Base */
+.gp-stick-base::before {
+    content: '';
+    position: absolute;
+    width: 86px;
+    height: 86px;
     border-radius: 50%;
-    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    border: 1px dashed rgba(0, 255, 200, 0.25);
+    pointer-events: none;
+}
+.gp-stick-thumb {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2a3b53 0%, #151e2e 60%, #0b111a 100%);
     border: 2px solid var(--aether-cyan);
-    box-shadow: 0 0 12px var(--aether-cyan);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(0, 255, 200, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
     transform: translate3d(0, 0, 0);
     will-change: transform;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-/* Botones L3 y R3 (Thumbstick Click para Sprint y Melee) */
+.gp-stick-thumb::after {
+    content: '';
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 255, 200, 0.3) 0%, rgba(0, 255, 200, 0) 70%);
+    border: 1px solid rgba(0, 255, 200, 0.4);
+}
+
+/* Botones L3 y R3 (Click Físico de Joystick - Sprint y Crouch) */
 .gp-stick-click-btn {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 34px;
-    height: 34px;
+    top: -6px;
+    right: -6px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1.5px solid var(--aether-cyan);
     color: var(--aether-cyan);
     font-size: 11px;
@@ -1552,205 +1574,313 @@ body.tp-gamepad-active #cloud-telemetry-panel {
     justify-content: center;
     cursor: pointer;
     touch-action: none;
-    box-shadow: 0 0 10px rgba(0, 255, 200, 0.25);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 255, 200, 0.25);
     transition: transform 0.08s ease, background 0.1s ease;
     z-index: 10;
 }
 .gp-stick-click-btn:active, .gp-stick-click-btn.pressed {
     background: var(--aether-cyan);
     color: #0a0f1a;
-    box-shadow: 0 0 16px var(--aether-cyan);
+    box-shadow: 0 0 18px var(--aether-cyan);
     transform: scale(0.92);
 }
-.gp-guide-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--aether-cyan) !important;
-    border-color: rgba(0, 255, 200, 0.35) !important;
-}
-.gp-guide-btn:active, .gp-guide-btn.pressed {
-    background: rgba(0, 255, 200, 0.35) !important;
-    box-shadow: 0 0 12px var(--aether-cyan);
-}
 
-/* D-Pad / Cruceta Táctil */
+/* D-Pad Esculpido Continuo (Neo-Retropad + TAK Arc Slot 7/8) */
 .gp-dpad-container {
     position: absolute;
-    bottom: calc(166px + var(--safe-bottom));
-    left: calc(36px + var(--safe-left));
-    width: 104px;
-    height: 104px;
+    bottom: calc(186px + var(--safe-bottom, 0px));
+    left: calc(32px + var(--safe-left, 0px));
+    width: 128px;
+    height: 128px;
     pointer-events: auto;
+    touch-action: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15, 23, 42, 0.4) 0%, rgba(10, 15, 26, 0.65) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+/* Hub central cóncavo del D-Pad */
+.gp-dpad-container::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    z-index: 1;
+    pointer-events: none;
 }
 .gp-dpad-btn {
     position: absolute;
-    width: 34px;
-    height: 34px;
-    background: rgba(15, 23, 42, 0.45);
+    width: 40px;
+    height: 40px;
+    background: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(56, 189, 248, 0.35);
-    border-radius: 9px;
     color: var(--aether-blue);
-    font-size: 13px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     touch-action: none;
-    transition: transform 0.08s ease, background 0.1s ease;
+    transition: transform 0.08s ease, background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+    z-index: 2;
+}
+.gp-dpad-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+.gp-dpad-up {
+    top: 4px; left: 44px;
+    border-radius: 12px 12px 4px 4px;
+}
+.gp-dpad-down {
+    bottom: 4px; left: 44px;
+    border-radius: 4px 4px 12px 12px;
+}
+.gp-dpad-left {
+    top: 44px; left: 4px;
+    border-radius: 12px 4px 4px 12px;
+}
+.gp-dpad-right {
+    top: 44px; right: 4px;
+    border-radius: 4px 12px 12px 4px;
 }
 .gp-dpad-btn:active, .gp-dpad-btn.pressed {
-    background: rgba(56, 189, 248, 0.45);
-    border-color: var(--aether-blue);
-    box-shadow: 0 0 12px var(--aether-blue);
-    transform: scale(0.92);
+    background: rgba(56, 189, 248, 0.55);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 16px #38bdf8;
+    transform: scale(0.94);
 }
-.gp-dpad-up { top: 0; left: 35px; }
-.gp-dpad-down { bottom: 0; left: 35px; }
-.gp-dpad-left { top: 35px; left: 0; }
-.gp-dpad-right { top: 35px; right: 0; }
 
-/* Botones de Acción ABXY (Diamante Anatómico Xbox Classic + Neón) */
+/* Diamante de Acción ABXY (Microsoft Xbox TAK Diamond + Cristal Óptico) */
 .gp-abxy-container {
     position: absolute;
-    bottom: calc(22px + var(--safe-bottom));
-    right: calc(22px + var(--safe-right));
-    width: 144px;
-    height: 144px;
+    bottom: calc(24px + var(--safe-bottom, 0px));
+    right: calc(24px + var(--safe-right, 0px));
+    width: 156px;
+    height: 156px;
     pointer-events: auto;
+    touch-action: none;
 }
 .gp-action-btn {
     position: absolute;
-    width: 46px;
-    height: 46px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: radial-gradient(circle at 35% 35%, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 19px;
+    font-weight: 900;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     cursor: pointer;
     touch-action: none;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.18), inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+    transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
 }
 .gp-action-btn:active, .gp-action-btn.pressed {
     transform: scale(0.92);
 }
-/* Botón A (Verde Neón Xbox) */
+
+/* Botón A (Verde Esmeralda Xbox Oficial: #10b981) */
 .btn-xbox-a {
-    bottom: 0; left: 49px;
-    border: 2px solid rgba(16, 185, 129, 0.6);
+    bottom: 0; left: 53px;
+    border: 2.2px solid rgba(16, 185, 129, 0.7);
     color: #10b981;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
 .btn-xbox-a.pressed, .btn-xbox-a:active {
-    background: rgba(16, 185, 129, 0.6);
-    box-shadow: 0 0 20px #10b981;
+    background: #10b981;
+    border-color: #10b981;
+    box-shadow: 0 0 24px #10b981;
     color: #ffffff;
-}
-/* Botón B (Rojo Neón Xbox) */
-.btn-xbox-b {
-    top: 49px; right: 0;
-    border: 2px solid rgba(239, 68, 68, 0.6);
-    color: #ef4444;
-}
-.btn-xbox-b.pressed, .btn-xbox-b:active {
-    background: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 0 20px #ef4444;
-    color: #ffffff;
-}
-/* Botón X (Azul Eléctrico Xbox) */
-.btn-xbox-x {
-    top: 49px; left: 0;
-    border: 2px solid rgba(59, 130, 246, 0.6);
-    color: #3b82f6;
-}
-.btn-xbox-x.pressed, .btn-xbox-x:active {
-    background: rgba(59, 130, 246, 0.6);
-    box-shadow: 0 0 20px #3b82f6;
-    color: #ffffff;
-}
-/* Botón Y (Amarillo Oro Xbox) */
-.btn-xbox-y {
-    top: 0; left: 49px;
-    border: 2px solid rgba(245, 158, 11, 0.6);
-    color: #f59e0b;
-}
-.btn-xbox-y.pressed, .btn-xbox-y:active {
-    background: rgba(245, 158, 11, 0.6);
-    box-shadow: 0 0 20px #f59e0b;
-    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* Gatillos y Bumpers (LB, RB, LT, RT) con Safe Areas */
+/* Botón B (Rojo Carmín Xbox Oficial: #ef4444) */
+.btn-xbox-b {
+    top: 53px; right: 0;
+    border: 2.2px solid rgba(239, 68, 68, 0.7);
+    color: #ef4444;
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+.btn-xbox-b.pressed, .btn-xbox-b:active {
+    background: #ef4444;
+    border-color: #ef4444;
+    box-shadow: 0 0 24px #ef4444;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Botón X (Azul Cobalto Xbox Oficial: #3b82f6) */
+.btn-xbox-x {
+    top: 53px; left: 0;
+    border: 2.2px solid rgba(59, 130, 246, 0.7);
+    color: #3b82f6;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+.btn-xbox-x.pressed, .btn-xbox-x:active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 0 24px #3b82f6;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Botón Y (Oro Ámbar Xbox Oficial: #f59e0b) */
+.btn-xbox-y {
+    top: 0; left: 53px;
+    border: 2.2px solid rgba(245, 158, 11, 0.7);
+    color: #f59e0b;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+.btn-xbox-y.pressed, .btn-xbox-y:active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    box-shadow: 0 0 24px #f59e0b;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Gatillos y Bumpers Anatómicos Superiores (LB, RB, LT, RT) */
 .gp-shoulders-container {
     position: absolute;
-    top: calc(8px + var(--safe-top));
+    top: calc(12px + var(--safe-top, 0px));
     width: 100vw;
     display: flex;
     justify-content: space-between;
-    padding: 0 calc(14px + var(--safe-right)) 0 calc(14px + var(--safe-left));
+    padding: 0 calc(20px + var(--safe-right, 0px)) 0 calc(20px + var(--safe-left, 0px));
     box-sizing: border-box;
     pointer-events: auto;
 }
 .gp-shoulder-group {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    align-items: center;
 }
 .gp-shoulder-btn {
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 255, 200, 0.35);
-    border-radius: 9px;
-    padding: 7px 16px;
+    background: radial-gradient(circle at 50% 30%, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(0, 255, 200, 0.4);
+    height: 40px;
+    padding: 0 18px;
     color: var(--aether-cyan);
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 800;
     cursor: pointer;
     touch-action: none;
-    transition: transform 0.08s ease, background 0.1s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease;
+}
+/* Bumpers (LB / RB) */
+.gp-bumper-btn {
+    border-radius: 12px;
+    min-width: 60px;
+}
+/* Gatillos Analógicos Curvos (LT / RT) */
+.gp-trigger-left {
+    border-radius: 16px 6px 16px 6px;
+    min-width: 66px;
+    border-color: rgba(56, 189, 248, 0.5);
+    color: var(--aether-blue);
+}
+.gp-trigger-right {
+    border-radius: 6px 16px 6px 16px;
+    min-width: 66px;
+    border-color: rgba(56, 189, 248, 0.5);
+    color: var(--aether-blue);
 }
 .gp-shoulder-btn.pressed, .gp-shoulder-btn:active {
-    background: rgba(0, 255, 200, 0.45);
-    box-shadow: 0 0 14px var(--aether-cyan);
-    transform: scale(0.94);
+    background: var(--aether-cyan);
+    color: #0a0f1a;
+    box-shadow: 0 0 18px var(--aether-cyan);
+    transform: scale(0.93);
+}
+.gp-trigger-left.pressed, .gp-trigger-left:active,
+.gp-trigger-right.pressed, .gp-trigger-right:active {
+    background: #38bdf8;
+    color: #0a0f1a;
+    box-shadow: 0 0 18px #38bdf8;
 }
 
-/* Botones Centrales (Select / Start) */
+/* Barra de Navegación Central (View, Nexus Guide, Menu) */
 .gp-center-container {
     position: absolute;
-    top: calc(8px + var(--safe-top));
+    top: calc(12px + var(--safe-top, 0px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 24px;
+    padding: 4px 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     pointer-events: auto;
 }
 .gp-center-btn {
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 7px;
-    padding: 5px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    height: 32px;
+    padding: 0 12px;
     color: #94a3b8;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     cursor: pointer;
     touch-action: none;
-    transition: transform 0.08s ease, background 0.1s ease;
+    transition: transform 0.08s ease, background 0.1s ease, color 0.1s ease;
+}
+.gp-center-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+}
+.gp-guide-btn {
+    background: radial-gradient(circle, rgba(0, 255, 200, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+    border-color: rgba(0, 255, 200, 0.4) !important;
+    color: var(--aether-cyan) !important;
+    font-weight: 800;
+}
+.gp-guide-btn svg {
+    fill: currentColor !important;
+    stroke: none !important;
 }
 .gp-center-btn.pressed, .gp-center-btn:active {
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.3);
     color: #ffffff;
-    transform: scale(0.94);
+    transform: scale(0.92);
+}
+.gp-guide-btn.pressed, .gp-guide-btn:active {
+    background: var(--aether-cyan) !important;
+    color: #0a0f1a !important;
+    box-shadow: 0 0 16px var(--aether-cyan);
 }
 
 /* ========================================================================== */
@@ -2071,9 +2201,9 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     </div>
 </div>
 
-<!-- 4. CAPA DE MANDOS VIRTUALES TÁCTILES (XBOX CLASSIC + NEON FUSION) -->
+<!-- 4. CAPA DE MANDOS VIRTUALES TÁCTILES: XBOX TAK + NEO-RETROPAD VECTOR -->
 <div id="virtual-gamepad-overlay">
-    <!-- Joystick Izquierdo -->
+    <!-- Joystick Izquierdo (Locomoción Principal) -->
     <div class="gp-stick-zone" id="left-stick-zone">
         <div class="gp-stick-base">
             <div class="gp-stick-thumb" id="left-stick-thumb"></div>
@@ -2089,42 +2219,56 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         <button class="gp-stick-click-btn" data-btn="11" title="Click Stick Derecho (Crouch / R3)">R3</button>
     </div>
 
-    <!-- Cruceta D-Pad -->
-    <div class="gp-dpad-container">
-        <button class="gp-dpad-btn gp-dpad-up" data-btn="12">▲</button>
-        <button class="gp-dpad-btn gp-dpad-down" data-btn="13">▼</button>
-        <button class="gp-dpad-btn gp-dpad-left" data-btn="14">◀</button>
-        <button class="gp-dpad-btn gp-dpad-right" data-btn="15">▶</button>
+    <!-- Cruceta D-Pad Esculpida con Vectores Kenney/Xbox -->
+    <div class="gp-dpad-container" id="gp-dpad-dish">
+        <button class="gp-dpad-btn gp-dpad-up" data-btn="12" title="Cruceta Arriba">
+            <svg viewBox="0 0 24 24"><path d="M12 4l-7 8h4.5v8h5v-8H19z"/></svg>
+        </button>
+        <button class="gp-dpad-btn gp-dpad-down" data-btn="13" title="Cruceta Abajo">
+            <svg viewBox="0 0 24 24"><path d="M12 20l7-8h-4.5V4h-5v8H5z"/></svg>
+        </button>
+        <button class="gp-dpad-btn gp-dpad-left" data-btn="14" title="Cruceta Izquierda">
+            <svg viewBox="0 0 24 24"><path d="M4 12l8-7v4.5h8v5h-8V19z"/></svg>
+        </button>
+        <button class="gp-dpad-btn gp-dpad-right" data-btn="15" title="Cruceta Derecha">
+            <svg viewBox="0 0 24 24"><path d="M20 12l-8 7v-4.5H4v-5h8V5z"/></svg>
+        </button>
     </div>
 
-    <!-- Botones ABXY (Fusión Xbox Classic) -->
+    <!-- Diamante Anatómico de Acción ABXY (Neón Xbox Series) -->
     <div class="gp-abxy-container">
-        <button class="gp-action-btn btn-xbox-y" data-btn="3">Y</button>
-        <button class="gp-action-btn btn-xbox-x" data-btn="2">X</button>
-        <button class="gp-action-btn btn-xbox-b" data-btn="1">B</button>
-        <button class="gp-action-btn btn-xbox-a" data-btn="0">A</button>
+        <button class="gp-action-btn btn-xbox-y" data-btn="3" title="Botón Y">Y</button>
+        <button class="gp-action-btn btn-xbox-x" data-btn="2" title="Botón X">X</button>
+        <button class="gp-action-btn btn-xbox-b" data-btn="1" title="Botón B">B</button>
+        <button class="gp-action-btn btn-xbox-a" data-btn="0" title="Botón A">A</button>
     </div>
 
-    <!-- Gatillos y Bumpers (LB, LT, RT, RB) -->
+    <!-- Gatillos y Bumpers Ergonómicos Superiores (LB, LT, RT, RB) -->
     <div class="gp-shoulders-container">
         <div class="gp-shoulder-group">
-            <button class="gp-shoulder-btn" data-btn="4">LB</button>
-            <button class="gp-shoulder-btn" data-btn="6">LT</button>
+            <button class="gp-shoulder-btn gp-trigger-left" data-btn="6" title="Gatillo Izquierdo (LT)">LT</button>
+            <button class="gp-shoulder-btn gp-bumper-btn" data-btn="4" title="Bumper Izquierdo (LB)">LB</button>
         </div>
         <div class="gp-shoulder-group">
-            <button class="gp-shoulder-btn" data-btn="7">RT</button>
-            <button class="gp-shoulder-btn" data-btn="5">RB</button>
+            <button class="gp-shoulder-btn gp-bumper-btn" data-btn="5" title="Bumper Derecho (RB)">RB</button>
+            <button class="gp-shoulder-btn gp-trigger-right" data-btn="7" title="Gatillo Derecho (RT)">RT</button>
         </div>
     </div>
 
-    <!-- Botones Centrales (Select, Guide, Start) -->
+    <!-- Barra Central de Sistema (View / Nexus Guide / Menu) -->
     <div class="gp-center-container">
-        <button class="gp-center-btn" data-btn="8">BACK</button>
-        <button class="gp-center-btn gp-guide-btn" data-btn="16" title="Botón Xbox / Guía">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M7 7c3 3 7 7 10 10M17 7c-3 3-7 7-10 10"/></svg>
-            <span>GUIDE</span>
+        <button class="gp-center-btn" data-btn="8" title="Botón Vista / Compartir (View)">
+            <svg viewBox="0 0 24 24" stroke-width="2"><rect x="4" y="8" width="10" height="10" rx="2"/><rect x="10" y="6" width="10" height="10" rx="2"/></svg>
+            <span>VIEW</span>
         </button>
-        <button class="gp-center-btn" data-btn="9">START</button>
+        <button class="gp-center-btn gp-guide-btn" data-btn="16" title="Botón Guía Xbox (Nexus Home)">
+            <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 6.5c2.8 2.2 4.5 5 5 8 .5-3 2.2-5.8 5-8-1.5-1.5-3.6-2.5-6-2.5s-4.5 1-6 2.5z"/><path d="M6 8c-1.3 1.8-2 3.9-2 6.2 0 4.2 2.6 7.8 6.4 9.3-1.6-3.8-3.4-7.5-4.4-15.5zm12 0c1 8 2.8 11.7 4.4 15.5 3.8-1.5 6.4-5.1 6.4-9.3 0-2.3-.7-4.4-2-6.2z" opacity="0.88"/></svg>
+            <span>XBOX</span>
+        </button>
+        <button class="gp-center-btn" data-btn="9" title="Botón Menú / Pausa (Menu)">
+            <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+            <span>MENU</span>
+        </button>
     </div>
 </div>
 
@@ -3018,8 +3162,108 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
         emitGamepadState();
     }
 
-    // B. Mapeo de Botones Táctiles en Pantalla (ABXY, DPad, Shoulders, Start, Select)
-    document.querySelectorAll("[data-btn]").forEach(btn => {
+    // B. Mapeo de Cruceta D-Pad Continua (Deslizamiento Fluido 8-Way TAK / RetroArch)
+    const dpadDish = document.getElementById("gp-dpad-dish");
+    if (dpadDish) {
+        let dpadTouchId = null;
+        const dpadUpBtn = dpadDish.querySelector(".gp-dpad-up");
+        const dpadDownBtn = dpadDish.querySelector(".gp-dpad-down");
+        const dpadLeftBtn = dpadDish.querySelector(".gp-dpad-left");
+        const dpadRightBtn = dpadDish.querySelector(".gp-dpad-right");
+
+        function processDpadTouch(clientX, clientY) {
+            const rect = dpadDish.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = clientX - cx;
+            const dy = clientY - cy;
+            const dist = Math.hypot(dx, dy);
+
+            let up = 0, down = 0, left = 0, right = 0;
+            if (dist >= 14) { // Zona muerta central de 14px
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI); // -180 a 180 deg
+                if (angle >= -157.5 && angle <= -22.5) up = 1;
+                if (angle >= 22.5 && angle <= 157.5) down = 1;
+                if (angle >= -67.5 && angle <= 67.5) right = 1;
+                if (angle >= 112.5 || angle <= -112.5) left = 1;
+            }
+
+            const changed = (gpButtonsState[12] !== up || gpButtonsState[13] !== down ||
+                             gpButtonsState[14] !== left || gpButtonsState[15] !== right);
+
+            gpButtonsState[12] = up;
+            gpButtonsState[13] = down;
+            gpButtonsState[14] = left;
+            gpButtonsState[15] = right;
+
+            if (dpadUpBtn) dpadUpBtn.classList.toggle("pressed", !!up);
+            if (dpadDownBtn) dpadDownBtn.classList.toggle("pressed", !!down);
+            if (dpadLeftBtn) dpadLeftBtn.classList.toggle("pressed", !!left);
+            if (dpadRightBtn) dpadRightBtn.classList.toggle("pressed", !!right);
+
+            if (changed) {
+                if (up || down || left || right) hapticFeedback(12);
+                emitGamepadState();
+            }
+        }
+
+        function resetDpad() {
+            dpadTouchId = null;
+            if (gpButtonsState[12] || gpButtonsState[13] || gpButtonsState[14] || gpButtonsState[15]) {
+                gpButtonsState[12] = 0;
+                gpButtonsState[13] = 0;
+                gpButtonsState[14] = 0;
+                gpButtonsState[15] = 0;
+                if (dpadUpBtn) dpadUpBtn.classList.remove("pressed");
+                if (dpadDownBtn) dpadDownBtn.classList.remove("pressed");
+                if (dpadLeftBtn) dpadLeftBtn.classList.remove("pressed");
+                if (dpadRightBtn) dpadRightBtn.classList.remove("pressed");
+                emitGamepadState();
+            }
+        }
+
+        dpadDish.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.changedTouches.length > 0) {
+                dpadTouchId = e.changedTouches[0].identifier;
+                processDpadTouch(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchmove", function(e) {
+            if (dpadTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === dpadTouchId) {
+                    processDpadTouch(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                    break;
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener("touchend", function(e) {
+            if (dpadTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === dpadTouchId) {
+                    resetDpad();
+                    break;
+                }
+            }
+        });
+
+        window.addEventListener("touchcancel", function(e) {
+            if (dpadTouchId === null) return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === dpadTouchId) {
+                    resetDpad();
+                    break;
+                }
+            }
+        });
+    }
+
+    // C. Mapeo de Botones Táctiles en Pantalla (ABXY, Shoulders, L3/R3, Start, Back, Guide)
+    document.querySelectorAll("[data-btn]:not(.gp-dpad-btn)").forEach(btn => {
         const btnIndex = parseInt(btn.getAttribute("data-btn"), 10);
         btn.addEventListener("touchstart", function(e) {
             e.preventDefault();
