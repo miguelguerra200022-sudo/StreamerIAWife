@@ -2152,6 +2152,10 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let isGamepadVisible = localStorage.getItem("cloudpc_gp_visible") === "true";
     let isStretchedAspect = false;
     let isAudioMuted = false;
+    let isControllerMouseMode = false;
+    let btn16WasDown = false;
+    let btnBWasDown = false;
+    let lastMouseMask = 0;
 
     let trackpadSens = parseFloat(localStorage.getItem("cloudpc_tp_sens") || "1.0");
     let isNaturalScroll = localStorage.getItem("cloudpc_natural_scroll") === "true";
@@ -2732,7 +2736,32 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                         // Botones 6 (LT) y 7 (RT) envían valor analógico continuo (0.0 .. 1.0) para 256 niveles
                         gpButtonsState[b] = (b === 6 || b === 7) ? val : (pressed ? 1 : 0);
                     }
-                    // 2. Sticks analógicos físicos con Deadzone continua calibrada
+
+                    // 1.1 D-Pad Universal: Lectura W3C estándar (12..15) + compatibilidad Hat Switch (axes[4..9])
+                    let dpadUp = !!(gp.buttons[12] && (gp.buttons[12].pressed || gp.buttons[12].value > 0.45));
+                    let dpadDown = !!(gp.buttons[13] && (gp.buttons[13].pressed || gp.buttons[13].value > 0.45));
+                    let dpadLeft = !!(gp.buttons[14] && (gp.buttons[14].pressed || gp.buttons[14].value > 0.45));
+                    let dpadRight = !!(gp.buttons[15] && (gp.buttons[15].pressed || gp.buttons[15].value > 0.45));
+
+                    if (!dpadUp && !dpadDown && !dpadLeft && !dpadRight && gp.axes && gp.axes.length > 4) {
+                        for (let ai = 4; ai < gp.axes.length; ai += 2) {
+                            const hx = gp.axes[ai] || 0;
+                            const hy = (ai + 1 < gp.axes.length) ? (gp.axes[ai + 1] || 0) : 0;
+                            if (Math.abs(hx) > 0.4 || Math.abs(hy) > 0.4) {
+                                if (hy < -0.4) dpadUp = true;
+                                if (hy > 0.4) dpadDown = true;
+                                if (hx < -0.4) dpadLeft = true;
+                                if (hx > 0.4) dpadRight = true;
+                                break;
+                            }
+                        }
+                    }
+                    gpButtonsState[12] = dpadUp ? 1 : 0;
+                    gpButtonsState[13] = dpadDown ? 1 : 0;
+                    gpButtonsState[14] = dpadLeft ? 1 : 0;
+                    gpButtonsState[15] = dpadRight ? 1 : 0;
+
+                    // 2. Sticks analógicos físicos con Deadzone continua calibrada (0.10)
                     if (gp.axes.length >= 2) {
                         const ax0 = gp.axes[0], ax1 = gp.axes[1];
                         const mag = Math.hypot(ax0, ax1);
@@ -2759,7 +2788,48 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                             gpAxesState[3] = (ax3 / mag) * scaledMag;
                         }
                     }
-                    emitGamepadState();
+
+                    // 3. Conmutador de Modo Dual con Botón 16 (Nexus / Xbox Guía / Home)
+                    if (gpButtonsState[16] && !btn16WasDown) {
+                        btn16WasDown = true;
+                        isControllerMouseMode = !isControllerMouseMode;
+                        showToast(isControllerMouseMode ? "Mando en Modo Ratón PC" : "Mando en Modo Juego XInput");
+                        hapticFeedback(isControllerMouseMode ? [40, 50, 60] : [70, 30]);
+                    } else if (!gpButtonsState[16]) {
+                        btn16WasDown = false;
+                    }
+
+                    // 4. Enrutamiento según el Modo
+                    if (isControllerMouseMode) {
+                        // Modo Ratón PC: Sticks controlan cursor de escritorio
+                        const mx = Math.abs(gpAxesState[2]) > 0.08 ? gpAxesState[2] : (Math.abs(gpAxesState[0]) > 0.08 ? gpAxesState[0] : 0);
+                        const my = Math.abs(gpAxesState[3]) > 0.08 ? gpAxesState[3] : (Math.abs(gpAxesState[1]) > 0.08 ? gpAxesState[1] : 0);
+                        if (Math.hypot(mx, my) > 0.08) {
+                            const mouseSpeed = 16;
+                            virtX = Math.max(0, Math.min(1920, virtX + mx * mouseSpeed));
+                            virtY = Math.max(0, Math.min(1080, virtY + my * mouseSpeed));
+                            sendMouseMove();
+                        }
+                        // RT o A = Clic Izquierdo
+                        const clickLeft = (gpButtonsState[7] > 0.4) || !!gpButtonsState[0];
+                        // LT o X = Clic Derecho
+                        const clickRight = (gpButtonsState[6] > 0.4) || !!gpButtonsState[2];
+                        const targetMask = clickRight ? 4 : (clickLeft ? 1 : 0);
+                        if (targetMask !== lastMouseMask) {
+                            lastMouseMask = targetMask;
+                            sendMouse(targetMask);
+                        }
+                        // B = Tecla Escape
+                        if (gpButtonsState[1] && !btnBWasDown) {
+                            btnBWasDown = true;
+                            sendKey(0xff1b);
+                        } else if (!gpButtonsState[1]) {
+                            btnBWasDown = false;
+                        }
+                    } else {
+                        // Modo Juego Puro: XInput al kernel de Linux (/dev/uinput)
+                        emitGamepadState();
+                    }
                     break;
                 }
             }
@@ -4239,6 +4309,18 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     if (isGamepadVisible) setGamepadVisibility(true);
     const savedAspect = localStorage.getItem("cloudpc_aspect") === "stretched";
     if (savedAspect) applyAspect(true);
+
+    // Blindaje de foco de hardware para mandos en Android Chrome
+    function ensureHardwareFocus() {
+        const cv = document.querySelector("#noVNC_canvas") || document.querySelector("canvas");
+        if (cv) {
+            if (!cv.getAttribute("tabindex")) cv.setAttribute("tabindex", "0");
+            if (document.activeElement !== cv) cv.focus();
+        }
+    }
+    window.addEventListener("pointerdown", ensureHardwareFocus, { capture: true, passive: true });
+    window.addEventListener("touchstart", ensureHardwareFocus, { capture: true, passive: true });
+    window.addEventListener("click", ensureHardwareFocus, { capture: true, passive: true });
 })();
 </script>
 """
