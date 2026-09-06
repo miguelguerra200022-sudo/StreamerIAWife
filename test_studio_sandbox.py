@@ -294,9 +294,39 @@ def build_sandbox_html():
         .floating-bumper-btn.hidden {{
             display: none !important;
         }}
+
+        /* CURSOR VIRTUAL PROFESIONAL (ESTÁNDAR BIGTECH ACELERADO POR HARDWARE) */
+        #cloud-virtual-cursor {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 99999999;
+            transform: translate3d(0, 0, 0);
+            display: block !important;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
+            will-change: transform;
+        }}
+        #cloud-virtual-cursor path {{
+            transform-origin: 0 0;
+            transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1), fill 0.12s ease;
+        }}
+        #cloud-virtual-cursor.cursor-clicked path {{
+            transform: scale(0.85);
+            fill: #38bdf8 !important;
+        }}
+        #cloud-virtual-cursor.cursor-right-clicked path {{
+            transform: scale(0.85);
+            fill: #ff2a85 !important;
+        }}
+        body.controller-game-mode #cloud-virtual-cursor {{
+            display: none !important;
+        }}
     </style>
 </head>
-<body>
+<body class="controller-mouse-active">
 
     <!-- Bumpers Flotantes Híbridos (Desactivados por defecto estilo BigTech para pantalla limpia) -->
     <div id="floating-bumper-lb" class="floating-bumper-btn hidden" style="left:16px; border:2px solid #00ffc8; background:rgba(0,255,200,0.18); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#00ffc8; box-shadow:0 0 15px rgba(0,255,200,0.3); display:none !important;">
@@ -311,9 +341,14 @@ def build_sandbox_html():
         <canvas id="noVNC_canvas" width="1920" height="1080" tabindex="0" style="outline:none;"></canvas>
     </div>
 
+    <!-- CURSOR VIRTUAL PROFESIONAL HARDWARE ACCELERATED (ESTÁNDAR BIGTECH) -->
+    <svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
+        <path d="M0 0l7 18 2.5-7 7-2.5L0 0z"/>
+    </svg>
+
     <!-- Banner Flotante de Notificación de Modo (Juego vs PC) -->
-    <div id="tel-mode-toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(10,15,26,0.94); border:1.5px solid #00ffc8; box-shadow:0 0 25px rgba(0,255,200,0.45); color:#00ffc8; padding:8px 22px; border-radius:24px; font-family:monospace; font-size:12px; font-weight:bold; letter-spacing:0.8px; z-index:999999; pointer-events:none; opacity:0; transition:opacity 0.25s ease, transform 0.25s ease;">
-        MODO JUEGO XINPUT ACTIVADO
+    <div id="tel-mode-toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(10,15,26,0.94); border:1.5px solid #38bdf8; box-shadow:0 0 25px rgba(56,189,248,0.45); color:#38bdf8; padding:8px 22px; border-radius:24px; font-family:monospace; font-size:12px; font-weight:bold; letter-spacing:0.8px; z-index:999999; pointer-events:none; opacity:0; transition:opacity 0.25s ease, transform 0.25s ease;">
+        MODO RATÓN PC ACTIVADO (Stick: Cursor | RT/A: Clic Izq | LT/X: Clic Der)
     </div>
 
     <!-- HUD de Telemetría Centrado e No Invasivo -->
@@ -323,7 +358,7 @@ def build_sandbox_html():
                 <span class="tel-indicator"></span>
                 <span style="font-weight:800; letter-spacing:0.5px;">TELEMETRÍA EN VIVO</span>
             </span>
-            <span class="tel-live-ticker" id="tel-ticker-text">Listo. Desliza o pulsa mandos</span>
+            <span class="tel-live-ticker" id="tel-ticker-text">Listo. Modo Ratón PC Activo</span>
             <span id="tel-collapse-btn-wrapper" style="display:flex; align-items:center; gap:4px; font-size:10px; color:#94a3b8;">
                 <span id="tel-collapse-text">EXPANDIR</span>
                 <svg id="tel-collapse-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.25s ease;"><polyline points="6 9 12 15 18 9"/></svg>
@@ -336,7 +371,7 @@ def build_sandbox_html():
                     <span class="tel-status-dot waiting" id="tel-gp-dot"></span>
                     <span id="tel-gp-name" style="color:#f59e0b; font-weight:bold;">Mando: Esperando señal (Pulsa cualquier botón)</span>
                 </span>
-                <span id="tel-gp-mode-badge" style="color:#00ffc8; font-weight:bold; background:rgba(0,255,200,0.12); padding:2px 6px; border-radius:6px; border:1px solid rgba(0,255,200,0.3);">Modo: JUEGO (XInput)</span>
+                <span id="tel-gp-mode-badge" style="color:#38bdf8; font-weight:bold; background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:6px; border:1px solid rgba(56,189,248,0.35);">Modo: RATÓN (Desktop PC)</span>
             </div>
 
             <!-- Medidor Analógico de Gatillos LT / RT en Tiempo Real -->
@@ -536,8 +571,48 @@ def build_sandbox_html():
         }}
         window.recordTelemetry = recordTelemetry;
 
-        window.isControllerMouseMode = false;
+        window.isControllerMouseMode = true;
         window.isGameModeLocked = false;
+
+        // Puntero Virtual de Producción (Hardware-Accelerated)
+        window.updateCursorElement = function() {{
+            const curEl = document.getElementById("cloud-virtual-cursor");
+            if (!curEl) return;
+            if (!window.isControllerMouseMode) {{
+                curEl.style.display = "none";
+                return;
+            }}
+            curEl.style.display = "block";
+            const canvas = document.getElementById("noVNC_canvas");
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const cx = (typeof state !== "undefined" && state.cursor) ? state.cursor.x : 960;
+            const cy = (typeof state !== "undefined" && state.cursor) ? state.cursor.y : 540;
+            const sx = rect.left + (cx / 1920) * rect.width;
+            const sy = rect.top + (cy / 1080) * rect.height;
+            curEl.style.transform = `translate3d(${{sx}}px, ${{sy}}px, 0)`;
+        }};
+        window.addEventListener("resize", () => {{
+            if (typeof window.updateCursorElement === "function") window.updateCursorElement();
+        }});
+
+        // Feedback Háptico y Visual en Puntero BigTech (Escala 0.85 y pulso de color)
+        window.triggerCursorClickEffect = function(type) {{
+            const curEl = document.getElementById("cloud-virtual-cursor");
+            if (curEl) {{
+                curEl.classList.remove("cursor-clicked", "cursor-right-clicked");
+                void curEl.offsetWidth; // Disparar reflow para reanimación inmediata
+                curEl.classList.add(type === "right" ? "cursor-right-clicked" : "cursor-clicked");
+                setTimeout(() => {{
+                    curEl.classList.remove("cursor-clicked", "cursor-right-clicked");
+                }}, 120);
+            }}
+            if (navigator.vibrate) {{
+                try {{
+                    navigator.vibrate(type === "right" ? [15, 30] : 15);
+                }} catch(e) {{}}
+            }}
+        }};
 
         window.toggleGameLock = function(forceVal) {{
             window.isGameModeLocked = (typeof forceVal === "boolean") ? forceVal : !window.isGameModeLocked;
@@ -597,13 +672,15 @@ def build_sandbox_html():
             }}
             if (window.isControllerMouseMode) {{
                 document.body.classList.add("controller-mouse-active");
+                document.body.classList.remove("controller-game-mode");
                 if (typeof virtX !== "undefined" && typeof state !== "undefined" && state.cursor) {{
                     virtX = state.cursor.x;
                     virtY = state.cursor.y;
-                    if (typeof updateCursorElement === "function") updateCursorElement();
+                    if (typeof window.updateCursorElement === "function") window.updateCursorElement();
                 }}
             }} else {{
                 document.body.classList.remove("controller-mouse-active");
+                document.body.classList.add("controller-game-mode");
             }}
 
             const modeBadge = document.getElementById("tel-gp-mode-badge");
@@ -1167,10 +1244,13 @@ def build_sandbox_html():
                 // Click Izquierdo presionado
                 if (mask === 1 && oldMask !== 1) {{
                     recordTelemetry("CLICK_LEFT", cur, "Canvas", "Down", `Virtual(${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
+                    if (typeof window.triggerCursorClickEffect === "function") window.triggerCursorClickEffect("left");
 
                     // Onda visual inmediata en cualquier parte de la pantalla
                     if (!state.ripples) state.ripples = [];
-                    state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 44, color: "#38bdf8", alpha: 1.0 }});
+                    state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 46, color: "#38bdf8", alpha: 1.0 }});
+
+                    const ticker = document.getElementById("tel-ticker-text");
 
                     // 1. Comprobar interacción con Menú Contextual si está abierto
                     if (state.contextMenu && state.contextMenu.visible) {{
@@ -1181,6 +1261,7 @@ def build_sandbox_html():
                                 const chosen = cm.items[itemIdx];
                                 win.terminalLines.push(`[MENÚ PC] Ejecutando "${{chosen.label}}"...`);
                                 if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                if (ticker) ticker.textContent = `[MENÚ PC] ${{chosen.label}}`;
                                 recordTelemetry("CONTEXT_MENU_CLICK", cur, chosen.label, "Execute", "Opción de menú contextual ejecutada", "", activeFinger);
                             }}
                         }}
@@ -1194,6 +1275,7 @@ def build_sandbox_html():
                         win.isDragging = true;
                         win.dragOffX = cur.x - win.x;
                         win.dragOffY = cur.y - win.y;
+                        if (ticker) ticker.textContent = "[A / RT] Arrastrando Ventana...";
                         recordTelemetry("WIN_DRAG", cur, "WindowHeader", "StartDrag", "Ventana enganchada con éxito", "", activeFinger);
                     }}
 
@@ -1204,12 +1286,15 @@ def build_sandbox_html():
                             cur.y >= b.y && cur.y <= b.y + b.h) {{
                             hitBtn = true;
                             b.time = Date.now();
+                            b.clicked = true;
                             if (b.id === "btn_test_clear") {{
-                                win.terminalLines = ["Consola limpiada."];
+                                win.terminalLines = ["Consola limpiada. Listo para nuevas pruebas."];
                                 win.activeInput = "";
+                                if (ticker) ticker.textContent = "[A / RT] Consola Limpiada";
                             }} else {{
-                                win.terminalLines.push(`[CLICK] ${{b.label}} activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
+                                win.terminalLines.push(`[BOTÓN ACTIVADO] ${{b.label}} en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
                                 if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                if (ticker) ticker.textContent = `[A / RT] Botón Pulsado: ${{b.label}}`;
                             }}
                             recordTelemetry("BTN_CLICK", cur, b.label, "Pressed", "Botón interior de ventana pulsado", "", activeFinger);
                         }}
@@ -1223,6 +1308,7 @@ def build_sandbox_html():
                             hitIcon = true;
                             win.terminalLines.push(`[LANZADOR] Abriendo ${{ic.label}}...`);
                             if (win.terminalLines.length > 7) win.terminalLines.shift();
+                            if (ticker) ticker.textContent = `[A / RT] Lanzando: ${{ic.label}}`;
                             recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado", "", activeFinger);
                         }}
                     }});
@@ -1231,6 +1317,7 @@ def build_sandbox_html():
                     if (!hitBtn && !hitIcon && !win.isDragging) {{
                         win.terminalLines.push(`[CLIC IZQ (RT / A)] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                         if (win.terminalLines.length > 7) win.terminalLines.shift();
+                        if (ticker) ticker.textContent = `[A / RT] Clic Izquierdo en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`;
                     }}
                 }}
 
@@ -1246,23 +1333,29 @@ def build_sandbox_html():
                     }} else {{
                         win.isDragging = false;
                         dt.isOver = false;
+                        const ticker = document.getElementById("tel-ticker-text");
+                        if (ticker) ticker.textContent = `[A / RT] Ventana Soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`;
                         recordTelemetry("WIN_DRAG", cur, "WindowHeader", "Drop", `Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`, "", activeFinger);
                     }}
                 }}
 
                 // Click Derecho presionado (LT / Botón X)
                 if (mask === 4 && oldMask !== 4) {{
+                    if (typeof window.triggerCursorClickEffect === "function") window.triggerCursorClickEffect("right");
                     recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
                     if (!state.ripples) state.ripples = [];
                     state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 48, color: "#f59e0b", alpha: 1.0 }});
 
                     if (state.contextMenu) {{
-                        state.contextMenu.visible = true;
+                        state.contextMenu.visible = !state.contextMenu.visible;
                         state.contextMenu.x = Math.min(1920 - 250, Math.max(10, cur.x));
                         state.contextMenu.y = Math.min(1080 - 230, Math.max(10, cur.y));
                     }}
-                    win.terminalLines.push(`[MENÚ CONTEXTUAL (LT/X)] Abierto en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    const cmState = state.contextMenu.visible ? "Abierto" : "Cerrado";
+                    win.terminalLines.push(`[MENÚ CONTEXTUAL (LT/X)] ${{cmState}} en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = `[X / LT] Menú Contextual ${{cmState}}`;
                 }}
 
                 // Click Central presionado (R3 Click o botón de rueda)
@@ -1272,6 +1365,8 @@ def build_sandbox_html():
                     state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 40, color: "#a855f7", alpha: 1.0 }});
                     win.terminalLines.push(`[CLIC CENTRAL R3] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = `[R3] Clic Central de Ratón`;
                 }}
 
                 // Scroll 2D de Rueda (Stick R: Arriba/Abajo/Izq/Der)
@@ -1295,18 +1390,39 @@ def build_sandbox_html():
                 if (!down) return;
                 recordTelemetry("KEY_INPUT", "-", "VirtualKbd", "KeyDown", `Keysym: ${{keysym}}`);
                 const win = state.window;
+                const ticker = document.getElementById("tel-ticker-text");
 
                 if (keysym === 0xff1b || keysym === 27) {{ // Escape
                     if (state.contextMenu && state.contextMenu.visible) {{
                         state.contextMenu.visible = false;
                         win.terminalLines.push("[ESCAPE (Y)] Menú contextual cerrado.");
-                        if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    }} else {{
+                        win.terminalLines.push("[ESCAPE (Y)] Señal Escape ejecutada.");
                     }}
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[Y] Tecla Escape ejecutada";
+                }} else if (keysym === 0xff52) {{ // Flecha Arriba
+                    win.terminalLines.push("[CRUCETA ▲] Arriba");
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[Cruceta ▲] Arriba";
+                }} else if (keysym === 0xff54) {{ // Flecha Abajo
+                    win.terminalLines.push("[CRUCETA ▼] Abajo");
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[Cruceta ▼] Abajo";
+                }} else if (keysym === 0xff51) {{ // Flecha Izquierda
+                    win.terminalLines.push("[CRUCETA ◀ / LB] Navegación Izquierda");
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[Cruceta ◀ / LB] Izquierda";
+                }} else if (keysym === 0xff53) {{ // Flecha Derecha
+                    win.terminalLines.push("[CRUCETA ▶ / RB] Navegación Derecha");
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[Cruceta ▶ / RB] Derecha";
                 }} else if (keysym === 65288) {{ // Backspace
                     win.activeInput = win.activeInput.slice(0, -1);
-                }} else if (keysym === 65293) {{ // Enter
-                    win.terminalLines.push("> " + win.activeInput);
+                }} else if (keysym === 65293 || keysym === 0xff0d) {{ // Enter
+                    win.terminalLines.push("> " + (win.activeInput || "comando ejecutado [OK]"));
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[START] Enter ejecutado";
                     win.activeInput = "";
                 }} else if (keysym >= 32 && keysym <= 126) {{
                     win.activeInput += String.fromCharCode(keysym);
@@ -1328,7 +1444,7 @@ def build_sandbox_html():
             const rawAx0 = axes[0] || 0;
             const rawAx1 = axes[1] || 0;
             const magL = Math.hypot(rawAx0, rawAx1);
-            const deadzoneL = 0.12;
+            const deadzoneL = 0.10;
 
             if (magL > deadzoneL) {{
                 // Normalizar magnitud de [deadzone .. 1.0] a [0.0 .. 1.0]
@@ -1336,10 +1452,9 @@ def build_sandbox_html():
                 const dirX = rawAx0 / magL;
                 const dirY = rawAx1 / magL;
 
-                // L3 (botón 10): Modo Precisión / Francotirador (320 px/s para apuntar a botones pequeños)
-                // Modo Normal: 920 px/s (recorrido cómodo de pantalla 1080p en ~2 segundos)
+                // L3 (botón 10): Modo Precisión / Francotirador (320 px/s)
                 const isPrecision = !!curBtns[10];
-                const maxSpeed = isPrecision ? 320 : 920;
+                const maxSpeed = isPrecision ? 320 : 960;
 
                 // Curva de respuesta ergonómica (exponente 1.65): suavidad milimétrica en toques tenues
                 const speed = Math.pow(normMag, 1.65) * maxSpeed;
@@ -1350,7 +1465,7 @@ def build_sandbox_html():
                 // Sincronizar coordenadas virtuales maestras para el cursor SVG
                 if (typeof virtX !== "undefined") virtX = state.cursor.x;
                 if (typeof virtY !== "undefined") virtY = state.cursor.y;
-                if (typeof updateCursorElement === "function") updateCursorElement();
+                if (typeof window.updateCursorElement === "function") window.updateCursorElement();
 
                 mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask);
             }}
@@ -1359,30 +1474,34 @@ def build_sandbox_html():
             const rawAx2 = axes[2] || 0;
             const rawAx3 = axes[3] || 0;
             const scrollMag = Math.hypot(rawAx2, rawAx3);
-            const deadzoneR = 0.14;
+            const deadzoneR = 0.12;
 
             if (scrollMag > deadzoneR) {{
                 const normScroll = Math.min(1.0, (scrollMag - deadzoneR) / (1.0 - deadzoneR));
-                const scrollSpeed = Math.pow(normScroll, 1.5) * 1100; // px por segundo
+                const scrollSpeed = Math.pow(normScroll, 1.5) * 1150; // px por segundo
 
                 window._scrollAccumY = (window._scrollAccumY || 0) + (rawAx3 * scrollSpeed * safeDt);
                 window._scrollAccumX = (window._scrollAccumX || 0) + (rawAx2 * scrollSpeed * safeDt);
 
-                const scrollThreshold = 38; // px para emitir 1 pulso de rueda
+                const scrollThreshold = 36; // px para emitir 1 pulso de rueda
 
                 // Scroll Vertical
                 if (Math.abs(window._scrollAccumY) >= scrollThreshold) {{
                     const ticks = Math.trunc(window._scrollAccumY / scrollThreshold);
                     window._scrollAccumY -= ticks * scrollThreshold;
                     const scrollMask = (ticks < 0) ? 8 : 16; // 8 = Arriba, 16 = Abajo
+                    const sDesc = (ticks < 0) ? "Scroll Arriba ▲" : "Scroll Abajo ▼";
 
-                    const activeClickMask = state.cursor.mask & 7; // Preservar botones izquierdo (1), central (2), derecho (4)
+                    const activeClickMask = state.cursor.mask & 7;
                     mockRFB._sendMouse(state.cursor.x, state.cursor.y, activeClickMask | scrollMask);
                     setTimeout(() => {{
                         if (state && state.cursor) {{
                             mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask & ~24);
                         }}
                     }}, 15);
+
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = `[Stick R] ${{sDesc}}`;
                 }}
 
                 // Scroll Horizontal
@@ -1390,6 +1509,7 @@ def build_sandbox_html():
                     const ticks = Math.trunc(window._scrollAccumX / scrollThreshold);
                     window._scrollAccumX -= ticks * scrollThreshold;
                     const scrollMask = (ticks < 0) ? 32 : 64; // 32 = Izquierda, 64 = Derecha
+                    const sDesc = (ticks < 0) ? "Scroll Izquierda ◀" : "Scroll Derecha ▶";
 
                     const activeClickMask = state.cursor.mask & 7;
                     mockRFB._sendMouse(state.cursor.x, state.cursor.y, activeClickMask | scrollMask);
@@ -1398,15 +1518,18 @@ def build_sandbox_html():
                             mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask & ~96);
                         }}
                     }}, 15);
+
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = `[Stick R] ${{sDesc}}`;
                 }}
             }}
 
-            // 3. Acciones del Puntero con Botones:
+            // 3. ACCIONES DEL PUNTERO CON BOTONES (ESTÁNDAR BIGTECH COMPLETO):
             // Botón A (0) o Gatillo RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
-            const clickLeft = (curBtns[7] > 0.4) || !!curBtns[0];
+            const clickLeft = (curBtns[7] > 0.35) || !!curBtns[0];
 
             // Botón X (2) o Gatillo LT (6) = Clic Derecho Secundario (Menú Contextual)
-            const clickRight = (curBtns[6] > 0.4) || !!curBtns[2];
+            const clickRight = (curBtns[6] > 0.35) || !!curBtns[2];
 
             // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
             const clickMiddle = !!curBtns[11];
@@ -1426,14 +1549,39 @@ def build_sandbox_html():
                     state.contextMenu.visible = false;
                     state.window.terminalLines.push("[CANCELAR (B)] Menú contextual cerrado.");
                     if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = "[B] Menú contextual cerrado";
                 }} else {{
                     if (!state.ripples) state.ripples = [];
                     state.ripples.push({{ x: state.cursor.x, y: state.cursor.y, radius: 4, maxRadius: 36, color: "#10b981", alpha: 1.0 }});
                     setTimeout(() => {{
                         state.ripples.push({{ x: state.cursor.x, y: state.cursor.y, radius: 4, maxRadius: 52, color: "#00ffc8", alpha: 1.0 }});
                     }}, 60);
+
                     state.window.terminalLines.push(`[DOBLE CLIC (B)] Ejecutado en (${{Math.round(state.cursor.x)}}, ${{Math.round(state.cursor.y)}})`);
                     if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+                    const ticker = document.getElementById("tel-ticker-text");
+                    if (ticker) ticker.textContent = `[B] Doble Clic en (${{Math.round(state.cursor.x)}}, ${{Math.round(state.cursor.y)}})`;
+
+                    if (typeof window.triggerCursorClickEffect === "function") window.triggerCursorClickEffect("left");
+
+                    // Comprobar interacción sobre botones e iconos
+                    state.buttons.forEach(b => {{
+                        if (state.cursor.x >= b.x && state.cursor.x <= b.x + b.w &&
+                            state.cursor.y >= b.y && state.cursor.y <= b.y + b.h) {{
+                            b.time = Date.now();
+                            b.clicked = true;
+                            state.window.terminalLines.push(`[DOBLE CLIC CONFIRMADO] ${{b.label}} activado`);
+                            if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+                        }}
+                    }});
+                    state.desktopIcons.forEach(ic => {{
+                        if (state.cursor.x >= ic.x && state.cursor.x <= ic.x + 90 &&
+                            state.cursor.y >= ic.y && state.cursor.y <= ic.y + 80) {{
+                            state.window.terminalLines.push(`[PROGRAMA INICIADO] ${{ic.label}} ejecutado.`);
+                            if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+                        }}
+                    }});
 
                     mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
                     setTimeout(() => {{
@@ -1450,37 +1598,57 @@ def build_sandbox_html():
             if (curBtns[3] && !prevBtns[3] && mockRFB.sendKey) {{
                 mockRFB.sendKey(0xff1b, true);
                 setTimeout(() => mockRFB.sendKey(0xff1b, false), 50);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[Y] Tecla Escape ejecutada";
             }}
 
             // LB (4) = Navegar Atrás (Browser Back / Historial)
             if (curBtns[4] && !prevBtns[4] && mockRFB.sendKey) {{
                 mockRFB.sendKey(0xff51, true); // Alt + Left
                 setTimeout(() => mockRFB.sendKey(0xff51, false), 50);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[LB] Navegar Atrás (Historial / Pestaña Izq)";
             }}
 
             // RB (5) = Navegar Adelante (Browser Forward)
             if (curBtns[5] && !prevBtns[5] && mockRFB.sendKey) {{
                 mockRFB.sendKey(0xff53, true); // Alt + Right
                 setTimeout(() => mockRFB.sendKey(0xff53, false), 50);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[RB] Navegar Adelante (Pestaña Der)";
             }}
 
             // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado (Arriba, Abajo, Izq, Der)
-            if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, true);
-            else if (!curBtns[12] && prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, false);
+            if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff52, true);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[Cruceta ▲] Arriba";
+            }} else if (!curBtns[12] && prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, false);
 
-            if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, true);
-            else if (!curBtns[13] && prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, false);
+            if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff54, true);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[Cruceta ▼] Abajo";
+            }} else if (!curBtns[13] && prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, false);
 
-            if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, true);
-            else if (!curBtns[14] && prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, false);
+            if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff51, true);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[Cruceta ◀] Izquierda";
+            }} else if (!curBtns[14] && prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, false);
 
-            if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, true);
-            else if (!curBtns[15] && prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, false);
+            if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff53, true);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[Cruceta ▶] Derecha";
+            }} else if (!curBtns[15] && prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, false);
 
             // START (9) = Tecla Enter / Intro
             if (curBtns[9] && !prevBtns[9] && mockRFB.sendKey) {{
                 mockRFB.sendKey(0xff0d, true);
                 setTimeout(() => mockRFB.sendKey(0xff0d, false), 50);
+                const ticker = document.getElementById("tel-ticker-text");
+                if (ticker) ticker.textContent = "[START] Tecla Enter ejecutada";
             }}
         }};
 
@@ -1921,6 +2089,14 @@ def build_sandbox_html():
                 btnRb.addEventListener("pointerup", onUpRb, {{ capture: true, passive: false }});
                 btnRb.addEventListener("pointercancel", onUpRb, {{ capture: true, passive: false }});
             }}
+
+            // Activar Modo Ratón PC por Defecto en Inicio (Estándar BigTech para control inmediato del escritorio)
+            if (typeof window.toggleMouseMode === "function") {{
+                window.toggleMouseMode(true);
+            }}
+            if (typeof window.updateCursorElement === "function") {{
+                window.updateCursorElement();
+            }}
         }});
     }})();
     </script>
@@ -2339,29 +2515,41 @@ def build_sandbox_html():
             if (e.button === 4) setSoftwareBumper(5, false, "Pointer_4 (Adelante)");
         }}, {{ capture: true, passive: false }});
 
-        // Soporte unificado de Mouse / Puntero para pruebas de escritorio o clics
-        document.querySelectorAll("[data-btn]:not(.gp-dpad-btn)").forEach(btn => {{
+        // Soporte unificado e Instantáneo de Touch, Mouse y Pointer para TODOS los botones en pantalla [data-btn]
+        document.querySelectorAll("[data-btn]").forEach(btn => {{
             const btnIndex = parseInt(btn.getAttribute("data-btn"), 10);
-            btn.addEventListener("mousedown", (e) => {{
+            const handleDown = (e) => {{
                 e.preventDefault();
                 e.stopPropagation();
                 btn.classList.add("pressed");
-                if (window._mockGpSocket) {{
-                    const btns = window._currentButtons.slice();
-                    btns[btnIndex] = 1;
-                    window._mockGpSocket.send(JSON.stringify({{ axes: window._currentAxes, buttons: btns }}));
+                if (window._currentButtons) {{
+                    window._currentButtons[btnIndex] = 1;
                 }}
-            }});
-            const rel = (e) => {{
-                btn.classList.remove("pressed");
                 if (window._mockGpSocket) {{
-                    const btns = window._currentButtons.slice();
-                    btns[btnIndex] = 0;
-                    window._mockGpSocket.send(JSON.stringify({{ axes: window._currentAxes, buttons: btns }}));
+                    window._mockGpSocket.send(JSON.stringify({{ axes: window._currentAxes || [0,0,0,0], buttons: window._currentButtons }}));
+                }}
+                if (navigator.vibrate) {{
+                    try {{ navigator.vibrate(12); }} catch(err) {{}}
                 }}
             }};
-            btn.addEventListener("mouseup", rel);
-            btn.addEventListener("mouseleave", rel);
+            const handleUp = (e) => {{
+                btn.classList.remove("pressed");
+                if (window._currentButtons) {{
+                    window._currentButtons[btnIndex] = 0;
+                }}
+                if (window._mockGpSocket) {{
+                    window._mockGpSocket.send(JSON.stringify({{ axes: window._currentAxes || [0,0,0,0], buttons: window._currentButtons }}));
+                }}
+            }};
+            btn.addEventListener("pointerdown", handleDown, {{ passive: false }});
+            btn.addEventListener("pointerup", handleUp, {{ passive: false }});
+            btn.addEventListener("pointercancel", handleUp, {{ passive: false }});
+            btn.addEventListener("touchstart", handleDown, {{ passive: false }});
+            btn.addEventListener("touchend", handleUp, {{ passive: false }});
+            btn.addEventListener("touchcancel", handleUp, {{ passive: false }});
+            btn.addEventListener("mousedown", handleDown);
+            btn.addEventListener("mouseup", handleUp);
+            btn.addEventListener("mouseleave", handleUp);
         }});
 
         // -------------------------------------------------------------------------
@@ -2861,10 +3049,14 @@ def build_sandbox_html():
             }} else {{
                 // Si no hay mando físico pero sí mandos táctiles en pantalla
                 if (window._currentAxes && window._currentButtons) {{
+                    if (!window._lastTouchBtns) window._lastTouchBtns = new Array(17).fill(0);
                     if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
-                        window.processDesktopMouseControls(window._currentAxes, window._currentButtons, window._lastTouchBtns || new Array(17).fill(0), dt);
+                        window.processDesktopMouseControls(window._currentAxes, window._currentButtons, window._lastTouchBtns, dt);
                     }} else if (window.updateAvatarFromGamepad) {{
                         window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons, dt);
+                    }}
+                    for (let i = 0; i < 17; i++) {{
+                        window._lastTouchBtns[i] = window._currentButtons[i] ? 1 : 0;
                     }}
                 }}
             }}
@@ -2884,6 +3076,11 @@ def build_sandbox_html():
             // 2. Renderizado del Canvas sincronizado al refresco nativo de la pantalla
             if (typeof window.drawCanvas === "function") {{
                 window.drawCanvas(dt);
+            }}
+
+            // 3. Sincronizar posición del cursor acelerado por hardware
+            if (typeof window.updateCursorElement === "function") {{
+                window.updateCursorElement();
             }}
 
             requestAnimationFrame(masterEngineLoop);
