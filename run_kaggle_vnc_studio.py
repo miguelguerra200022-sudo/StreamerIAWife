@@ -158,23 +158,8 @@ def optimizar_red_bbr_buffers():
     """Aplica Google BBR, amplía buffers TCP de Linux a 64MB y acelera DNS al límite físico de la red de Google Cloud (10Gbps+)."""
     print("[NETWORK] Optimizando Stack TCP con Google BBR, Buffers de 64MB y DNS Ultra-Rápido...", flush=True)
     
-    # 1. Optimización del DNS Resolver (Cloudflare 1.1.1.1 + Google 8.8.8.8 con single-request-reopen)
-    try:
-        resolv_p = Path("/etc/resolv.conf")
-        if resolv_p.exists():
-            content = resolv_p.read_text(encoding="utf-8")
-            if "single-request-reopen" not in content:
-                header = (
-                    "# BigTech Ultra-Fast DNS Optimization (Latencia < 5ms)\n"
-                    "options single-request-reopen timeout:1 attempts:2 rotate\n"
-                    "nameserver 1.1.1.1\n"
-                    "nameserver 8.8.8.8\n"
-                    "nameserver 1.0.0.1\n"
-                    "nameserver 8.8.4.4\n"
-                )
-                resolv_p.write_text(header + content, encoding="utf-8")
-    except Exception:
-        pass
+    # 1. DNS Resolver: Preservar DNS nativo de Google Cloud (latencia < 0.2ms y liveness probe de Kubernetes)
+    pass
 
     # 2. Kernel Sysctl para enlaces Cloud de 10Gbps+ (BBR + BDP Buffers 64MB)
     sysctls = [
@@ -483,8 +468,8 @@ if "--save-now" in sys.argv:
 # Iniciar cronómetro de arranque total
 t_start_total = time.time()
 
-# Limpiar fuentes de software obsoletas de Kaggle para evitar errores de red
-subprocess.run("rm -rf /etc/apt/sources.list.d/* 2>/dev/null || true", shell=True)
+# Fuentes de software
+pass
 
 # Iniciar servicio D-Bus del sistema
 subprocess.run("mkdir -p /var/run/dbus && dbus-daemon --system --fork 2>/dev/null || true", shell=True)
@@ -4632,7 +4617,6 @@ try:
     # Personalización Profesional de la Terminal: Aether Cloud PC Workstation
     # --------------------------------------------------------------------------
     try:
-        Path("/etc/hostname").write_text("aether-pc\n", encoding="utf-8")
         Path("/media").mkdir(parents=True, exist_ok=True)
         if Path("/kaggle/input").exists() and not Path("/media/Cloud_Storage").exists():
             subprocess.run("ln -sfn /kaggle/input /media/Cloud_Storage 2>/dev/null || true", shell=True)
