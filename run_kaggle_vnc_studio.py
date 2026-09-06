@@ -2789,13 +2789,14 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                         }
                     }
 
-                    // 3. Conmutador de Modo Dual con Botón 16 (Nexus / Xbox Guía / Home)
-                    if (gpButtonsState[16] && !btn16WasDown) {
+                    // 3. Conmutador de Modo Dual con SELECT + R3 (botones 8 y 11) o Botón 16 (Nexus / Guía)
+                    const isComboToggle = (gpButtonsState[8] && gpButtonsState[11]) || !!gpButtonsState[16];
+                    if (isComboToggle && !btn16WasDown) {
                         btn16WasDown = true;
                         isControllerMouseMode = !isControllerMouseMode;
                         showToast(isControllerMouseMode ? "Mando en Modo Ratón PC" : "Mando en Modo Juego XInput");
                         hapticFeedback(isControllerMouseMode ? [40, 50, 60] : [70, 30]);
-                    } else if (!gpButtonsState[16]) {
+                    } else if (!isComboToggle) {
                         btn16WasDown = false;
                     }
 
