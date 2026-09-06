@@ -861,21 +861,24 @@ def build_sandbox_html():
                 ctx.strokeStyle = "#38bdf8";
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.roundRect(1100, 215, 320, 130, 12);
+                ctx.roundRect(1080, 185, 360, 190, 12);
                 ctx.fill();
                 ctx.stroke();
 
                 ctx.fillStyle = "#38bdf8";
                 ctx.font = "bold 15px monospace";
                 ctx.textAlign = "center";
-                ctx.fillText("🖱️ MODO RATÓN PC ACTIVO", 1260, 248);
+                ctx.fillText("🖱️ MODO RATÓN PC ACTIVO", 1260, 212);
                 ctx.fillStyle = "#e2e8f0";
-                ctx.font = "12px monospace";
-                ctx.fillText("Stick: Controla Cursor de Escritorio", 1260, 273);
-                ctx.fillText("RT / A: Clic Izq  |  LT / X: Clic Der", 1260, 295);
+                ctx.font = "11px monospace";
+                ctx.fillText("Stick L: Puntero (L3: Precisión)", 1260, 235);
+                ctx.fillText("Stick R: Scroll 2D Páginas (R3: Clic Central)", 1260, 255);
+                ctx.fillText("A / RT: Clic Izq  |  X / LT: Clic Der", 1260, 275);
+                ctx.fillText("B: Doble Clic  |  Y: Escape  |  START: Enter", 1260, 295);
+                ctx.fillText("LB / RB: Atrás / Adelante  |  D-Pad: Flechas", 1260, 315);
                 ctx.fillStyle = "#f59e0b";
                 ctx.font = "bold 11px monospace";
-                ctx.fillText("SELECT + R3 para conmutar a Juego", 1260, 322);
+                ctx.fillText("SELECT + R3: Volver a Modo Juego", 1260, 348);
                 ctx.textAlign = "left";
                 ctx.restore();
             }}
@@ -1102,7 +1105,22 @@ def build_sandbox_html():
                 // Click Derecho presionado (Toque sostenido o 2 dedos)
                 if (mask === 4 && oldMask !== 4) {{
                     recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
-                    win.terminalLines.push(`[CLICK DERECHO] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    win.terminalLines.push(`[CLICK DERECHO (X / LT)] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                }}
+
+                // Click Central presionado (R3 Click o botón de rueda)
+                if (mask === 2 && oldMask !== 2) {{
+                    recordTelemetry("CLICK_MIDDLE", cur, "Canvas", "Down", `Clic Central (R3) en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
+                    win.terminalLines.push(`[CLIC CENTRAL R3] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                }}
+
+                // Scroll 2D de Rueda (Stick R3: Arriba/Abajo/Izq/Der)
+                if ((mask === 8 || mask === 16 || mask === 32 || mask === 64) && oldMask === 0) {{
+                    const sDesc = (mask === 8) ? "Scroll Arriba ▲" : ((mask === 16) ? "Scroll Abajo ▼" : ((mask === 32) ? "Scroll Izquierda ◀" : "Scroll Derecha ▶"));
+                    recordTelemetry("MOUSE_SCROLL", cur, "DesktopCanvas", "Wheel", sDesc, "", activeFinger);
+                    win.terminalLines.push(`[SCROLL R3] ${{sDesc}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
                 }}
 
@@ -2493,41 +2511,94 @@ def build_sandbox_html():
 
                 // 5. MODO RATÓN / ESCRITORIO CON EL MANDO FÍSICO
                 if (window.isControllerMouseMode && typeof mockRFB !== "undefined") {{
-                    const moveX = Math.abs(ax2) > 0.08 ? ax2 : (Math.abs(ax0) > 0.08 ? ax0 : 0);
-                    const moveY = Math.abs(ax3) > 0.08 ? ax3 : (Math.abs(ax1) > 0.08 ? ax1 : 0);
-
-                    if (Math.hypot(moveX, moveY) > 0.08) {{
-                        const mouseSpeed = 16;
-                        state.cursor.x = Math.max(0, Math.min(1920, state.cursor.x + moveX * mouseSpeed));
-                        state.cursor.y = Math.max(0, Math.min(1080, state.cursor.y + moveY * mouseSpeed));
+                    // Stick Izquierdo (ax0, ax1): Movimiento Analógico del Cursor
+                    const magL = Math.hypot(ax0, ax1);
+                    if (magL > 0.08) {{
+                        // L3 (botón 10): Modo Precisión / Francotirador (35% velocidad para afinar clics pequeños)
+                        const isPrecision = !!curBtns[10];
+                        const baseSpeed = isPrecision ? 5.5 : 18.0;
+                        const factor = Math.pow(magL, 1.30) * baseSpeed;
+                        state.cursor.x = Math.max(0, Math.min(1920, state.cursor.x + (ax0 / magL) * factor));
+                        state.cursor.y = Math.max(0, Math.min(1080, state.cursor.y + (ax1 / magL) * factor));
                         mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask);
                     }}
 
-                    // Botón RT o A = Clic Izquierdo de ratón
-                    const clickLeft = (rtVal > 0.4) || !!curBtns[0];
-                    // Botón LT o X = Clic Derecho de ratón
-                    const clickRight = (ltVal > 0.4) || !!curBtns[2];
-                    const targetMask = clickRight ? 4 : (clickLeft ? 1 : 0);
+                    // Stick Derecho (ax2, ax3): Desplazamiento 2D de Páginas (Scroll Arriba / Abajo / Izquierda / Derecha)
+                    const scrollMag = Math.hypot(ax2, ax3);
+                    if (scrollMag > 0.18) {{
+                        const now = Date.now();
+                        const scrollInterval = Math.max(45, Math.round(180 - (scrollMag * 130)));
+                        if (!window._lastScrollTime || (now - window._lastScrollTime > scrollInterval)) {{
+                            window._lastScrollTime = now;
+                            if (Math.abs(ax3) >= Math.abs(ax2)) {{
+                                // Scroll Vertical: Stick hacia arriba = Scroll Arriba (8) | Abajo = Scroll Abajo (16)
+                                const scrollMask = (ax3 < 0) ? 8 : 16;
+                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
+                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
+                            }} else {{
+                                // Scroll Horizontal: Stick hacia la izq = Scroll Izq (32) | Der = Scroll Der (64)
+                                const scrollMask = (ax2 < 0) ? 32 : 64;
+                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
+                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
+                            }}
+                        }}
+                    }}
 
+                    // ACCIONES DEL PUNTERO CON BOTONES:
+                    // Botón A (0) o RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
+                    const clickLeft = (rtVal > 0.4) || !!curBtns[0];
+
+                    // Botón X (2) o LT (6) = Clic Derecho Secundario (Menú Contextual)
+                    const clickRight = (ltVal > 0.4) || !!curBtns[2];
+
+                    // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
+                    const clickMiddle = !!curBtns[11];
+
+                    const targetMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
                     if (targetMask !== state.cursor.mask) {{
                         mockRFB._sendMouse(state.cursor.x, state.cursor.y, targetMask);
                     }}
 
-                    // Botón B = Tecla Escape (cierra diálogos y ventanas sin salir de la página)
-                    if (curBtns[1] && !prevBtns[1] && mockRFB.sendKey) {{
+                    // Botón B (1) = Doble Clic Izquierdo Instantáneo (Abre archivos/programas de un toque)
+                    if (curBtns[1] && !prevBtns[1]) {{
+                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
+                        setTimeout(() => {{
+                            mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0);
+                            setTimeout(() => {{
+                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
+                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 40);
+                            }}, 50);
+                        }}, 40);
+                    }}
+
+                    // Botón Y (3) = Tecla Escape (cierra diálogos, menús o ventanas activas)
+                    if (curBtns[3] && !prevBtns[3] && mockRFB.sendKey) {{
                         mockRFB.sendKey(0xff1b, true);
                         setTimeout(() => mockRFB.sendKey(0xff1b, false), 50);
                     }}
 
-                    // Cruceta Arriba / LB = Scroll Arriba (mask 8)
-                    if ((curBtns[12] && !prevBtns[12]) || (curBtns[4] && !prevBtns[4])) {{
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, 8);
-                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 60);
+                    // LB (4) = Navegar Atrás (Browser Back / Historial)
+                    if (curBtns[4] && !prevBtns[4] && mockRFB.sendKey) {{
+                        mockRFB.sendKey(0xff51, true); // Alt + Left
+                        setTimeout(() => mockRFB.sendKey(0xff51, false), 50);
                     }}
-                    // Cruceta Abajo / RB = Scroll Abajo (mask 16)
-                    if ((curBtns[13] && !prevBtns[13]) || (curBtns[5] && !prevBtns[5])) {{
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, 16);
-                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 60);
+
+                    // RB (5) = Navegar Adelante (Browser Forward)
+                    if (curBtns[5] && !prevBtns[5] && mockRFB.sendKey) {{
+                        mockRFB.sendKey(0xff53, true); // Alt + Right
+                        setTimeout(() => mockRFB.sendKey(0xff53, false), 50);
+                    }}
+
+                    // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado (Arriba, Abajo, Izq, Der)
+                    if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, true);
+                    if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, true);
+                    if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, true);
+                    if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, true);
+
+                    // START (9) = Tecla Enter / Intro
+                    if (curBtns[9] && !prevBtns[9] && mockRFB.sendKey) {{
+                        mockRFB.sendKey(0xff0d, true);
+                        setTimeout(() => mockRFB.sendKey(0xff0d, false), 50);
                     }}
                 }} else {{
                     // Modo Juego: Locomoción física fluida del Avatar

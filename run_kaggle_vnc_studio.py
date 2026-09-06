@@ -1379,11 +1379,9 @@ try:
     width: 140px;
     height: 140px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(15, 23, 42, 0.5) 0%, rgba(10, 15, 26, 0.75) 100%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 2px solid rgba(0, 255, 200, 0.35);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), inset 0 0 16px rgba(0, 255, 200, 0.12);
+    background: transparent;
+    border: 1.8px solid rgba(0, 255, 200, 0.45);
+    box-shadow: 0 0 16px rgba(0, 255, 200, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1395,16 +1393,16 @@ try:
     width: 86px;
     height: 86px;
     border-radius: 50%;
-    border: 1px dashed rgba(0, 255, 200, 0.25);
+    border: 1.5px dashed rgba(0, 255, 200, 0.35);
     pointer-events: none;
 }
 .gp-stick-thumb {
     width: 58px;
     height: 58px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #2a3b53 0%, #151e2e 60%, #0b111a 100%);
+    background: rgba(0, 255, 200, 0.08);
     border: 2px solid var(--aether-cyan);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(0, 255, 200, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -3px 6px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 16px rgba(0, 255, 200, 0.45), inset 0 0 8px rgba(0, 255, 200, 0.3);
     transform: translate3d(0, 0, 0);
     will-change: transform;
     pointer-events: none;
@@ -1417,8 +1415,8 @@ try:
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 255, 200, 0.3) 0%, rgba(0, 255, 200, 0) 70%);
-    border: 1px solid rgba(0, 255, 200, 0.4);
+    background: transparent;
+    border: 1.5px solid rgba(0, 255, 200, 0.6);
 }
 
 /* Botones L3 y R3 (Click Físico de Joystick - Sprint y Crouch) */
@@ -1544,9 +1542,7 @@ try:
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1555,71 +1551,67 @@ try:
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     cursor: pointer;
     touch-action: none;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.18), inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
     transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
 }
 .gp-action-btn:active, .gp-action-btn.pressed {
     transform: scale(0.92);
 }
 
-/* Botón A (Verde Esmeralda Xbox Oficial: #10b981) */
+/* Botón A (Verde Esmeralda Xbox: #10b981) */
 .btn-xbox-a {
     bottom: 0; left: 53px;
-    border: 2.2px solid rgba(16, 185, 129, 0.7);
+    border: 2.2px solid #10b981;
     color: #10b981;
-    text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.9);
 }
 .btn-xbox-a.pressed, .btn-xbox-a:active {
-    background: #10b981;
+    background: rgba(16, 185, 129, 0.35);
     border-color: #10b981;
-    box-shadow: 0 0 24px #10b981;
+    box-shadow: 0 0 24px #10b981, inset 0 0 10px rgba(16, 185, 129, 0.4);
     color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* Botón B (Rojo Carmín Xbox Oficial: #ef4444) */
+/* Botón B (Rojo Carmín Xbox: #ef4444) */
 .btn-xbox-b {
     top: 53px; right: 0;
-    border: 2.2px solid rgba(239, 68, 68, 0.7);
+    border: 2.2px solid #ef4444;
     color: #ef4444;
-    text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
 }
 .btn-xbox-b.pressed, .btn-xbox-b:active {
-    background: #ef4444;
+    background: rgba(239, 68, 68, 0.35);
     border-color: #ef4444;
-    box-shadow: 0 0 24px #ef4444;
+    box-shadow: 0 0 24px #ef4444, inset 0 0 10px rgba(239, 68, 68, 0.4);
     color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* Botón X (Azul Cobalto Xbox Oficial: #3b82f6) */
+/* Botón X (Azul Cobalto Xbox: #3b82f6) */
 .btn-xbox-x {
     top: 53px; left: 0;
-    border: 2.2px solid rgba(59, 130, 246, 0.7);
+    border: 2.2px solid #3b82f6;
     color: #3b82f6;
-    text-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
 }
 .btn-xbox-x.pressed, .btn-xbox-x:active {
-    background: #3b82f6;
+    background: rgba(59, 130, 246, 0.35);
     border-color: #3b82f6;
-    box-shadow: 0 0 24px #3b82f6;
+    box-shadow: 0 0 24px #3b82f6, inset 0 0 10px rgba(59, 130, 246, 0.4);
     color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-/* Botón Y (Oro Ámbar Xbox Oficial: #f59e0b) */
+/* Botón Y (Oro Ámbar Xbox: #f59e0b) */
 .btn-xbox-y {
     top: 0; left: 53px;
-    border: 2.2px solid rgba(245, 158, 11, 0.7);
+    border: 2.2px solid #f59e0b;
     color: #f59e0b;
-    text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.9);
 }
 .btn-xbox-y.pressed, .btn-xbox-y:active {
-    background: #f59e0b;
+    background: rgba(245, 158, 11, 0.35);
     border-color: #f59e0b;
-    box-shadow: 0 0 24px #f59e0b;
+    box-shadow: 0 0 24px #f59e0b, inset 0 0 10px rgba(245, 158, 11, 0.4);
     color: #ffffff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 /* Gatillos y Bumpers Anatómicos Superiores (LB, RB, LT, RT) */
@@ -2154,7 +2146,8 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
     let isAudioMuted = false;
     let isControllerMouseMode = false;
     let btn16WasDown = false;
-    let btnBWasDown = false;
+    let btnBWasDown = false, btnYWasDown = false, btnLBWasDown = false, btnRBWasDown = false, btnStartWasDown = false;
+    let btnUpWasDown = false, btnDownWasDown = false, btnLeftWasDown = false, btnRightWasDown = false;
     let lastMouseMask = 0;
 
     let trackpadSens = parseFloat(localStorage.getItem("cloudpc_tp_sens") || "1.0");
@@ -2805,30 +2798,110 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
 
                     // 4. Enrutamiento según el Modo
                     if (isControllerMouseMode) {
-                        // Modo Ratón PC: Sticks controlan cursor de escritorio
-                        const mx = Math.abs(gpAxesState[2]) > 0.08 ? gpAxesState[2] : (Math.abs(gpAxesState[0]) > 0.08 ? gpAxesState[0] : 0);
-                        const my = Math.abs(gpAxesState[3]) > 0.08 ? gpAxesState[3] : (Math.abs(gpAxesState[1]) > 0.08 ? gpAxesState[1] : 0);
-                        if (Math.hypot(mx, my) > 0.08) {
-                            const mouseSpeed = 16;
-                            virtX = Math.max(0, Math.min(1920, virtX + mx * mouseSpeed));
-                            virtY = Math.max(0, Math.min(1080, virtY + my * mouseSpeed));
+                        // Stick Izquierdo (gpAxesState 0 y 1): Movimiento Analógico del Cursor
+                        const magL = Math.hypot(gpAxesState[0], gpAxesState[1]);
+                        if (magL > 0.08) {
+                            // L3 (botón 10): Modo Precisión / Francotirador (35% velocidad)
+                            const isPrecision = !!gpButtonsState[10];
+                            const baseSpeed = isPrecision ? 5.0 : 17.0;
+                            const factor = Math.pow(magL, 1.30) * baseSpeed;
+                            virtX = Math.max(0, Math.min(1920, virtX + (gpAxesState[0] / magL) * factor));
+                            virtY = Math.max(0, Math.min(1080, virtY + (gpAxesState[1] / magL) * factor));
                             sendMouseMove();
                         }
-                        // RT o A = Clic Izquierdo
+
+                        // Stick Derecho (gpAxesState 2 y 3): Desplazamiento 2D de Páginas (Scroll R3)
+                        const scrollMag = Math.hypot(gpAxesState[2], gpAxesState[3]);
+                        if (scrollMag > 0.18) {
+                            const now = Date.now();
+                            const scrollInterval = Math.max(45, Math.round(180 - (scrollMag * 130)));
+                            if (!window._lastScrollTime || (now - window._lastScrollTime > scrollInterval)) {
+                                window._lastScrollTime = now;
+                                if (Math.abs(gpAxesState[3]) >= Math.abs(gpAxesState[2])) {
+                                    // Scroll Vertical: Arriba (8) / Abajo (16)
+                                    const scrollMask = (gpAxesState[3] < 0) ? 8 : 16;
+                                    sendMouse(scrollMask);
+                                    setTimeout(() => sendMouse(0), 20);
+                                } else {
+                                    // Scroll Horizontal: Izquierda (32) / Derecha (64)
+                                    const scrollMask = (gpAxesState[2] < 0) ? 32 : 64;
+                                    sendMouse(scrollMask);
+                                    setTimeout(() => sendMouse(0), 20);
+                                }
+                            }
+                        }
+
+                        // ACCIONES DEL PUNTERO CON BOTONES:
+                        // Botón A (0) o RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
                         const clickLeft = (gpButtonsState[7] > 0.4) || !!gpButtonsState[0];
-                        // LT o X = Clic Derecho
+
+                        // Botón X (2) o LT (6) = Clic Derecho Secundario (Menú Contextual)
                         const clickRight = (gpButtonsState[6] > 0.4) || !!gpButtonsState[2];
-                        const targetMask = clickRight ? 4 : (clickLeft ? 1 : 0);
+
+                        // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
+                        const clickMiddle = !!gpButtonsState[11];
+
+                        const targetMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
                         if (targetMask !== lastMouseMask) {
                             lastMouseMask = targetMask;
                             sendMouse(targetMask);
                         }
-                        // B = Tecla Escape
+
+                        // Botón B (1) = Doble Clic Izquierdo Instantáneo
                         if (gpButtonsState[1] && !btnBWasDown) {
                             btnBWasDown = true;
-                            sendKey(0xff1b);
+                            sendMouse(1);
+                            setTimeout(() => {
+                                sendMouse(0);
+                                setTimeout(() => {
+                                    sendMouse(1);
+                                    setTimeout(() => sendMouse(0), 35);
+                                }, 45);
+                            }, 35);
                         } else if (!gpButtonsState[1]) {
                             btnBWasDown = false;
+                        }
+
+                        // Botón Y (3) = Tecla Escape (cierra diálogos, menús o ventanas activas)
+                        if (gpButtonsState[3] && !btnYWasDown) {
+                            btnYWasDown = true;
+                            sendKey(0xff1b);
+                        } else if (!gpButtonsState[3]) {
+                            btnYWasDown = false;
+                        }
+
+                        // LB (4) = Navegar Atrás (Alt + Left)
+                        if (gpButtonsState[4] && !btnLBWasDown) {
+                            btnLBWasDown = true;
+                            sendKeyCombo(0xffe9, 0xff51);
+                        } else if (!gpButtonsState[4]) {
+                            btnLBWasDown = false;
+                        }
+
+                        // RB (5) = Navegar Adelante (Alt + Right)
+                        if (gpButtonsState[5] && !btnRBWasDown) {
+                            btnRBWasDown = true;
+                            sendKeyCombo(0xffe9, 0xff53);
+                        } else if (!gpButtonsState[5]) {
+                            btnRBWasDown = false;
+                        }
+
+                        // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado
+                        if (gpButtonsState[12] && !btnUpWasDown) { btnUpWasDown = true; sendKey(0xff52); }
+                        else if (!gpButtonsState[12]) { btnUpWasDown = false; }
+                        if (gpButtonsState[13] && !btnDownWasDown) { btnDownWasDown = true; sendKey(0xff54); }
+                        else if (!gpButtonsState[13]) { btnDownWasDown = false; }
+                        if (gpButtonsState[14] && !btnLeftWasDown) { btnLeftWasDown = true; sendKey(0xff51); }
+                        else if (!gpButtonsState[14]) { btnLeftWasDown = false; }
+                        if (gpButtonsState[15] && !btnRightWasDown) { btnRightWasDown = true; sendKey(0xff53); }
+                        else if (!gpButtonsState[15]) { btnRightWasDown = false; }
+
+                        // START (9) = Tecla Enter / Intro
+                        if (gpButtonsState[9] && !btnStartWasDown) {
+                            btnStartWasDown = true;
+                            sendKey(0xff0d);
+                        } else if (!gpButtonsState[9]) {
+                            btnStartWasDown = false;
                         }
                     } else {
                         // Modo Juego Puro: XInput al kernel de Linux (/dev/uinput)
