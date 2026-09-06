@@ -37,7 +37,7 @@ ICON_192 = make_png_icon(192)
 ICON_512 = make_png_icon(512)
 
 def get_hud_code():
-    """Extrae el bloque exacto de CSS, HTML y JS de producción de run_kaggle_vnc_studio.py"""
+    """Extrae el bloque exacto de CSS, HTML y JS de producción de run_kaggle_vnc_studio.py y adapta mejoras"""
     if not SOURCE_FILE.exists():
         return ""
     text = SOURCE_FILE.read_text(encoding="utf-8")
@@ -46,7 +46,35 @@ def get_hud_code():
     start = text.find(start_marker)
     end = text.find(end_marker)
     if start != -1 and end != -1:
-        return text[start + len(start_marker):end]
+        code = text[start + len(start_marker):end]
+
+        # 1. Iniciar directamente en Modo Ratón PC sin desincronización
+        code = code.replace(
+            "let isControllerMouseMode = false;",
+            "let isControllerMouseMode = true;\n    window.isControllerMouseMode = true;\n    window.setControllerMouseMode = function(v) { isControllerMouseMode = !!v; };"
+        )
+
+        # 2. Corregir arrastre en sendMouseMove() para mandos:
+        #    Cuando el mando mueve Stick L mientras mantiene presionado A o RT,
+        #    debe conservar la máscara activa (1) en vez de forzar 0.
+        code = code.replace(
+            "function sendMouseMove() {\n        sendPointer(virtX, virtY, isDragging ? 1 : 0);\n    }",
+            """function sendMouseMove() {
+        const isDown = isDragging || (isControllerMouseMode && ((lastMouseMask & 1) !== 0));
+        sendPointer(virtX, virtY, isDown ? 1 : 0);
+    }"""
+        )
+
+        # 3. Sincronizar el conmutador de modo SELECT + R3 con window.isControllerMouseMode y UI
+        code = code.replace(
+            "isControllerMouseMode = !isControllerMouseMode;\n                        showToast(isControllerMouseMode ? \"Mando en Modo Ratón PC\" : \"Mando en Modo Juego XInput\");",
+            """isControllerMouseMode = !isControllerMouseMode;
+                        window.isControllerMouseMode = isControllerMouseMode;
+                        if (typeof window.syncUIMouseMode === "function") window.syncUIMouseMode(isControllerMouseMode);
+                        showToast(isControllerMouseMode ? "Mando en Modo Ratón PC" : "Mando en Modo Juego XInput");"""
+        )
+
+        return code
     return ""
 
 def log_telemetry_entry(entry):
@@ -295,17 +323,17 @@ def build_sandbox_html():
             display: none !important;
         }}
 
-        /* CURSOR VIRTUAL PROFESIONAL (ESTÁNDAR BIGTECH ACELERADO POR HARDWARE) */
+        /* CURSOR VIRTUAL PROFESIONAL (ESTÁNDAR BIGTECH ACELERADO POR HARDWARE - CERO DUPLICADOS) */
         #cloud-virtual-cursor {{
             position: fixed;
             top: 0;
             left: 0;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             pointer-events: none;
             z-index: 99999999;
             transform: translate3d(0, 0, 0);
-            display: block !important;
+            display: none;
             filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
             will-change: transform;
         }}
@@ -321,7 +349,17 @@ def build_sandbox_html():
             transform: scale(0.85);
             fill: #ff2a85 !important;
         }}
-        body.controller-game-mode #cloud-virtual-cursor {{
+        #cloud-virtual-cursor.cursor-dragging path {{
+            fill: #00ffc8 !important;
+            stroke: #0a0f1a !important;
+            filter: drop-shadow(0 0 10px #00ffc8) !important;
+        }}
+        body.controller-mouse-active #cloud-virtual-cursor,
+        body.tp-trackpad-mode #cloud-virtual-cursor,
+        body.tp-touch-mode #cloud-virtual-cursor {{
+            display: block !important;
+        }}
+        body.controller-game-mode:not(.tp-trackpad-mode):not(.tp-touch-mode) #cloud-virtual-cursor {{
             display: none !important;
         }}
     </style>
@@ -340,11 +378,6 @@ def build_sandbox_html():
     <div id="noVNC_screen" tabindex="0" style="outline:none;">
         <canvas id="noVNC_canvas" width="1920" height="1080" tabindex="0" style="outline:none;"></canvas>
     </div>
-
-    <!-- CURSOR VIRTUAL PROFESIONAL HARDWARE ACCELERATED (ESTÁNDAR BIGTECH) -->
-    <svg id="cloud-virtual-cursor" viewBox="0 0 24 24" fill="#ffffff" stroke="#000000" stroke-width="1.6">
-        <path d="M0 0l7 18 2.5-7 7-2.5L0 0z"/>
-    </svg>
 
     <!-- Banner Flotante de Notificación de Modo (Juego vs PC) -->
     <div id="tel-mode-toast" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(10,15,26,0.94); border:1.5px solid #38bdf8; box-shadow:0 0 25px rgba(56,189,248,0.45); color:#38bdf8; padding:8px 22px; border-radius:24px; font-family:monospace; font-size:12px; font-weight:bold; letter-spacing:0.8px; z-index:999999; pointer-events:none; opacity:0; transition:opacity 0.25s ease, transform 0.25s ease;">
@@ -503,12 +536,18 @@ def build_sandbox_html():
                 {{ id: "btn_test_clear", x: 895, y: 415, w: 105, h: 42, label: "Limpiar", clicked: false, time: 0 }}
             ],
             desktopIcons: [
-                {{ id: "icon_term", x: 490, y: 530, label: "Terminal X11", icon: ">_", color: "#38bdf8" }},
-                {{ id: "icon_game", x: 620, y: 530, label: "Juegos Cloud", icon: "GFN", color: "#10b981" }},
-                {{ id: "icon_files", x: 750, y: 530, label: "Archivos", icon: "DIR", color: "#f59e0b" }},
-                {{ id: "icon_settings", x: 880, y: 530, label: "Ajustes", icon: "SYS", color: "#94a3b8" }}
+                {{ id: "icon_term", x: 490, y: 530, origX: 490, origY: 530, label: "Terminal X11", icon: ">_", color: "#38bdf8", isDragging: false, dragOffX: 0, dragOffY: 0 }},
+                {{ id: "icon_game", x: 620, y: 530, origX: 620, origY: 530, label: "Juegos Cloud", icon: "GFN", color: "#10b981", isDragging: false, dragOffX: 0, dragOffY: 0 }},
+                {{ id: "icon_files", x: 750, y: 530, origX: 750, origY: 530, label: "Archivos", icon: "DIR", color: "#f59e0b", isDragging: false, dragOffX: 0, dragOffY: 0 }},
+                {{ id: "icon_settings", x: 880, y: 530, origX: 880, origY: 530, label: "Ajustes", icon: "SYS", color: "#94a3b8", isDragging: false, dragOffX: 0, dragOffY: 0 }}
             ],
-            dropTarget: {{ x: 1060, y: 510, w: 380, h: 180, label: "Zona de Arrastre Libre (Drop Zone)", isOver: false }},
+            draggableFiles: [
+                {{ id: "file_test", x: 920, y: 520, w: 120, h: 84, origX: 920, origY: 520, label: "Doc_Prueba.txt", icon: "📄", color: "#38bdf8", isDragging: false, dragOffX: 0, dragOffY: 0 }}
+            ],
+            selectionBox: {{ active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 }},
+            isAnyDragging: false,
+            lastDragLabel: "",
+            dropTarget: {{ x: 1080, y: 510, w: 370, h: 190, label: "Zona de Arrastre Libre (Drop Zone)", isOver: false, dropCount: 0, lastDropped: "" }},
             contextMenu: {{
                 visible: false,
                 x: 0,
@@ -617,8 +656,7 @@ def build_sandbox_html():
         window.toggleGameLock = function(forceVal) {{
             window.isGameModeLocked = (typeof forceVal === "boolean") ? forceVal : !window.isGameModeLocked;
             if (window.isGameModeLocked) {{
-                // Si se activa el bloqueo de juego, forzar Modo Juego XInput de inmediato
-                window.isControllerMouseMode = false;
+                window.syncUIMouseMode(false);
             }}
             const lockBtn = document.getElementById("tel-game-lock-btn");
             const lockText = document.getElementById("tel-game-lock-text");
@@ -630,12 +668,6 @@ def build_sandbox_html():
                 lockBtn.style.borderColor = window.isGameModeLocked ? "rgba(16,185,129,0.6)" : "rgba(239,68,68,0.5)";
                 lockBtn.style.color = window.isGameModeLocked ? "#10b981" : "#f87171";
             }}
-            const modeBadge = document.getElementById("tel-gp-mode-badge");
-            if (modeBadge) {{
-                modeBadge.textContent = window.isGameModeLocked ? "JUEGO BLINDADO (Sin Interrupciones)" : (window.isControllerMouseMode ? "Modo: RATÓN (Desktop PC)" : "Modo: JUEGO (XInput)");
-                modeBadge.style.color = window.isGameModeLocked ? "#10b981" : (window.isControllerMouseMode ? "#38bdf8" : "#00ffc8");
-                modeBadge.style.borderColor = window.isGameModeLocked ? "rgba(16,185,129,0.5)" : (window.isControllerMouseMode ? "rgba(56,189,248,0.4)" : "rgba(0,255,200,0.3)");
-            }}
             // Al activar el Bloqueo de Juego, colapsar el HUD automáticamente para no tapar el juego
             const box = document.getElementById("telemetry-hud-box");
             if (window.isGameModeLocked && box) {{
@@ -645,7 +677,6 @@ def build_sandbox_html():
                 if (colText) colText.textContent = "EXPANDIR";
                 if (colSvg) colSvg.style.transform = "rotate(0deg)";
             }}
-            // Ocultar cualquier toast inmediatamente
             const toast = document.getElementById("tel-mode-toast");
             if (toast) {{
                 toast.style.opacity = "0";
@@ -656,16 +687,11 @@ def build_sandbox_html():
             recordTelemetry("GAME_LOCK", cur, "Security", "Toggle", window.isGameModeLocked ? "Bloqueo de Juego ACTIVADO: 100% del mando blindado para el juego, atajos bloqueados, banners silenciados" : "Bloqueo de Juego DESACTIVADO");
         }};
 
-        window.toggleMouseMode = function(forceVal) {{
-            if (window.isGameModeLocked) {{
-                // Si el juego está blindado, NUNCA cambiar a modo ratón ni mostrar interrupciones
-                const cur = (typeof state !== "undefined" && state.cursor) ? state.cursor : {{ x: 960, y: 540 }};
-                recordTelemetry("MODE_SWITCH_BLOCKED", cur, "Security", "Ignored", "Intento de conmutación bloqueado porque Bloqueo de Juego está activo");
-                return;
+        window.syncUIMouseMode = function(isMouse) {{
+            window.isControllerMouseMode = !!isMouse;
+            if (typeof window.setControllerMouseMode === "function") {{
+                window.setControllerMouseMode(window.isControllerMouseMode);
             }}
-            window.isControllerMouseMode = (typeof forceVal === "boolean") ? forceVal : !window.isControllerMouseMode;
-
-            // Gestión Estricta de Visibilidad de Puntero Único BigTech: CERO CURSORES DUPLICADOS
             const curEl = document.getElementById("cloud-virtual-cursor");
             if (curEl) {{
                 curEl.style.display = window.isControllerMouseMode ? "block" : "none";
@@ -685,9 +711,9 @@ def build_sandbox_html():
 
             const modeBadge = document.getElementById("tel-gp-mode-badge");
             if (modeBadge) {{
-                modeBadge.textContent = window.isControllerMouseMode ? "Modo: RATÓN (Desktop PC)" : "Modo: JUEGO (XInput)";
-                modeBadge.style.color = window.isControllerMouseMode ? "#38bdf8" : "#00ffc8";
-                modeBadge.style.borderColor = window.isControllerMouseMode ? "rgba(56,189,248,0.4)" : "rgba(0,255,200,0.3)";
+                modeBadge.textContent = window.isGameModeLocked ? "JUEGO BLINDADO (Sin Interrupciones)" : (window.isControllerMouseMode ? "Modo: RATÓN (Desktop PC)" : "Modo: JUEGO (XInput)");
+                modeBadge.style.color = window.isGameModeLocked ? "#10b981" : (window.isControllerMouseMode ? "#38bdf8" : "#00ffc8");
+                modeBadge.style.borderColor = window.isGameModeLocked ? "rgba(16,185,129,0.5)" : (window.isControllerMouseMode ? "rgba(56,189,248,0.4)" : "rgba(0,255,200,0.3)");
             }}
             const toast = document.getElementById("tel-mode-toast");
             if (toast) {{
@@ -708,6 +734,16 @@ def build_sandbox_html():
             }}
             const cur = (typeof state !== "undefined" && state.cursor) ? state.cursor : {{ x: 960, y: 540 }};
             recordTelemetry("MODE_SWITCH", cur, "Input", "Toggle", window.isControllerMouseMode ? "Mando controla el ratón del PC (Stick = Cursor, RT/A = Clic Izq, LT/X = Clic Der)" : "Mando controla el Avatar de juego");
+        }};
+
+        window.toggleMouseMode = function(forceVal) {{
+            if (window.isGameModeLocked) {{
+                const cur = (typeof state !== "undefined" && state.cursor) ? state.cursor : {{ x: 960, y: 540 }};
+                recordTelemetry("MODE_SWITCH_BLOCKED", cur, "Security", "Ignored", "Intento de conmutación bloqueado porque Bloqueo de Juego está activo");
+                return;
+            }}
+            const newVal = (typeof forceVal === "boolean") ? forceVal : !window.isControllerMouseMode;
+            window.syncUIMouseMode(newVal);
         }};
 
         function flushTelemetry() {{
@@ -1009,14 +1045,35 @@ def build_sandbox_html():
                 ctx.restore();
             }}
 
-            // 4. Zona Inferior de Prueba de Escritorio (Iconos y Zona de Arrastre)
-            // Iconos
+            // 4. Zona Inferior de Prueba de Escritorio (Iconos, Archivos y Zona de Arrastre)
+            // Iconos de Escritorio Arrastrables
             state.desktopIcons.forEach(ic => {{
-                ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+                // Silueta fantasma en posición original si se está arrastrando
+                if (ic.isDragging) {{
+                    ctx.save();
+                    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(ic.origX, ic.origY, 90, 80);
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    ctx.moveTo(ic.origX + 45, ic.origY + 40);
+                    ctx.lineTo(ic.x + 45, ic.y + 40);
+                    ctx.strokeStyle = "rgba(0, 255, 200, 0.4)";
+                    ctx.stroke();
+                    ctx.restore();
+                }}
+
+                ctx.save();
+                if (ic.isDragging) {{
+                    ctx.shadowColor = ic.color;
+                    ctx.shadowBlur = 20;
+                }}
+                ctx.fillStyle = ic.isDragging ? "rgba(30, 58, 80, 0.95)" : "rgba(15, 23, 42, 0.75)";
                 ctx.beginPath();
                 ctx.roundRect(ic.x, ic.y, 90, 80, 10);
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.12)";
+                ctx.strokeStyle = ic.isDragging ? "#00ffc8" : "rgba(255,255,255,0.15)";
+                ctx.lineWidth = ic.isDragging ? 2.5 : 1;
                 ctx.stroke();
 
                 ctx.fillStyle = ic.color;
@@ -1024,31 +1081,117 @@ def build_sandbox_html():
                 ctx.textAlign = "center";
                 ctx.fillText(ic.icon, ic.x + 45, ic.y + 42);
 
-                ctx.fillStyle = "#cbd5e1";
+                ctx.fillStyle = ic.isDragging ? "#ffffff" : "#cbd5e1";
                 ctx.font = "bold 11px sans-serif";
                 ctx.fillText(ic.label, ic.x + 45, ic.y + 68);
                 ctx.textAlign = "left";
+                ctx.restore();
             }});
 
-            // Zona de Soltado / Drop Target
+            // Archivo Arrastrable de Prueba Inmediata (Frente al Cursor Inicial 960, 540)
+            if (state.draggableFiles) {{
+                state.draggableFiles.forEach(f => {{
+                    if (f.isDragging) {{
+                        ctx.save();
+                        ctx.strokeStyle = "rgba(56, 189, 248, 0.35)";
+                        ctx.setLineDash([4, 4]);
+                        ctx.strokeRect(f.origX, f.origY, f.w, f.h);
+                        ctx.setLineDash([]);
+                        ctx.beginPath();
+                        ctx.moveTo(f.origX + f.w / 2, f.origY + f.h / 2);
+                        ctx.lineTo(f.x + f.w / 2, f.y + f.h / 2);
+                        ctx.strokeStyle = "#00ffc8";
+                        ctx.stroke();
+                        ctx.restore();
+                    }}
+
+                    ctx.save();
+                    if (f.isDragging) {{
+                        ctx.shadowColor = "#00ffc8";
+                        ctx.shadowBlur = 22;
+                    }}
+                    ctx.fillStyle = f.isDragging ? "rgba(16, 185, 129, 0.35)" : "rgba(15, 23, 42, 0.92)";
+                    ctx.beginPath();
+                    ctx.roundRect(f.x, f.y, f.w, f.h, 10);
+                    ctx.fill();
+                    ctx.strokeStyle = f.isDragging ? "#00ffc8" : "rgba(56, 189, 248, 0.65)";
+                    ctx.lineWidth = f.isDragging ? 2.5 : 1.5;
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.font = "24px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillText(f.icon, f.x + f.w / 2, f.y + 34);
+
+                    ctx.fillStyle = "#f1f5f9";
+                    ctx.font = "bold 11px monospace";
+                    ctx.fillText(f.label, f.x + f.w / 2, f.y + 54);
+
+                    ctx.fillStyle = f.isDragging ? "#00ffc8" : "#94a3b8";
+                    ctx.font = "9px monospace";
+                    ctx.fillText(f.isDragging ? "[ARRASTRANDO]" : "¡Arrastra a Drop Zone!", f.x + f.w / 2, f.y + 70);
+                    ctx.textAlign = "left";
+                    ctx.restore();
+                }});
+            }}
+
+            // Zona de Soltado / Drop Target (Feedback visual completo)
             const dt = state.dropTarget;
-            ctx.strokeStyle = dt.isOver ? "#00ffc8" : "rgba(56, 189, 248, 0.35)";
-            ctx.lineWidth = dt.isOver ? 2.5 : 1.5;
-            ctx.setLineDash([8, 8]);
-            ctx.fillStyle = dt.isOver ? "rgba(0, 255, 200, 0.1)" : "rgba(15, 23, 42, 0.5)";
+            ctx.save();
+            if (dt.isOver) {{
+                ctx.shadowColor = "#00ffc8";
+                ctx.shadowBlur = 25;
+            }}
+            ctx.strokeStyle = dt.isOver ? "#00ffc8" : "rgba(56, 189, 248, 0.4)";
+            ctx.lineWidth = dt.isOver ? 3 : 1.5;
+            ctx.setLineDash(dt.isOver ? [4, 4] : [8, 8]);
+            ctx.fillStyle = dt.isOver ? "rgba(0, 255, 200, 0.22)" : "rgba(15, 23, 42, 0.55)";
             ctx.beginPath();
             ctx.roundRect(dt.x, dt.y, dt.w, dt.h, 12);
             ctx.fill();
             ctx.stroke();
             ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
 
-            ctx.fillStyle = dt.isOver ? "#00ffc8" : "#94a3b8";
-            ctx.font = "bold 13px sans-serif";
+            ctx.fillStyle = dt.isOver ? "#00ffc8" : "#38bdf8";
+            ctx.font = "bold 14px sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(dt.label, dt.x + dt.w / 2, dt.y + dt.h / 2 - 8);
+            ctx.fillText(dt.isOver ? "¡SUELTA AQUÍ PARA CONFIRMAR!" : dt.label, dt.x + dt.w / 2, dt.y + dt.h / 2 - 16);
+            ctx.fillStyle = "#e2e8f0";
             ctx.font = "11px monospace";
-            ctx.fillText("Arrastra la ventana aquí para verificar precisión", dt.x + dt.w / 2, dt.y + dt.h / 2 + 14);
+            ctx.fillText("Arrastra aquí archivos, iconos o la ventana", dt.x + dt.w / 2, dt.y + dt.h / 2 + 6);
+            ctx.fillStyle = "#10b981";
+            ctx.font = "bold 11px monospace";
+            ctx.fillText(`Elementos completados: ${{dt.dropCount || 0}}${{dt.lastDropped ? ' (Último: ' + dt.lastDropped + ')' : ''}}`, dt.x + dt.w / 2, dt.y + dt.h / 2 + 28);
             ctx.textAlign = "left";
+            ctx.restore();
+
+            // Caja de Selección Marquee en Escritorio Libre
+            if (state.selectionBox && state.selectionBox.active) {{
+                const sb = state.selectionBox;
+                const sx = Math.min(sb.startX, sb.currentX);
+                const sy = Math.min(sb.startY, sb.currentY);
+                const sw = Math.abs(sb.currentX - sb.startX);
+                const sh = Math.abs(sb.currentY - sb.startY);
+
+                ctx.save();
+                ctx.fillStyle = "rgba(56, 189, 248, 0.16)";
+                ctx.fillRect(sx, sy, sw, sh);
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(sx, sy, sw, sh);
+                ctx.setLineDash([]);
+
+                if (sw > 30 && sh > 20) {{
+                    ctx.fillStyle = "rgba(10, 15, 26, 0.85)";
+                    ctx.fillRect(sx + 6, sy + 6, 80, 18);
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.font = "bold 10px monospace";
+                    ctx.fillText(`${{Math.round(sw)}}x${{Math.round(sh)}}`, sx + 12, sy + 19);
+                }}
+                ctx.restore();
+            }}
 
             // 4.5. Ondas de Impacto Visual por Clic (Ripples)
             if (state.ripples && state.ripples.length > 0) {{
@@ -1209,7 +1352,7 @@ def build_sandbox_html():
                 state.cursor.y = Math.max(0, Math.min(1080, vy));
                 state.cursor.mask = mask;
 
-                // Sincronización milimétrica bidireccional con el cursor SVG virtual de producción
+                // Sincronización milimétrica bidireccional con el cursor virtual único
                 if (typeof virtX !== "undefined") virtX = state.cursor.x;
                 if (typeof virtY !== "undefined") virtY = state.cursor.y;
                 if (typeof updateCursorElement === "function") updateCursorElement();
@@ -1228,12 +1371,27 @@ def build_sandbox_html():
                     if (ft) activeFinger = {{ x: ft.lastX, y: ft.lastY }};
                 }}
 
+                // Gestión de clase visual de arrastre en el cursor único (.cursor-dragging)
+                const curEl = document.getElementById("cloud-virtual-cursor");
+                const isDraggingAny = win.isDragging || state.isAnyDragging || (state.selectionBox && state.selectionBox.active);
+                if (curEl) {{
+                    if (mask === 1 && isDraggingAny) {{
+                        curEl.classList.add("cursor-dragging");
+                    }} else if (mask === 0 && !isDraggingAny) {{
+                        curEl.classList.remove("cursor-dragging");
+                    }}
+                }}
+
                 // Registro de Deslizamiento Continuo del Puntero (Cada 75ms o movimientos claros)
                 const now = Date.now();
                 if (moveDist > 2 && (now - lastLoggedMove > 75)) {{
                     lastLoggedMove = now;
-                    const actionName = win.isDragging ? "WIN_DRAGGING" : (mask === 1 ? "MOUSE_DRAG" : "POINTER_MOVE");
-                    const targetName = win.isDragging ? "WindowHeader" : "DesktopCanvas";
+                    let actionName = (mask === 1) ? "MOUSE_DRAG" : "POINTER_MOVE";
+                    let targetName = "DesktopCanvas";
+                    if (win.isDragging) {{ actionName = "WIN_DRAGGING"; targetName = "WindowHeader"; }}
+                    else if (state.isAnyDragging) {{ actionName = "ITEM_DRAGGING"; targetName = state.lastDragLabel || "Item"; }}
+                    else if (state.selectionBox && state.selectionBox.active) {{ actionName = "SELECTION_DRAG"; targetName = "SelectionMarquee"; }}
+
                     let anomaly = "";
                     if (cur.x <= 0 || cur.x >= 1920 || cur.y <= 0 || cur.y >= 1080) {{
                         anomaly = "BORDE_ESCRITORIO";
@@ -1241,18 +1399,20 @@ def build_sandbox_html():
                     recordTelemetry(actionName, cur, targetName, "Move", `Delta Virt: (dx:${{Math.round(deltaVirtX)}}, dy:${{Math.round(deltaVirtY)}}) | Puntero en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, anomaly, activeFinger);
                 }}
 
-                // Click Izquierdo presionado
+                const ticker = document.getElementById("tel-ticker-text");
+
+                // -------------------------------------------------------------
+                // 1. CLIC IZQUIERDO PRESIONADO (mask === 1 && oldMask !== 1)
+                // -------------------------------------------------------------
                 if (mask === 1 && oldMask !== 1) {{
                     recordTelemetry("CLICK_LEFT", cur, "Canvas", "Down", `Virtual(${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
                     if (typeof window.triggerCursorClickEffect === "function") window.triggerCursorClickEffect("left");
 
-                    // Onda visual inmediata en cualquier parte de la pantalla
+                    // Onda visual inmediata en el punto de impacto
                     if (!state.ripples) state.ripples = [];
                     state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 46, color: "#38bdf8", alpha: 1.0 }});
 
-                    const ticker = document.getElementById("tel-ticker-text");
-
-                    // 1. Comprobar interacción con Menú Contextual si está abierto
+                    // A. Interacción con Menú Contextual si está abierto
                     if (state.contextMenu && state.contextMenu.visible) {{
                         const cm = state.contextMenu;
                         if (cur.x >= cm.x && cur.x <= cm.x + cm.w && cur.y >= cm.y + 36 && cur.y <= cm.y + cm.h) {{
@@ -1269,17 +1429,20 @@ def build_sandbox_html():
                         return;
                     }}
 
-                    // Comprobar arrastre de cabecera de ventana
+                    // B. Comprobar arrastre de cabecera de ventana
                     if (cur.x >= win.x && cur.x <= win.x + win.w &&
                         cur.y >= win.y && cur.y <= win.y + 42) {{
                         win.isDragging = true;
                         win.dragOffX = cur.x - win.x;
                         win.dragOffY = cur.y - win.y;
-                        if (ticker) ticker.textContent = "[A / RT] Arrastrando Ventana...";
+                        state.isAnyDragging = true;
+                        state.lastDragLabel = "Ventana";
+                        if (ticker) ticker.textContent = "[ARRASTRANDO] Ventana de Consola...";
                         recordTelemetry("WIN_DRAG", cur, "WindowHeader", "StartDrag", "Ventana enganchada con éxito", "", activeFinger);
+                        return;
                     }}
 
-                    // Comprobar botones dentro de la ventana
+                    // C. Comprobar botones de prueba dentro de la ventana
                     let hitBtn = false;
                     state.buttons.forEach(b => {{
                         if (cur.x >= b.x && cur.x <= b.x + b.w &&
@@ -1290,56 +1453,197 @@ def build_sandbox_html():
                             if (b.id === "btn_test_clear") {{
                                 win.terminalLines = ["Consola limpiada. Listo para nuevas pruebas."];
                                 win.activeInput = "";
-                                if (ticker) ticker.textContent = "[A / RT] Consola Limpiada";
+                                if (ticker) ticker.textContent = "[CLIC] Consola Limpiada";
                             }} else {{
                                 win.terminalLines.push(`[BOTÓN ACTIVADO] ${{b.label}} en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
                                 if (win.terminalLines.length > 7) win.terminalLines.shift();
-                                if (ticker) ticker.textContent = `[A / RT] Botón Pulsado: ${{b.label}}`;
+                                if (ticker) ticker.textContent = `[BOTÓN] Pulsado: ${{b.label}}`;
                             }}
                             recordTelemetry("BTN_CLICK", cur, b.label, "Pressed", "Botón interior de ventana pulsado", "", activeFinger);
                         }}
                     }});
+                    if (hitBtn) return;
 
-                    // Comprobar iconos de escritorio
+                    // D. Comprobar archivos arrastrables (ej. Doc_Prueba.txt)
+                    let hitFile = false;
+                    if (state.draggableFiles) {{
+                        state.draggableFiles.forEach(f => {{
+                            if (cur.x >= f.x && cur.x <= f.x + f.w &&
+                                cur.y >= f.y && cur.y <= f.y + f.h) {{
+                                hitFile = true;
+                                f.isDragging = true;
+                                f.dragOffX = cur.x - f.x;
+                                f.dragOffY = cur.y - f.y;
+                                state.isAnyDragging = true;
+                                state.lastDragLabel = f.label;
+                                if (ticker) ticker.textContent = `[ARRASTRANDO] Archivo "${{f.label}}"...`;
+                                recordTelemetry("FILE_DRAG", cur, f.label, "StartDrag", "Archivo enganchado para arrastrar a Zona Drop", "", activeFinger);
+                            }}
+                        }});
+                    }}
+                    if (hitFile) return;
+
+                    // E. Comprobar iconos de escritorio arrastrables
                     let hitIcon = false;
                     state.desktopIcons.forEach(ic => {{
                         if (cur.x >= ic.x && cur.x <= ic.x + 90 &&
                             cur.y >= ic.y && cur.y <= ic.y + 80) {{
                             hitIcon = true;
-                            win.terminalLines.push(`[LANZADOR] Abriendo ${{ic.label}}...`);
-                            if (win.terminalLines.length > 7) win.terminalLines.shift();
-                            if (ticker) ticker.textContent = `[A / RT] Lanzando: ${{ic.label}}`;
-                            recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado", "", activeFinger);
+                            ic.isDragging = true;
+                            ic.dragOffX = cur.x - ic.x;
+                            ic.dragOffY = cur.y - ic.y;
+                            state.isAnyDragging = true;
+                            state.lastDragLabel = ic.label;
+                            if (ticker) ticker.textContent = `[ARRASTRANDO] Acceso "${{ic.label}}"...`;
+                            recordTelemetry("ICON_DRAG", cur, ic.label, "StartDrag", "Icono enganchado para arrastre libre", "", activeFinger);
+                        }}
+                    }});
+                    if (hitIcon) return;
+
+                    // F. Clic en fondo de escritorio libre -> Iniciar Caja de Selección Marquee
+                    state.selectionBox = {{
+                        active: true,
+                        startX: cur.x,
+                        startY: cur.y,
+                        currentX: cur.x,
+                        currentY: cur.y
+                    }};
+                    win.terminalLines.push(`[SELECCIÓN / CLIC] Fondo en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
+                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = "[SELECCIÓN] Arrastra para enmarcar área";
+                }}
+
+                // -------------------------------------------------------------
+                // 2. MOVIMIENTO CON BOTÓN MANTENIDO (mask === 1)
+                // -------------------------------------------------------------
+                if (mask === 1) {{
+                    // Mover ventana si se está arrastrando
+                    if (win.isDragging) {{
+                        win.x = Math.max(0, Math.min(1920 - win.w, cur.x - win.dragOffX));
+                        win.y = Math.max(42, Math.min(1080 - win.h, cur.y - win.dragOffY));
+                        dt.isOver = (win.x + win.w/2 >= dt.x && win.x + win.w/2 <= dt.x + dt.w &&
+                                     win.y + win.h/2 >= dt.y && win.y + win.h/2 <= dt.y + dt.h);
+                    }}
+
+                    // Mover archivos arrastrables
+                    if (state.draggableFiles) {{
+                        state.draggableFiles.forEach(f => {{
+                            if (f.isDragging) {{
+                                f.x = Math.max(0, Math.min(1920 - f.w, cur.x - f.dragOffX));
+                                f.y = Math.max(42, Math.min(1080 - f.h, cur.y - f.dragOffY));
+                                dt.isOver = (f.x + f.w/2 >= dt.x && f.x + f.w/2 <= dt.x + dt.w &&
+                                             f.y + f.h/2 >= dt.y && f.y + f.h/2 <= dt.y + dt.h);
+                            }}
+                        }});
+                    }}
+
+                    // Mover iconos de escritorio arrastrables
+                    state.desktopIcons.forEach(ic => {{
+                        if (ic.isDragging) {{
+                            ic.x = Math.max(0, Math.min(1920 - 90, cur.x - ic.dragOffX));
+                            ic.y = Math.max(42, Math.min(1080 - 80, cur.y - ic.dragOffY));
+                            dt.isOver = (ic.x + 45 >= dt.x && ic.x + 45 <= dt.x + dt.w &&
+                                         ic.y + 40 >= dt.y && ic.y + 40 <= dt.y + dt.h);
                         }}
                     }});
 
-                    // Clic en fondo de escritorio libre
-                    if (!hitBtn && !hitIcon && !win.isDragging) {{
-                        win.terminalLines.push(`[CLIC IZQ (RT / A)] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
-                        if (win.terminalLines.length > 7) win.terminalLines.shift();
-                        if (ticker) ticker.textContent = `[A / RT] Clic Izquierdo en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`;
+                    // Actualizar rectángulo de selección marquee
+                    if (state.selectionBox && state.selectionBox.active) {{
+                        state.selectionBox.currentX = cur.x;
+                        state.selectionBox.currentY = cur.y;
                     }}
                 }}
 
-                // Movimiento mientras arrastra la ventana
-                if (win.isDragging) {{
-                    if (mask === 1) {{
-                        win.x = Math.max(0, Math.min(1920 - win.w, cur.x - win.dragOffX));
-                        win.y = Math.max(42, Math.min(1080 - win.h, cur.y - win.dragOffY));
+                // -------------------------------------------------------------
+                // 3. BOTÓN IZQUIERDO SOLTADO (mask === 0 && oldMask === 1)
+                // -------------------------------------------------------------
+                if (mask === 0 && oldMask === 1) {{
+                    state.isAnyDragging = false;
+                    state.lastDragLabel = "";
 
-                        // Verificar si está sobre la zona de soltado
-                        dt.isOver = (win.x + win.w/2 >= dt.x && win.x + win.w/2 <= dt.x + dt.w &&
-                                     win.y + win.h/2 >= dt.y && win.y + win.h/2 <= dt.y + dt.h);
-                    }} else {{
+                    // Soltar ventana
+                    if (win.isDragging) {{
                         win.isDragging = false;
+                        if (dt.isOver) {{
+                            dt.dropCount = (dt.dropCount || 0) + 1;
+                            dt.lastDropped = "Ventana de Consola";
+                            win.terminalLines.push(`[ÉXITO DROP] Ventana soltada en Zona de Arrastre! Total: ${{dt.dropCount}}`);
+                            if (win.terminalLines.length > 7) win.terminalLines.shift();
+                            if (ticker) ticker.textContent = `[ÉXITO] Ventana soltada en Drop Zone (#${{dt.dropCount}})`;
+                            recordTelemetry("WIN_DROP", cur, "DropTarget", "DropSuccess", `Ventana depositada en Drop Zone (Total drops: ${{dt.dropCount}})`, "", activeFinger);
+                            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+                        }} else {{
+                            if (ticker) ticker.textContent = `[DROP] Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`;
+                            recordTelemetry("WIN_DRAG", cur, "WindowHeader", "Drop", `Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`, "", activeFinger);
+                        }}
                         dt.isOver = false;
-                        const ticker = document.getElementById("tel-ticker-text");
-                        if (ticker) ticker.textContent = `[A / RT] Ventana Soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`;
-                        recordTelemetry("WIN_DRAG", cur, "WindowHeader", "Drop", `Ventana soltada en (${{Math.round(win.x)}}, ${{Math.round(win.y)}})`, "", activeFinger);
+                    }}
+
+                    // Soltar archivos arrastrables
+                    if (state.draggableFiles) {{
+                        state.draggableFiles.forEach(f => {{
+                            if (f.isDragging) {{
+                                f.isDragging = false;
+                                if (dt.isOver) {{
+                                    dt.dropCount = (dt.dropCount || 0) + 1;
+                                    dt.lastDropped = f.label;
+                                    win.terminalLines.push(`[ÉXITO DROP] "${{f.label}}" soltado en Drop Zone! Total: ${{dt.dropCount}}`);
+                                    if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                    if (ticker) ticker.textContent = `[ÉXITO] "${{f.label}}" soltado en Drop Zone (#${{dt.dropCount}})`;
+                                    recordTelemetry("FILE_DROP", cur, "DropTarget", "DropSuccess", `Archivo ${{f.label}} soltado en Drop Zone (Total: ${{dt.dropCount}})`, "", activeFinger);
+                                    if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
+                                    setTimeout(() => {{ f.x = f.origX; f.y = f.origY; }}, 1500);
+                                }} else {{
+                                    if (ticker) ticker.textContent = `[DROP] "${{f.label}}" soltado en (${{Math.round(f.x)}}, ${{Math.round(f.y)}})`;
+                                }}
+                                dt.isOver = false;
+                            }}
+                        }});
+                    }}
+
+                    // Soltar iconos de escritorio
+                    state.desktopIcons.forEach(ic => {{
+                        if (ic.isDragging) {{
+                            ic.isDragging = false;
+                            const movedDist = Math.hypot(ic.x - ic.origX, ic.y - ic.origY);
+                            if (dt.isOver) {{
+                                dt.dropCount = (dt.dropCount || 0) + 1;
+                                dt.lastDropped = ic.label;
+                                win.terminalLines.push(`[ÉXITO DROP] "${{ic.label}}" soltado en Drop Zone! Total: ${{dt.dropCount}}`);
+                                if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                if (ticker) ticker.textContent = `[ÉXITO] Acceso "${{ic.label}}" soltado (#${{dt.dropCount}})`;
+                                recordTelemetry("ICON_DROP", cur, "DropTarget", "DropSuccess", `Icono ${{ic.label}} soltado en Drop Zone (Total: ${{dt.dropCount}})`, "", activeFinger);
+                                if (navigator.vibrate) navigator.vibrate([30, 70, 30]);
+                                setTimeout(() => {{ ic.x = ic.origX; ic.y = ic.origY; }}, 1500);
+                            }} else if (movedDist < 8) {{
+                                win.terminalLines.push(`[LANZADOR] Abriendo ${{ic.label}}...`);
+                                if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                if (ticker) ticker.textContent = `[LANZADOR] Abriendo: ${{ic.label}}`;
+                                recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado", "", activeFinger);
+                            }} else {{
+                                if (ticker) ticker.textContent = `[DROP] "${{ic.label}}" reubicado en (${{Math.round(ic.x)}}, ${{Math.round(ic.y)}})`;
+                            }}
+                            dt.isOver = false;
+                        }}
+                    }});
+
+                    // Finalizar caja de selección marquee
+                    if (state.selectionBox && state.selectionBox.active) {{
+                        const selW = Math.abs(state.selectionBox.currentX - state.selectionBox.startX);
+                        const selH = Math.abs(state.selectionBox.currentY - state.selectionBox.startY);
+                        state.selectionBox.active = false;
+                        if (selW > 12 && selH > 12) {{
+                            win.terminalLines.push(`[SELECCIÓN] Área marcada: ${{Math.round(selW)}}x${{Math.round(selH)}} px`);
+                            if (win.terminalLines.length > 7) win.terminalLines.shift();
+                            if (ticker) ticker.textContent = `[SELECCIÓN] Enmarcado (${{Math.round(selW)}}x${{Math.round(selH)}} px)`;
+                            recordTelemetry("SELECTION_MARQUEE", cur, "DesktopCanvas", "Select", `Área de selección: ${{Math.round(selW)}}x${{Math.round(selH)}} px`, "", activeFinger);
+                        }}
                     }}
                 }}
 
-                // Click Derecho presionado (LT / Botón X)
+                // -------------------------------------------------------------
+                // 4. CLIC DERECHO (mask === 4 && oldMask !== 4)
+                // -------------------------------------------------------------
                 if (mask === 4 && oldMask !== 4) {{
                     if (typeof window.triggerCursorClickEffect === "function") window.triggerCursorClickEffect("right");
                     recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
@@ -1348,36 +1652,47 @@ def build_sandbox_html():
 
                     if (state.contextMenu) {{
                         state.contextMenu.visible = !state.contextMenu.visible;
-                        state.contextMenu.x = Math.min(1920 - 250, Math.max(10, cur.x));
-                        state.contextMenu.y = Math.min(1080 - 230, Math.max(10, cur.y));
+                        if (state.contextMenu.visible) {{
+                            state.contextMenu.x = Math.min(1920 - state.contextMenu.w - 10, cur.x);
+                            state.contextMenu.y = Math.min(1080 - state.contextMenu.h - 10, cur.y);
+                        }}
                     }}
-                    const cmState = state.contextMenu.visible ? "Abierto" : "Cerrado";
-                    win.terminalLines.push(`[MENÚ CONTEXTUAL (LT/X)] ${{cmState}} en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    const cmState = (state.contextMenu && state.contextMenu.visible) ? "Abierto" : "Cerrado";
+                    win.terminalLines.push(`[MENÚ CONTEXTUAL (LT/X)] ${{cmState}} en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
-                    const ticker = document.getElementById("tel-ticker-text");
                     if (ticker) ticker.textContent = `[X / LT] Menú Contextual ${{cmState}}`;
                 }}
 
-                // Click Central presionado (R3 Click o botón de rueda)
+                // -------------------------------------------------------------
+                // 5. CLIC CENTRAL (mask === 2 && oldMask !== 2)
+                // -------------------------------------------------------------
                 if (mask === 2 && oldMask !== 2) {{
                     recordTelemetry("CLICK_MIDDLE", cur, "Canvas", "Down", `Clic Central (R3) en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
                     if (!state.ripples) state.ripples = [];
                     state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 40, color: "#a855f7", alpha: 1.0 }});
-                    win.terminalLines.push(`[CLIC CENTRAL R3] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    win.terminalLines.push(`[CLIC CENTRAL R3] en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
-                    const ticker = document.getElementById("tel-ticker-text");
-                    if (ticker) ticker.textContent = `[R3] Clic Central de Ratón`;
+                    if (ticker) ticker.textContent = "[R3] Clic Central de Ratón";
                 }}
 
-                // Scroll 2D de Rueda (Stick R: Arriba/Abajo/Izq/Der)
-                if ((mask === 8 || mask === 16 || mask === 32 || mask === 64) && oldMask === 0) {{
-                    const sDesc = (mask === 8) ? "Scroll Arriba ▲" : ((mask === 16) ? "Scroll Abajo ▼" : ((mask === 32) ? "Scroll Izquierda ◀" : "Scroll Derecha ▶"));
-                    recordTelemetry("MOUSE_SCROLL", cur, "DesktopCanvas", "Wheel", sDesc, "", activeFinger);
+                // -------------------------------------------------------------
+                // 6. SCROLL 2D DE RUEDA (Stick R o Trackpad con 2 dedos)
+                // -------------------------------------------------------------
+                const scrollBits = mask & (8 | 16 | 32 | 64);
+                if (scrollBits && (scrollBits !== (oldMask & (8 | 16 | 32 | 64)))) {{
+                    let dirStr = "";
+                    if (scrollBits & 8) dirStr = "Arriba ▲";
+                    else if (scrollBits & 16) dirStr = "Abajo ▼";
+                    else if (scrollBits & 32) dirStr = "Izquierda ◀";
+                    else if (scrollBits & 64) dirStr = "Derecha ▶";
+
                     if (state.scrollIndicator) {{
-                        state.scrollIndicator = {{ active: true, x: cur.x, y: cur.y, text: sDesc, time: Date.now() }};
+                        state.scrollIndicator = {{ active: true, x: cur.x, y: cur.y, text: "Scroll " + dirStr, time: Date.now() }};
                     }}
-                    win.terminalLines.push(`[SCROLL STICK R] ${{sDesc}}`);
+                    win.terminalLines.push(`[SCROLL] ${{dirStr}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    if (ticker) ticker.textContent = `[SCROLL] ${{dirStr}}`;
+                    recordTelemetry("MOUSE_SCROLL", cur, "DesktopCanvas", "Wheel", `Pulso de rueda: ${{dirStr}}`, "", activeFinger);
                 }}
 
                 if (mask === 0 && oldMask !== 0) {{
@@ -2588,7 +2903,12 @@ def build_sandbox_html():
         function checkPhysicalGamepadNow() {{
             if (!isPhysicalGamepadOn) {{
                 const gp = scanActiveGamepad();
-                if (gp) handleGamepadPowerOn(gp);
+                if (gp) {{
+                    handleGamepadPowerOn(gp);
+                    if (typeof startPhysicalGamepadLoop === "function") {{
+                        startPhysicalGamepadLoop();
+                    }}
+                }}
             }}
         }}
         window.addEventListener("focus", checkPhysicalGamepadNow);
@@ -3033,10 +3353,14 @@ def build_sandbox_html():
                 }}
 
                 // 5. MODO RATÓN / ESCRITORIO O MODO JUEGO (Con Delta-Time Exacto)
-                if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
+                // Si startPhysicalGamepadLoop de producción ya gestiona el mando físico, delegar para evitar bucles concurrentes
+                if (typeof startPhysicalGamepadLoop === "function") {{
+                    if (!window.isControllerMouseMode && window.updateAvatarFromGamepad) {{
+                        window.updateAvatarFromGamepad(currentAxes, curBtns, dt);
+                    }}
+                }} else if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
                     window.processDesktopMouseControls(currentAxes, curBtns, lastLoggedPhysicalBtns, dt);
                 }} else {{
-                    // Modo Juego: Locomoción física fluida del Avatar
                     if (window.updateAvatarFromGamepad) {{
                         window.updateAvatarFromGamepad(currentAxes, curBtns, dt);
                     }}
