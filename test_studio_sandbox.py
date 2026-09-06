@@ -420,6 +420,13 @@ def build_sandbox_html():
     <!-- MOCK ENGINE noVNC & Canvas Simulator ANTES del HUD -->
     <script>
     (function() {{
+        window.addEventListener("error", function(e) {{
+            console.error("[SANDBOX ERROR]", e.message, e.filename, e.lineno);
+            if (typeof recordTelemetry === "function") {{
+                recordTelemetry("JS_ERROR", {{ x: 960, y: 540 }}, "Window", "Error", `${{e.message}} at line ${{e.lineno}}:${{e.colno}}`);
+            }}
+        }});
+
         const canvas = document.getElementById("noVNC_canvas");
         const ctx = canvas.getContext("2d");
 
@@ -1100,6 +1107,8 @@ def build_sandbox_html():
                 ctx.restore();
             }}
         }}
+        window.drawCanvas = drawCanvas;
+        drawCanvas();
 
         // Objeto RFB Simulado con Registro Exhaustivo de Deslizamiento y Consecuencias
         let lastLoggedMove = 0;
@@ -2873,7 +2882,9 @@ def build_sandbox_html():
             processPhysicalGamepadFrame(dt);
 
             // 2. Renderizado del Canvas sincronizado al refresco nativo de la pantalla
-            drawCanvas(dt);
+            if (typeof window.drawCanvas === "function") {{
+                window.drawCanvas(dt);
+            }}
 
             requestAnimationFrame(masterEngineLoop);
         }}
