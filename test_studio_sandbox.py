@@ -466,7 +466,23 @@ def build_sandbox_html():
                 {{ id: "icon_files", x: 750, y: 530, label: "Archivos", icon: "DIR", color: "#f59e0b" }},
                 {{ id: "icon_settings", x: 880, y: 530, label: "Ajustes", icon: "SYS", color: "#94a3b8" }}
             ],
-            dropTarget: {{ x: 1060, y: 510, w: 380, h: 180, label: "Zona de Arrastre Libre (Drop Zone)", isOver: false }}
+            dropTarget: {{ x: 1060, y: 510, w: 380, h: 180, label: "Zona de Arrastre Libre (Drop Zone)", isOver: false }},
+            contextMenu: {{
+                visible: false,
+                x: 0,
+                y: 0,
+                w: 240,
+                h: 215,
+                items: [
+                    {{ id: "new_folder", label: "📁 Nueva Carpeta" }},
+                    {{ id: "terminal", label: "⚡ Terminal X11" }},
+                    {{ id: "browser", label: "🌐 Navegador Web" }},
+                    {{ id: "refresh", label: "🔄 Actualizar Escritorio" }},
+                    {{ id: "properties", label: "⚙️ Propiedades del Sistema" }}
+                ]
+            }},
+            ripples: [],
+            scrollIndicator: {{ active: false, x: 0, y: 0, text: "", time: 0 }}
         }};
 
         // Sistema de Telemetría hacia el Servidor Local con Buffer Rápido
@@ -924,6 +940,94 @@ def build_sandbox_html():
             ctx.fillText("Arrastra la ventana aquí para verificar precisión", dt.x + dt.w / 2, dt.y + dt.h / 2 + 14);
             ctx.textAlign = "left";
 
+            // 4.5. Ondas de Impacto Visual por Clic (Ripples)
+            if (state.ripples && state.ripples.length > 0) {{
+                for (let i = state.ripples.length - 1; i >= 0; i--) {{
+                    const r = state.ripples[i];
+                    r.radius += (r.maxRadius - r.radius) * 0.25 + 1.5;
+                    r.alpha *= 0.88;
+                    if (r.alpha < 0.03 || r.radius >= r.maxRadius) {{
+                        state.ripples.splice(i, 1);
+                        continue;
+                    }}
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = r.color;
+                    ctx.globalAlpha = r.alpha;
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = r.color;
+                    ctx.shadowBlur = 16;
+                    ctx.stroke();
+                    ctx.restore();
+                }}
+            }}
+
+            // 4.6. Menú Contextual Real de Escritorio (Clic Derecho X / LT)
+            if (state.contextMenu && state.contextMenu.visible) {{
+                const cm = state.contextMenu;
+                ctx.save();
+                ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+                ctx.shadowBlur = 24;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 6;
+                ctx.fillStyle = "rgba(15, 23, 42, 0.96)";
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.roundRect(cm.x, cm.y, cm.w, cm.h, 10);
+                ctx.fill();
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Cabecera de menú contextual
+                ctx.fillStyle = "rgba(56, 189, 248, 0.18)";
+                ctx.beginPath();
+                ctx.roundRect(cm.x, cm.y, cm.w, 32, [10, 10, 0, 0]);
+                ctx.fill();
+                ctx.fillStyle = "#38bdf8";
+                ctx.font = "bold 11px monospace";
+                ctx.fillText("MENÚ CONTEXTUAL PC", cm.x + 14, cm.y + 20);
+
+                // Opciones del Menú con Resaltado Hover
+                const itemH = 34;
+                const curX = state.cursor.x;
+                const curY = state.cursor.y;
+                cm.items.forEach((item, idx) => {{
+                    const iy = cm.y + 36 + (idx * itemH);
+                    const isHovered = (curX >= cm.x && curX <= cm.x + cm.w && curY >= iy && curY < iy + itemH);
+                    if (isHovered) {{
+                        ctx.fillStyle = "rgba(56, 189, 248, 0.32)";
+                        ctx.beginPath();
+                        ctx.roundRect(cm.x + 6, iy + 2, cm.w - 12, itemH - 4, 6);
+                        ctx.fill();
+                    }}
+                    ctx.fillStyle = isHovered ? "#ffffff" : "#cbd5e1";
+                    ctx.font = isHovered ? "bold 13px sans-serif" : "12px sans-serif";
+                    ctx.fillText(item.label, cm.x + 16, iy + 22);
+                }});
+                ctx.restore();
+            }}
+
+            // 4.7. Indicador Visual de Scroll 2D (Stick Derecho)
+            if (state.scrollIndicator && state.scrollIndicator.active && (Date.now() - state.scrollIndicator.time < 750)) {{
+                const si = state.scrollIndicator;
+                ctx.save();
+                ctx.fillStyle = "rgba(245, 158, 11, 0.95)";
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(si.x + 15, si.y - 35, 135, 26, 13);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = "#000000";
+                ctx.font = "bold 11px monospace";
+                ctx.textAlign = "center";
+                ctx.fillText(si.text, si.x + 82, si.y - 18);
+                ctx.textAlign = "left";
+                ctx.restore();
+            }}
+
             // 5. Renderizado del Puntero de Ratón Virtual del Escritorio (Hardware Accelerated)
             if (window.isControllerMouseMode || state.cursor.mask > 0 || (Date.now() - lastLoggedMove < 4000)) {{
                 const cx = state.cursor.x;
@@ -1050,6 +1154,26 @@ def build_sandbox_html():
                 if (mask === 1 && oldMask !== 1) {{
                     recordTelemetry("CLICK_LEFT", cur, "Canvas", "Down", `Virtual(${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
 
+                    // Onda visual inmediata en cualquier parte de la pantalla
+                    if (!state.ripples) state.ripples = [];
+                    state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 44, color: "#38bdf8", alpha: 1.0 }});
+
+                    // 1. Comprobar interacción con Menú Contextual si está abierto
+                    if (state.contextMenu && state.contextMenu.visible) {{
+                        const cm = state.contextMenu;
+                        if (cur.x >= cm.x && cur.x <= cm.x + cm.w && cur.y >= cm.y + 36 && cur.y <= cm.y + cm.h) {{
+                            const itemIdx = Math.floor((cur.y - (cm.y + 36)) / 34);
+                            if (itemIdx >= 0 && itemIdx < cm.items.length) {{
+                                const chosen = cm.items[itemIdx];
+                                win.terminalLines.push(`[MENÚ PC] Ejecutando "${{chosen.label}}"...`);
+                                if (win.terminalLines.length > 7) win.terminalLines.shift();
+                                recordTelemetry("CONTEXT_MENU_CLICK", cur, chosen.label, "Execute", "Opción de menú contextual ejecutada", "", activeFinger);
+                            }}
+                        }}
+                        state.contextMenu.visible = false;
+                        return;
+                    }}
+
                     // Comprobar arrastre de cabecera de ventana
                     if (cur.x >= win.x && cur.x <= win.x + win.w &&
                         cur.y >= win.y && cur.y <= win.y + 42) {{
@@ -1060,9 +1184,11 @@ def build_sandbox_html():
                     }}
 
                     // Comprobar botones dentro de la ventana
+                    let hitBtn = false;
                     state.buttons.forEach(b => {{
                         if (cur.x >= b.x && cur.x <= b.x + b.w &&
                             cur.y >= b.y && cur.y <= b.y + b.h) {{
+                            hitBtn = true;
                             b.time = Date.now();
                             if (b.id === "btn_test_clear") {{
                                 win.terminalLines = ["Consola limpiada."];
@@ -1076,14 +1202,22 @@ def build_sandbox_html():
                     }});
 
                     // Comprobar iconos de escritorio
+                    let hitIcon = false;
                     state.desktopIcons.forEach(ic => {{
                         if (cur.x >= ic.x && cur.x <= ic.x + 90 &&
                             cur.y >= ic.y && cur.y <= ic.y + 80) {{
+                            hitIcon = true;
                             win.terminalLines.push(`[LANZADOR] Abriendo ${{ic.label}}...`);
                             if (win.terminalLines.length > 7) win.terminalLines.shift();
                             recordTelemetry("ICON_LAUNCH", cur, ic.label, "Launch", "Acceso directo ejecutado", "", activeFinger);
                         }}
                     }});
+
+                    // Clic en fondo de escritorio libre
+                    if (!hitBtn && !hitIcon && !win.isDragging) {{
+                        win.terminalLines.push(`[CLIC IZQ (RT / A)] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                        if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    }}
                 }}
 
                 // Movimiento mientras arrastra la ventana
@@ -1102,25 +1236,38 @@ def build_sandbox_html():
                     }}
                 }}
 
-                // Click Derecho presionado (Toque sostenido o 2 dedos)
+                // Click Derecho presionado (LT / Botón X)
                 if (mask === 4 && oldMask !== 4) {{
                     recordTelemetry("CLICK_RIGHT", cur, "Canvas", "Down", `Menu Contextual activado en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
-                    win.terminalLines.push(`[CLICK DERECHO (X / LT)] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
+                    if (!state.ripples) state.ripples = [];
+                    state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 48, color: "#f59e0b", alpha: 1.0 }});
+
+                    if (state.contextMenu) {{
+                        state.contextMenu.visible = true;
+                        state.contextMenu.x = Math.min(1920 - 250, Math.max(10, cur.x));
+                        state.contextMenu.y = Math.min(1080 - 230, Math.max(10, cur.y));
+                    }}
+                    win.terminalLines.push(`[MENÚ CONTEXTUAL (LT/X)] Abierto en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
                 }}
 
                 // Click Central presionado (R3 Click o botón de rueda)
                 if (mask === 2 && oldMask !== 2) {{
                     recordTelemetry("CLICK_MIDDLE", cur, "Canvas", "Down", `Clic Central (R3) en (${{Math.round(cur.x)}}, ${{Math.round(cur.y)}})`, "", activeFinger);
+                    if (!state.ripples) state.ripples = [];
+                    state.ripples.push({{ x: cur.x, y: cur.y, radius: 4, maxRadius: 40, color: "#a855f7", alpha: 1.0 }});
                     win.terminalLines.push(`[CLIC CENTRAL R3] en X:${{Math.round(cur.x)}} Y:${{Math.round(cur.y)}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
                 }}
 
-                // Scroll 2D de Rueda (Stick R3: Arriba/Abajo/Izq/Der)
+                // Scroll 2D de Rueda (Stick R: Arriba/Abajo/Izq/Der)
                 if ((mask === 8 || mask === 16 || mask === 32 || mask === 64) && oldMask === 0) {{
                     const sDesc = (mask === 8) ? "Scroll Arriba ▲" : ((mask === 16) ? "Scroll Abajo ▼" : ((mask === 32) ? "Scroll Izquierda ◀" : "Scroll Derecha ▶"));
                     recordTelemetry("MOUSE_SCROLL", cur, "DesktopCanvas", "Wheel", sDesc, "", activeFinger);
-                    win.terminalLines.push(`[SCROLL R3] ${{sDesc}}`);
+                    if (state.scrollIndicator) {{
+                        state.scrollIndicator = {{ active: true, x: cur.x, y: cur.y, text: sDesc, time: Date.now() }};
+                    }}
+                    win.terminalLines.push(`[SCROLL STICK R] ${{sDesc}}`);
                     if (win.terminalLines.length > 7) win.terminalLines.shift();
                 }}
 
@@ -1135,7 +1282,13 @@ def build_sandbox_html():
                 recordTelemetry("KEY_INPUT", "-", "VirtualKbd", "KeyDown", `Keysym: ${{keysym}}`);
                 const win = state.window;
 
-                if (keysym === 65288) {{ // Backspace
+                if (keysym === 0xff1b || keysym === 27) {{ // Escape
+                    if (state.contextMenu && state.contextMenu.visible) {{
+                        state.contextMenu.visible = false;
+                        win.terminalLines.push("[ESCAPE (Y)] Menú contextual cerrado.");
+                        if (win.terminalLines.length > 7) win.terminalLines.shift();
+                    }}
+                }} else if (keysym === 65288) {{ // Backspace
                     win.activeInput = win.activeInput.slice(0, -1);
                 }} else if (keysym === 65293) {{ // Enter
                     win.terminalLines.push("> " + win.activeInput);
@@ -1151,6 +1304,119 @@ def build_sandbox_html():
         }};
 
         window.UI = {{ rfb: mockRFB }};
+
+        // Procesador Unificado de Control de PC por Mando (Desktop Mouse Mode)
+        window.processDesktopMouseControls = function(axes, curBtns, prevBtns) {{
+            if (typeof mockRFB === "undefined" || !state || !state.cursor) return;
+
+            // 1. Stick Izquierdo (ax0, ax1): Movimiento Analógico del Cursor
+            const ax0 = axes[0] || 0;
+            const ax1 = axes[1] || 0;
+            const magL = Math.hypot(ax0, ax1);
+            if (magL > 0.08) {{
+                // L3 (botón 10): Modo Precisión / Francotirador (35% velocidad para afinar clics)
+                const isPrecision = !!curBtns[10];
+                const baseSpeed = isPrecision ? 5.5 : 18.0;
+                const factor = Math.pow(magL, 1.30) * baseSpeed;
+                state.cursor.x = Math.max(10, Math.min(1910, state.cursor.x + (ax0 / magL) * factor));
+                state.cursor.y = Math.max(10, Math.min(1070, state.cursor.y + (ax1 / magL) * factor));
+                mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask);
+            }}
+
+            // 2. Stick Derecho (ax2, ax3): Desplazamiento 2D de Páginas (Scroll Continuo)
+            const ax2 = axes[2] || 0;
+            const ax3 = axes[3] || 0;
+            const scrollMag = Math.hypot(ax2, ax3);
+            if (scrollMag > 0.18) {{
+                const now = Date.now();
+                const scrollInterval = Math.max(45, Math.round(180 - (scrollMag * 130)));
+                if (!window._lastScrollTime || (now - window._lastScrollTime > scrollInterval)) {{
+                    window._lastScrollTime = now;
+                    if (Math.abs(ax3) >= Math.abs(ax2)) {{
+                        // Scroll Vertical: Stick hacia arriba = Scroll Arriba (8) | Abajo = Scroll Abajo (16)
+                        const scrollMask = (ax3 < 0) ? 8 : 16;
+                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
+                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
+                    }} else {{
+                        // Scroll Horizontal: Stick hacia la izq = Scroll Izq (32) | Der = Scroll Der (64)
+                        const scrollMask = (ax2 < 0) ? 32 : 64;
+                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
+                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
+                    }}
+                }}
+            }}
+
+            // 3. Acciones del Puntero con Botones:
+            // Botón A (0) o RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
+            const clickLeft = (curBtns[7] > 0.4) || !!curBtns[0];
+
+            // Botón X (2) o LT (6) = Clic Derecho Secundario (Menú Contextual)
+            const clickRight = (curBtns[6] > 0.4) || !!curBtns[2];
+
+            // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
+            const clickMiddle = !!curBtns[11];
+
+            const targetMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
+            if (targetMask !== state.cursor.mask) {{
+                mockRFB._sendMouse(state.cursor.x, state.cursor.y, targetMask);
+            }}
+
+            // Botón B (1) = Doble Clic Izquierdo Instantáneo o Cerrar Menú Contextual
+            if (curBtns[1] && !prevBtns[1]) {{
+                if (state.contextMenu && state.contextMenu.visible) {{
+                    state.contextMenu.visible = false;
+                    state.window.terminalLines.push("[CANCELAR (B)] Menú contextual cerrado.");
+                    if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+                }} else {{
+                    if (!state.ripples) state.ripples = [];
+                    state.ripples.push({{ x: state.cursor.x, y: state.cursor.y, radius: 4, maxRadius: 36, color: "#10b981", alpha: 1.0 }});
+                    setTimeout(() => {{
+                        state.ripples.push({{ x: state.cursor.x, y: state.cursor.y, radius: 4, maxRadius: 52, color: "#00ffc8", alpha: 1.0 }});
+                    }}, 60);
+                    state.window.terminalLines.push(`[DOBLE CLIC (B)] Ejecutado en (${{Math.round(state.cursor.x)}}, ${{Math.round(state.cursor.y)}})`);
+                    if (state.window.terminalLines.length > 7) state.window.terminalLines.shift();
+
+                    mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
+                    setTimeout(() => {{
+                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0);
+                        setTimeout(() => {{
+                            mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
+                            setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 40);
+                        }}, 50);
+                    }}, 40);
+                }}
+            }}
+
+            // Botón Y (3) = Tecla Escape (cierra diálogos, menús o ventanas activas)
+            if (curBtns[3] && !prevBtns[3] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff1b, true);
+                setTimeout(() => mockRFB.sendKey(0xff1b, false), 50);
+            }}
+
+            // LB (4) = Navegar Atrás (Browser Back / Historial)
+            if (curBtns[4] && !prevBtns[4] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff51, true); // Alt + Left
+                setTimeout(() => mockRFB.sendKey(0xff51, false), 50);
+            }}
+
+            // RB (5) = Navegar Adelante (Browser Forward)
+            if (curBtns[5] && !prevBtns[5] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff53, true); // Alt + Right
+                setTimeout(() => mockRFB.sendKey(0xff53, false), 50);
+            }}
+
+            // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado (Arriba, Abajo, Izq, Der)
+            if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, true);
+            if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, true);
+            if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, true);
+            if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, true);
+
+            // START (9) = Tecla Enter / Intro
+            if (curBtns[9] && !prevBtns[9] && mockRFB.sendKey) {{
+                mockRFB.sendKey(0xff0d, true);
+                setTimeout(() => mockRFB.sendKey(0xff0d, false), 50);
+            }}
+        }};
 
         // -------------------------------------------------------------------------
         // MOCK WEBSOCKET: Emulador de Socket /gamepad para Mandos Táctiles (BigTech Test Harness)
@@ -1198,6 +1464,17 @@ def build_sandbox_html():
                         window._currentAxes = axes;
                         window._currentButtons = btns;
 
+                        // Conmutador táctil con SELECT + R3, SELECT + START o Botón 16 (Nexus / Guía)
+                        const isTouchCombo = (btns[8] && btns[11]) || (btns[8] && btns[9]) || !!btns[16];
+                        if (isTouchCombo && !window._touchComboLastDown) {{
+                            window._touchComboLastDown = true;
+                            if (!window.isGameModeLocked && typeof window.toggleMouseMode === "function") {{
+                                window.toggleMouseMode();
+                            }}
+                        }} else if (!isTouchCombo) {{
+                            window._touchComboLastDown = false;
+                        }}
+
                         // Detección Instantánea de Cambios en Botones (Down / Up)
                         for (let i = 0; i < 17; i++) {{
                             const isDown = !!btns[i];
@@ -1233,7 +1510,9 @@ def build_sandbox_html():
                             }}
                         }}
 
-                        if (window.updateAvatarFromGamepad) {{
+                        if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
+                            window.processDesktopMouseControls(axes, btns, prevBtns);
+                        }} else if (window.updateAvatarFromGamepad) {{
                             window.updateAvatarFromGamepad(axes, btns);
                         }}
                     }} catch(e) {{
@@ -2509,97 +2788,9 @@ def build_sandbox_html():
                     }}
                 }}
 
-                // 5. MODO RATÓN / ESCRITORIO CON EL MANDO FÍSICO
-                if (window.isControllerMouseMode && typeof mockRFB !== "undefined") {{
-                    // Stick Izquierdo (ax0, ax1): Movimiento Analógico del Cursor
-                    const magL = Math.hypot(ax0, ax1);
-                    if (magL > 0.08) {{
-                        // L3 (botón 10): Modo Precisión / Francotirador (35% velocidad para afinar clics pequeños)
-                        const isPrecision = !!curBtns[10];
-                        const baseSpeed = isPrecision ? 5.5 : 18.0;
-                        const factor = Math.pow(magL, 1.30) * baseSpeed;
-                        state.cursor.x = Math.max(0, Math.min(1920, state.cursor.x + (ax0 / magL) * factor));
-                        state.cursor.y = Math.max(0, Math.min(1080, state.cursor.y + (ax1 / magL) * factor));
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask);
-                    }}
-
-                    // Stick Derecho (ax2, ax3): Desplazamiento 2D de Páginas (Scroll Arriba / Abajo / Izquierda / Derecha)
-                    const scrollMag = Math.hypot(ax2, ax3);
-                    if (scrollMag > 0.18) {{
-                        const now = Date.now();
-                        const scrollInterval = Math.max(45, Math.round(180 - (scrollMag * 130)));
-                        if (!window._lastScrollTime || (now - window._lastScrollTime > scrollInterval)) {{
-                            window._lastScrollTime = now;
-                            if (Math.abs(ax3) >= Math.abs(ax2)) {{
-                                // Scroll Vertical: Stick hacia arriba = Scroll Arriba (8) | Abajo = Scroll Abajo (16)
-                                const scrollMask = (ax3 < 0) ? 8 : 16;
-                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
-                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
-                            }} else {{
-                                // Scroll Horizontal: Stick hacia la izq = Scroll Izq (32) | Der = Scroll Der (64)
-                                const scrollMask = (ax2 < 0) ? 32 : 64;
-                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
-                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
-                            }}
-                        }}
-                    }}
-
-                    // ACCIONES DEL PUNTERO CON BOTONES:
-                    // Botón A (0) o RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
-                    const clickLeft = (rtVal > 0.4) || !!curBtns[0];
-
-                    // Botón X (2) o LT (6) = Clic Derecho Secundario (Menú Contextual)
-                    const clickRight = (ltVal > 0.4) || !!curBtns[2];
-
-                    // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
-                    const clickMiddle = !!curBtns[11];
-
-                    const targetMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
-                    if (targetMask !== state.cursor.mask) {{
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, targetMask);
-                    }}
-
-                    // Botón B (1) = Doble Clic Izquierdo Instantáneo (Abre archivos/programas de un toque)
-                    if (curBtns[1] && !prevBtns[1]) {{
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
-                        setTimeout(() => {{
-                            mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0);
-                            setTimeout(() => {{
-                                mockRFB._sendMouse(state.cursor.x, state.cursor.y, 1);
-                                setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 40);
-                            }}, 50);
-                        }}, 40);
-                    }}
-
-                    // Botón Y (3) = Tecla Escape (cierra diálogos, menús o ventanas activas)
-                    if (curBtns[3] && !prevBtns[3] && mockRFB.sendKey) {{
-                        mockRFB.sendKey(0xff1b, true);
-                        setTimeout(() => mockRFB.sendKey(0xff1b, false), 50);
-                    }}
-
-                    // LB (4) = Navegar Atrás (Browser Back / Historial)
-                    if (curBtns[4] && !prevBtns[4] && mockRFB.sendKey) {{
-                        mockRFB.sendKey(0xff51, true); // Alt + Left
-                        setTimeout(() => mockRFB.sendKey(0xff51, false), 50);
-                    }}
-
-                    // RB (5) = Navegar Adelante (Browser Forward)
-                    if (curBtns[5] && !prevBtns[5] && mockRFB.sendKey) {{
-                        mockRFB.sendKey(0xff53, true); // Alt + Right
-                        setTimeout(() => mockRFB.sendKey(0xff53, false), 50);
-                    }}
-
-                    // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado (Arriba, Abajo, Izq, Der)
-                    if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, true);
-                    if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, true);
-                    if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, true);
-                    if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, true);
-
-                    // START (9) = Tecla Enter / Intro
-                    if (curBtns[9] && !prevBtns[9] && mockRFB.sendKey) {{
-                        mockRFB.sendKey(0xff0d, true);
-                        setTimeout(() => mockRFB.sendKey(0xff0d, false), 50);
-                    }}
+                // 5. MODO RATÓN / ESCRITORIO O MODO JUEGO
+                if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
+                    window.processDesktopMouseControls(currentAxes, curBtns, lastLoggedPhysicalBtns);
                 }} else {{
                     // Modo Juego: Locomoción física fluida del Avatar
                     if (window.updateAvatarFromGamepad) {{
@@ -2612,9 +2803,13 @@ def build_sandbox_html():
                     lastLoggedPhysicalBtns[b] = curBtns[b] ? 1 : 0;
                 }}
             }} else {{
-                // Si no hay mando físico pero sí mandos táctiles en pantalla en Modo Juego
-                if (!window.isControllerMouseMode && window.updateAvatarFromGamepad && window._currentAxes && window._currentButtons) {{
-                    window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons);
+                // Si no hay mando físico pero sí mandos táctiles en pantalla
+                if (window._currentAxes && window._currentButtons) {{
+                    if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
+                        window.processDesktopMouseControls(window._currentAxes, window._currentButtons, window._lastTouchBtns || new Array(17).fill(0));
+                    }} else if (window.updateAvatarFromGamepad) {{
+                        window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons);
+                    }}
                 }}
             }}
         }}
