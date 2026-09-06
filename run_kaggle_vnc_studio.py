@@ -5362,56 +5362,36 @@ if tailscaled_bin:
             except Exception:
                 pass
 
-        os.makedirs("/root/.config/tailscale", exist_ok=True)
-        tun_arg = "--tun=userspace-networking"
-        subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
-        time.sleep(0.3)
-        ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
-        subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log("Tailscale daemon iniciado (Userspace Networking SOCKS5:1055)")
+        if authkey:
+            os.makedirs("/root/.config/tailscale", exist_ok=True)
+            tun_arg = "--tun=userspace-networking"
+            subprocess.run("pkill -9 -f tailscaled 2>/dev/null || true", shell=True)
+            time.sleep(0.3)
+            ts_cmd = f"{tailscaled_bin} {tun_arg} --state=/root/.config/tailscale/tailscaled.state --socks5-server=localhost:1055 --outbound-http-proxy-listen=localhost:1055"
+            subprocess.Popen(ts_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            log("Tailscale daemon iniciado con Auth Key (Userspace SOCKS5:1055)")
 
-        def tailscale_manager_loop():
-            global tailscale_info
-            time.sleep(2)
-            if authkey:
-                tailscale_info["status"] = "iniciando"
-                log("Conectando Tailscale con Auth Key (Cero PIN)...")
-                subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes --reset >/dev/null 2>&1", shell=True)
-            else:
-                tailscale_info["status"] = "iniciando"
-                log("Iniciando Tailscale interactivo para acceso WAN por Internet...")
-                up_proc = subprocess.Popen(
-                    f"{tailscale_bin} up --hostname=aether-cloud-pc --accept-routes --reset",
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True
-                )
-                for line in up_proc.stdout:
-                    if "login.tailscale.com" in line or "tailscale.com/a/" in line:
-                        import re
-                        m_url = re.search(r'https://[^\s]+', line)
-                        if m_url:
-                            login_url = m_url.group(0)
-                            tailscale_info["login_url"] = login_url
-                            tailscale_info["status"] = "login_required"
-                            log(f"🔑 TAILSCALE WAN LOGIN URL: {login_url}", "SUCCESS")
-                            log(f"Inicia sesión en este enlace para vincular Moonlight por Internet: {login_url}")
-                            break
-
-            for _ in range(60):
+            def tailscale_manager_loop():
+                global tailscale_info
                 time.sleep(2)
-                res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
-                ts_ip = res_ip.stdout.strip()
-                if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip and "error" not in ts_ip.lower():
-                    tailscale_info["status"] = "connected"
-                    tailscale_info["ip"] = ts_ip
-                    tailscale_info["login_url"] = None
-                    log(f"🌐 Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
-                    log(f"🎮 Sunshine listo para jugar por Internet: Conéctate en Moonlight a {ts_ip}", "SUCCESS")
-                    break
+                tailscale_info["status"] = "iniciando"
+                log("Conectando Tailscale con Auth Key...")
+                subprocess.run(f"{tailscale_bin} up --authkey={authkey} --hostname=aether-cloud-pc --accept-routes --accept-dns=false >/dev/null 2>&1", shell=True)
+                for _ in range(30):
+                    time.sleep(2)
+                    res_ip = subprocess.run(f"{tailscale_bin} ip -4 2>/dev/null", shell=True, stdout=subprocess.PIPE, text=True)
+                    ts_ip = res_ip.stdout.strip()
+                    if ts_ip and not ts_ip.startswith("Tailscale is stopped") and "." in ts_ip and "error" not in ts_ip.lower():
+                        tailscale_info["status"] = "connected"
+                        tailscale_info["ip"] = ts_ip
+                        tailscale_info["login_url"] = None
+                        log(f"🌐 Tailscale Conectado Exitosamente: IP {ts_ip}", "SUCCESS")
+                        break
 
-        threading.Thread(target=tailscale_manager_loop, daemon=True).start()
+            threading.Thread(target=tailscale_manager_loop, daemon=True).start()
+        else:
+            tailscale_info["status"] = "unconfigured"
+            log("Tailscale en modo pasivo (sin AuthKey configurada - Cero interferencia de red)")
     except Exception as e_ts:
         log(f"Aviso arranque Tailscale: {e_ts}", "WARNING")
 

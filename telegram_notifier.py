@@ -52,7 +52,7 @@ def enviar_mensaje(texto, parse_mode="HTML"):
         "chat_id": chat_id,
         "text": texto,
         "parse_mode": parse_mode,
-        "disable_web_page_preview": False
+        "disable_web_page_preview": True
     }
     try:
         r = requests.post(url, json=payload, timeout=15)
