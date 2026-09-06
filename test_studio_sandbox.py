@@ -582,6 +582,23 @@ def build_sandbox_html():
                 return;
             }}
             window.isControllerMouseMode = (typeof forceVal === "boolean") ? forceVal : !window.isControllerMouseMode;
+
+            // Gestión Estricta de Visibilidad de Puntero Único BigTech: CERO CURSORES DUPLICADOS
+            const curEl = document.getElementById("cloud-virtual-cursor");
+            if (curEl) {{
+                curEl.style.display = window.isControllerMouseMode ? "block" : "none";
+            }}
+            if (window.isControllerMouseMode) {{
+                document.body.classList.add("controller-mouse-active");
+                if (typeof virtX !== "undefined" && typeof state !== "undefined" && state.cursor) {{
+                    virtX = state.cursor.x;
+                    virtY = state.cursor.y;
+                    if (typeof updateCursorElement === "function") updateCursorElement();
+                }}
+            }} else {{
+                document.body.classList.remove("controller-mouse-active");
+            }}
+
             const modeBadge = document.getElementById("tel-gp-mode-badge");
             if (modeBadge) {{
                 modeBadge.textContent = window.isControllerMouseMode ? "Modo: RATÓN (Desktop PC)" : "Modo: JUEGO (XInput)";
@@ -768,133 +785,142 @@ def build_sandbox_html():
             }});
             ctx.restore();
 
-            // 3. Gamepad Arena: Avatar en Posición Equilibrada (Columna Derecha Libre de Pulgares)
-            const av = state.avatar;
-            ctx.save();
-            if (window.isControllerMouseMode) {{
-                ctx.globalAlpha = 0.25;
-            }}
-            ctx.strokeStyle = "rgba(0, 255, 200, 0.3)";
-            ctx.lineWidth = 2;
-            ctx.setLineDash([6, 6]);
-            ctx.beginPath();
-            ctx.arc(1260, 280, 160, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            ctx.fillStyle = "rgba(0, 255, 200, 0.5)";
-            ctx.font = "bold 14px monospace";
-            ctx.fillText("ARENA XINPUT / GAMEPAD", 1180, 105);
-            ctx.fillStyle = "#94a3b8";
-            ctx.font = "11px monospace";
-            ctx.fillText("Stick L: Mover | Stick R: Mirar", 1160, 125);
-            ctx.fillText("L3: Sprint | A: Saltar | B: Dash", 1160, 142);
-            ctx.fillText("D-Pad: 8-Way | X: Ataque | Y: Escudo", 1160, 159);
-
-            // Actualizar posición del Avatar con fricción
-            av.x += av.vx;
-            av.y += av.vy;
-            av.vx *= 0.88;
-            av.vy *= 0.88;
-
-            // Restricción dentro del área
-            const dx = av.x - 1260;
-            const dy = av.y - 280;
-            const dist = Math.hypot(dx, dy);
-            if (dist > 140) {{
-                const angle = Math.atan2(dy, dx);
-                av.x = 1260 + Math.cos(angle) * 140;
-                av.y = 280 + Math.sin(angle) * 140;
-            }}
-
-            // Estela de Sprint
-            if (av.isSprinting && Math.hypot(av.vx, av.vy) > 0.5) {{
-                av.trail.push({{ x: av.x, y: av.y, alpha: 0.6 }});
-            }}
-            av.trail.forEach((t) => {{
-                ctx.fillStyle = `rgba(0, 255, 200, ${{t.alpha}})`;
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, av.radius * 0.7, 0, Math.PI * 2);
-                ctx.fill();
-                t.alpha *= 0.85;
-            }});
-            av.trail = av.trail.filter(t => t.alpha > 0.05);
-
-            // Efecto de Ataque (Botón X)
-            if (av.attackEffect > 0) {{
-                ctx.strokeStyle = `rgba(59, 130, 246, ${{av.attackEffect}})`;
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.arc(av.x, av.y, av.radius * (2.2 - av.attackEffect), 0, Math.PI * 2);
-                ctx.stroke();
-                av.attackEffect -= 0.08;
-            }}
-
-            // Escudo (Botón Y)
-            if (av.shieldActive) {{
-                ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
-                ctx.strokeStyle = "#f59e0b";
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(av.x, av.y, av.radius * 1.35, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }}
-
-            // Cuerpo del Avatar
-            const renderRadius = av.radius * (av.isJumping ? av.jumpScale : 1.0);
-            ctx.shadowColor = av.color;
-            ctx.shadowBlur = 18;
-            ctx.fillStyle = av.color;
-            ctx.beginPath();
-            ctx.arc(av.x, av.y, renderRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            ctx.fillStyle = "#0a0f1a";
-            ctx.beginPath();
-            ctx.arc(av.x, av.y, renderRadius * 0.6, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Puntero de orientación / mira (Stick Derecho)
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(av.x, av.y);
-            ctx.lineTo(av.x + Math.cos(av.angle) * (renderRadius * 1.5), av.y + Math.sin(av.angle) * (renderRadius * 1.5));
-            ctx.stroke();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 13px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(av.isSprinting ? "SPRINT (L3)" : (av.isJumping ? "SALTO (A)" : "PILOTO"), av.x, av.y + renderRadius + 20);
-            ctx.textAlign = "left";
-            ctx.restore();
-
-            if (window.isControllerMouseMode) {{
+            // 3. Modo Dual Estricto: En Modo Ratón PC se oculta totalmente el Avatar para evitar dos punteros
+            if (!window.isControllerMouseMode) {{
+                const av = state.avatar;
                 ctx.save();
-                ctx.fillStyle = "rgba(10, 15, 26, 0.92)";
-                ctx.strokeStyle = "#38bdf8";
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "rgba(0, 255, 200, 0.4)";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 6]);
                 ctx.beginPath();
-                ctx.roundRect(1080, 185, 360, 190, 12);
-                ctx.fill();
+                ctx.arc(1260, 280, 160, 0, Math.PI * 2);
                 ctx.stroke();
+                ctx.setLineDash([]);
 
-                ctx.fillStyle = "#38bdf8";
-                ctx.font = "bold 15px monospace";
-                ctx.textAlign = "center";
-                ctx.fillText("🖱️ MODO RATÓN PC ACTIVO", 1260, 212);
-                ctx.fillStyle = "#e2e8f0";
+                ctx.fillStyle = "#00ffc8";
+                ctx.font = "bold 14px monospace";
+                ctx.fillText("🎮 MODO JUEGO XINPUT", 1180, 105);
+                ctx.fillStyle = "#94a3b8";
                 ctx.font = "11px monospace";
-                ctx.fillText("Stick L: Puntero (L3: Precisión)", 1260, 235);
-                ctx.fillText("Stick R: Scroll 2D Páginas (R3: Clic Central)", 1260, 255);
-                ctx.fillText("A / RT: Clic Izq  |  X / LT: Clic Der", 1260, 275);
-                ctx.fillText("B: Doble Clic  |  Y: Escape  |  START: Enter", 1260, 295);
-                ctx.fillText("LB / RB: Atrás / Adelante  |  D-Pad: Flechas", 1260, 315);
+                ctx.fillText("Stick L: Locomoción | Stick R: Mirar 360°", 1150, 125);
+                ctx.fillText("L3: Sprint | A: Saltar | B: Dash", 1150, 142);
+                ctx.fillText("D-Pad: 8-Way | X: Ataque | Y: Escudo", 1150, 159);
                 ctx.fillStyle = "#f59e0b";
                 ctx.font = "bold 11px monospace";
-                ctx.fillText("SELECT + R3: Volver a Modo Juego", 1260, 348);
+                ctx.fillText("SELECT + R3: Cambiar a Modo Ratón PC", 1150, 180);
+
+                // Actualizar posición del Avatar con fricción
+                av.x += av.vx;
+                av.y += av.vy;
+                av.vx *= 0.88;
+                av.vy *= 0.88;
+
+                // Restricción dentro del área
+                const dx = av.x - 1260;
+                const dy = av.y - 280;
+                const dist = Math.hypot(dx, dy);
+                if (dist > 140) {{
+                    const angle = Math.atan2(dy, dx);
+                    av.x = 1260 + Math.cos(angle) * 140;
+                    av.y = 280 + Math.sin(angle) * 140;
+                }}
+
+                // Estela de Sprint
+                if (av.isSprinting && Math.hypot(av.vx, av.vy) > 0.5) {{
+                    av.trail.push({{ x: av.x, y: av.y, alpha: 0.6 }});
+                }}
+                av.trail.forEach((t) => {{
+                    ctx.fillStyle = `rgba(0, 255, 200, ${{t.alpha}})`;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, av.radius * 0.7, 0, Math.PI * 2);
+                    ctx.fill();
+                    t.alpha *= 0.85;
+                }});
+                av.trail = av.trail.filter(t => t.alpha > 0.05);
+
+                // Efecto de Ataque (Botón X)
+                if (av.attackEffect > 0) {{
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${{av.attackEffect}})`;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(av.x, av.y, av.radius * (2.2 - av.attackEffect), 0, Math.PI * 2);
+                    ctx.stroke();
+                    av.attackEffect -= 0.08;
+                }}
+
+                // Escudo (Botón Y)
+                if (av.shieldActive) {{
+                    ctx.fillStyle = "rgba(245, 158, 11, 0.25)";
+                    ctx.strokeStyle = "#f59e0b";
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(av.x, av.y, av.radius * 1.35, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }}
+
+                // Cuerpo del Avatar
+                const renderRadius = av.radius * (av.isJumping ? av.jumpScale : 1.0);
+                ctx.shadowColor = av.color;
+                ctx.shadowBlur = 18;
+                ctx.fillStyle = av.color;
+                ctx.beginPath();
+                ctx.arc(av.x, av.y, renderRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = "#0a0f1a";
+                ctx.beginPath();
+                ctx.arc(av.x, av.y, renderRadius * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Puntero de orientación / mira (Stick Derecho)
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(av.x, av.y);
+                ctx.lineTo(av.x + Math.cos(av.angle) * (renderRadius * 1.5), av.y + Math.sin(av.angle) * (renderRadius * 1.5));
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 13px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(av.isSprinting ? "SPRINT (L3)" : (av.isJumping ? "SALTO (A)" : "PILOTO"), av.x, av.y + renderRadius + 20);
+                ctx.textAlign = "left";
+                ctx.restore();
+            }} else {{
+                // EN MODO RATÓN PC: Se oculta el Avatar y se muestra panel de información limpio
+                ctx.save();
+                ctx.fillStyle = "rgba(10, 15, 26, 0.94)";
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                ctx.roundRect(1080, 105, 370, 265, 14);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "rgba(56, 189, 248, 0.15)";
+                ctx.beginPath();
+                ctx.roundRect(1080, 105, 370, 36, [14, 14, 0, 0]);
+                ctx.fill();
+
+                ctx.fillStyle = "#38bdf8";
+                ctx.font = "bold 13px monospace";
+                ctx.textAlign = "center";
+                ctx.fillText("🖱️ CONTROL DE ESCRITORIO PC (1 PUNTERO)", 1265, 128);
+
+                ctx.fillStyle = "#e2e8f0";
+                ctx.font = "11px monospace";
+                ctx.fillText("Stick L: Puntero Ratón (L3: Precisión)", 1265, 160);
+                ctx.fillText("Stick R: Scroll 2D Suave (R3: Clic Rueda)", 1265, 184);
+                ctx.fillText("Gatillo RT / A: Clic Izquierdo (Arrastre)", 1265, 208);
+                ctx.fillText("Gatillo LT / X: Clic Derecho (Menú Contextual)", 1265, 232);
+                ctx.fillText("Botón B: Doble Clic / Cancelar Menú", 1265, 256);
+                ctx.fillText("Botón Y: Escape | START: Intro/Enter", 1265, 280);
+                ctx.fillText("LB / RB: Atrás / Adelante Navegador", 1265, 304);
+                ctx.fillStyle = "#f59e0b";
+                ctx.font = "bold 11px monospace";
+                ctx.fillText("SELECT + R3: Volver a Modo Juego", 1265, 340);
                 ctx.textAlign = "left";
                 ctx.restore();
             }}
@@ -1029,14 +1055,17 @@ def build_sandbox_html():
             }}
 
             // 5. Renderizado del Puntero de Ratón Virtual del Escritorio (Hardware Accelerated)
-            if (window.isControllerMouseMode || state.cursor.mask > 0 || (Date.now() - lastLoggedMove < 4000)) {{
+            // Estándar BigTech: EXACTAMENTE UN PUNTERO EN PANTALLA.
+            // En Modo Ratón PC: #cloud-virtual-cursor (SVG acelerado) es el puntero visual principal.
+            // En el Canvas NO se dibuja un segundo cursor tipo flecha para erradicar cualquier duplicado.
+            if (window.isControllerMouseMode) {{
                 const cx = state.cursor.x;
                 const cy = state.cursor.y;
                 const isDownLeft = (state.cursor.mask === 1);
                 const isDownRight = (state.cursor.mask === 4);
 
                 ctx.save();
-                // Halo de pulsación o arrastre
+                // Halo de pulsación o arrastre sobre la superficie del escritorio
                 if (isDownLeft) {{
                     ctx.beginPath();
                     ctx.arc(cx, cy, 26, 0, Math.PI * 2);
@@ -1055,33 +1084,7 @@ def build_sandbox_html():
                     ctx.stroke();
                 }}
 
-                // Sombra de puntero
-                ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
-                ctx.shadowBlur = 12;
-                ctx.shadowOffsetX = 3;
-                ctx.shadowOffsetY = 4;
-
-                // Flecha de puntero OS de alta visibilidad
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx, cy + 24);
-                ctx.lineTo(cx + 6, cy + 18);
-                ctx.lineTo(cx + 13, cy + 28);
-                ctx.lineTo(cx + 17, cy + 25);
-                ctx.lineTo(cx + 10, cy + 16);
-                ctx.lineTo(cx + 19, cy + 16);
-                ctx.closePath();
-
-                ctx.fillStyle = isDownLeft ? "#38bdf8" : (isDownRight ? "#f59e0b" : "#ffffff");
-                ctx.fill();
-                ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Placa flotante de coordenadas y estado
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
+                // Placa flotante de coordenadas y estado bajo el cursor único
                 ctx.fillStyle = "rgba(10, 15, 26, 0.9)";
                 ctx.strokeStyle = isDownLeft ? "#38bdf8" : "rgba(255, 255, 255, 0.35)";
                 ctx.lineWidth = 1;
@@ -1096,10 +1099,7 @@ def build_sandbox_html():
 
                 ctx.restore();
             }}
-
-            requestAnimationFrame(drawCanvas);
         }}
-        requestAnimationFrame(drawCanvas);
 
         // Objeto RFB Simulado con Registro Exhaustivo de Deslizamiento y Consecuencias
         let lastLoggedMove = 0;
@@ -1122,6 +1122,11 @@ def build_sandbox_html():
                 state.cursor.x = Math.max(0, Math.min(1920, vx));
                 state.cursor.y = Math.max(0, Math.min(1080, vy));
                 state.cursor.mask = mask;
+
+                // Sincronización milimétrica bidireccional con el cursor SVG virtual de producción
+                if (typeof virtX !== "undefined") virtX = state.cursor.x;
+                if (typeof virtY !== "undefined") virtY = state.cursor.y;
+                if (typeof updateCursorElement === "function") updateCursorElement();
 
                 const cur = state.cursor;
                 const win = state.window;
@@ -1305,58 +1310,103 @@ def build_sandbox_html():
 
         window.UI = {{ rfb: mockRFB }};
 
-        // Procesador Unificado de Control de PC por Mando (Desktop Mouse Mode)
-        window.processDesktopMouseControls = function(axes, curBtns, prevBtns) {{
+        // Procesador Unificado de Control de PC por Mando (Desktop Mouse Mode) - Estándar BigTech con Delta-Time
+        window.processDesktopMouseControls = function(axes, curBtns, prevBtns, dt) {{
             if (typeof mockRFB === "undefined" || !state || !state.cursor) return;
+            const safeDt = (typeof dt === "number" && dt > 0.0001 && dt < 0.1) ? dt : 0.016;
 
-            // 1. Stick Izquierdo (ax0, ax1): Movimiento Analógico del Cursor
-            const ax0 = axes[0] || 0;
-            const ax1 = axes[1] || 0;
-            const magL = Math.hypot(ax0, ax1);
-            if (magL > 0.08) {{
-                // L3 (botón 10): Modo Precisión / Francotirador (35% velocidad para afinar clics)
+            // 1. Stick Izquierdo (ax0, ax1): Movimiento Analógico del Cursor Calibrado BigTech
+            const rawAx0 = axes[0] || 0;
+            const rawAx1 = axes[1] || 0;
+            const magL = Math.hypot(rawAx0, rawAx1);
+            const deadzoneL = 0.12;
+
+            if (magL > deadzoneL) {{
+                // Normalizar magnitud de [deadzone .. 1.0] a [0.0 .. 1.0]
+                const normMag = Math.min(1.0, (magL - deadzoneL) / (1.0 - deadzoneL));
+                const dirX = rawAx0 / magL;
+                const dirY = rawAx1 / magL;
+
+                // L3 (botón 10): Modo Precisión / Francotirador (320 px/s para apuntar a botones pequeños)
+                // Modo Normal: 920 px/s (recorrido cómodo de pantalla 1080p en ~2 segundos)
                 const isPrecision = !!curBtns[10];
-                const baseSpeed = isPrecision ? 5.5 : 18.0;
-                const factor = Math.pow(magL, 1.30) * baseSpeed;
-                state.cursor.x = Math.max(10, Math.min(1910, state.cursor.x + (ax0 / magL) * factor));
-                state.cursor.y = Math.max(10, Math.min(1070, state.cursor.y + (ax1 / magL) * factor));
+                const maxSpeed = isPrecision ? 320 : 920;
+
+                // Curva de respuesta ergonómica (exponente 1.65): suavidad milimétrica en toques tenues
+                const speed = Math.pow(normMag, 1.65) * maxSpeed;
+
+                state.cursor.x = Math.max(0, Math.min(1920, state.cursor.x + dirX * speed * safeDt));
+                state.cursor.y = Math.max(0, Math.min(1080, state.cursor.y + dirY * speed * safeDt));
+
+                // Sincronizar coordenadas virtuales maestras para el cursor SVG
+                if (typeof virtX !== "undefined") virtX = state.cursor.x;
+                if (typeof virtY !== "undefined") virtY = state.cursor.y;
+                if (typeof updateCursorElement === "function") updateCursorElement();
+
                 mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask);
             }}
 
-            // 2. Stick Derecho (ax2, ax3): Desplazamiento 2D de Páginas (Scroll Continuo)
-            const ax2 = axes[2] || 0;
-            const ax3 = axes[3] || 0;
-            const scrollMag = Math.hypot(ax2, ax3);
-            if (scrollMag > 0.18) {{
-                const now = Date.now();
-                const scrollInterval = Math.max(45, Math.round(180 - (scrollMag * 130)));
-                if (!window._lastScrollTime || (now - window._lastScrollTime > scrollInterval)) {{
-                    window._lastScrollTime = now;
-                    if (Math.abs(ax3) >= Math.abs(ax2)) {{
-                        // Scroll Vertical: Stick hacia arriba = Scroll Arriba (8) | Abajo = Scroll Abajo (16)
-                        const scrollMask = (ax3 < 0) ? 8 : 16;
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
-                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
-                    }} else {{
-                        // Scroll Horizontal: Stick hacia la izq = Scroll Izq (32) | Der = Scroll Der (64)
-                        const scrollMask = (ax2 < 0) ? 32 : 64;
-                        mockRFB._sendMouse(state.cursor.x, state.cursor.y, scrollMask);
-                        setTimeout(() => mockRFB._sendMouse(state.cursor.x, state.cursor.y, 0), 20);
-                    }}
+            // 2. Stick Derecho (ax2, ax3): Desplazamiento 2D Continuo de Páginas (Scroll Acumulativo)
+            const rawAx2 = axes[2] || 0;
+            const rawAx3 = axes[3] || 0;
+            const scrollMag = Math.hypot(rawAx2, rawAx3);
+            const deadzoneR = 0.14;
+
+            if (scrollMag > deadzoneR) {{
+                const normScroll = Math.min(1.0, (scrollMag - deadzoneR) / (1.0 - deadzoneR));
+                const scrollSpeed = Math.pow(normScroll, 1.5) * 1100; // px por segundo
+
+                window._scrollAccumY = (window._scrollAccumY || 0) + (rawAx3 * scrollSpeed * safeDt);
+                window._scrollAccumX = (window._scrollAccumX || 0) + (rawAx2 * scrollSpeed * safeDt);
+
+                const scrollThreshold = 38; // px para emitir 1 pulso de rueda
+
+                // Scroll Vertical
+                if (Math.abs(window._scrollAccumY) >= scrollThreshold) {{
+                    const ticks = Math.trunc(window._scrollAccumY / scrollThreshold);
+                    window._scrollAccumY -= ticks * scrollThreshold;
+                    const scrollMask = (ticks < 0) ? 8 : 16; // 8 = Arriba, 16 = Abajo
+
+                    const activeClickMask = state.cursor.mask & 7; // Preservar botones izquierdo (1), central (2), derecho (4)
+                    mockRFB._sendMouse(state.cursor.x, state.cursor.y, activeClickMask | scrollMask);
+                    setTimeout(() => {{
+                        if (state && state.cursor) {{
+                            mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask & ~24);
+                        }}
+                    }}, 15);
+                }}
+
+                // Scroll Horizontal
+                if (Math.abs(window._scrollAccumX) >= scrollThreshold) {{
+                    const ticks = Math.trunc(window._scrollAccumX / scrollThreshold);
+                    window._scrollAccumX -= ticks * scrollThreshold;
+                    const scrollMask = (ticks < 0) ? 32 : 64; // 32 = Izquierda, 64 = Derecha
+
+                    const activeClickMask = state.cursor.mask & 7;
+                    mockRFB._sendMouse(state.cursor.x, state.cursor.y, activeClickMask | scrollMask);
+                    setTimeout(() => {{
+                        if (state && state.cursor) {{
+                            mockRFB._sendMouse(state.cursor.x, state.cursor.y, state.cursor.mask & ~96);
+                        }}
+                    }}, 15);
                 }}
             }}
 
             // 3. Acciones del Puntero con Botones:
-            // Botón A (0) o RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
+            // Botón A (0) o Gatillo RT (7) = Clic Izquierdo Primario (Seleccionar / Arrastrar)
             const clickLeft = (curBtns[7] > 0.4) || !!curBtns[0];
 
-            // Botón X (2) o LT (6) = Clic Derecho Secundario (Menú Contextual)
+            // Botón X (2) o Gatillo LT (6) = Clic Derecho Secundario (Menú Contextual)
             const clickRight = (curBtns[6] > 0.4) || !!curBtns[2];
 
             // Botón R3 (11) = Clic Central de Ratón (Middle Click / botón de rueda)
             const clickMiddle = !!curBtns[11];
 
-            const targetMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
+            const baseClickMask = clickRight ? 4 : (clickMiddle ? 2 : (clickLeft ? 1 : 0));
+            // Mantener bits de scroll si están en proceso
+            const currentScrollBits = state.cursor.mask & (8 | 16 | 32 | 64);
+            const targetMask = baseClickMask | currentScrollBits;
+
             if (targetMask !== state.cursor.mask) {{
                 mockRFB._sendMouse(state.cursor.x, state.cursor.y, targetMask);
             }}
@@ -1407,9 +1457,16 @@ def build_sandbox_html():
 
             // Cruceta D-Pad (12..15): Teclas de Flecha del Teclado (Arriba, Abajo, Izq, Der)
             if (curBtns[12] && !prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, true);
+            else if (!curBtns[12] && prevBtns[12] && mockRFB.sendKey) mockRFB.sendKey(0xff52, false);
+
             if (curBtns[13] && !prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, true);
+            else if (!curBtns[13] && prevBtns[13] && mockRFB.sendKey) mockRFB.sendKey(0xff54, false);
+
             if (curBtns[14] && !prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, true);
+            else if (!curBtns[14] && prevBtns[14] && mockRFB.sendKey) mockRFB.sendKey(0xff51, false);
+
             if (curBtns[15] && !prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, true);
+            else if (!curBtns[15] && prevBtns[15] && mockRFB.sendKey) mockRFB.sendKey(0xff53, false);
 
             // START (9) = Tecla Enter / Intro
             if (curBtns[9] && !prevBtns[9] && mockRFB.sendKey) {{
@@ -1510,11 +1567,7 @@ def build_sandbox_html():
                             }}
                         }}
 
-                        if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
-                            window.processDesktopMouseControls(axes, btns, prevBtns);
-                        }} else if (window.updateAvatarFromGamepad) {{
-                            window.updateAvatarFromGamepad(axes, btns);
-                        }}
+                        // El procesamiento físico de sticks se realiza en el Master Engine Loop con delta-time exacto
                     }} catch(e) {{
                         console.error("[MOCK WS] Error:", e);
                     }}
@@ -1535,14 +1588,15 @@ def build_sandbox_html():
             window.WebSocket = MockGamepadSocket;
         }})();
 
-        // Escucha y control del Avatar mediante Mandos Táctiles con Telemetría de Ejes
-        window.updateAvatarFromGamepad = function(axes, buttons) {{
+        // Escucha y control del Avatar mediante Mandos Táctiles con Telemetría de Ejes y Delta-Time
+        window.updateAvatarFromGamepad = function(axes, buttons, dt) {{
             const av = state.avatar;
+            const safeDt = (typeof dt === "number" && dt > 0.0001 && dt < 0.1) ? dt : 0.016;
 
             // Stick Izquierdo: Locomoción Analógica 360°
             const lx = axes[0] || 0;
             const ly = axes[1] || 0;
-            const speed = av.isSprinting ? 9.5 : 5.5;
+            const speed = (av.isSprinting ? 560 : 330) * safeDt;
 
             if (Math.hypot(lx, ly) > 0.08) {{
                 av.vx = lx * speed;
@@ -1607,19 +1661,12 @@ def build_sandbox_html():
             }}
 
             // Cruceta D-Pad (12, 13, 14, 15): Movimiento Direccional Fluido
-            const dpadSpeed = av.isSprinting ? 7.5 : 4.8;
+            const dpadSpeed = (av.isSprinting ? 450 : 280) * safeDt;
             if (buttons[12]) av.vy = -dpadSpeed; // Up
             if (buttons[13]) av.vy = dpadSpeed;  // Down
             if (buttons[14]) av.vx = -dpadSpeed; // Left
             if (buttons[15]) av.vx = dpadSpeed;  // Right
         }};
-
-        // Bucle continuo para mantener locomoción física fluida cuando el stick está sostenido
-        setInterval(() => {{
-            if (window.updateAvatarFromGamepad && window._currentAxes && window._currentButtons) {{
-                window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons);
-            }}
-        }}, 16);
 
         // Aislamiento Táctil Absoluto del HUD de Telemetría (Estándar BigTech: stopImmediatePropagation)
         // Evita que tocar el panel del test active el trackpad o mueva el ratón en la pantalla
@@ -2553,7 +2600,7 @@ def build_sandbox_html():
         }});
 
         // Bucle de sincronización de alta fidelidad (60Hz / 120Hz)
-        function processPhysicalGamepadFrame() {{
+        function processPhysicalGamepadFrame(dt) {{
             const activeGp = scanActiveGamepad();
 
             // 1. Detección continua de ciclo de vida (Encendido vs Apagado)
@@ -2782,19 +2829,19 @@ def build_sandbox_html():
                 const now = Date.now();
                 if ((Math.abs(ax0) > 0.06 || Math.abs(ax1) > 0.06 || Math.abs(ax2) > 0.06 || Math.abs(ax3) > 0.06) && (now - lastPhysicalAxesLogTime > 130)) {{
                     lastPhysicalAxesLogTime = now;
-                    const cur = (typeof state !== "undefined" && state.avatar) ? {{ x: state.avatar.x, y: state.avatar.y }} : {{ x: 960, y: 540 }};
+                    const cur = (window.isControllerMouseMode && state.cursor) ? state.cursor : (state.avatar ? {{ x: state.avatar.x, y: state.avatar.y }} : {{ x: 960, y: 540 }});
                     if (window.recordTelemetry) {{
                         window.recordTelemetry("PHYSICAL_AXES", cur, "Sticks", "Move", `Stick L:(X:${{ax0.toFixed(2)}}, Y:${{ax1.toFixed(2)}}) | Stick R:${{ax2.toFixed(2)}}, Y:${{ax3.toFixed(2)}})`);
                     }}
                 }}
 
-                // 5. MODO RATÓN / ESCRITORIO O MODO JUEGO
+                // 5. MODO RATÓN / ESCRITORIO O MODO JUEGO (Con Delta-Time Exacto)
                 if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
-                    window.processDesktopMouseControls(currentAxes, curBtns, lastLoggedPhysicalBtns);
+                    window.processDesktopMouseControls(currentAxes, curBtns, lastLoggedPhysicalBtns, dt);
                 }} else {{
                     // Modo Juego: Locomoción física fluida del Avatar
                     if (window.updateAvatarFromGamepad) {{
-                        window.updateAvatarFromGamepad(currentAxes, curBtns);
+                        window.updateAvatarFromGamepad(currentAxes, curBtns, dt);
                     }}
                 }}
 
@@ -2806,21 +2853,31 @@ def build_sandbox_html():
                 // Si no hay mando físico pero sí mandos táctiles en pantalla
                 if (window._currentAxes && window._currentButtons) {{
                     if (window.isControllerMouseMode && typeof window.processDesktopMouseControls === "function") {{
-                        window.processDesktopMouseControls(window._currentAxes, window._currentButtons, window._lastTouchBtns || new Array(17).fill(0));
+                        window.processDesktopMouseControls(window._currentAxes, window._currentButtons, window._lastTouchBtns || new Array(17).fill(0), dt);
                     }} else if (window.updateAvatarFromGamepad) {{
-                        window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons);
+                        window.updateAvatarFromGamepad(window._currentAxes, window._currentButtons, dt);
                     }}
                 }}
             }}
         }}
 
-        // Ejecutar bucle con doble garantía: requestAnimationFrame para fluidez nativa y setInterval como fallback
-        function startSyncLoop() {{
-            processPhysicalGamepadFrame();
-            requestAnimationFrame(startSyncLoop);
+        // Bucle Maestro Único Unificado (Single Master Engine Loop - Estándar BigTech 60Hz/120Hz)
+        // Erradica bucles desincronizados concurrentes y garantiza velocidad de puntero y avatar predecible
+        let lastEngineTime = performance.now();
+        function masterEngineLoop(timestamp) {{
+            const now = timestamp || performance.now();
+            const dt = Math.min(0.05, Math.max(0.001, (now - lastEngineTime) / 1000));
+            lastEngineTime = now;
+
+            // 1. Procesar mandos físicos y táctiles con delta-time exacto
+            processPhysicalGamepadFrame(dt);
+
+            // 2. Renderizado del Canvas sincronizado al refresco nativo de la pantalla
+            drawCanvas(dt);
+
+            requestAnimationFrame(masterEngineLoop);
         }}
-        requestAnimationFrame(startSyncLoop);
-        setInterval(processPhysicalGamepadFrame, 16);
+        requestAnimationFrame(masterEngineLoop);
 
         // Registro de Toques y Deslizamientos Físicos Continuos en Pantalla
         const touchTrackMap = window.touchTrackMap || (window.touchTrackMap = new Map());
