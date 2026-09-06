@@ -2789,8 +2789,11 @@ body.tp-gamepad-active #cloud-virtual-cursor { display: none; }
                         }
                     }
 
-                    // 3. Conmutador de Modo Dual con SELECT + R3 (botones 8 y 11) o Botón 16 (Nexus / Guía)
-                    const isComboToggle = (gpButtonsState[8] && gpButtonsState[11]) || !!gpButtonsState[16];
+                    // 3. Conmutador de Modo Dual con SELECT + R3 (8+11), SELECT + START (8+9), L3 + R3 (10+11) o Botón 16 (Nexus / Guía)
+                    const isComboToggle = (gpButtonsState[8] && gpButtonsState[11]) ||
+                                          (gpButtonsState[8] && gpButtonsState[9]) ||
+                                          (gpButtonsState[10] && gpButtonsState[11]) ||
+                                          !!gpButtonsState[16];
                     if (isComboToggle && !btn16WasDown) {
                         btn16WasDown = true;
                         isControllerMouseMode = !isControllerMouseMode;

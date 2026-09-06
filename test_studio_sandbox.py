@@ -670,7 +670,7 @@ def build_sandbox_html():
                 ctx.stroke();
                 ctx.fillStyle = "#38bdf8";
                 ctx.font = "bold 12px monospace";
-                ctx.fillText("MODO RATÓN PC (M / HUD)", 1555, 26);
+                ctx.fillText("MODO RATÓN PC (SELECT + R3)", 1538, 26);
             }} else {{
                 ctx.fillStyle = "rgba(0, 255, 200, 0.14)";
                 ctx.strokeStyle = "#00ffc8";
@@ -680,7 +680,7 @@ def build_sandbox_html():
                 ctx.stroke();
                 ctx.fillStyle = "#00ffc8";
                 ctx.font = "bold 12px monospace";
-                ctx.fillText("MODO JUEGO (AVATAR XINPUT)", 1542, 26);
+                ctx.fillText("MODO JUEGO XINPUT (SELECT + R3)", 1532, 26);
             }}
 
             // 2. Ventana Interactiva Arrastrable
@@ -755,6 +755,9 @@ def build_sandbox_html():
             // 3. Gamepad Arena: Avatar en Posición Equilibrada (Columna Derecha Libre de Pulgares)
             const av = state.avatar;
             ctx.save();
+            if (window.isControllerMouseMode) {{
+                ctx.globalAlpha = 0.25;
+            }}
             ctx.strokeStyle = "rgba(0, 255, 200, 0.3)";
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 6]);
@@ -852,6 +855,31 @@ def build_sandbox_html():
             ctx.textAlign = "left";
             ctx.restore();
 
+            if (window.isControllerMouseMode) {{
+                ctx.save();
+                ctx.fillStyle = "rgba(10, 15, 26, 0.92)";
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(1100, 215, 320, 130, 12);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#38bdf8";
+                ctx.font = "bold 15px monospace";
+                ctx.textAlign = "center";
+                ctx.fillText("🖱️ MODO RATÓN PC ACTIVO", 1260, 248);
+                ctx.fillStyle = "#e2e8f0";
+                ctx.font = "12px monospace";
+                ctx.fillText("Stick: Controla Cursor de Escritorio", 1260, 273);
+                ctx.fillText("RT / A: Clic Izq  |  LT / X: Clic Der", 1260, 295);
+                ctx.fillStyle = "#f59e0b";
+                ctx.font = "bold 11px monospace";
+                ctx.fillText("SELECT + R3 para conmutar a Juego", 1260, 322);
+                ctx.textAlign = "left";
+                ctx.restore();
+            }}
+
             // 4. Zona Inferior de Prueba de Escritorio (Iconos y Zona de Arrastre)
             // Iconos
             state.desktopIcons.forEach(ic => {{
@@ -893,8 +921,74 @@ def build_sandbox_html():
             ctx.fillText("Arrastra la ventana aquí para verificar precisión", dt.x + dt.w / 2, dt.y + dt.h / 2 + 14);
             ctx.textAlign = "left";
 
-            // 5. Unificación Total: El puntero oficial es #cloud-virtual-cursor (DOM SVG calibrado a 60/120Hz).
-            // La superficie canvas nunca dibuja un segundo cursor redundante.
+            // 5. Renderizado del Puntero de Ratón Virtual del Escritorio (Hardware Accelerated)
+            if (window.isControllerMouseMode || state.cursor.mask > 0 || (Date.now() - lastLoggedMove < 4000)) {{
+                const cx = state.cursor.x;
+                const cy = state.cursor.y;
+                const isDownLeft = (state.cursor.mask === 1);
+                const isDownRight = (state.cursor.mask === 4);
+
+                ctx.save();
+                // Halo de pulsación o arrastre
+                if (isDownLeft) {{
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
+                    ctx.fill();
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }} else if (isDownRight) {{
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(245, 158, 11, 0.4)";
+                    ctx.fill();
+                    ctx.strokeStyle = "#f59e0b";
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }}
+
+                // Sombra de puntero
+                ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 3;
+                ctx.shadowOffsetY = 4;
+
+                // Flecha de puntero OS de alta visibilidad
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx, cy + 24);
+                ctx.lineTo(cx + 6, cy + 18);
+                ctx.lineTo(cx + 13, cy + 28);
+                ctx.lineTo(cx + 17, cy + 25);
+                ctx.lineTo(cx + 10, cy + 16);
+                ctx.lineTo(cx + 19, cy + 16);
+                ctx.closePath();
+
+                ctx.fillStyle = isDownLeft ? "#38bdf8" : (isDownRight ? "#f59e0b" : "#ffffff");
+                ctx.fill();
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Placa flotante de coordenadas y estado
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.fillStyle = "rgba(10, 15, 26, 0.9)";
+                ctx.strokeStyle = isDownLeft ? "#38bdf8" : "rgba(255, 255, 255, 0.35)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(cx + 20, cy + 20, 125, 24, 6);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = isDownLeft ? "#38bdf8" : "#94a3b8";
+                ctx.font = "bold 11px monospace";
+                ctx.fillText(isDownLeft ? "CLIC / ARRASTRE" : `X:${{Math.round(cx)}} Y:${{Math.round(cy)}}`, cx + 26, cy + 36);
+
+                ctx.restore();
+            }}
 
             requestAnimationFrame(drawCanvas);
         }}
@@ -1293,6 +1387,11 @@ def build_sandbox_html():
             // 1. Alternador de Modo Ratón de PC vs Modo Juego en Mando
             if (mouseModeBtn) {{
                 attachFastTap(mouseModeBtn, () => {{
+                    if (window.toggleMouseMode) window.toggleMouseMode();
+                }});
+            }}
+            if (modeBadge) {{
+                attachFastTap(modeBadge, () => {{
                     if (window.toggleMouseMode) window.toggleMouseMode();
                 }});
             }}
@@ -2341,8 +2440,11 @@ def build_sandbox_html():
                     }}
                 }}
 
-                // Conmutador de Modo: SELECT + R3 (curBtns[8] + curBtns[11]) o Botón 16 (Nexus / Guía)
-                const isComboToggle = (curBtns[8] && curBtns[11]) || !!curBtns[16];
+                // Conmutador de Modo Dual: SELECT + R3 (8+11), SELECT + START (8+9), L3 + R3 (10+11) o Botón 16 (Nexus / Guía)
+                const isComboToggle = (curBtns[8] && curBtns[11]) ||
+                                      (curBtns[8] && curBtns[9]) ||
+                                      (curBtns[10] && curBtns[11]) ||
+                                      !!curBtns[16];
                 if (isComboToggle && !btn16LastDown) {{
                     btn16LastDown = true;
                     if (!window.isGameModeLocked && typeof window.toggleMouseMode === "function") {{
