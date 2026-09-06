@@ -5644,8 +5644,10 @@ vnc_app_address = []
 ngrok_token = os.environ.get("NGROK_TOKEN", "").strip()
 if len(sys.argv) > 1 and sys.argv[1].strip() and sys.argv[1].strip() != "SIN_TOKEN" and not sys.argv[1].startswith("--"):
     ngrok_token = sys.argv[1].strip()
-if not ngrok_token:
+if not ngrok_token and os.environ.get("NGROK_TOKEN", "").strip().upper() not in ("DISABLED", "NONE", "NO", "0") and "SIN_TOKEN" not in sys.argv:
     ngrok_token = DEFAULT_NGROK
+if ngrok_token.upper() in ("DISABLED", "NONE", "NO", "0"):
+    ngrok_token = ""
 
 # 1. Cloudflare Tunnel (Ultra-Rápido con protocolo HTTP/2 Anti-Drop, Sin Límites de Banda)
 url_cf = None

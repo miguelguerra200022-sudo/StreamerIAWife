@@ -1,11 +1,12 @@
 {
-  "id": "miguel55755/aether-cloud-pc-pro",
-  "title": "Aether Cloud PC Pro",
+  "id": "miguelguerra22/aether-cloud-pc-live",
+  "title": "Aether Cloud PC Live",
   "code_file": "main.py",
   "language": "python",
   "kernel_type": "script",
   "is_private": true,
   "enable_gpu": true,
+  "enable_tpu": false,
   "enable_internet": true,
   "dataset_sources": []
 }
